@@ -1,0 +1,10 @@
+{
+  "cycle": 9,
+  "build_ok": true,
+  "style_assertions": {
+    "total": 285,
+    "passed": 285,
+    "failed": 0,
+    "failures": []
+  }
+}

@@ -1,0 +1,122 @@
+/* Home — one continuous scene (fixed stage behind the page), then writing + footer. */
+
+.scene-stage { position: fixed; inset: 0; z-index: 0; }
+.scene-stage__field { position: absolute; inset: 0; width: 100%; height: 100%; }
+.scene-stage__veil { position: absolute; inset: 0; background: var(--paper); opacity: 0; pointer-events: none; }
+html[data-page='home'] [data-page-root], html[data-page='home'] .c-footer { position: relative; z-index: 1; }
+html[data-page='home'] body { cursor: crosshair; }
+html[data-page='home'] a, html[data-page='home'] button { cursor: pointer; }
+
+.scene { position: relative; height: 150svh; pointer-events: none; }
+.scene__screen { position: relative; height: 100svh; }
+.scene__cue { position: absolute; left: 50%; bottom: calc(var(--grid-margin) * 0.75); transform: translateX(-50%); color: var(--ink-2); }
+.scene-rail { position: absolute; right: calc(var(--grid-margin) * 0.5); top: 50%; width: 1px; height: 22vh; transform: translateY(-50%); background: var(--rule); z-index: 2; pointer-events: none; transition: opacity var(--d-450) var(--ease-out); }
+.scene-rail i { display: block; width: 100%; height: 100%; background: var(--signal); transform-origin: 50% 0; transform: scaleY(var(--sp, 0)); }
+.scene-rail.is-off { opacity: 0; }
+
+/* writing (Ref A .c-extras) on the settled lattice */
+.writing { margin-top: 0; padding-top: var(--space-big); }
+.writing__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.9rem; }
+.writing__grid { margin-top: 7px; }
+.writing__label { grid-column: 1 / 7; }
+.writing__list { grid-column: 7 / 13; }
+.writing-row {
+  display: grid; grid-template-columns: 1fr auto; gap: 1em; align-items: baseline;
+  padding: 0.3em 0 0.35em; border-bottom: var(--border);
+  font-size: var(--fs-medium); line-height: 1.2; letter-spacing: -0.01em;
+  transition: background-color var(--d-300) var(--ease-out);
+}
+.writing-row__meta { color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.writing-row:hover, .writing-row:focus-visible { background: var(--paper-2); }
+.writing-row:hover .writing-row__title { text-decoration: underline; text-decoration-thickness: var(--border-size); text-underline-offset: 0.1em; }
+@media (max-width: 1024px) { .writing__label { grid-column: 1 / 3; } .writing__list { grid-column: 3 / 9; } }
+@media (max-width: 699px) {
+  .scene { height: 140svh; }
+  .homotopy { height: 380svh; }
+  .homotopy__copy { bottom: 1.5rem; }
+  .homotopy__statement { width: 100%; }
+  .writing__label { grid-column: 1 / -1; margin-bottom: 0.5em; }
+  .writing__list { grid-column: 1 / -1; }
+  .writing-row { grid-template-columns: 1fr; gap: 0.2em; }
+}
+html.rm .scene { height: 100svh; }
+
+/* homotopy section: sticky surface, one placeholder statement per stage */
+.homotopy { position: relative; z-index: 1; height: 440svh; background: var(--paper); }
+.homotopy__pin { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.homotopy__canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: pan-y; }
+.homotopy__copy { position: absolute; left: 0; right: 0; bottom: var(--grid-margin); pointer-events: none; display: grid; }
+.homotopy__statement { grid-area: 1 / 1; width: min(34em, 60%); opacity: 0; transform: translateY(12px); transition: opacity var(--d-600) var(--ease-out), transform var(--d-600) var(--ease-out); }
+.homotopy__statement.is-active { opacity: 1; transform: none; }
+html.rm .homotopy { height: auto; }
+html.rm .homotopy__pin { position: relative; height: 80svh; }
+html.rm .homotopy__statement { position: static; opacity: 1; transform: none; }
+
+/* plotter plates: ink drafting on paper, captioned figures */
+.plates { position: relative; z-index: 1; height: 460svh; background: var(--paper); }
+.plates__pin { position: sticky; top: 0; height: 100svh; display: grid; grid-template-rows: 1fr auto; overflow: hidden; }
+.plates__svg { width: min(100%, 1400px); height: 100%; max-height: 78svh; margin: 0 auto; align-self: center; overflow: visible; }
+.pl-line { fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linecap: butt; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.pl-line.-thick { stroke-width: 1.7; }
+.pl-line.-dash { stroke-dasharray: 5 6; stroke-width: 1; }
+.pl-line.-signal { stroke: var(--signal); }
+.pl-hatch { fill: none; stroke: var(--ink); stroke-width: 0.8; vector-effect: non-scaling-stroke; }
+.pl-label, .pl-chip text, .pl-note { font-family: var(--font-mono); font-size: 21px; letter-spacing: 0.04em; fill: var(--ink); }
+.pl-note { font-size: 15px; fill: var(--ink-2); font-style: italic; }
+.pl-chip rect { fill: var(--paper); stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.pl-chip.-signal rect { stroke: var(--signal); }
+.plates__caption { display: grid; padding-bottom: var(--grid-margin); }
+.plates__fig { grid-area: 1 / 1; opacity: 0; transform: translateY(8px); transition: opacity var(--d-450) var(--ease-out), transform var(--d-450) var(--ease-out); }
+.plates__fig.is-active { opacity: 1; transform: none; }
+.plates__n { font-family: var(--font-mono); font-size: var(--fs-h6); color: var(--ink-2); letter-spacing: 0.06em; margin-bottom: 0.6em; }
+.plates__line { font-family: var(--font-mono); font-size: clamp(14px, 1.35vw, 22px); line-height: 1.45; letter-spacing: 0.05em; max-width: 46em; }
+@media (max-width: 699px) {
+  .plates { height: 400svh; }
+  .plates__svg { max-height: 62svh; }
+  .pl-label, .pl-chip text { font-size: 30px; }
+  .pl-note { font-size: 22px; }
+}
+html.rm .plates { height: auto; }
+html.rm .plates__pin { position: relative; height: auto; }
+html.rm .plates__fig { position: static; opacity: 1; transform: none; margin-bottom: 1em; }
+
+/* ── the story: one sticky stage, three zoom levels ─────────────────────────── */
+.story { position: relative; height: 1150svh; }
+.story__stage { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.story__layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+.story__diagram { opacity: 0; overflow: visible; padding: 4vh 2vw 18vh; }
+.story__surface { opacity: 0; cursor: grab; }
+.dg-boundary { fill: none; stroke: var(--ink); stroke-width: 1; stroke-dasharray: 5 6; vector-effect: non-scaling-stroke; }
+.dg-link, .dg-head { fill: none; stroke: var(--ink); stroke-width: 1.3; vector-effect: non-scaling-stroke; }
+.dg-link.-signal, .dg-head.-signal { stroke: var(--signal); }
+.dg-circle { fill: var(--paper); fill-opacity: 0; stroke: var(--ink); stroke-width: 1.7; vector-effect: non-scaling-stroke; }
+.dg-hatch { fill: none; stroke: var(--ink); stroke-width: 0.8; vector-effect: non-scaling-stroke; }
+.dg-node.-signal .dg-hatch { stroke: var(--signal); }
+.dg-label { font-family: var(--font-mono); font-size: 17px; letter-spacing: 0.05em; fill: var(--ink); }
+.dg-dot { fill: var(--ink); }
+.story__caption { position: absolute; left: 0; right: 0; bottom: var(--grid-margin); display: grid; pointer-events: none; }
+.story__fig { grid-area: 1 / 1; justify-self: start; background: color-mix(in srgb, var(--paper) 92%, transparent); padding: 0.6em 0.8em 0.7em 0; box-shadow: -0.8em 0 0 color-mix(in srgb, var(--paper) 92%, transparent); opacity: 0; transform: translateY(8px); transition: opacity var(--d-450) var(--ease-out), transform var(--d-450) var(--ease-out); }
+.story__fig.is-active { opacity: 1; transform: none; }
+.story__term { color: var(--ink-3); }
+.story__n { font-family: var(--font-mono); font-size: var(--fs-h6); color: var(--ink-2); letter-spacing: 0.06em; margin-bottom: 0.6em; }
+.story__line { font-family: var(--font-mono); font-size: clamp(13px, 1.3vw, 21px); line-height: 1.5; letter-spacing: 0.05em; max-width: 52em; }
+.story__cue { position: absolute; left: 50%; bottom: calc(var(--grid-margin) * 0.75); transform: translateX(-50%); color: var(--ink-2); }
+@media (max-width: 699px) {
+  .story { height: 1000svh; }
+  .story__diagram { padding: 10vh 0 30vh; }
+  .dg-label { font-size: 19px; }
+  .dg-label.-small { font-size: 13px; }
+}
+html.rm .story { height: auto; }
+html.rm .story__stage { position: relative; height: 100svh; }
+
+.dg-form { fill: none; stroke: var(--ink); stroke-width: 1.7; vector-effect: non-scaling-stroke; }
+.dg-form.-signal { stroke: var(--signal); }
+.dg-hatch.-light { stroke-width: 0.7; }
+.dg-role { fill: var(--paper); stroke: var(--ink); stroke-width: 1.3; vector-effect: non-scaling-stroke; }
+.dg-link.-thin { stroke-width: 1; }
+.dg-chip rect { fill: var(--paper); stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.dg-chip.-plain text { paint-order: stroke; stroke: var(--paper); stroke-width: 7px; stroke-linejoin: round; }
+.dg-label.-strong { font-weight: 700; }
+.dg-label.-small { font-size: 14px; }
+.dg-label.-signal { fill: var(--signal); }

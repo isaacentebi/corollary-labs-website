@@ -1,0 +1,65 @@
+{
+  "cycle": 6,
+  "build_ok": true,
+  "style_assertions": {
+    "total": 279,
+    "passed": 270,
+    "failed": 9,
+    "failures": [
+      {
+        "selector": "home@desktop .wordmark__word",
+        "prop": "fontFamily",
+        "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+        "actual": null
+      },
+      {
+        "selector": "home@desktop .wordmark__word",
+        "prop": "fontWeight",
+        "expected": "500",
+        "actual": null
+      },
+      {
+        "selector": "home@desktop .wordmark__tag",
+        "prop": "fontFamily",
+        "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+        "actual": null
+      },
+      {
+        "selector": "home@tablet .wordmark__word",
+        "prop": "fontFamily",
+        "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+        "actual": null
+      },
+      {
+        "selector": "home@tablet .wordmark__word",
+        "prop": "fontWeight",
+        "expected": "500",
+        "actual": null
+      },
+      {
+        "selector": "home@tablet .wordmark__tag",
+        "prop": "fontFamily",
+        "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+        "actual": null
+      },
+      {
+        "selector": "home@mobile .wordmark__word",
+        "prop": "fontFamily",
+        "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+        "actual": null
+      },
+      {
+        "selector": "home@mobile .wordmark__word",
+        "prop": "fontWeight",
+        "expected": "500",
+        "actual": null
+      },
+      {
+        "selector": "home@mobile .wordmark__tag",
+        "prop": "fontFamily",
+        "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+        "actual": null
+      }
+    ]
+  }
+}

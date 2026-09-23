@@ -1,0 +1,8 @@
+[
+ {"slug":"hover-annotation","trigger":".annotation","kind":"hover","reveals":["crosshair cursor; linked tertiary aside highlighted"],"watch":["[data-tertiary-aside]"]},
+ {"slug":"hover-note-marker","trigger":"[id^=tertiary_aside_marker_]","kind":"hover","reveals":["note highlight; others dim to .3"],"watch":["aside[id^=tertiary_aside_]"]},
+ {"slug":"open-toc","trigger":"button:has-text('CHAPTER I'), [class*=navigation] button","kind":"click","wait":900,"reveals":["TOC dropdown with chapter list"],"visualOnly":true},
+ {"slug":"hover-chapter-tile","trigger":"a.chapter-navigation__tile--primary","kind":"hover","reveals":["tile scale .99, .1s"]},
+ {"slug":"hover-more-info","trigger":"button:has-text('More Info')","kind":"hover","reveals":["button hover"]},
+ {"slug":"mobile-nav","trigger":"body","kind":"hover","viewport":[375,667],"reveals":["mobile layout"],"visualOnly":true}
+]

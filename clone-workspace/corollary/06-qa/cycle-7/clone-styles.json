@@ -1,0 +1,480 @@
+{
+ "home@desktop html": {
+  "backgroundColor": "rgb(250, 250, 248)",
+  "fontSize": "17px",
+  "color": "rgb(13, 13, 12)"
+ },
+ "home@desktop body": {
+  "backgroundColor": "rgb(250, 250, 248)"
+ },
+ "home@desktop .c-footer__list a": {
+  "fontFamily": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+  "fontSize": "29.4666px",
+  "textUnderlineOffset": "2.94666px",
+  "textDecorationThickness": "1px"
+ },
+ "home@desktop .scene-stage": {
+  "position": "fixed",
+  "zIndex": "0"
+ },
+ "home@desktop .field": {
+  "cursor": "crosshair"
+ },
+ "home@desktop .scene__cue": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "home@desktop .scene-rail": {
+  "position": "fixed",
+  "width": "1px"
+ },
+ "home@desktop .writing__title": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "79.3334px"
+ },
+ "home@desktop .writing-row": {
+  "borderBottomWidth": "1px",
+  "fontSize": "29.4666px",
+  "transitionDuration": "0.3s"
+ },
+ "home@desktop .c-footer": {
+  "marginTop": "181.334px",
+  "fontSize": "29.4666px",
+  "paddingLeft": "45.3334px"
+ },
+ "home@desktop .c-footer__big": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ "home@desktop .c-footer__copy": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "home@desktop .c-footer__big .box": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "borderTopWidth": "1px"
+ },
+ "home@tablet html": {
+  "backgroundColor": "rgb(250, 250, 248)",
+  "fontSize": "15px",
+  "color": "rgb(13, 13, 12)"
+ },
+ "home@tablet body": {
+  "backgroundColor": "rgb(250, 250, 248)"
+ },
+ "home@tablet .c-footer__list a": {
+  "fontFamily": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+  "fontSize": "24px",
+  "textUnderlineOffset": "2.4px",
+  "textDecorationThickness": "1px"
+ },
+ "home@tablet .scene-stage": {
+  "position": "fixed",
+  "zIndex": "0"
+ },
+ "home@tablet .field": {
+  "cursor": "crosshair"
+ },
+ "home@tablet .scene__cue": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "home@tablet .scene-rail": {
+  "position": "fixed",
+  "width": "1px"
+ },
+ "home@tablet .writing__title": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "50px"
+ },
+ "home@tablet .writing-row": {
+  "borderBottomWidth": "1px",
+  "fontSize": "24px",
+  "transitionDuration": "0.3s"
+ },
+ "home@tablet .c-footer": {
+  "marginTop": "160.001px",
+  "fontSize": "24px",
+  "paddingLeft": "20px"
+ },
+ "home@tablet .c-footer__big": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ "home@tablet .c-footer__copy": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "home@tablet .c-footer__big .box": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "borderTopWidth": "1px"
+ },
+ "home@mobile html": {
+  "backgroundColor": "rgb(250, 250, 248)",
+  "fontSize": "15px",
+  "color": "rgb(13, 13, 12)"
+ },
+ "home@mobile body": {
+  "backgroundColor": "rgb(250, 250, 248)"
+ },
+ "home@mobile .c-footer__list a": {
+  "fontFamily": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+  "fontSize": "18px",
+  "textUnderlineOffset": "1.8px",
+  "textDecorationThickness": "1px"
+ },
+ "home@mobile .scene-stage": {
+  "position": "fixed",
+  "zIndex": "0"
+ },
+ "home@mobile .field": {
+  "cursor": "crosshair"
+ },
+ "home@mobile .scene__cue": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "home@mobile .scene-rail": {
+  "position": "fixed",
+  "width": "1px"
+ },
+ "home@mobile .writing__title": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "36px"
+ },
+ "home@mobile .writing-row": {
+  "borderBottomWidth": "1px",
+  "fontSize": "18px",
+  "transitionDuration": "0.3s"
+ },
+ "home@mobile .c-footer": {
+  "marginTop": "160.001px",
+  "fontSize": "18px",
+  "paddingLeft": "20px"
+ },
+ "home@mobile .c-footer__big": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ "home@mobile .c-footer__copy": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "home@mobile .c-footer__big .box": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "borderTopWidth": "1px"
+ },
+ "essay@desktop .essay-body > p": {
+  "fontFamily": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+  "fontSize": "25.74px",
+  "lineHeight": "35.0064px",
+  "marginBottom": "32.9472px",
+  "color": "rgb(13, 13, 12)",
+  "fontWeight": "400"
+ },
+ "essay@desktop .essay-body h2": {
+  "fontFamily": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+  "fontSize": "43.56px",
+  "lineHeight": "50.094px",
+  "fontWeight": "700",
+  "color": "rgb(13, 13, 12)"
+ },
+ "essay@desktop .essay-head__title": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "93.6px",
+  "lineHeight": "93.6px",
+  "fontWeight": "400"
+ },
+ "essay@desktop .essay-head__kicker": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)",
+  "fontSize": "18px"
+ },
+ "essay@desktop .h-marker": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "fontSize": "18px",
+  "color": "rgb(86, 86, 79)"
+ },
+ "essay@desktop .sidenote": {
+  "fontSize": "18px",
+  "lineHeight": "23.04px",
+  "backgroundColor": "rgb(242, 242, 239)",
+  "borderTopLeftRadius": "6.375px"
+ },
+ "essay@desktop .note-ref": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "cursor": "crosshair",
+  "borderTopLeftRadius": "2.125px"
+ },
+ "essay@desktop .term": {
+  "backgroundColor": "rgb(13, 13, 12)",
+  "color": "rgb(250, 250, 248)",
+  "cursor": "crosshair",
+  "borderTopLeftRadius": "2.125px",
+  "paddingLeft": "4.25px"
+ },
+ "essay@desktop .essay-body .pullquote": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "56.52px",
+  "lineHeight": "62.172px",
+  "borderTopWidth": "1px",
+  "width": "1389.38px"
+ },
+ "essay@desktop .fig__cap": {
+  "fontSize": "15.426px",
+  "color": "rgb(86, 86, 79)"
+ },
+ "essay@desktop .fig__plate": {
+  "borderTopLeftRadius": "6.375px",
+  "borderTopWidth": "1px"
+ },
+ "essay@desktop .next-essay": {
+  "transitionDuration": "0.1s, 0.3s"
+ },
+ "essay@desktop .next-essay__title": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "56.52px"
+ },
+ "essay@desktop .rail-card": {
+  "borderTopLeftRadius": "6.375px",
+  "backgroundColor": "rgb(250, 250, 248)"
+ },
+ "essay@desktop .essay-body": {
+  "width": "912.75px"
+ },
+ "essay@desktop .essay-body .sidenote": {
+  "position": "absolute",
+  "width": "436.125px",
+  "transitionDuration": "0.18s, 0.18s",
+  "transitionTimingFunction": "cubic-bezier(0.23, 1, 0.32, 1), cubic-bezier(0.23, 1, 0.32, 1)"
+ },
+ "essay@desktop .essay-rail": {
+  "position": "sticky"
+ },
+ "essay@tablet .essay-body > p": {
+  "fontFamily": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+  "fontSize": "20.02px",
+  "lineHeight": "27.2272px",
+  "marginBottom": "25.6256px",
+  "color": "rgb(13, 13, 12)",
+  "fontWeight": "400"
+ },
+ "essay@tablet .essay-body h2": {
+  "fontFamily": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+  "fontSize": "33.88px",
+  "lineHeight": "38.962px",
+  "fontWeight": "700",
+  "color": "rgb(13, 13, 12)"
+ },
+ "essay@tablet .essay-head__title": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "72.8px",
+  "lineHeight": "72.8px",
+  "fontWeight": "400"
+ },
+ "essay@tablet .essay-head__kicker": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)",
+  "fontSize": "14px"
+ },
+ "essay@tablet .h-marker": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "fontSize": "14px",
+  "color": "rgb(86, 86, 79)"
+ },
+ "essay@tablet .sidenote": {
+  "fontSize": "14px",
+  "lineHeight": "17.92px",
+  "backgroundColor": "rgb(242, 242, 239)",
+  "borderTopLeftRadius": "5.625px"
+ },
+ "essay@tablet .note-ref": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "cursor": "crosshair",
+  "borderTopLeftRadius": "1.875px"
+ },
+ "essay@tablet .term": {
+  "backgroundColor": "rgb(13, 13, 12)",
+  "color": "rgb(250, 250, 248)",
+  "cursor": "crosshair",
+  "borderTopLeftRadius": "1.875px",
+  "paddingLeft": "3.75px"
+ },
+ "essay@tablet .essay-body .pullquote": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "43.96px",
+  "lineHeight": "48.356px",
+  "borderTopWidth": "1px"
+ },
+ "essay@tablet .fig__cap": {
+  "fontSize": "11.998px",
+  "color": "rgb(86, 86, 79)"
+ },
+ "essay@tablet .fig__plate": {
+  "borderTopLeftRadius": "5.625px",
+  "borderTopWidth": "1px"
+ },
+ "essay@tablet .next-essay": {
+  "transitionDuration": "0.1s, 0.3s"
+ },
+ "essay@tablet .next-essay__title": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "43.96px"
+ },
+ "essay@tablet .rail-card": {
+  "borderTopLeftRadius": "5.625px",
+  "backgroundColor": "rgb(250, 250, 248)"
+ },
+ "essay@tablet .essay-body .sidenote": {
+  "position": "relative"
+ },
+ "essay@mobile .essay-body > p": {
+  "fontFamily": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+  "fontSize": "17.16px",
+  "lineHeight": "23.3376px",
+  "marginBottom": "21.9648px",
+  "color": "rgb(13, 13, 12)",
+  "fontWeight": "400"
+ },
+ "essay@mobile .essay-body h2": {
+  "fontFamily": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif",
+  "fontSize": "29.04px",
+  "lineHeight": "33.396px",
+  "fontWeight": "700",
+  "color": "rgb(13, 13, 12)"
+ },
+ "essay@mobile .essay-head__title": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "62.4px",
+  "lineHeight": "62.4px",
+  "fontWeight": "400"
+ },
+ "essay@mobile .essay-head__kicker": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)",
+  "fontSize": "12px"
+ },
+ "essay@mobile .h-marker": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "fontSize": "12px",
+  "color": "rgb(86, 86, 79)"
+ },
+ "essay@mobile .sidenote": {
+  "fontSize": "12px",
+  "lineHeight": "15.36px",
+  "backgroundColor": "rgb(242, 242, 239)",
+  "borderTopLeftRadius": "5.625px"
+ },
+ "essay@mobile .note-ref": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "cursor": "crosshair",
+  "borderTopLeftRadius": "1.875px"
+ },
+ "essay@mobile .term": {
+  "backgroundColor": "rgb(13, 13, 12)",
+  "color": "rgb(250, 250, 248)",
+  "cursor": "crosshair",
+  "borderTopLeftRadius": "1.875px",
+  "paddingLeft": "3.75px"
+ },
+ "essay@mobile .essay-body .pullquote": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "37.68px",
+  "lineHeight": "41.448px",
+  "borderTopWidth": "1px"
+ },
+ "essay@mobile .fig__cap": {
+  "fontSize": "10.284px",
+  "color": "rgb(86, 86, 79)"
+ },
+ "essay@mobile .fig__plate": {
+  "borderTopLeftRadius": "5.625px",
+  "borderTopWidth": "1px"
+ },
+ "essay@mobile .next-essay": {
+  "transitionDuration": "0.1s, 0.3s"
+ },
+ "essay@mobile .next-essay__title": {
+  "fontFamily": "\"Instrument Serif\", \"Times New Roman\", serif",
+  "fontSize": "37.68px"
+ },
+ "essay@mobile .rail-card": {
+  "borderTopLeftRadius": "5.625px",
+  "backgroundColor": "rgb(250, 250, 248)"
+ },
+ "essay@mobile .essay-body .sidenote": {
+  "position": "relative"
+ },
+ "index@desktop .index-band__field": {
+  "cursor": "crosshair",
+  "position": "absolute"
+ },
+ "index@desktop .index-band__count": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "index@desktop .index-row": {
+  "fontSize": "29.4666px",
+  "borderBottomWidth": "1px",
+  "borderBottomColor": "rgb(13, 13, 12)",
+  "transitionDuration": "0.3s, 0.1s"
+ },
+ "index@desktop .index-row__glyph": {
+  "transitionDuration": "0.2s",
+  "transitionTimingFunction": "cubic-bezier(0.23, 1, 0.32, 1)"
+ },
+ "index@desktop .index-row__date": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "index@desktop .index-row__dek": {
+  "color": "rgb(86, 86, 79)"
+ },
+ "index@tablet .index-band__field": {
+  "cursor": "crosshair",
+  "position": "absolute"
+ },
+ "index@tablet .index-band__count": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "index@tablet .index-row": {
+  "fontSize": "24px",
+  "borderBottomWidth": "1px",
+  "borderBottomColor": "rgb(13, 13, 12)",
+  "transitionDuration": "0.3s, 0.1s"
+ },
+ "index@tablet .index-row__glyph": {
+  "transitionDuration": "0.2s",
+  "transitionTimingFunction": "cubic-bezier(0.23, 1, 0.32, 1)"
+ },
+ "index@tablet .index-row__date": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "index@tablet .index-row__dek": {
+  "color": "rgb(86, 86, 79)"
+ },
+ "index@mobile .index-band__field": {
+  "cursor": "crosshair",
+  "position": "absolute"
+ },
+ "index@mobile .index-band__count": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "index@mobile .index-row": {
+  "fontSize": "18px",
+  "borderBottomWidth": "1px",
+  "borderBottomColor": "rgb(13, 13, 12)",
+  "transitionDuration": "0.3s, 0.1s"
+ },
+ "index@mobile .index-row__glyph": {
+  "transitionDuration": "0.2s",
+  "transitionTimingFunction": "cubic-bezier(0.23, 1, 0.32, 1)"
+ },
+ "index@mobile .index-row__date": {
+  "fontFamily": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+  "color": "rgb(86, 86, 79)"
+ },
+ "index@mobile .index-row__dek": {
+  "color": "rgb(86, 86, 79)"
+ }
+}

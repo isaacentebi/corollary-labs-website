@@ -1,0 +1,9 @@
+[
+ {"slug":"hover-header-link","trigger":".c-header-menu_link","kind":"hover","reveals":["underline thickness=border-size offset .1em"]},
+ {"slug":"hover-featured-row","trigger":".c-featured-links_item","kind":"hover","watch":[".c-featured-links_visual",".c-featured-links_title span"],"reveals":["inline visual expands 0→1.5em, .45s cubic-bezier(.23,1,.32,1)"]},
+ {"slug":"hover-summary-link","trigger":".c-home-summary_link","kind":"hover","watch":[".c-button_label"],"reveals":["label underline"]},
+ {"slug":"hover-footer-link","trigger":".c-footer_nav a","kind":"hover","reveals":["underline"]},
+ {"slug":"hover-extras-article","trigger":".c-extras a, [class*=article] a","kind":"hover","reveals":["row hover"]},
+ {"slug":"focus-header-cta","trigger":".c-header_cta a, .c-header_cta","kind":"focus","reveals":["focus-visible outline"]},
+ {"slug":"open-mobile-menu","trigger":".c-header_menu-toggler","kind":"click","viewport":[375,667],"wait":1200,"watch":[".c-menu",".c-header"],"reveals":["fullscreen menu, bg #312DFB in ref"]}
+]

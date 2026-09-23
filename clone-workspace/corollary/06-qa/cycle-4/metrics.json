@@ -1,0 +1,29 @@
+{
+  "cycle": 4,
+  "build_ok": true,
+  "style_assertions": {
+    "total": 378,
+    "passed": 375,
+    "failed": 3,
+    "failures": [
+      {
+        "selector": "home@desktop .c-header",
+        "prop": "transitionTimingFunction",
+        "expected": "cubic-bezier(0.215, 0.61, 0.355, 1)",
+        "actual": "cubic-bezier(0.215, 0.61, 0.355, 1), cubic-bezier(0.215, 0.61, 0.355, 1)"
+      },
+      {
+        "selector": "home@tablet .c-header",
+        "prop": "transitionTimingFunction",
+        "expected": "cubic-bezier(0.215, 0.61, 0.355, 1)",
+        "actual": "cubic-bezier(0.215, 0.61, 0.355, 1), cubic-bezier(0.215, 0.61, 0.355, 1)"
+      },
+      {
+        "selector": "home@mobile .c-header",
+        "prop": "transitionTimingFunction",
+        "expected": "cubic-bezier(0.215, 0.61, 0.355, 1)",
+        "actual": "cubic-bezier(0.215, 0.61, 0.355, 1), cubic-bezier(0.215, 0.61, 0.355, 1)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import Story from '../components/Story.astro';
+import { getCollection } from 'astro:content';
+import { render } from 'astro:content';
+import '../styles/landing.css';
+
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
+const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+<Base page="home">
+  <Story />
+
+  <section class="writing o-container" id="writing" aria-labelledby="writing-title">
+    <header class="writing__head">
+      <h2 class="writing__title t-h1" id="writing-title" data-reveal="chars">Essays</h2>
+      <span class="writing__count t-h1" aria-hidden="true" data-reveal="chars">({rows.length})</span>
+    </header>
+    <div class="rule" data-reveal="rule"></div>
+    <div class="writing__grid o-grid">
+      <p class="writing__label t-medium" data-reveal="scramble">Recent</p>
+      <ol class="writing__list" data-reveal="rows">
+        {rows.map(({ e, fm }) => (
+          <li>
+            <a class="writing-row" href={`/essays/${e.id}/`} data-shuffle-hover>
+              <span class="writing-row__title" data-shuffle-target>{e.data.title}</span>
+              <span class="writing-row__meta t-label"><time datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time> · {fm.minutesRead} min</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+</Base>

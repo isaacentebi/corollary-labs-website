@@ -1,0 +1,41 @@
+---
+// The home page is one story on one stage, told at three zoom levels:
+//   field (every node is a firm) → dive into one node → the firm, figs 1–4 → pull back → diffusion, fig 5
+//   → the whole lattice lifts into 3D and changes shape (homotopy coda).
+// scripts/story.ts drives everything from one scroll progress.
+import { site } from '../config/site';
+export const figs = [
+  { n: 1, title: 'The firm', lines: ['A firm is a boundary drawn around coordination', 'A firm keeps inside whatever costs more to buy than to organise'] },
+  { n: 2, title: 'Decoupling', lines: ['An agent is execution without a worker', 'What can be executed without a worker no longer needs a firm'] },
+  { n: 3, title: 'Redundancy', lines: ['A role is a connection to work', 'When the work leaves, the connection has nothing left to connect'] },
+  { n: 4, title: 'Recomposition', lines: ['The firm contracts to what cannot be executed', 'Judgement, risk, relations: the remainder is the firm'] },
+  { n: 5, title: 'Diffusion', lines: ['An agent costs nothing to copy', 'Every boundary is redrawn at once'] },
+];
+---
+<section class="story" data-story aria-labelledby="hero-title">
+  <h1 class="u-sr" id="hero-title">{site.name}</h1>
+  <div class="story__stage" data-stage>
+    <canvas class="field story__layer" data-field="hero" aria-hidden="true"></canvas>
+    <canvas class="field story__layer" data-field="diffuse" aria-hidden="true"></canvas>
+    <svg class="story__diagram story__layer" viewBox="0 0 1200 700" data-diagram role="img"
+      aria-label={figs.map((f) => `Figure ${f.n}, ${f.title}: ${f.lines.join('. ')}.`).join(' ')}>
+      <defs>
+        <filter id="boil" filterUnits="userSpaceOnUse" x="0" y="0" width="1200" height="700">
+          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1" data-boil />
+          <feDisplacementMap in="SourceGraphic" scale="2.2" />
+        </filter>
+      </defs>
+      <g data-dg><g filter="url(#boil)" data-ink></g></g>
+    </svg>
+    <canvas class="story__layer story__surface" data-surface aria-hidden="true"></canvas>
+    <div class="story__caption o-container" aria-hidden="true">
+      {figs.map((f, i) => (
+        <div class="story__fig" data-fig={i}>
+          <p class="story__n">FIG. {f.n} — {f.title.toUpperCase()}</p>
+          {f.lines.map((l) => <p class="story__line">{l.toUpperCase()}</p>)}
+        </div>
+      ))}
+    </div>
+    <span class="story__cue t-label" aria-hidden="true" data-hero-scroll>↓</span>
+  </div>
+</section>

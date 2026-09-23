@@ -1,0 +1,28 @@
+---
+import { site } from '../config/site';
+const path = Astro.url.pathname;
+const cur = (h: string) => (h === '/' ? path === '/' : path.startsWith(h)) ? 'page' : undefined;
+---
+<footer class="c-footer" id="contact" data-footer>
+  <nav class="c-footer__menus" aria-label="Site">
+    <div class="c-footer__menu -main">
+      <ul class="c-footer__list" data-reveal="lines">
+        <li><a href="/" aria-current={cur('/')}>Home</a></li>
+        <li><a href="/essays/" aria-current={cur('/essays')}>Essays</a></li>
+      </ul>
+      <ul class="c-footer__list -b" data-reveal="lines">
+        <li><a href="#top" data-to-top>Back to top ↑</a></li>
+      </ul>
+    </div>
+    <div class="c-footer__menu -contact">
+      <p class="c-footer__title" data-reveal="scramble">Contact</p>
+      <ul class="c-footer__list" data-reveal="lines">
+        <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+      </ul>
+    </div>
+  </nav>
+  <p class="c-footer__big" data-reveal="lines">
+    {site.name}
+  </p>
+  <p class="c-footer__copy">©{site.year} {site.name}</p>
+</footer>

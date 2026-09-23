@@ -1,0 +1,11 @@
+node_modules/
+site/dist/
+site/.astro/
+.DS_Store
+# methodology repo is its own git repo (github.com/per-simmons/clone-app-pat-pro-public)
+_method/
+# large raw extraction dumps and screenshots (regenerable with tools/*.mjs)
+clone-workspace/*/02-extraction/**/*.all-styles.json
+clone-workspace/*/02-extraction/all-styles.json
+clone-workspace/*/02-extraction/motion/*.json
+clone-workspace/*/02-extraction/fragments/*.dom.html

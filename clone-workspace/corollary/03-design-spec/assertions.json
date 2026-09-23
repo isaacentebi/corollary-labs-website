@@ -1,0 +1,1352 @@
+[
+ {
+  "selector": "home@desktop html",
+  "prop": "backgroundColor",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "home@desktop html",
+  "prop": "fontSize",
+  "expected": "17px"
+ },
+ {
+  "selector": "home@desktop html",
+  "prop": "color",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "home@desktop body",
+  "prop": "backgroundColor",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "home@desktop .c-footer__list a",
+  "prop": "fontFamily",
+  "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif"
+ },
+ {
+  "selector": "home@desktop .c-footer__list a",
+  "prop": "fontSize",
+  "expected": "29.4667px"
+ },
+ {
+  "selector": "home@desktop .c-footer__list a",
+  "prop": "textUnderlineOffset",
+  "expected": "2.9467px"
+ },
+ {
+  "selector": "home@desktop .c-footer__list a",
+  "prop": "textDecorationThickness",
+  "expected": "1px"
+ },
+ {
+  "selector": "home@desktop .story__stage",
+  "prop": "position",
+  "expected": "sticky"
+ },
+ {
+  "selector": "home@desktop .story__stage",
+  "prop": "top",
+  "expected": "0px"
+ },
+ {
+  "selector": "home@desktop .field",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "home@desktop .story__cue",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@desktop .story__cue",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "home@desktop .story__line",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@desktop .story__n",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@desktop .story__n",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "home@desktop .dg-label",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@desktop .writing__title",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "home@desktop .writing__title",
+  "prop": "fontSize",
+  "expected": "79.3333px"
+ },
+ {
+  "selector": "home@desktop .writing-row",
+  "prop": "borderBottomWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "home@desktop .writing-row",
+  "prop": "fontSize",
+  "expected": "29.4667px"
+ },
+ {
+  "selector": "home@desktop .writing-row",
+  "prop": "transitionDuration",
+  "expected": "0.3s"
+ },
+ {
+  "selector": "home@desktop .c-footer",
+  "prop": "marginTop",
+  "expected": "181.3333px"
+ },
+ {
+  "selector": "home@desktop .c-footer",
+  "prop": "fontSize",
+  "expected": "29.4667px"
+ },
+ {
+  "selector": "home@desktop .c-footer",
+  "prop": "paddingLeft",
+  "expected": "45.3333px"
+ },
+ {
+  "selector": "home@desktop .c-footer__big",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "home@desktop .c-footer__copy",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@desktop .c-footer__copy",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "home@tablet html",
+  "prop": "backgroundColor",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "home@tablet html",
+  "prop": "fontSize",
+  "expected": "15px"
+ },
+ {
+  "selector": "home@tablet html",
+  "prop": "color",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "home@tablet body",
+  "prop": "backgroundColor",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "home@tablet .c-footer__list a",
+  "prop": "fontFamily",
+  "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif"
+ },
+ {
+  "selector": "home@tablet .c-footer__list a",
+  "prop": "fontSize",
+  "expected": "24px"
+ },
+ {
+  "selector": "home@tablet .c-footer__list a",
+  "prop": "textUnderlineOffset",
+  "expected": "2.4px"
+ },
+ {
+  "selector": "home@tablet .c-footer__list a",
+  "prop": "textDecorationThickness",
+  "expected": "1px"
+ },
+ {
+  "selector": "home@tablet .story__stage",
+  "prop": "position",
+  "expected": "sticky"
+ },
+ {
+  "selector": "home@tablet .story__stage",
+  "prop": "top",
+  "expected": "0px"
+ },
+ {
+  "selector": "home@tablet .field",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "home@tablet .story__cue",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@tablet .story__cue",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "home@tablet .story__line",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@tablet .story__n",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@tablet .story__n",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "home@tablet .dg-label",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@tablet .writing__title",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "home@tablet .writing__title",
+  "prop": "fontSize",
+  "expected": "50px"
+ },
+ {
+  "selector": "home@tablet .writing-row",
+  "prop": "borderBottomWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "home@tablet .writing-row",
+  "prop": "fontSize",
+  "expected": "24px"
+ },
+ {
+  "selector": "home@tablet .writing-row",
+  "prop": "transitionDuration",
+  "expected": "0.3s"
+ },
+ {
+  "selector": "home@tablet .c-footer",
+  "prop": "marginTop",
+  "expected": "160px"
+ },
+ {
+  "selector": "home@tablet .c-footer",
+  "prop": "fontSize",
+  "expected": "24px"
+ },
+ {
+  "selector": "home@tablet .c-footer",
+  "prop": "paddingLeft",
+  "expected": "20px"
+ },
+ {
+  "selector": "home@tablet .c-footer__big",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "home@tablet .c-footer__copy",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@tablet .c-footer__copy",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "home@mobile html",
+  "prop": "backgroundColor",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "home@mobile html",
+  "prop": "fontSize",
+  "expected": "15px"
+ },
+ {
+  "selector": "home@mobile html",
+  "prop": "color",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "home@mobile body",
+  "prop": "backgroundColor",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "home@mobile .c-footer__list a",
+  "prop": "fontFamily",
+  "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif"
+ },
+ {
+  "selector": "home@mobile .c-footer__list a",
+  "prop": "fontSize",
+  "expected": "18px"
+ },
+ {
+  "selector": "home@mobile .c-footer__list a",
+  "prop": "textUnderlineOffset",
+  "expected": "1.8px"
+ },
+ {
+  "selector": "home@mobile .c-footer__list a",
+  "prop": "textDecorationThickness",
+  "expected": "1px"
+ },
+ {
+  "selector": "home@mobile .story__stage",
+  "prop": "position",
+  "expected": "sticky"
+ },
+ {
+  "selector": "home@mobile .story__stage",
+  "prop": "top",
+  "expected": "0px"
+ },
+ {
+  "selector": "home@mobile .field",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "home@mobile .story__cue",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@mobile .story__cue",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "home@mobile .story__line",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@mobile .story__n",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@mobile .story__n",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "home@mobile .dg-label",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@mobile .writing__title",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "home@mobile .writing__title",
+  "prop": "fontSize",
+  "expected": "36px"
+ },
+ {
+  "selector": "home@mobile .writing-row",
+  "prop": "borderBottomWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "home@mobile .writing-row",
+  "prop": "fontSize",
+  "expected": "18px"
+ },
+ {
+  "selector": "home@mobile .writing-row",
+  "prop": "transitionDuration",
+  "expected": "0.3s"
+ },
+ {
+  "selector": "home@mobile .c-footer",
+  "prop": "marginTop",
+  "expected": "160px"
+ },
+ {
+  "selector": "home@mobile .c-footer",
+  "prop": "fontSize",
+  "expected": "18px"
+ },
+ {
+  "selector": "home@mobile .c-footer",
+  "prop": "paddingLeft",
+  "expected": "20px"
+ },
+ {
+  "selector": "home@mobile .c-footer__big",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "home@mobile .c-footer__copy",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "home@mobile .c-footer__copy",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "essay@desktop .essay-body > p",
+  "prop": "fontFamily",
+  "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif"
+ },
+ {
+  "selector": "essay@desktop .essay-body > p",
+  "prop": "fontSize",
+  "expected": "25.74px"
+ },
+ {
+  "selector": "essay@desktop .essay-body > p",
+  "prop": "lineHeight",
+  "expected": "35.0064px"
+ },
+ {
+  "selector": "essay@desktop .essay-body > p",
+  "prop": "marginBottom",
+  "expected": "32.9472px"
+ },
+ {
+  "selector": "essay@desktop .essay-body > p",
+  "prop": "color",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "essay@desktop .essay-body > p",
+  "prop": "fontWeight",
+  "expected": "400"
+ },
+ {
+  "selector": "essay@desktop .essay-body h2",
+  "prop": "fontFamily",
+  "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif"
+ },
+ {
+  "selector": "essay@desktop .essay-body h2",
+  "prop": "fontSize",
+  "expected": "43.56px"
+ },
+ {
+  "selector": "essay@desktop .essay-body h2",
+  "prop": "lineHeight",
+  "expected": "50.094px"
+ },
+ {
+  "selector": "essay@desktop .essay-body h2",
+  "prop": "fontWeight",
+  "expected": "700"
+ },
+ {
+  "selector": "essay@desktop .essay-body h2",
+  "prop": "color",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "essay@desktop .essay-head__title",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "essay@desktop .essay-head__title",
+  "prop": "fontSize",
+  "expected": "93.6px"
+ },
+ {
+  "selector": "essay@desktop .essay-head__title",
+  "prop": "lineHeight",
+  "expected": "93.6px"
+ },
+ {
+  "selector": "essay@desktop .essay-head__title",
+  "prop": "fontWeight",
+  "expected": "400"
+ },
+ {
+  "selector": "essay@desktop .essay-head__kicker",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "essay@desktop .essay-head__kicker",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "essay@desktop .essay-head__kicker",
+  "prop": "fontSize",
+  "expected": "18px"
+ },
+ {
+  "selector": "essay@desktop .h-marker",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "essay@desktop .h-marker",
+  "prop": "fontSize",
+  "expected": "18px"
+ },
+ {
+  "selector": "essay@desktop .h-marker",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "essay@desktop .sidenote",
+  "prop": "fontSize",
+  "expected": "18px"
+ },
+ {
+  "selector": "essay@desktop .sidenote",
+  "prop": "lineHeight",
+  "expected": "23.04px"
+ },
+ {
+  "selector": "essay@desktop .sidenote",
+  "prop": "backgroundColor",
+  "expected": "rgb(242, 242, 239)"
+ },
+ {
+  "selector": "essay@desktop .sidenote",
+  "prop": "borderTopLeftRadius",
+  "expected": "6.375px"
+ },
+ {
+  "selector": "essay@desktop .note-ref",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "essay@desktop .note-ref",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "essay@desktop .note-ref",
+  "prop": "borderTopLeftRadius",
+  "expected": "2.125px"
+ },
+ {
+  "selector": "essay@desktop .term",
+  "prop": "backgroundColor",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "essay@desktop .term",
+  "prop": "color",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "essay@desktop .term",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "essay@desktop .term",
+  "prop": "borderTopLeftRadius",
+  "expected": "2.125px"
+ },
+ {
+  "selector": "essay@desktop .term",
+  "prop": "paddingLeft",
+  "expected": "4.25px"
+ },
+ {
+  "selector": "essay@desktop .essay-body .pullquote",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "essay@desktop .essay-body .pullquote",
+  "prop": "fontSize",
+  "expected": "56.52px"
+ },
+ {
+  "selector": "essay@desktop .essay-body .pullquote",
+  "prop": "lineHeight",
+  "expected": "62.172px"
+ },
+ {
+  "selector": "essay@desktop .essay-body .pullquote",
+  "prop": "borderTopWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "essay@desktop .fig__cap",
+  "prop": "fontSize",
+  "expected": "15.426px"
+ },
+ {
+  "selector": "essay@desktop .fig__cap",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "essay@desktop .fig__plate",
+  "prop": "borderTopLeftRadius",
+  "expected": "6.375px"
+ },
+ {
+  "selector": "essay@desktop .fig__plate",
+  "prop": "borderTopWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "essay@desktop .next-essay",
+  "prop": "transitionDuration",
+  "expected": "0.1s, 0.3s"
+ },
+ {
+  "selector": "essay@desktop .next-essay__title",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "essay@desktop .next-essay__title",
+  "prop": "fontSize",
+  "expected": "56.52px"
+ },
+ {
+  "selector": "essay@desktop .rail-card",
+  "prop": "borderTopLeftRadius",
+  "expected": "6.375px"
+ },
+ {
+  "selector": "essay@desktop .rail-card",
+  "prop": "backgroundColor",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "essay@desktop .essay-body",
+  "prop": "width",
+  "expected": "912.75px"
+ },
+ {
+  "selector": "essay@desktop .essay-body .sidenote",
+  "prop": "position",
+  "expected": "absolute"
+ },
+ {
+  "selector": "essay@desktop .essay-body .sidenote",
+  "prop": "width",
+  "expected": "436.125px"
+ },
+ {
+  "selector": "essay@desktop .essay-body .sidenote",
+  "prop": "transitionDuration",
+  "expected": "0.18s, 0.18s"
+ },
+ {
+  "selector": "essay@desktop .essay-body .sidenote",
+  "prop": "transitionTimingFunction",
+  "expected": "cubic-bezier(0.23, 1, 0.32, 1), cubic-bezier(0.23, 1, 0.32, 1)"
+ },
+ {
+  "selector": "essay@desktop .essay-body .pullquote",
+  "prop": "width",
+  "expected": "1389.375px"
+ },
+ {
+  "selector": "essay@desktop .essay-rail",
+  "prop": "position",
+  "expected": "sticky"
+ },
+ {
+  "selector": "essay@tablet .essay-body > p",
+  "prop": "fontFamily",
+  "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif"
+ },
+ {
+  "selector": "essay@tablet .essay-body > p",
+  "prop": "fontSize",
+  "expected": "20.02px"
+ },
+ {
+  "selector": "essay@tablet .essay-body > p",
+  "prop": "lineHeight",
+  "expected": "27.2272px"
+ },
+ {
+  "selector": "essay@tablet .essay-body > p",
+  "prop": "marginBottom",
+  "expected": "25.6256px"
+ },
+ {
+  "selector": "essay@tablet .essay-body > p",
+  "prop": "color",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "essay@tablet .essay-body > p",
+  "prop": "fontWeight",
+  "expected": "400"
+ },
+ {
+  "selector": "essay@tablet .essay-body h2",
+  "prop": "fontFamily",
+  "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif"
+ },
+ {
+  "selector": "essay@tablet .essay-body h2",
+  "prop": "fontSize",
+  "expected": "33.88px"
+ },
+ {
+  "selector": "essay@tablet .essay-body h2",
+  "prop": "lineHeight",
+  "expected": "38.962px"
+ },
+ {
+  "selector": "essay@tablet .essay-body h2",
+  "prop": "fontWeight",
+  "expected": "700"
+ },
+ {
+  "selector": "essay@tablet .essay-body h2",
+  "prop": "color",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "essay@tablet .essay-head__title",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "essay@tablet .essay-head__title",
+  "prop": "fontSize",
+  "expected": "72.8px"
+ },
+ {
+  "selector": "essay@tablet .essay-head__title",
+  "prop": "lineHeight",
+  "expected": "72.8px"
+ },
+ {
+  "selector": "essay@tablet .essay-head__title",
+  "prop": "fontWeight",
+  "expected": "400"
+ },
+ {
+  "selector": "essay@tablet .essay-head__kicker",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "essay@tablet .essay-head__kicker",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "essay@tablet .essay-head__kicker",
+  "prop": "fontSize",
+  "expected": "14px"
+ },
+ {
+  "selector": "essay@tablet .h-marker",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "essay@tablet .h-marker",
+  "prop": "fontSize",
+  "expected": "14px"
+ },
+ {
+  "selector": "essay@tablet .h-marker",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "essay@tablet .sidenote",
+  "prop": "fontSize",
+  "expected": "14px"
+ },
+ {
+  "selector": "essay@tablet .sidenote",
+  "prop": "lineHeight",
+  "expected": "17.92px"
+ },
+ {
+  "selector": "essay@tablet .sidenote",
+  "prop": "backgroundColor",
+  "expected": "rgb(242, 242, 239)"
+ },
+ {
+  "selector": "essay@tablet .sidenote",
+  "prop": "borderTopLeftRadius",
+  "expected": "5.625px"
+ },
+ {
+  "selector": "essay@tablet .note-ref",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "essay@tablet .note-ref",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "essay@tablet .note-ref",
+  "prop": "borderTopLeftRadius",
+  "expected": "1.875px"
+ },
+ {
+  "selector": "essay@tablet .term",
+  "prop": "backgroundColor",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "essay@tablet .term",
+  "prop": "color",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "essay@tablet .term",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "essay@tablet .term",
+  "prop": "borderTopLeftRadius",
+  "expected": "1.875px"
+ },
+ {
+  "selector": "essay@tablet .term",
+  "prop": "paddingLeft",
+  "expected": "3.75px"
+ },
+ {
+  "selector": "essay@tablet .essay-body .pullquote",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "essay@tablet .essay-body .pullquote",
+  "prop": "fontSize",
+  "expected": "43.96px"
+ },
+ {
+  "selector": "essay@tablet .essay-body .pullquote",
+  "prop": "lineHeight",
+  "expected": "48.356px"
+ },
+ {
+  "selector": "essay@tablet .essay-body .pullquote",
+  "prop": "borderTopWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "essay@tablet .fig__cap",
+  "prop": "fontSize",
+  "expected": "11.998px"
+ },
+ {
+  "selector": "essay@tablet .fig__cap",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "essay@tablet .fig__plate",
+  "prop": "borderTopLeftRadius",
+  "expected": "5.625px"
+ },
+ {
+  "selector": "essay@tablet .fig__plate",
+  "prop": "borderTopWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "essay@tablet .next-essay",
+  "prop": "transitionDuration",
+  "expected": "0.1s, 0.3s"
+ },
+ {
+  "selector": "essay@tablet .next-essay__title",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "essay@tablet .next-essay__title",
+  "prop": "fontSize",
+  "expected": "43.96px"
+ },
+ {
+  "selector": "essay@tablet .rail-card",
+  "prop": "borderTopLeftRadius",
+  "expected": "5.625px"
+ },
+ {
+  "selector": "essay@tablet .rail-card",
+  "prop": "backgroundColor",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "essay@tablet .essay-body .sidenote",
+  "prop": "position",
+  "expected": "relative"
+ },
+ {
+  "selector": "essay@mobile .essay-body > p",
+  "prop": "fontFamily",
+  "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif"
+ },
+ {
+  "selector": "essay@mobile .essay-body > p",
+  "prop": "fontSize",
+  "expected": "17.16px"
+ },
+ {
+  "selector": "essay@mobile .essay-body > p",
+  "prop": "lineHeight",
+  "expected": "23.3376px"
+ },
+ {
+  "selector": "essay@mobile .essay-body > p",
+  "prop": "marginBottom",
+  "expected": "21.9648px"
+ },
+ {
+  "selector": "essay@mobile .essay-body > p",
+  "prop": "color",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "essay@mobile .essay-body > p",
+  "prop": "fontWeight",
+  "expected": "400"
+ },
+ {
+  "selector": "essay@mobile .essay-body h2",
+  "prop": "fontFamily",
+  "expected": "\"Inter Tight Variable\", \"Helvetica Neue\", Arial, sans-serif"
+ },
+ {
+  "selector": "essay@mobile .essay-body h2",
+  "prop": "fontSize",
+  "expected": "29.04px"
+ },
+ {
+  "selector": "essay@mobile .essay-body h2",
+  "prop": "lineHeight",
+  "expected": "33.396px"
+ },
+ {
+  "selector": "essay@mobile .essay-body h2",
+  "prop": "fontWeight",
+  "expected": "700"
+ },
+ {
+  "selector": "essay@mobile .essay-body h2",
+  "prop": "color",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "essay@mobile .essay-head__title",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "essay@mobile .essay-head__title",
+  "prop": "fontSize",
+  "expected": "62.4px"
+ },
+ {
+  "selector": "essay@mobile .essay-head__title",
+  "prop": "lineHeight",
+  "expected": "62.4px"
+ },
+ {
+  "selector": "essay@mobile .essay-head__title",
+  "prop": "fontWeight",
+  "expected": "400"
+ },
+ {
+  "selector": "essay@mobile .essay-head__kicker",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "essay@mobile .essay-head__kicker",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "essay@mobile .essay-head__kicker",
+  "prop": "fontSize",
+  "expected": "12px"
+ },
+ {
+  "selector": "essay@mobile .h-marker",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "essay@mobile .h-marker",
+  "prop": "fontSize",
+  "expected": "12px"
+ },
+ {
+  "selector": "essay@mobile .h-marker",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "essay@mobile .sidenote",
+  "prop": "fontSize",
+  "expected": "12px"
+ },
+ {
+  "selector": "essay@mobile .sidenote",
+  "prop": "lineHeight",
+  "expected": "15.36px"
+ },
+ {
+  "selector": "essay@mobile .sidenote",
+  "prop": "backgroundColor",
+  "expected": "rgb(242, 242, 239)"
+ },
+ {
+  "selector": "essay@mobile .sidenote",
+  "prop": "borderTopLeftRadius",
+  "expected": "5.625px"
+ },
+ {
+  "selector": "essay@mobile .note-ref",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "essay@mobile .note-ref",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "essay@mobile .note-ref",
+  "prop": "borderTopLeftRadius",
+  "expected": "1.875px"
+ },
+ {
+  "selector": "essay@mobile .term",
+  "prop": "backgroundColor",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "essay@mobile .term",
+  "prop": "color",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "essay@mobile .term",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "essay@mobile .term",
+  "prop": "borderTopLeftRadius",
+  "expected": "1.875px"
+ },
+ {
+  "selector": "essay@mobile .term",
+  "prop": "paddingLeft",
+  "expected": "3.75px"
+ },
+ {
+  "selector": "essay@mobile .essay-body .pullquote",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "essay@mobile .essay-body .pullquote",
+  "prop": "fontSize",
+  "expected": "37.68px"
+ },
+ {
+  "selector": "essay@mobile .essay-body .pullquote",
+  "prop": "lineHeight",
+  "expected": "41.448px"
+ },
+ {
+  "selector": "essay@mobile .essay-body .pullquote",
+  "prop": "borderTopWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "essay@mobile .fig__cap",
+  "prop": "fontSize",
+  "expected": "10.284px"
+ },
+ {
+  "selector": "essay@mobile .fig__cap",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "essay@mobile .fig__plate",
+  "prop": "borderTopLeftRadius",
+  "expected": "5.625px"
+ },
+ {
+  "selector": "essay@mobile .fig__plate",
+  "prop": "borderTopWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "essay@mobile .next-essay",
+  "prop": "transitionDuration",
+  "expected": "0.1s, 0.3s"
+ },
+ {
+  "selector": "essay@mobile .next-essay__title",
+  "prop": "fontFamily",
+  "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
+ },
+ {
+  "selector": "essay@mobile .next-essay__title",
+  "prop": "fontSize",
+  "expected": "37.68px"
+ },
+ {
+  "selector": "essay@mobile .rail-card",
+  "prop": "borderTopLeftRadius",
+  "expected": "5.625px"
+ },
+ {
+  "selector": "essay@mobile .rail-card",
+  "prop": "backgroundColor",
+  "expected": "rgb(250, 250, 248)"
+ },
+ {
+  "selector": "essay@mobile .essay-body .sidenote",
+  "prop": "position",
+  "expected": "relative"
+ },
+ {
+  "selector": "index@desktop .index-band__field",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "index@desktop .index-band__field",
+  "prop": "position",
+  "expected": "absolute"
+ },
+ {
+  "selector": "index@desktop .index-band__count",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "index@desktop .index-band__count",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "index@desktop .index-row",
+  "prop": "fontSize",
+  "expected": "29.4667px"
+ },
+ {
+  "selector": "index@desktop .index-row",
+  "prop": "borderBottomWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "index@desktop .index-row",
+  "prop": "borderBottomColor",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "index@desktop .index-row",
+  "prop": "transitionDuration",
+  "expected": "0.3s, 0.1s"
+ },
+ {
+  "selector": "index@desktop .index-row__glyph",
+  "prop": "transitionDuration",
+  "expected": "0.2s"
+ },
+ {
+  "selector": "index@desktop .index-row__glyph",
+  "prop": "transitionTimingFunction",
+  "expected": "cubic-bezier(0.23, 1, 0.32, 1)"
+ },
+ {
+  "selector": "index@desktop .index-row__date",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "index@desktop .index-row__date",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "index@desktop .index-row__dek",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "index@tablet .index-band__field",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "index@tablet .index-band__field",
+  "prop": "position",
+  "expected": "absolute"
+ },
+ {
+  "selector": "index@tablet .index-band__count",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "index@tablet .index-band__count",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "index@tablet .index-row",
+  "prop": "fontSize",
+  "expected": "24px"
+ },
+ {
+  "selector": "index@tablet .index-row",
+  "prop": "borderBottomWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "index@tablet .index-row",
+  "prop": "borderBottomColor",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "index@tablet .index-row",
+  "prop": "transitionDuration",
+  "expected": "0.3s, 0.1s"
+ },
+ {
+  "selector": "index@tablet .index-row__glyph",
+  "prop": "transitionDuration",
+  "expected": "0.2s"
+ },
+ {
+  "selector": "index@tablet .index-row__glyph",
+  "prop": "transitionTimingFunction",
+  "expected": "cubic-bezier(0.23, 1, 0.32, 1)"
+ },
+ {
+  "selector": "index@tablet .index-row__date",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "index@tablet .index-row__date",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "index@tablet .index-row__dek",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "index@mobile .index-band__field",
+  "prop": "cursor",
+  "expected": "crosshair"
+ },
+ {
+  "selector": "index@mobile .index-band__field",
+  "prop": "position",
+  "expected": "absolute"
+ },
+ {
+  "selector": "index@mobile .index-band__count",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "index@mobile .index-band__count",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "index@mobile .index-row",
+  "prop": "fontSize",
+  "expected": "18px"
+ },
+ {
+  "selector": "index@mobile .index-row",
+  "prop": "borderBottomWidth",
+  "expected": "1px"
+ },
+ {
+  "selector": "index@mobile .index-row",
+  "prop": "borderBottomColor",
+  "expected": "rgb(13, 13, 12)"
+ },
+ {
+  "selector": "index@mobile .index-row",
+  "prop": "transitionDuration",
+  "expected": "0.3s, 0.1s"
+ },
+ {
+  "selector": "index@mobile .index-row__glyph",
+  "prop": "transitionDuration",
+  "expected": "0.2s"
+ },
+ {
+  "selector": "index@mobile .index-row__glyph",
+  "prop": "transitionTimingFunction",
+  "expected": "cubic-bezier(0.23, 1, 0.32, 1)"
+ },
+ {
+  "selector": "index@mobile .index-row__date",
+  "prop": "fontFamily",
+  "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
+ },
+ {
+  "selector": "index@mobile .index-row__date",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ },
+ {
+  "selector": "index@mobile .index-row__dek",
+  "prop": "color",
+  "expected": "rgb(86, 86, 79)"
+ }
+]

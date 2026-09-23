@@ -1,0 +1,91 @@
+---
+// Plotter plates: one diagram, drawn in four figures as you scroll. Every element carries its start time
+// (data-p, in figure units 0–4) and duration (data-d); scripts/plates.ts builds a scrubbed timeline from them.
+// kinds: draw (stroke draws in) · fade · hatch (fill sweeps in) · boundary (fades in, then contracts at data-keys "t:r,…")
+// data-out: time at which an element draws/fades back out
+const figs = [
+  { n: 1, title: 'The firm', line: 'A firm is a boundary drawn around work that is cheaper to coordinate inside than outside.' },
+  { n: 2, title: 'Automation', line: 'When a routine can run by itself, it leaves the boundary.' },
+  { n: 3, title: 'Diffusion', line: 'Once detached, the same routine can enter every other firm.' },
+  { n: 4, title: 'Reorganisation', line: 'Each boundary is redrawn around what remains.' },
+];
+const head = (x: number, y: number, deg: number) => {
+  const a = (deg * Math.PI) / 180, l = 13, w = 0.42;
+  const p1 = [x - l * Math.cos(a - w), y - l * Math.sin(a - w)], p2 = [x - l * Math.cos(a + w), y - l * Math.sin(a + w)];
+  return `M${p1[0].toFixed(1)} ${p1[1].toFixed(1)} L${x} ${y} L${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+};
+const hatch = (cx: number, cy: number, r: number, gap = 7) => {
+  let d = '';
+  for (let k = -r * 2; k <= r * 2; k += gap) d += `M${cx + k - r} ${cy + r} L${cx + k + r} ${cy - r} `;
+  return d;
+};
+const circ = (cx: number, cy: number, r: number) => `M${cx - r} ${cy} a${r} ${r} 0 1 0 ${r * 2} 0 a${r} ${r} 0 1 0 ${-r * 2} 0`;
+const A = { x: 560, y: 330, r: 108 }, B = { x: 1010, y: 175, r: 62 }, C = { x: 1030, y: 530, r: 72 }, N = { x: 360, y: 575, r: 34 };
+---
+<section class="plates" data-plates aria-label="Figures">
+  <div class="plates__pin">
+    <svg class="plates__svg" viewBox="0 0 1200 700" role="img" aria-label={figs.map((f) => `Figure ${f.n}, ${f.title}: ${f.line}`).join(' ')} data-plates-svg>
+      <defs>
+        <filter id="boil" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1" data-boil />
+          <feDisplacementMap in="SourceGraphic" scale="2.2" />
+        </filter>
+        {[A, B, C].map((f, i) => (<clipPath id={`clip${i}`}><circle cx={f.x} cy={f.y} r={f.r} /></clipPath>))}
+        {[A, B, C].map((f, i) => (<mask id={`sweep${i}`}><rect x={f.x - f.r} y={f.y - f.r} width={f.r * 2} height={f.r * 2} fill="#fff" data-sweep={i} /></mask>))}
+      </defs>
+      <g filter="url(#boil)" class="plates__ink">
+        <!-- FIG 1 · the firm -->
+        <path class="pl-line -thick" d={circ(A.x, A.y, A.r)} pathLength="1" data-k="draw" data-p="0.05" data-d="0.35" />
+        <g clip-path="url(#clip0)" mask="url(#sweep0)" data-k="hatch" data-p="0.3" data-d="0.35" data-i="0"><path class="pl-hatch" d={hatch(A.x, A.y, A.r)} /></g>
+        <circle class="pl-line -dash" cx={A.x} cy={A.y} r="150" data-k="boundary" data-p="0.35" data-d="0.25" data-keys="1.2:128,3.2:118" />
+        <g class="pl-chip" data-k="fade" data-p="0.45" data-d="0.15"><rect x={A.x - 46} y={A.y - 16} width="92" height="32" /><text x={A.x} y={A.y + 6} text-anchor="middle">FIRM</text></g>
+        <g data-k="fade" data-p="0.15" data-d="0.2"><text class="pl-label" x="160" y="238">LABOUR</text><text class="pl-label" x="160" y="336">JUDGEMENT</text></g>
+        <text class="pl-label" x="160" y="434" data-k="fade" data-p="0.15" data-d="0.2" data-out="1.1">ROUTINE</text>
+        <path class="pl-line" d="M300 230 L452 292" pathLength="1" data-k="draw" data-p="0.2" data-d="0.25" />
+        <path class="pl-line" d={head(452, 292, 22)} data-k="fade" data-p="0.44" data-d="0.05" />
+        <path class="pl-line" d="M318 330 L446 330" pathLength="1" data-k="draw" data-p="0.24" data-d="0.25" />
+        <path class="pl-line" d={head(446, 330, 0)} data-k="fade" data-p="0.48" data-d="0.05" />
+        <path class="pl-line" d="M300 428 L452 368" pathLength="1" data-k="draw" data-p="0.28" data-d="0.25" data-out="1.05" />
+        <path class="pl-line" d={head(452, 368, -22)} data-k="fade" data-p="0.52" data-d="0.05" data-out="1.05" />
+        <path class="pl-line" d="M672 330 L800 330" pathLength="1" data-k="draw" data-p="0.5" data-d="0.2" />
+        <path class="pl-line" d={head(800, 330, 0)} data-k="fade" data-p="0.68" data-d="0.05" />
+        <text class="pl-label" x="818" y="337" data-k="fade" data-p="0.62" data-d="0.15">OUTPUT</text>
+
+        <!-- FIG 2 · automation: the routine leaves the boundary -->
+        <path class="pl-line -signal -thick" d={circ(N.x, N.y, N.r)} pathLength="1" data-k="draw" data-p="1.15" data-d="0.3" />
+        <g class="pl-chip -signal" data-k="fade" data-p="1.35" data-d="0.15"><rect x={N.x - 62} y={N.y + 46} width="124" height="30" /><text x={N.x} y={N.y + 67} text-anchor="middle">ROUTINE</text></g>
+        <path class="pl-line -signal" d={`M${N.x + 30} ${N.y - 18} Q 450 500 ${A.x - 80} ${A.y + 74}`} pathLength="1" data-k="draw" data-p="1.4" data-d="0.3" />
+        <path class="pl-line -signal" d={head(A.x - 80, A.y + 74, -45)} data-k="fade" data-p="1.68" data-d="0.05" />
+        <text class="pl-note" x="178" y="512" data-k="fade" data-p="1.5" data-d="0.15">(OUTSIDE)</text>
+
+        <!-- FIG 3 · diffusion: the same routine enters other firms -->
+        {[B, C].map((f, i) => (
+          <g>
+            <path class="pl-line -thick" d={circ(f.x, f.y, f.r)} pathLength="1" data-k="draw" data-p={2.05 + i * 0.12} data-d="0.3" />
+            <g clip-path={`url(#clip${i + 1})`} mask={`url(#sweep${i + 1})`} data-k="hatch" data-p={2.25 + i * 0.12} data-d="0.3" data-i={i + 1}><path class="pl-hatch" d={hatch(f.x, f.y, f.r)} /></g>
+            <circle class="pl-line -dash" cx={f.x} cy={f.y} r={f.r + 36} data-k="boundary" data-p={2.3 + i * 0.12} data-d="0.25" data-keys={`${2.7 + i * 0.12}:${f.r + 22},3.25:${f.r + 12}`} />
+            <g class="pl-chip" data-k="fade" data-p={2.4 + i * 0.12} data-d="0.15"><rect x={f.x - 40} y={f.y - 15} width="80" height="30" /><text x={f.x} y={f.y + 6} text-anchor="middle">FIRM</text></g>
+          </g>
+        ))}
+        <path class="pl-line -signal" d={`M${N.x + 34} ${N.y + 6} C 620 690 860 660 ${C.x - C.r - 8} ${C.y + 20}`} pathLength="1" data-k="draw" data-p="2.5" data-d="0.35" />
+        <path class="pl-line -signal" d={head(C.x - C.r - 8, C.y + 20, -12)} data-k="fade" data-p="2.84" data-d="0.05" />
+        <path class="pl-line -signal" d={`M${N.x + 20} ${N.y - 28} C 230 110 720 40 ${B.x - B.r - 8} ${B.y + 6}`} pathLength="1" data-k="draw" data-p="2.6" data-d="0.35" />
+        <path class="pl-line -signal" d={head(B.x - B.r - 8, B.y + 6, 8)} data-k="fade" data-p="2.94" data-d="0.05" />
+
+        <!-- FIG 4 · reorganisation: boundaries redrawn; the firms are re-linked through what they now share -->
+        <path class="pl-line" d={`M${A.x + A.r * 0.8} ${A.y - A.r * 0.6} L${B.x - B.r * 0.8} ${B.y + B.r * 0.6}`} pathLength="1" data-k="draw" data-p="3.35" data-d="0.3" />
+        <path class="pl-line" d={`M${A.x + A.r * 0.85} ${A.y + A.r * 0.55} L${C.x - C.r * 0.85} ${C.y - C.r * 0.55}`} pathLength="1" data-k="draw" data-p="3.45" data-d="0.3" />
+        <path class="pl-line" d={`M${B.x} ${B.y + B.r} L${C.x} ${C.y - C.r}`} pathLength="1" data-k="draw" data-p="3.55" data-d="0.3" />
+        <text class="pl-note" x="760" y="438" data-k="fade" data-p="3.7" data-d="0.15">(REDRAWN)</text>
+      </g>
+    </svg>
+    <div class="plates__caption o-container" aria-hidden="true">
+      {figs.map((f, i) => (
+        <div class="plates__fig" data-fig={i}>
+          <p class="plates__n">FIG. {f.n} — {f.title.toUpperCase()}</p>
+          <p class="plates__line">{f.line.toUpperCase()}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

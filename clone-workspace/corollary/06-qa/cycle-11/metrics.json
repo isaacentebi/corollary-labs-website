@@ -1,0 +1,47 @@
+{
+  "cycle": 11,
+  "build_ok": true,
+  "style_assertions": {
+    "total": 276,
+    "passed": 270,
+    "failed": 6,
+    "failures": [
+      {
+        "selector": "home@desktop .c-footer__big .box",
+        "prop": "fontFamily",
+        "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+        "actual": null
+      },
+      {
+        "selector": "home@desktop .c-footer__big .box",
+        "prop": "borderTopWidth",
+        "expected": "1px",
+        "actual": null
+      },
+      {
+        "selector": "home@tablet .c-footer__big .box",
+        "prop": "fontFamily",
+        "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+        "actual": null
+      },
+      {
+        "selector": "home@tablet .c-footer__big .box",
+        "prop": "borderTopWidth",
+        "expected": "1px",
+        "actual": null
+      },
+      {
+        "selector": "home@mobile .c-footer__big .box",
+        "prop": "fontFamily",
+        "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+        "actual": null
+      },
+      {
+        "selector": "home@mobile .c-footer__big .box",
+        "prop": "borderTopWidth",
+        "expected": "1px",
+        "actual": null
+      }
+    ]
+  }
+}
