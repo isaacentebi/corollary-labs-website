@@ -33,8 +33,7 @@ for (const [vp, { w, root }] of Object.entries(VP)) {
   add(K('.story__line'), { fontFamily: MONO });
   add(K('.story__n'), { fontFamily: MONO, color: INK2 });
   add(K('.dg-label'), { fontFamily: MONO });
-  add(K('.writing__title'), { fontFamily: SERIF, fontSize: px(h1) });
-  add(K('.writing-row'), { borderBottomWidth: '1px', fontSize: px(medium), transitionDuration: '0.3s' });
+  add(K('.story__statement'), { fontFamily: SERIF, position: 'absolute' });
   add(K('.c-footer'), { marginTop: px(10.6666666667 * root), fontSize: px(medium), paddingLeft: px(margin) });
   add(K('.c-footer__big'), { fontFamily: SERIF });
   add(K('.c-footer__copy'), { fontFamily: MONO, color: INK2 });

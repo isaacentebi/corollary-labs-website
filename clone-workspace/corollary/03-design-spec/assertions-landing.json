@@ -85,29 +85,14 @@
   "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
  },
  {
-  "selector": "home@desktop .writing__title",
+  "selector": "home@desktop .story__statement",
   "prop": "fontFamily",
   "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
  },
  {
-  "selector": "home@desktop .writing__title",
-  "prop": "fontSize",
-  "expected": "79.3333px"
- },
- {
-  "selector": "home@desktop .writing-row",
-  "prop": "borderBottomWidth",
-  "expected": "1px"
- },
- {
-  "selector": "home@desktop .writing-row",
-  "prop": "fontSize",
-  "expected": "29.4667px"
- },
- {
-  "selector": "home@desktop .writing-row",
-  "prop": "transitionDuration",
-  "expected": "0.3s"
+  "selector": "home@desktop .story__statement",
+  "prop": "position",
+  "expected": "absolute"
  },
  {
   "selector": "home@desktop .c-footer",
@@ -225,29 +210,14 @@
   "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
  },
  {
-  "selector": "home@tablet .writing__title",
+  "selector": "home@tablet .story__statement",
   "prop": "fontFamily",
   "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
  },
  {
-  "selector": "home@tablet .writing__title",
-  "prop": "fontSize",
-  "expected": "50px"
- },
- {
-  "selector": "home@tablet .writing-row",
-  "prop": "borderBottomWidth",
-  "expected": "1px"
- },
- {
-  "selector": "home@tablet .writing-row",
-  "prop": "fontSize",
-  "expected": "24px"
- },
- {
-  "selector": "home@tablet .writing-row",
-  "prop": "transitionDuration",
-  "expected": "0.3s"
+  "selector": "home@tablet .story__statement",
+  "prop": "position",
+  "expected": "absolute"
  },
  {
   "selector": "home@tablet .c-footer",
@@ -365,29 +335,14 @@
   "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace"
  },
  {
-  "selector": "home@mobile .writing__title",
+  "selector": "home@mobile .story__statement",
   "prop": "fontFamily",
   "expected": "\"Instrument Serif\", \"Times New Roman\", serif"
  },
  {
-  "selector": "home@mobile .writing__title",
-  "prop": "fontSize",
-  "expected": "36px"
- },
- {
-  "selector": "home@mobile .writing-row",
-  "prop": "borderBottomWidth",
-  "expected": "1px"
- },
- {
-  "selector": "home@mobile .writing-row",
-  "prop": "fontSize",
-  "expected": "18px"
- },
- {
-  "selector": "home@mobile .writing-row",
-  "prop": "transitionDuration",
-  "expected": "0.3s"
+  "selector": "home@mobile .story__statement",
+  "prop": "position",
+  "expected": "absolute"
  },
  {
   "selector": "home@mobile .c-footer",

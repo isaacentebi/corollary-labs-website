@@ -10,6 +10,7 @@ const cur = (h: string) => (h === '/' ? path === '/' : path.startsWith(h)) ? 'pa
         <li><a href="/" aria-current={cur('/')}>Home</a></li>
         <li><a href="/essays/" aria-current={cur('/essays')}>Essays</a></li>
         <li><a href="/about/" aria-current={cur('/about')}>About</a></li>
+        <li><a href="/team/" aria-current={cur('/team')}>Team</a></li>
       </ul>
       <ul class="c-footer__list -b" data-reveal="lines">
         <li><a href="#top" data-to-top>Back to top ↑</a></li>

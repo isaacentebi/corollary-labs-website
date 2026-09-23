@@ -84,7 +84,11 @@ html.rm .plates__fig { position: static; opacity: 1; transform: none; margin-bot
 .story { position: relative; height: 1150svh; }
 .story__stage { position: sticky; top: 0; height: 100svh; overflow: hidden; }
 .story__layer { position: absolute; inset: 0; width: 100%; height: 100%; }
-.story__diagram { opacity: 0; overflow: visible; padding: 4vh 2vw 18vh; }
+/* the firm sits on the right; the statement and the figure captions on the left */
+.story__diagram { opacity: 0; overflow: visible; padding: 10vh 2.5vw 10vh 44vw; }
+.story__statement { position: absolute; left: var(--grid-margin); top: 16vh; width: 36vw; opacity: 0; pointer-events: none;
+  font-family: var(--font-serif); font-weight: 400; font-size: clamp(30px, 2.9vw, 54px); line-height: 1.04; letter-spacing: -0.005em; }
+.story__statement .ph { color: var(--ink-3); }
 .story__surface { opacity: 0; cursor: grab; }
 .dg-boundary { fill: none; stroke: var(--ink); stroke-width: 1; stroke-dasharray: 5 6; vector-effect: non-scaling-stroke; }
 .dg-link, .dg-head { fill: none; stroke: var(--ink); stroke-width: 1.3; vector-effect: non-scaling-stroke; }
@@ -94,7 +98,7 @@ html.rm .plates__fig { position: static; opacity: 1; transform: none; margin-bot
 .dg-node.-signal .dg-hatch { stroke: var(--signal); }
 .dg-label { font-family: var(--font-mono); font-size: 17px; letter-spacing: 0.05em; fill: var(--ink); }
 .dg-dot { fill: var(--ink); }
-.story__caption { position: absolute; left: 0; right: 0; bottom: var(--grid-margin); display: grid; pointer-events: none; }
+.story__caption { position: absolute; left: var(--grid-margin); width: 36vw; bottom: 14vh; display: grid; pointer-events: none; }
 .story__fig { grid-area: 1 / 1; justify-self: start; background: color-mix(in srgb, var(--paper) 92%, transparent); padding: 0.6em 0.8em 0.7em 0; box-shadow: -0.8em 0 0 color-mix(in srgb, var(--paper) 92%, transparent); opacity: 0; transform: translateY(8px); transition: opacity var(--d-450) var(--ease-out), transform var(--d-450) var(--ease-out); }
 .story__fig.is-active { opacity: 1; transform: none; }
 .story__term { color: var(--ink-3); }
@@ -103,11 +107,14 @@ html.rm .plates__fig { position: static; opacity: 1; transform: none; margin-bot
 .story__cue { position: absolute; left: 50%; bottom: calc(var(--grid-margin) * 0.75); transform: translateX(-50%); color: var(--ink-2); }
 @media (max-width: 699px) {
   .story { height: 1000svh; }
-  .story__diagram { padding: 10vh 0 30vh; }
+  .story__diagram { padding: 27svh 0 24svh; }
+  .story__statement { top: 9svh; right: var(--grid-margin); width: auto; font-size: 27px; }
+  .story__caption { right: var(--grid-margin); width: auto; bottom: var(--grid-margin); }
   .dg-label { font-size: 19px; }
   .dg-label.-small { font-size: 13px; }
 }
 html.rm .story { height: auto; }
+html.rm .story__statement { opacity: 1; }
 html.rm .story__stage { position: relative; height: 100svh; }
 
 .dg-form { fill: none; stroke: var(--ink); stroke-width: 1.7; vector-effect: non-scaling-stroke; }

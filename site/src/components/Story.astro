@@ -1,6 +1,6 @@
 ---
 // The home page is one story on one stage, told at three zoom levels:
-//   field (every node is a firm) → dive into one node → the firm, figs 1–4 → pull back → diffusion, fig 5
+//   field (every node is a firm) → dive into one node → the statement beside the firm, figs 1–4 → pull back → diffusion, fig 5
 //   → the whole lattice lifts into 3D and changes shape (homotopy coda).
 // scripts/story.ts drives everything from one scroll progress.
 import { site } from '../config/site';
@@ -30,7 +30,10 @@ export const figs: { n: number; title: string; lines: string[] }[] = [
       <g data-dg><g filter="url(#boil)" data-ink></g></g>
     </svg>
     <canvas class="story__layer story__surface" data-surface aria-hidden="true"></canvas>
-    <div class="story__caption o-container" aria-hidden="true">
+    <p class="story__statement">
+      {site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span>
+    </p>
+    <div class="story__caption" aria-hidden="true">
       {figs.map((f, i) => (
         <div class="story__fig" data-fig={i}>
           <p class="story__n">FIG. {f.n} — {f.title.toUpperCase()}</p>

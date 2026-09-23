@@ -289,7 +289,8 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
   const cS = sec.querySelector<HTMLCanvasElement>('[data-surface]')!;
   const figs = [...sec.querySelectorAll<HTMLElement>('[data-fig]')];
   const cue = sec.querySelector<HTMLElement>('[data-hero-scroll]');
-  svg.setAttribute('viewBox', mobile() ? '250 -50 620 720' : '150 30 900 660'); // crop to the firm
+  const stmt = sec.querySelector<HTMLElement>('.story__statement');
+  svg.setAttribute('viewBox', mobile() ? '295 -20 500 690' : '175 140 830 420'); // crop to the firm
 
   const opts = { spacing: mobile() ? 20 : 26, seed: 11 };
   const A = new DiffusionField(cA, { ...opts, mode: 'progress', staticT: 0.34, word: true, global: true, seeds: [[0.14, 0.34], [0.62, 0.2], [0.86, 0.58], [0.4, 0.82]] });
@@ -306,7 +307,7 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
 
   if (RM) {
     D.tl.progress(1); D.render();
-    cB.style.opacity = '0'; cS.style.opacity = '0'; svg.style.opacity = '1';
+    cB.style.opacity = '0'; cS.style.opacity = '0'; svg.style.opacity = '1'; if (stmt) stmt.style.opacity = '1';
     figs.forEach((f) => f.classList.add('is-active'));
     return;
   }
@@ -345,6 +346,8 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
     const ox = p < P.back[0] ? F.x : bc.x, oy = p < P.back[0] ? F.y : bc.y;
     dg.setAttribute('transform', `translate(${(ox + tx).toFixed(2)} ${(oy + ty).toFixed(2)}) scale(${s.toFixed(4)}) translate(${-ox} ${-oy})`);
     svg.style.opacity = String(inFirm ? dop : 0);
+    // the statement sits beside the firm while it is on screen
+    if (stmt) stmt.style.opacity = String(inFirm ? sm(seg(dive, 0.55, 1)) * (1 - sm(seg(back, 0, 0.35))) : 0);
     // figs 1–4 time
     D.tl.progress(seg(p, P.dive[0] + 0.02, P.figs[1]));
     if (p < P.back[0]) D.S.fa = Math.max(D.S.fa, sm(seg(dive, 0, 0.25))); // the node's outline is the firm's boundary from the start
