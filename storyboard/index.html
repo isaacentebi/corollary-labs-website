@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagram Storyboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#FAFAF8; --ink:#0D0D0C; --ink2:#56564F; --ink3:#8E8E86; --rule:#D9D9D3; --signal:#00A15C; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:"Space Mono", ui-monospace, monospace; }
+  main { max-width: 980px; margin: 0 auto; padding: 48px 16px 96px; }
+  h1 { font-family:"Instrument Serif", serif; font-weight:400; font-size: clamp(40px, 7vw, 72px); line-height:1; margin:0 0 12px; }
+  .lede { color:var(--ink2); font-size:13px; line-height:1.6; max-width: 60em; margin:0 0 48px; }
+  .frame { border-top:1px solid var(--ink); padding: 18px 0 40px; }
+  .n { font-size:12px; letter-spacing:.06em; color:var(--ink2); margin:0 0 10px; }
+  svg { width:100%; height:auto; display:block; }
+  .what { font-size:13px; line-height:1.6; margin:14px 0 8px; max-width: 62em; }
+  .src { font-size:11px; line-height:1.6; color:var(--ink3); margin:0; max-width: 70em; }
+  .src b { color:var(--ink2); font-weight:400; }
+  /* diagram */
+  .lbl { font-family:"Space Mono", monospace; font-size:13px; letter-spacing:.05em; fill:var(--ink); }
+  .lbl.s { font-size:10.5px; }
+  .lbl.g { fill:var(--signal); } .lbl.d { fill:var(--ink3); }
+  .ln { fill:none; stroke:var(--ink); stroke-width:1.3; }
+  .ln.t { stroke-width:.9; }
+  .ln.g { stroke:var(--signal); } .ln.d { stroke:var(--ink3); stroke-dasharray:3 4; }
+  .wall { fill:url(#hatch); stroke:var(--ink); stroke-width:1.6; }
+  .wall.old { fill:none; stroke:var(--ink3); stroke-dasharray:4 5; stroke-width:1; }
+  .st { fill:var(--paper); stroke:var(--ink); stroke-width:1.3; }
+  .st.g { stroke:var(--signal); } .st.d { stroke:var(--ink3); stroke-dasharray:3 3; }
+  .chip { fill:var(--paper); stroke:var(--ink); stroke-width:1; }
+  .chip.d { stroke:var(--ink3); stroke-dasharray:3 3; }
+  .dot { fill:var(--ink); } .dot.g { fill:var(--signal); }
+  .x { stroke:var(--ink3); stroke-width:1.2; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Storyboard</h1>
+  <p class="lede">Five static frames for the home-page diagram, drawn before any animation so we can agree on the picture first. The only green thing is automation: the agent, and whatever it touches. Grey dashed means dying. Each frame lists which earlier design it borrows from and which source idea it draws.</p>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+        <line x1="0" y1="0" x2="0" y2="9" stroke="#0D0D0C" stroke-width=".6" opacity=".35"/>
+      </pattern>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9" fill="none" stroke="#0D0D0C" stroke-width="1.3"/></marker>
+      <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9" fill="none" stroke="#00A15C" stroke-width="1.3"/></marker>
+      <marker id="ahd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 1 L9 5 L0 9" fill="none" stroke="#8E8E86" stroke-width="1.3"/></marker>
+    </defs>
+  </svg>
+
+  <!-- FIG 1 -->
+  <section class="frame">
+    <p class="n">FIG. 1 — THE FIRM</p>
+    <svg viewBox="0 0 800 400" role="img" aria-label="Inputs flow into a firm, through three people in a line, out as output A. Every person is tied to one coordination centre by a bundle of instructions.">
+      <rect class="wall" x="200" y="90" width="400" height="240"/>
+      <rect class="chip" x="222" y="76" width="70" height="26"/><text class="lbl" x="257" y="94" text-anchor="middle" font-weight="700">FIRM</text>
+      <text class="lbl" x="40" y="168">INPUTS</text>
+      <line class="ln" x1="40" y1="180" x2="262" y2="180" marker-end="url(#ah)"/>
+      <line class="ln" x1="294" y1="180" x2="382" y2="180" marker-end="url(#ah)"/>
+      <line class="ln" x1="414" y1="180" x2="502" y2="180" marker-end="url(#ah)"/>
+      <line class="ln" x1="534" y1="180" x2="760" y2="180" marker-end="url(#ah)"/>
+      <text class="lbl" x="760" y="168" text-anchor="end">OUTPUT A</text>
+      <circle class="st" cx="278" cy="180" r="15"/><circle class="st" cx="398" cy="180" r="15"/><circle class="st" cx="518" cy="180" r="15"/>
+      <!-- instruction bundles -->
+      <g class="ln t"><path d="M346 272 L275 196 M353 272 L281 196 M360 272 L287 196"/><path d="M393 272 L393 196 M400 272 L400 196 M407 272 L407 196"/><path d="M440 272 L509 196 M447 272 L515 196 M454 272 L521 196"/></g>
+      <rect class="chip" x="320" y="272" width="160" height="28"/><text class="lbl" x="400" y="291" text-anchor="middle">COORDINATION</text>
+      <text class="lbl s d" x="548" y="244">INSTRUCTIONS</text>
+      <circle class="dot" cx="140" cy="180" r="3"/><circle class="dot" cx="340" cy="180" r="3"/><circle class="dot" cx="650" cy="180" r="3"/>
+    </svg>
+    <p class="what">Work comes in, passes from person to person, and leaves as one output. Every step is told what to do by one centre: the bundles are instructions. The layout is built around that centre, like machines belted to a steam engine's line shaft.</p>
+    <p class="src"><b>Borrowed from:</b> the hatched firm and the throughput dots (v1) · inputs and outputs (the new-combination design). <b>Source:</b> David, the line-shaft factory · Superdark, a firm is defined by its inputs and outputs.</p>
+  </section>
+
+  <!-- FIG 2 -->
+  <section class="frame">
+    <p class="n">FIG. 2 — AUTOMATION ENTERS</p>
+    <svg viewBox="0 0 800 400" role="img" aria-label="A green automation line enters the firm from above and becomes an agent at the middle step. The person at that step stands aside. The wiring and the output are unchanged.">
+      <rect class="wall" x="200" y="90" width="400" height="240"/>
+      <rect class="chip" x="222" y="76" width="70" height="26"/><text class="lbl" x="257" y="94" text-anchor="middle" font-weight="700">FIRM</text>
+      <text class="lbl g" x="408" y="24">AUTOMATION</text>
+      <line class="ln g" x1="400" y1="12" x2="400" y2="152" marker-end="url(#ahg)"/>
+      <text class="lbl" x="40" y="168">INPUTS</text>
+      <line class="ln" x1="40" y1="180" x2="262" y2="180" marker-end="url(#ah)"/>
+      <line class="ln" x1="294" y1="180" x2="374" y2="180" marker-end="url(#ah)"/>
+      <line class="ln" x1="422" y1="180" x2="502" y2="180" marker-end="url(#ah)"/>
+      <line class="ln" x1="534" y1="180" x2="760" y2="180" marker-end="url(#ah)"/>
+      <text class="lbl" x="760" y="168" text-anchor="end">OUTPUT A</text>
+      <circle class="st" cx="278" cy="180" r="15"/><circle class="st g" cx="398" cy="180" r="23"/><text class="lbl s g" x="398" y="184" text-anchor="middle">AGENT</text><circle class="st" cx="518" cy="180" r="15"/>
+      <circle class="st d" cx="455" cy="128" r="12"/><path class="ln d" d="M442 138 L420 162"/>
+      <g class="ln t"><path d="M346 272 L275 196 M353 272 L281 196 M360 272 L287 196"/><path d="M393 272 L393 204 M400 272 L400 204 M407 272 L407 204"/><path d="M440 272 L509 196 M447 272 L515 196 M454 272 L521 196"/></g>
+      <rect class="chip" x="320" y="272" width="160" height="28"/><text class="lbl" x="400" y="291" text-anchor="middle">COORDINATION</text>
+      <circle class="dot" cx="140" cy="180" r="3"/><circle class="dot" cx="340" cy="180" r="3"/><circle class="dot g" cx="460" cy="180" r="3"/><circle class="dot" cx="650" cy="180" r="3"/>
+    </svg>
+    <p class="what">Automation arrives from outside and enters the firm. It doesn't sit outside as a supplier. It becomes an agent at one step. The person there stands aside. Nothing else changes: same instructions, same layout, same output. The new motor bolted into the old factory. This is where most firms are now.</p>
+    <p class="src"><b>Borrowed from:</b> automation entering as a green line and staying inside (the new-combination design) · the green agent circle (v1). <b>Source:</b> David, the first electric motor dropped into the engine's place, with productivity flat for decades.</p>
+  </section>
+
+  <!-- FIG 3 -->
+  <section class="frame">
+    <p class="n">FIG. 3 — WHAT THE AGENT NEEDS</p>
+    <svg viewBox="0 0 800 400" role="img" aria-label="The bundle of instructions feeding the agent collapses into a single green line labelled goal. The old bundle is shown dashed and fading.">
+      <rect class="wall" x="200" y="90" width="400" height="240"/>
+      <rect class="chip" x="222" y="76" width="70" height="26"/><text class="lbl" x="257" y="94" text-anchor="middle" font-weight="700">FIRM</text>
+      <line class="ln g" x1="400" y1="12" x2="400" y2="152" marker-end="url(#ahg)"/>
+      <text class="lbl" x="40" y="168">INPUTS</text>
+      <line class="ln" x1="40" y1="180" x2="262" y2="180" marker-end="url(#ah)"/>
+      <line class="ln" x1="294" y1="180" x2="374" y2="180" marker-end="url(#ah)"/>
+      <line class="ln" x1="422" y1="180" x2="502" y2="180" marker-end="url(#ah)"/>
+      <line class="ln" x1="534" y1="180" x2="760" y2="180" marker-end="url(#ah)"/>
+      <text class="lbl" x="760" y="168" text-anchor="end">OUTPUT A</text>
+      <circle class="st" cx="278" cy="180" r="15"/><circle class="st g" cx="398" cy="180" r="23"/><text class="lbl s g" x="398" y="184" text-anchor="middle">AGENT</text><circle class="st" cx="518" cy="180" r="15"/>
+      <g class="ln t"><path d="M346 272 L275 196 M353 272 L281 196 M360 272 L287 196"/><path d="M440 272 L509 196 M447 272 L515 196 M454 272 L521 196"/></g>
+      <g class="ln d"><path d="M392 272 L392 204 M408 272 L408 204"/></g>
+      <line class="ln g" x1="400" y1="272" x2="400" y2="206" marker-end="url(#ahg)"/>
+      <text class="lbl g" x="412" y="246">GOAL</text>
+      <rect class="chip" x="320" y="272" width="160" height="28"/><text class="lbl" x="400" y="291" text-anchor="middle">COORDINATION</text>
+      <circle class="dot" cx="140" cy="180" r="3"/><circle class="dot g" cx="460" cy="180" r="3"/><circle class="dot" cx="650" cy="180" r="3"/>
+    </svg>
+    <p class="what">The agent's input changes. That step used to need a bundle of instructions saying how. The agent needs only a goal saying what. The how has moved inside. That's automation in Superdark's sense: the loom stopped needing hands, and the agent stops needing a plan.</p>
+    <p class="src"><b>Borrowed from:</b> execution moving inside the boundary (the rejected objective/plan design, now shown on one line instead of three chips). <b>Source:</b> Superdark, automation as a factory's production of its own input, and the Class 1 → Class 2 step (plans → objectives).</p>
+  </section>
+
+  <!-- FIG 4 -->
+  <section class="frame">
+    <p class="n">FIG. 4 — REORGANISATION</p>
+    <svg viewBox="0 0 800 420" role="img" aria-label="The firm is rebuilt around agents. Coordination and its instruction bundles fade out. Every step is an agent. People move to the edges: one sets goals going in, one reviews what comes out. A green feedback loop runs from the output back to the goal. The old outline is dashed; the new outline opens to new outputs B and C. Output A fades.">
+      <rect class="wall old" x="200" y="90" width="400" height="240"/>
+      <rect x="170" y="60" width="470" height="190" fill="url(#hatch)"/><path class="ln" style="stroke-width:1.6" d="M640 104 L640 60 L170 60 L170 250 L640 250"/>
+      <rect class="chip" x="186" y="46" width="70" height="26"/><text class="lbl" x="221" y="64" text-anchor="middle" font-weight="700">FIRM</text>
+      <!-- coordination dying -->
+      <g class="ln d"><path d="M353 330 L281 214 M400 330 L400 214 M447 330 L515 214"/></g>
+      <rect class="chip d" x="320" y="330" width="160" height="28"/><text class="lbl d" x="400" y="349" text-anchor="middle">COORDINATION</text>
+      <path class="x" d="M392 280 l16 16 M408 280 l-16 16"/>
+      <!-- flow of agents -->
+      <text class="lbl" x="40" y="188">INPUTS</text>
+      <line class="ln" x1="40" y1="200" x2="256" y2="200" marker-end="url(#ah)"/>
+      <line class="ln g" x1="302" y1="200" x2="376" y2="200" marker-end="url(#ahg)"/>
+      <line class="ln g" x1="422" y1="200" x2="496" y2="200" marker-end="url(#ahg)"/>
+      <circle class="st g" cx="279" cy="200" r="22"/><text class="lbl s g" x="279" y="204" text-anchor="middle">AGENT</text>
+      <circle class="st g" cx="399" cy="200" r="22"/><text class="lbl s g" x="399" y="204" text-anchor="middle">AGENT</text>
+      <circle class="st g" cx="519" cy="200" r="22"/><text class="lbl s g" x="519" y="204" text-anchor="middle">AGENT</text>
+      <!-- outputs: A dying, B and C new, through the reopened wall -->
+      <line class="ln d" x1="541" y1="200" x2="760" y2="200" marker-end="url(#ahd)"/>
+      <text class="lbl d" x="760" y="188" text-anchor="end">OUTPUT A</text>
+      <path class="ln g" d="M537 188 L640 120 L760 120" marker-end="url(#ahg)"/>
+      <text class="lbl" x="760" y="108" text-anchor="end">OUTPUT B</text>
+      <path class="ln g" d="M537 212 L640 290 L760 290" marker-end="url(#ahg)"/>
+      <text class="lbl" x="760" y="278" text-anchor="end">OUTPUT C</text>
+      <!-- people at the edges -->
+      <circle class="st" cx="279" cy="92" r="15"/><text class="lbl s" x="300" y="84">GOAL</text>
+      <line class="ln g" x1="279" y1="108" x2="279" y2="174" marker-end="url(#ahg)"/>
+      <circle class="st" cx="560" cy="92" r="15"/><text class="lbl s" x="490" y="84">REVIEW</text>
+      <line class="ln" x1="534" y1="182" x2="552" y2="106" marker-end="url(#ah)"/>
+      <!-- feedback loop -->
+      <path class="ln g" d="M548 84 C520 30, 330 30, 292 82" marker-end="url(#ahg)"/>
+      <text class="lbl s g" x="420" y="40" text-anchor="middle">FEEDBACK</text>
+      <circle class="dot g" cx="340" cy="200" r="3"/><circle class="dot g" cx="460" cy="200" r="3"/><circle class="dot g" cx="690" cy="120" r="3"/><circle class="dot g" cx="690" cy="290" r="3"/>
+    </svg>
+    <p class="what">The firm is rebuilt around agents instead of around the old centre. The coordination centre and its instructions die out, and every step becomes an agent. People move to the edges: they set goals going in and review what comes out, and a feedback loop connects the two. The boundary is redrawn as a different shape (the old outline is dashed) and left open on the right. The old output fades, and new outputs B and C appear that the old layout couldn't make.</p>
+    <p class="src"><b>Borrowed from:</b> the green feedback loop (v1) · things dying in grey, the old route fading, new outputs appearing (the new-combination design) · the boundary redrawn and reopened. <b>Source:</b> David, the unit-drive factory rebuilt around the flow of work, where the gains came · Superdark, self-optimisation as a feedback loop · Schumpeter, new combinations replacing old ones.</p>
+  </section>
+
+  <!-- FIG 5 -->
+  <section class="frame">
+    <p class="n">FIG. 5 — DIFFUSION</p>
+    <svg viewBox="0 0 800 300" role="img" aria-label="A field of firms. A green front spreads from the left: reorganised firms carry a small feedback loop; old firms ahead of the front are grey, and some have faded out.">
+      <g id="field"></g>
+      <text class="lbl s d" x="780" y="290" text-anchor="end">THE FRONT MOVES RIGHT →</text>
+    </svg>
+    <p class="what">Pull back to the field. Firm after firm reorganises the same way, slowly and unevenly. Behind the front, firms carry the loop. Ahead of it, the old layouts hold, and some die. Then the coda: the whole surface re-forms.</p>
+    <p class="src"><b>Borrowed from:</b> the diffusion field and the homotopy coda (v1, unchanged). <b>Source:</b> diffusion as an S-curve with a persistent gap between leaders and the rest (OECD, "The Best versus the Rest").</p>
+  </section>
+</main>
+<script>
+  // fig 5: a small deterministic field
+  const g = document.getElementById('field'), NS = 'http://www.w3.org/2000/svg';
+  let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 15; c++) {
+    const x = 40 + c * 51 + (rnd() - 0.5) * 18, y = 36 + r * 44 + (rnd() - 0.5) * 14;
+    const front = 330 + Math.sin(r * 1.3) * 60 + rnd() * 60;
+    const e = document.createElementNS(NS, 'circle');
+    e.setAttribute('cx', x); e.setAttribute('cy', y);
+    if (x < front) {
+      e.setAttribute('r', 6); e.setAttribute('class', 'st g');
+      const l = document.createElementNS(NS, 'path'); l.setAttribute('class', 'ln g'); l.setAttribute('d', `M${x + 5} ${y - 5} a7 7 0 1 1 -10 0`); g.appendChild(l);
+    } else if (rnd() < 0.18) { e.setAttribute('r', 5); e.setAttribute('class', 'st d'); }
+    else { e.setAttribute('r', 5); e.setAttribute('class', 'st'); }
+    g.appendChild(e);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "cycle": 18,
+  "build_ok": true,
+  "style_assertions": {
+    "total": 270,
+    "passed": 267,
+    "failed": 3,
+    "failures": [
+      {
+        "selector": "home@desktop .story__line",
+        "prop": "fontFamily",
+        "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+        "actual": null
+      },
+      {
+        "selector": "home@tablet .story__line",
+        "prop": "fontFamily",
+        "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+        "actual": null
+      },
+      {
+        "selector": "home@mobile .story__line",
+        "prop": "fontFamily",
+        "expected": "\"Space Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+        "actual": null
+      }
+    ]
+  }
+}

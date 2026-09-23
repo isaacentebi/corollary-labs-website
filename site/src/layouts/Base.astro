@@ -12,7 +12,7 @@ import Footer from '../components/Footer.astro';
 import Preloader from '../components/Preloader.astro';
 import { site } from '../config/site';
 
-interface Props { title?: string; description?: string; page: 'home' | 'index' | 'essay' }
+interface Props { title?: string; description?: string; page: 'home' | 'index' | 'essay' | 'about' }
 const { title, description = site.description, page } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 ---

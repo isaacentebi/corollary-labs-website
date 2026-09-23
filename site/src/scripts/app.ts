@@ -45,7 +45,7 @@ async function initPage() {
 
   if (page === 'home') initHome(introDone, !wasFirst);
   else if (page === 'essay') initEssay(introDone);
-  else if (page === 'index') initIndex(introDone);
+  else if (page === 'index' || page === 'about') initIndex(introDone); // both open on a field band with a word in it
 
   await introDone;
   initReveals();

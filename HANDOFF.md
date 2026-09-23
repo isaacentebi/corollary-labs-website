@@ -1,7 +1,7 @@
 # HANDOFF — Corollary Labs site
 
 This is where the project stands, what's been decided and what comes next. Read it before touching anything.
-The first commit, `v1`, snapshots the "story" version of the home page described below.
+Tags: `v1` = the first story version (replacement diagram); `v2` = the reorganisation diagram, green coda, Set A captions and the About page. A rejected attempt is kept in `git stash`.
 
 ## Run
 
@@ -30,37 +30,35 @@ cd site && npm run gate                    # build → serve → headless comput
 | Spec + deltas | `clone-workspace/corollary/03-design-spec/DESIGN.md` |
 | Footer (the only navigation) | `site/src/components/Footer.astro` |
 
-## Current home page (v1)
+## Current home page (v2)
 
-The whole page is one sticky stage. A single scroll progress `p` drives it:
+The whole page is one sticky stage driven by one scroll progress `p` (phase map `P` in `story.ts`):
 
-- **Hero** (`p` 0–0.06). Full-screen diffusion field. "Corollary Labs" sits in it as a faint point cloud. The cursor reveals the name, and clicking plants seeds.
-- **Dive** (0.06–0.15). The camera zooms into one node, and that node's outline becomes the firm.
-- **Figs 1–4** (0.15–0.62). A plotter diagram:
-  - The firm is a big hatched circle holding JUDGEMENT / RISK / RELATIONS, plus an EXECUTION chip wired to three roles.
-  - EXECUTION leaves the circle and becomes a green AGENT outside, linked by a green loop. The BUYS/SUPPLIES labels were removed at the user's request.
-  - The roles go grey and disappear.
-  - The circle contracts.
-- **Pull back** (0.62–0.70). The firm shrinks back into its node.
-- **Fig 5 diffusion** (0.70–0.84). A green front spreads from that node across the field.
-- **Lift + coda** (0.84–1). The field lifts into 3D, then goes through the homotopy (twist → tear → re-glue into a torus).
-- **Essays list and footer** follow.
+- **Hero** (0–0.06): full-screen diffusion field with "Corollary Labs" as a point cloud (cursor reveals, clicks seed).
+- **Dive** (0.06–0.15): the camera falls into one node; it resolves into the firm.
+- **Figs 1–4** (0.15–0.62), `makeDiagram()` in `story.ts`. The picture was agreed first as a static storyboard (`storyboard/index.html`), then animated. One timeline unit per figure (fig 4 runs 3.0–4.6); captions follow the timeline clock.
+  1. **The firm**: inputs pass through three people in a line to OUTPUT A; each step is tied by a bundle of instructions to COORDINATION.
+  2. **Automation enters**: a green streak arrives along the input line (same entrance as the inputs) and settles at the middle step as an AGENT with a pulse; the person steps aside. Nothing else changes.
+  3. **What the agent needs**: its instruction bundle dies (grey dashed); one green GOAL line replaces it.
+  4. **Reorganisation**: bundles retract; COORDINATION collapses to a point and bursts into five small agents that settle between the steps as a mesh (green dots flow back upstream through it); the wall grows, green spreads to every step, people move to the edges on an unlabelled loop (deliberately open: steering / review / recursion), one person sits on new work (output C); the wall opens; OUTPUT A fades, B and C draw in; throughput speeds up.
+- **Pull back** (0.62–0.70) and **fig 5 diffusion** (0.70–0.84) as before.
+- **Lift + coda** (0.84–1): homotopy sheet → torus; the re-formed surface turns green as a front sweeps round it (`surface.ts`).
+- Phones: the diagram's flow runs top-to-bottom (geometry is written in flow coordinates u/v and mapped by `M()`).
 
-## NEXT: the agreed rework (not started)
+**Captions** (`Story.astro`): Set A from one clean-room writer, verbatim, to be polished line by line with the founder. Known issues: "Step 2" in fig 3 (steps are not numbered in the drawing); fig 5 line 2 claims an output-mix shift the field doesn't draw.
 
-The user decided the diagram's premise is wrong. **It is not about replacing humans.** Replacement is a second-order effect at most. The rework should tell a Schumpeterian **new combination** story about **inputs and outputs**:
+**About** (`/about/`, `pages/about.astro`, `styles/about.css`): band with "About" in the field → statement "Corollary Labs is a company." + two placeholder sentences → static drawing of the reorganised firm → colophon (entity, founded, location, contact). Placeholders in [brackets], set in ink-3. The founder rejected numbered sections (Object/Method/…) and a terms glossary.
 
-1. **The combination.** LABOUR · CAPITAL · KNOWLEDGE → FIRM → OUTPUT A. The firm is one particular way of combining inputs, and its operators are wired to execution.
-2. **A new combination.** A new input enters, in green: machine inference, the agent. **It enters the firm; it does not leave it.** The internal wiring re-routes through it, and new outputs (B, C) appear, work that wasn't economical before.
-3. **Displacement.** The old route to OUTPUT A thins and fades because it's out-competed. **The operators re-attach to the new outputs; they do not vanish.**
-4. **Recomposition.** The boundary redraws around the new combination: a different shape, not just a smaller one.
-5. **Diffusion.** Pull back: the new combination spreads firm to firm, and old combinations fade as it passes.
+## How we got here (so we don't loop)
 
-Open question for the user: should outputs be generic (A/B/C) or named (e.g. SERVICE / PRODUCT / MARKET)? I recommended generic.
+- Rejected diagram concepts: replacement story (execution leaves the firm) · labour/capital/knowledge + an AUTOMATION input (category error: automation is not a factor) · blob boundary · OBJECTIVE/PLAN/EXECUTION chips gliding inside (too abstract, agent invisible) · loop topology (invented).
+- Grounding that stuck: Superdark ontology (a firm is defined by inputs/outputs; automation = a supplied input moving inside; execution needs plans, plan-making needs objectives; feedback loops) + the historical pattern that gains come from reorganising around a general-purpose technology, not dropping it in. **No historical references on the page** (no electricity/line shafts): founder's call. No "superdark" speculation (enterprise company).
+- The box is **COORDINATION** (founder's choice over CONTROL / ORCHESTRATION).
+- Process that works: static storyboard frames first → agree → animate. Copy: one clean-room writer (founder's words + the Superdark file at ~/Downloads/Superdark Factory.md), shown unedited; don't blend sets.
 
 ## Copy status
 
-**Not settled.** The captions in `Story.astro` are placeholders from an earlier round and need replacing once the rework lands.
+Captions are Set A (see above), pending a polish pass with the founder.
 
 The user wants the tone of **The Superdark Factory** (superdark.antikythera.org): plain, literal, technical definitions, like an engineering manual. The strangeness comes from *what* is asserted, never from wordplay. The format is two uppercase mono lines per figure.
 
@@ -74,7 +72,7 @@ The user wants the tone of **The Superdark Factory** (superdark.antikythera.org)
 
 ## User preferences, settled
 
-- **No top navbar anywhere.** Navigation lives only in the footer (Home, Essays, Back to top, [EMAIL]).
+- **No top navbar anywhere.** Navigation lives only in the footer (Home, Essays, About, Back to top, [EMAIL]).
 - **No logo at the top.** The earlier wordmark with dots was disliked.
 - **Removed as slop:** "adoption 00.0%" and other readouts, hero slogans, "Write to us", the inline curve glyph in the footer, the thesis beat rows, the summary box, the About section.
 - **The hero is full-screen**, with just the field and the name. The name uses a denser point cloud, and on phones it stacks as Corollary / Labs.
@@ -85,6 +83,6 @@ The user wants the tone of **The Superdark Factory** (superdark.antikythera.org)
 
 ## Known loose ends
 
-- `site/src/scripts/home.ts` now only calls `initStory`. `plates.ts`, `morph.ts` and `Plates.astro` are unused leftovers and can be deleted.
+- `plates.ts`, `morph.ts`, `Plates.astro`, `InlineCurve` in the footer and the `summary/beats/about` exports in `config/site.ts` are unused leftovers.
 - The README's motion and mapping sections describe older versions and should be refreshed after the rework.
 - The essays are lorem ipsum, on purpose, until the copy is settled.

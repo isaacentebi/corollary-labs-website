@@ -1,4 +1,4 @@
-// Essays index: rows' inline curve fronts ride along on hover (the glyph is alive), everything else is
+// Essays index (and the About band, which reuses it with data-word): rows' inline curve fronts ride along on hover (the glyph is alive), everything else is
 // handled by the shared reveal/hover systems.
 import { gsap, reduced, onDispose } from './core';
 import { DiffusionField } from './field';
@@ -8,7 +8,7 @@ export function initIndex(_introDone: Promise<void>) {
   if (band) {
     const f = new DiffusionField(band, {
       mode: 'auto', spacing: innerWidth < 700 ? 18 : 24, autoSpeed: 0.02, autoMax: 0.34, staticT: 0.34, seed: 29, word: true, wordBase: 0.5,
-      wordLayout: { text: 'Essays', wFrac: innerWidth < 700 ? 0.78 : 0.56, hFrac: 0.62, baseFrac: 0.7 },
+      wordLayout: { text: band.dataset.word ?? 'Essays', wFrac: innerWidth < 700 ? 0.78 : 0.56, hFrac: 0.62, baseFrac: 0.7 },
       seeds: [[0.1, 0.3], [0.55, 0.15], [0.88, 0.7]],
     });
     onDispose(() => f.destroy());

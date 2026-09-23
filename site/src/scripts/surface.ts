@@ -156,9 +156,13 @@ export class HomotopySurface {
     const seamFlash = hp > 0.28 && hp < 0.44;
     const glue = seg(hp, 0.62, 0.95);
     const crossesSeam = (a: number, b: number) => { const ja = (a / NU) | 0, jb = (b / NU) | 0; return (ja <= seamJ) !== (jb <= seamJ); };
-    const buckets = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], flash = new Path2D(), faint = new Path2D();
+    const buckets = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], gBuckets = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], flash = new Path2D(), faint = new Path2D();
+    // the re-formed surface is green: a front sweeps round the new shape as it closes (the transformation)
+    const front = sm(seg(hp, 0.5, 0.97)) * 1.15;
+    const reformed = (a: number) => (a % NU) / (NU - 1) < front;
     const add = (a: number, b: number, green = false, into?: Path2D) => {
-      const path = green ? flash : into ?? buckets[Math.min(3, Math.max(0, Math.floor((1.6 - (D[a] + D[b]) / 2) / 0.8)))];
+      const bi = Math.min(3, Math.max(0, Math.floor((1.6 - (D[a] + D[b]) / 2) / 0.8)));
+      const path = green ? flash : into ?? (reformed(a) && reformed(b) ? gBuckets[bi] : buckets[bi]);
       path.moveTo(P[a * 2], P[a * 2 + 1]); path.lineTo(P[b * 2], P[b * 2 + 1]);
     };
     // the old lattice as a faint underlay — it fades as the new structure takes over
@@ -181,12 +185,13 @@ export class HomotopySurface {
     ctx.lineWidth = 1; ctx.strokeStyle = c.rule; ctx.globalAlpha = lat; ctx.stroke(faint);
     ctx.lineWidth = 0.8; ctx.strokeStyle = c.ink;
     [0.42, 0.3, 0.18, 0.09].forEach((a, i) => { ctx.globalAlpha = a; ctx.stroke(buckets[i]); });
+    ctx.strokeStyle = c.signal; [0.7, 0.5, 0.3, 0.14].forEach((a, i) => { ctx.globalAlpha = a; ctx.stroke(gBuckets[i]); });
     ctx.globalAlpha = 1; ctx.strokeStyle = c.signal; ctx.lineWidth = 1.2; ctx.stroke(flash);
     // vertices: ink squares like the field's nodes; the torn seam's vertices flash green
     for (let k = 0; k < NU * NV; k++) {
       const j = (k / NU) | 0, onSeam = (j === seamJ || j === seamJ + 1) && seamFlash;
       ctx.globalAlpha = D[k] < 0 ? 0.95 : 0.4;
-      ctx.fillStyle = onSeam ? c.signal : c.ink;
+      ctx.fillStyle = onSeam || reformed(k) ? c.signal : c.ink;
       const sz = onSeam ? 3.5 : 2.2;
       ctx.fillRect(P[k * 2] - sz / 2, P[k * 2 + 1] - sz / 2, sz, sz);
     }

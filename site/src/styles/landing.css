@@ -120,3 +120,11 @@ html.rm .story__stage { position: relative; height: 100svh; }
 .dg-label.-strong { font-weight: 700; }
 .dg-label.-small { font-size: 14px; }
 .dg-label.-signal { fill: var(--signal); }
+/* diagram states: dying (grey, dashed), the old outline, travelling green, agent pulses */
+.dg-link.-dead, .dg-chip.-dead rect { stroke: var(--ink-3); stroke-dasharray: 4 5 !important; }
+.dg-chip.-dead text { fill: var(--ink-3); }
+.dg-form.-ghost { fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 5 6; vector-effect: non-scaling-stroke; }
+.dg-form.-agent { fill: var(--paper); }
+.dg-link.-comet { stroke-width: 3; stroke-linecap: round; }
+.dg-pulse { fill: none; stroke: var(--signal); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.dg-label.-tiny { font-size: 12px; letter-spacing: 0.04em; }

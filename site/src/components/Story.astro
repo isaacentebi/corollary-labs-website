@@ -4,12 +4,14 @@
 //   → the whole lattice lifts into 3D and changes shape (homotopy coda).
 // scripts/story.ts drives everything from one scroll progress.
 import { site } from '../config/site';
-export const figs = [
-  { n: 1, title: 'The firm', lines: ['A firm is a boundary drawn around coordination', 'A firm keeps inside whatever costs more to buy than to organise'] },
-  { n: 2, title: 'Decoupling', lines: ['An agent is execution without a worker', 'What can be executed without a worker no longer needs a firm'] },
-  { n: 3, title: 'Redundancy', lines: ['A role is a connection to work', 'When the work leaves, the connection has nothing left to connect'] },
-  { n: 4, title: 'Recomposition', lines: ['The firm contracts to what cannot be executed', 'Judgement, risk, relations: the remainder is the firm'] },
-  { n: 5, title: 'Diffusion', lines: ['An agent costs nothing to copy', 'Every boundary is redrawn at once'] },
+// Captions: Set A from one clean-room writer (read the Superdark essay; no historical analogies), used verbatim.
+// To be polished line by line with the founder.
+export const figs: { n: number; title: string; lines: string[] }[] = [
+  { n: 1, title: 'Supplied plans', lines: ['A firm is defined by its inputs and its outputs.', 'Each step executes a plan issued by coordination.'] },
+  { n: 2, title: 'Agent as input', lines: ['The agent is supplied through the same entrance as other inputs.', 'It executes the existing plan. Layout and output are unchanged.'] },
+  { n: 3, title: 'Objective input', lines: ['Step 2 receives an objective as its only control input.', 'The agent selects among alternative plans to meet it.'] },
+  { n: 4, title: 'Redrawn boundary', lines: ['Execution and coordination are produced inside the boundary.', 'People work on the feedback loop and on outputs B and C.'] },
+  { n: 5, title: 'Diffusion', lines: ['The same boundary change recurs across firms at uneven rates.', "The field's output mix shifts as each firm reorganises."] },
 ];
 ---
 <section class="story" data-story aria-labelledby="hero-title">
@@ -18,7 +20,7 @@ export const figs = [
     <canvas class="field story__layer" data-field="hero" aria-hidden="true"></canvas>
     <canvas class="field story__layer" data-field="diffuse" aria-hidden="true"></canvas>
     <svg class="story__diagram story__layer" viewBox="0 0 1200 700" data-diagram role="img"
-      aria-label={figs.map((f) => `Figure ${f.n}, ${f.title}: ${f.lines.join('. ')}.`).join(' ')}>
+      aria-label={figs.map((f) => `Figure ${f.n}, ${f.title}. ${f.lines.join(' ')}`).join(' ')}>
       <defs>
         <filter id="boil" filterUnits="userSpaceOnUse" x="0" y="0" width="1200" height="700">
           <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1" data-boil />
