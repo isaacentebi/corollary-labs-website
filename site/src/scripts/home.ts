@@ -21,13 +21,18 @@ export function initHome() {
   const blocks = [...document.querySelectorAll<HTMLElement>('[data-block]')];
   const legends = [...document.querySelectorAll<HTMLElement>('[data-legend]')];
   const mobile = () => innerWidth < 760;
+  const hero = document.querySelector<HTMLElement>('.hero');
 
   // key layer: one element per label id, positioned every frame
   const els = new Map<string, HTMLSpanElement>();
   sp.onLabels = (ls: Label[]) => {
     for (const l of ls) {
       let e = els.get(l.id);
-      if (!e) { e = document.createElement('span'); e.textContent = l.text; e.className = l.key ? '-key' : '-word'; keysEl.appendChild(e); els.set(l.id, e); }
+      if (!e) {
+        e = document.createElement('span'); e.className = l.key ? '-key' : '-word';
+        if (!l.key && l.letter) { const i = document.createElement('i'); i.textContent = l.letter; e.append(i, l.text); } else e.textContent = l.text;
+        keysEl.appendChild(e); els.set(l.id, e);
+      }
       if (!l.key) { const dx = l.x - l.ax; e.classList.toggle('-l', dx < -8); e.classList.toggle('-c', Math.abs(dx) <= 8); }
       e.style.opacity = l.a.toFixed(3);
       e.style.visibility = l.a > 0.01 ? 'visible' : 'hidden';
@@ -45,8 +50,9 @@ export function initHome() {
     const L = homeLayout(innerWidth, innerHeight, 0);
     if (mobile()) home.style.setProperty('--ap-b', `${Math.round(L.cy + L.R + 10)}px`);
     else home.style.removeProperty('--ap-b');
-    const last = legends[legends.length - 1];
-    if (last && mobile()) home.style.setProperty('--last-top', `${Math.round(innerHeight - last.offsetHeight)}px`);
+    // phones: each legend is pinned to the bottom of the screen (never higher than just under the aperture)
+    const apB = L.cy + L.R + 10;
+    legends.forEach((lg) => { lg.style.top = mobile() ? `${Math.round(Math.max(apB + 12, innerHeight - lg.offsetHeight - 22))}px` : ''; });
   };
 
   const measure = () => {
@@ -63,12 +69,18 @@ export function initHome() {
     // legend k is fully visible for s ∈ [k-1+0.1, k-0.1]
     legends.forEach((lg) => {
       const k = +lg.dataset.legend!;
+      // desktop: fig 1 waits until the hero copy has gone; fig 4 slides in as the aperture moves left
+      const start = k - 1 + (mobile() ? 0.04 : k === 1 ? 0.2 : k === 4 ? 0.09 : 0.04);
       const a = RM ? (Math.round(s) === k || (s >= 5 && k === 5) ? 1 : 0)
-        : Math.min(1, Math.max(0, (s - (k - 1 + (k === 4 && !mobile() ? 0.2 : 0.04))) / 0.08)) * Math.min(1, Math.max(0, (k + (k === 5 ? 0.45 : 0) + 0.05 - s) / 0.08));
+        : Math.min(1, Math.max(0, (s - start) / 0.08)) * Math.min(1, Math.max(0, (k + (k === 5 ? 0.45 : 0) + 0.05 - s) / 0.08));
       lg.style.opacity = a.toFixed(3);
+      if (k === 4 && !mobile() && !RM) lg.style.translate = `${((1 - a) * 60).toFixed(1)}px 0`;
       lg.style.visibility = a > 0.005 ? 'visible' : 'hidden';
     });
     home.classList.toggle('is-open', s > 4.45);
+    root.classList.toggle('is-dark', s > 3.06 && s < 4.0);
+    root.classList.toggle('past-hero', scrollY > vh * 0.3);
+    if (hero) { const ha = RM ? (scrollY < vh * 0.3 ? 1 : 0) : 1 - Math.min(1, Math.max(0, (scrollY - vh * 0.04) / (vh * 0.28))); hero.style.opacity = ha.toFixed(3); }
     if (RM) sp.draw();
   };
 

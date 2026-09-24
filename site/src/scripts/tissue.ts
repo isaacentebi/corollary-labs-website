@@ -24,13 +24,15 @@ export function makeTissue(seed: number, w: number, h: number, spacing: number, 
   const [ox, oy] = opts.origin || [0, 0];
   const mk = (x: number, y: number): TCell => {
     const nuc: [number, number][] = [];
-    for (let k = 0; k < 16; k++) { const a = R() * TAU, d = Math.sqrt(R()); nuc.push([Math.cos(a) * d, Math.sin(a) * d]); }
+    const np = 5 + Math.floor(R() * 4); for (let k = 0; k < np; k++) { const a = R() * TAU, d = 0.25 + Math.sqrt(R()) * 0.75; nuc.push([Math.cos(a) * d, Math.sin(a) * d]); }
     const links: [number, number][] = [];
     nuc.forEach((p, k) => {
-      let best = -1, bd = 9;
-      nuc.forEach((q, j) => { if (j === k) return; const d = (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2; if (d < bd) { bd = d; best = j; } });
-      if (!links.some(([a, b]) => a === best && b === k)) links.push([k, best]);
+      if (!k) return;
+      let best = 0, bd = 9;
+      for (let j = 0; j < k; j++) { const q = nuc[j]; const d = (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2; if (d < bd) { bd = d; best = j; } }
+      links.push([best, k]);
     });
+    links.push([nuc.length - 1, Math.floor(R() * (nuc.length - 2))]);
     return { bx: x, by: y, x, y, ph: R() * TAU, tau: 0, resist: false, nuc, links, alive: 1 };
   };
   cells.push(mk(ox, oy));
@@ -122,7 +124,7 @@ export function drawTissue(ctx: CanvasRenderingContext2D, T: Tissue, S: TissueSt
     if (!poly || poly.length < 4) continue;
     poly.pop();
     let cx = 0, cy = 0; for (const p of poly) { cx += p[0]; cy += p[1]; } cx /= poly.length; cy /= poly.length;
-    const stain = i === 0 && S.firstStained ? 1 : ss(c.tau, c.tau + 0.09, st);
+    const stain = i === 0 && S.firstStained ? 1 : ss(c.tau, c.tau + 0.32, st);
     const hot = S.hot === i ? 1 : 0;
     const a = A * c.alive;
     if (a <= 0.01) continue;
@@ -138,26 +140,29 @@ export function drawTissue(ctx: CanvasRenderingContext2D, T: Tissue, S: TissueSt
     ctx.stroke(); ctx.setLineDash([]);
     ctx.beginPath(); roundPoly(ctx, inset(0.83));
     ctx.lineWidth = px * 0.7; ctx.strokeStyle = rgba(mixc(P.ink3, P.accent, stain * 0.6), a * 0.5); ctx.stroke();
-    // inside each firm: coordination (a ring) above three steps (dots); once reorganised the ring opens
-    // into a mesh across the steps, with agents (solid seeds) at the nodes
-    const r = sp * 0.085;
-    const wob = (q: number) => [Math.sin(t * 0.6 + q + c.ph) * r * 0.08, Math.cos(t * 0.5 + q * 1.7 + c.ph) * r * 0.08];
-    const ringA = a * (1 - stain);
-    if (ringA > 0.02) { ctx.beginPath(); ctx.arc(cx, cy - r * 1.1, r, 0, TAU); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.ink2, ringA * 0.9); ctx.stroke(); }
-    const steps: [number, number][] = [-1, 0, 1].map((q) => { const w = wob(q); return [cx + q * r * 1.6 + w[0], cy + r * 1.1 + w[1]]; });
-    if (stain > 0.02) {
-      // two junctions above the steps, each tied to the steps beneath and to each other: a small mesh
-      const hub: [number, number][] = [-0.8, 0.8].map((q, j) => { const w = wob(j + 4); return [cx + q * r * 1.1 + w[0], cy - r * 1.2 + w[1]]; });
+    // inside each firm: coordination is a ring. As the firm reorganises (partly, then fully) the ring fades and a
+    // mesh grows across the firm, edge by edge, with agents (reticles) at some of its nodes. Every firm grows its own mesh.
+    const r = sp * 0.1;
+    const conv = i === 0 && S.firstStained ? 1 : clamp((st - c.tau) / 0.32);
+    const wob = (q: number): [number, number] => [Math.sin(t * 0.6 + q + c.ph) * r * 0.08, Math.cos(t * 0.5 + q * 1.7 + c.ph) * r * 0.08];
+    const ringA = a * (1 - ss(0.1, 0.6, conv));
+    if (ringA > 0.02) { ctx.beginPath(); ctx.arc(cx, cy, r * (0.8 + 0.2 * ((c.ph * 3) % 1)), 0, TAU); ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.ink, ringA * 0.85); ctx.stroke(); }
+    if (conv > 0.01) {
+      const pt = (q: number): [number, number] => { const [ux, uy] = c.nuc[q]; const w = wob(q); return [cx + ux * r * 3.2 + w[0], cy + uy * r * 2.6 + w[1]]; };
+      // the mesh deepens with conversion: all links present, their weight and ink rising together
+      const n = c.links.length;
       ctx.beginPath();
-      ctx.moveTo(hub[0][0], hub[0][1]); ctx.lineTo(hub[1][0], hub[1][1]);
-      for (const [j, q] of [[0, 0], [0, 1], [1, 1], [1, 2]] as const) { ctx.moveTo(hub[j][0], hub[j][1]); ctx.lineTo(steps[q][0], steps[q][1]); }
-      ctx.lineWidth = px * 0.9; ctx.strokeStyle = rgba(P.accent, a * stain * 0.8); ctx.stroke();
-      for (const h of hub) { ctx.beginPath(); ctx.arc(h[0], h[1], px * 2.2, 0, TAU); ctx.fillStyle = rgba(P.paper, a); ctx.fill(); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.accent, a * stain); ctx.stroke(); }
-    }
-    for (let q = 0; q < 3; q++) {
-      const [x, y] = steps[q];
-      ctx.beginPath(); ctx.arc(x, y, px * (1.6 + stain * 1.6), 0, TAU);
-      ctx.fillStyle = rgba(mixc(P.ink, P.accent, stain), a * 0.85); ctx.fill();
+      for (let q = 0; q < n; q++) { const [p0, p1] = c.links[q]; const A0 = pt(p0), B0 = pt(p1); ctx.moveTo(A0[0], A0[1]); ctx.lineTo(B0[0], B0[1]); }
+      ctx.lineWidth = px * (0.7 + conv * 0.7); ctx.strokeStyle = rgba(P.accent, a * (0.15 + 0.75 * conv)); ctx.lineCap = 'round'; ctx.stroke();
+      for (let q = 0; q < c.nuc.length; q++) { const [x, y] = pt(q); ctx.beginPath(); ctx.arc(x, y, px * 1.8, 0, TAU); ctx.fillStyle = rgba(P.paper, a); ctx.fill(); ctx.lineWidth = px * 0.9; ctx.strokeStyle = rgba(P.accent, a * (0.2 + 0.7 * conv)); ctx.stroke(); }
+      // agents at two nodes once the mesh is mostly there
+      const ag = a * ss(0.55, 0.9, conv);
+      if (ag > 0.02) for (const q of [c.links[0][0], c.links[Math.floor(n / 2)][1]]) {
+        const [x, y] = pt(q);
+        ctx.beginPath(); ctx.arc(x, y, sp * 0.032, 0, TAU); ctx.fillStyle = rgba(P.paper, ag); ctx.fill();
+        ctx.lineWidth = px * 1.2; ctx.strokeStyle = rgba(P.accent, ag); ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, y, sp * 0.012, 0, TAU); ctx.fillStyle = rgba(P.accent, ag); ctx.fill();
+      }
     }
   }
 }

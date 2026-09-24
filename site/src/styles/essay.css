@@ -51,10 +51,10 @@
 
 /* figures (charts from Figure.astro), drawn in ink with accent for what moves */
 .fig { margin: 2em 0; }
-.fig__plate { padding: 18px; border-radius: 26px; background: var(--paper-2); }
+.fig__plate { padding: 18px; border: 1px solid var(--rule); background: var(--paper-2); }
 .fig__plate svg { width: 100%; height: auto; overflow: visible; }
-.fig__cap { margin-top: 12px; font-size: 15px; color: var(--ink-2); font-style: italic; }
-.fig__n { font-style: normal; color: var(--ink); margin-right: 0.4em; }
+.fig__cap { margin-top: 12px; font-size: 15px; color: var(--ink-2); }
+.fig__n { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); margin-right: 0.6em; }
 .fig-axis { fill: none; stroke: var(--ink); stroke-width: 1; }
 .fig-tick { stroke: var(--ink-3); stroke-width: 1; }
 .fig-grid { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 4; }
@@ -62,7 +62,7 @@
 .fig-line.-soft { stroke: var(--ink-3); }
 .fig-hatch { stroke: var(--accent-2); stroke-width: 1.4; }
 .fig-front { fill: var(--accent); }
-.fig-label { font-family: var(--f-display); font-style: italic; font-size: 13px; fill: var(--ink); }
+.fig-label { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; fill: var(--ink); }
 .fig-label.-muted { fill: var(--ink-3); }
 .fig-lattice { stroke: var(--ink-3); stroke-width: 1; opacity: 0.6; }
 .fig-net { fill: none; stroke: var(--accent); stroke-width: 1.3; opacity: 0.75; }

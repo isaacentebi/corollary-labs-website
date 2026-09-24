@@ -50,11 +50,11 @@ if (kind === 'dissolve') {
     const rx = cw * 0.46, ry = 86 + (rnd() - 0.5) * 12;
     body += `<path d="${wall(cx, cy, rx, ry, i)}" class="fig-wall${t > 0.45 ? ' -on' : ''}"/>`;
     if (t <= 0.45) {
-      body += `<circle cx="${cx}" cy="${cy - 30}" r="11" class="fig-ring"/>` + [-1, 0, 1].map((k) => `<path d="M${cx} ${cy - 19} Q${cx + k * 10} ${cy} ${cx + k * 22} ${cy + 18}" class="fig-strand"/><circle cx="${cx + k * 22}" cy="${cy + 24}" r="4" class="fig-dot"/>`).join('');
+      body += `<circle cx="${cx}" cy="${cy - 30}" r="11" class="fig-ring"/>` + [-1, 0, 1].map((k) => `<path d="M${cx} ${cy - 19} Q${cx + k * 10} ${cy} ${cx + k * 22} ${cy + 18}" class="fig-strand"/><path d="M${cx + k * 22 - 6} ${cy + 32} A6.5 6 0 0 1 ${cx + k * 22 + 6} ${cy + 32}" class="fig-strand"/><circle cx="${cx + k * 22}" cy="${cy + 21}" r="3" class="fig-ring"/>`).join('');
     } else {
       const pts: [number, number][] = Array.from({ length: 7 }, () => [cx + (rnd() - 0.5) * rx * 1.3, cy + (rnd() - 0.5) * ry * 1.3]);
       pts.forEach((p, k) => { const q = pts[(k + 1) % pts.length], r2 = pts[(k + 3) % pts.length]; body += `<path d="M${p[0].toFixed(1)} ${p[1].toFixed(1)} Q${cx} ${cy} ${q[0].toFixed(1)} ${q[1].toFixed(1)} M${p[0].toFixed(1)} ${p[1].toFixed(1)} L${r2[0].toFixed(1)} ${r2[1].toFixed(1)}" class="fig-net"/>`; });
-      pts.forEach((p, k) => { body += k % 3 === 0 ? `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" class="fig-node"/>` : `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" class="fig-junction"/>`; });
+      pts.forEach((p, k) => { body += k % 3 === 0 ? `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5" class="fig-junction"/><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="1.8" class="fig-node"/>` : `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.4" class="fig-junction"/>`; });
     }
   }
   body += `<text x="${20}" y="${H - 8}" class="fig-label -muted">coordination issuing plans</text><text x="${W - 16}" y="${H - 8}" class="fig-label" text-anchor="end">coordination as a mesh</text>`;

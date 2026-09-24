@@ -5,7 +5,6 @@
 import Base from '../layouts/Base.astro';
 import { site, figs } from '../config/site';
 import '../styles/home.css';
-const L = 'abcdefghij'; // key letters
 ---
 <Base page="home">
   <section class="home" data-home aria-labelledby="home-title">
@@ -29,12 +28,12 @@ const L = 'abcdefghij'; // key letters
       {figs.map((f, i) => (
         <article class:list={['block', 'fig', { '-right': f.side === 'right', '-last': i === figs.length - 1 }]} data-block={i + 1} aria-labelledby={`fig-${i + 1}`}>
           <div class="legend" data-legend={i + 1}>
-            <p class="legend__n">Fig. {i + 1}</p>
+            <p class="legend__n">Fig. {i + 1} / {figs.length}</p>
             <h2 class="legend__title t-title" id={`fig-${i + 1}`}>{f.title}</h2>
             <p class="legend__text">{f.legend}</p>
             {f.keys.length > 0 && (
               <ul class="legend__keys">
-                {f.keys.map((k, j) => <li><i>{L[j]}</i> {k}</li>)}
+                {f.keys.map(([l, k]) => <li><i>{l}</i>{k}</li>)}
               </ul>
             )}
           </div>

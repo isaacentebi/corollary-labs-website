@@ -5,9 +5,11 @@ import { Delaunay } from 'd3-delaunay';
 import { rng, hash, blob } from './blob';
 
 const f = (n: number) => n.toFixed(1);
+// the site's glyphs: a person (head over an open shoulder arc) and an agent (a reticle: ring, centre point, ticks)
 const person = (x: number, y: number, s = 1) =>
-  `<g class="s-person" transform="translate(${f(x)} ${f(y)}) scale(${s})"><path d="M-7 7 A7 6 0 0 1 7 7 Z"/><circle cx="0" cy="-2.5" r="3.4"/></g>`;
-const seed = (x: number, y: number, r = 4) => `<circle class="s-halo" cx="${f(x)}" cy="${f(y)}" r="${f(r * 1.7)}"/><circle class="s-seed" cx="${f(x)}" cy="${f(y)}" r="${f(r)}"/>`;
+  `<g class="s-person" transform="translate(${f(x)} ${f(y)}) scale(${s})"><path d="M-6.5 7.5 A7 6.4 0 0 1 6.5 7.5"/><circle cx="0" cy="-2.6" r="3.2"/></g>`;
+const seed = (x: number, y: number, r = 4) =>
+  `<g class="s-agent"><circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}"/><circle class="-c" cx="${f(x)}" cy="${f(y)}" r="${f(r * 0.36)}"/><path d="M${f(x + r * 1.2)} ${f(y)}h${f(r * 0.45)}M${f(x - r * 1.2)} ${f(y)}h${f(-r * 0.45)}M${f(x)} ${f(y + r * 1.2)}v${f(r * 0.45)}M${f(x)} ${f(y - r * 1.2)}v${f(-r * 0.45)}"/></g>`;
 
 export function slideSVG(slug: string, kind: number): string {
   const sd = hash(slug); const R = rng(sd);
@@ -18,7 +20,7 @@ export function slideSVG(slug: string, kind: number): string {
     body += `<path class="s-wall" d="${blob(sd, 100, 100, 68, 0.06)}"/><path class="s-wall2" d="${blob(sd, 100, 100, 64.5, 0.06)}"/>`;
     body += `<circle class="s-ring" cx="98" cy="70" r="13"/><circle class="s-ring2" cx="98" cy="70" r="10.5"/>`;
     body += `<path class="s-strand" d="M98 83 Q84 96 68 104 M98 83 Q116 96 132 104"/><path class="s-strand -gone" d="M98 83 L100 102"/>`;
-    body += person(68, 112) + person(132, 112) + seed(100, 112, 4.5);
+    body += person(68, 112) + person(132, 112) + seed(100, 112, 4.6);
     for (let i = 0; i < 8; i++) body += `<circle class="s-in" cx="${f(8 + R() * 22)}" cy="${f(100 + (R() - 0.5) * 18)}" r="2.2"/>`;
     for (let i = 0; i < 4; i++) body += `<circle class="s-out" cx="${f(176 + R() * 16)}" cy="${f(104 + (R() - 0.5) * 18)}" r="3.4"/>`;
   } else if (kind === 1) {
@@ -33,8 +35,12 @@ export function slideSVG(slug: string, kind: number): string {
       const d = (k: number) => { const q = poly.map(([x, y]) => [mx + (x - mx) * k, my + (y - my) * k]); const n = q.length; const mid = (a: number[], b: number[]) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; const m0 = mid(q[n - 1], q[0]); let s = `M${f(m0[0])} ${f(m0[1])}`; for (let a = 0; a < n; a++) { const m = mid(q[a], q[(a + 1) % n]); s += ` Q${f(q[a][0])} ${f(q[a][1])} ${f(m[0])} ${f(m[1])}`; } return s + 'Z'; };
       const on = Math.hypot(mx - cx, my - cy) + R() * 26 < 64;
       body += `<path class="${on ? 's-cell s-on' : 's-cell'}" d="${d(0.88)}"/><path class="s-wall2" d="${d(0.8)}"/>`;
-      if (on) body += `<path class="s-tube" style="stroke-width:1" d="M${f(mx - 5)} ${f(my - 3)} L${f(mx + 4)} ${f(my - 5)} L${f(mx + 5)} ${f(my + 4)} L${f(mx - 4)} ${f(my + 5)} Z"/>` + `<circle class="s-seed" cx="${f(mx + 4)}" cy="${f(my - 5)}" r="2.2"/><circle class="s-seed" cx="${f(mx - 4)}" cy="${f(my + 5)}" r="2.2"/>`;
-      else body += `<circle class="s-ring" cx="${f(mx)}" cy="${f(my - 3)}" r="3.4"/>` + [-4.5, 0, 4.5].map((dx) => `<circle class="s-node" cx="${f(mx + dx)}" cy="${f(my + 4)}" r="1.1"/>`).join('');
+      if (on) {
+        // each reorganised firm grows its own small mesh (a tree over a few points), with one agent
+        const P: [number, number][] = Array.from({ length: 4 + Math.floor(R() * 3) }, () => [mx + (R() - 0.5) * 16, my + (R() - 0.5) * 13]);
+        let d2 = ''; P.forEach((p, k) => { if (!k) return; let b = 0, bd = 1e9; for (let j = 0; j < k; j++) { const q = P[j]; const dd = Math.hypot(q[0] - p[0], q[1] - p[1]); if (dd < bd) { bd = dd; b = j; } } d2 += `M${f(P[b][0])} ${f(P[b][1])}L${f(p[0])} ${f(p[1])}`; });
+        body += `<path class="s-tube" style="stroke-width:1" d="${d2}"/>` + seed(P[0][0], P[0][1], 2.4);
+      } else body += `<circle class="s-ring" cx="${f(mx)}" cy="${f(my)}" r="${f(3 + R() * 1.4)}"/>`;
     });
   } else {
     // a mesh: coordination spread across many steps. A spanning tree plus a few loops, tubes thinning outward,
