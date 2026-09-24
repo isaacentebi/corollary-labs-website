@@ -6,7 +6,7 @@ The brief for the next phase. Read HANDOFF.md first, for the current state and t
 
 The founder loves the current site. Their boss asked: *"¿podemos probar algo más orgánico? menos 'industrial'?"* ("can we try something more organic? less 'industrial'?").
 
-So we turn the single Vercel site into **several complete versions of the same site**, each one a different design direction. A small hub page lets the founder and their boss move between them.
+So we turn the single Vercel site into **several complete, independent sites for the same company**, each one a different creative direction (structure, story, diagrams and identity included). A small hub page lets the founder and their boss move between them.
 
 The founder's words: be super ambitious; go to Awwwards for inspiration again; use subagents; loop a lot until each one is right. Try different colours and different logos.
 
@@ -78,7 +78,7 @@ Past lessons from the founder: they disliked the wordmark with dots and "Labs" a
 ## Lessons from last time (don't repeat them)
 
 - **Agree the picture before animating.** Static frames and a pitch first, every time.
-- **Don't invent concepts.** Ground the drawing in the agreed argument.
+- **Be inventive with form, not with facts.** Metaphors and structures are free; the ideas they carry must be real (Superdark ontology, the economics of reorganisation and diffusion).
 - **Keep subagent briefs clean.** Give the founder's words plus the references, not my framing.
 - **Show outputs unedited**, and let the founder choose.
 
