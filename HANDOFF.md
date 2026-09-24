@@ -1,6 +1,7 @@
 # HANDOFF — Corollary Labs site
 
 This is where the project stands, what's been decided and what comes next. Read it before touching anything.
+**Next phase: read DIRECTIONS.md** (several versions of the site: Plotter = current, Organic, Proof, Atlas; hub + switcher; Awwwards research → moodboard → build → critic loop).
 Tags: `v1` = the first story version (replacement diagram); `v2` = the reorganisation diagram, green coda, Set A captions and the About page. A rejected attempt is kept in `git stash`.
 
 ## Run
