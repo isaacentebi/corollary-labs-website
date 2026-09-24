@@ -43,7 +43,8 @@ out vec4 o;
 const vec2 G = vec2(${N}.0, ${M}.0);
 vec2 swirl(vec2 g, vec4 s){ vec2 d = g - s.xy; float a = s.z * exp(-dot(d,d)/(s.w*s.w)); float c = cos(a), n = sin(a); return s.xy + vec2(c*d.x - n*d.y, n*d.x + c*d.y); }
 float fill(float litT, float unlitT, float entry, float u){
-  if (unlitT > litT) return 1.0 - clamp((uTime - unlitT)/0.6, 0.0, 1.0);
+  // draining: the colour retreats along the arc (no colour mixing, so no grey in between)
+  if (unlitT > litT) { float g = clamp((uTime - unlitT)/0.45, 0.0, 1.0); return 1.0 - smoothstep(1.0 - g - 0.04, 1.0 - g, u); }
   float f = clamp((uTime - litT)/uStep, 0.0, 1.0);
   if (f <= 0.0) return 0.0;
   if (f >= 1.0) return 1.0;
@@ -83,11 +84,15 @@ void main(){
   float ag = A.y;
   if (ag > 0.001) {
     float r = length(f - 0.5);
-    float disc = 1.0 - smoothstep(0.12*ag - aa, 0.12*ag + aa, r);
+    float rd = 0.11 * ag;
+    float halo = 1.0 - smoothstep(rd + 0.045 - aa, rd + 0.045 + aa, r);
+    float disc = 1.0 - smoothstep(rd - aa, rd + aa, r);
     float ph = fract(uTime * 0.45 + A.w);
-    float rr = 0.14 + ph * 0.3;
-    float ring = (1.0 - smoothstep(0.018 - aa, 0.018 + aa, abs(r - rr))) * (1.0 - ph) * ag;
-    col = mix(col, uAgent, max(disc, ring * 0.9));
+    float rr = 0.17 + ph * 0.3;
+    float ring = (1.0 - smoothstep(0.016 - aa, 0.016 + aa, abs(r - rr))) * (1.0 - ph) * ag;
+    col = mix(col, uAgent, ring * 0.9);
+    col = mix(col, uGround, halo * ag);
+    col = mix(col, uAgent, disc);
   }
   col = mix(col, uGround, uFade);
   o = vec4(col, 1.0);
@@ -111,6 +116,7 @@ export class LoopField {
   agentA = new Float32Array(T);           // agent displayed amount
   agentPhase = new Float32Array(T);
   settled = new Int8Array(T).fill(-1);
+  spinning = new Uint8Array(T);            // 1 while a tile makes a full turn (same connections before and after)
   // arc state (2 per tile)
   lit = new Uint8Array(T * 2); litT = new Float32Array(T * 2).fill(1e9); unlitT = new Float32Array(T * 2).fill(-1e9);
   entry = new Uint8Array(T * 2);
@@ -216,6 +222,7 @@ export class LoopField {
   turn(t: number, n = 1, delay = 0, dur = TURN) {
     const a = this.angle(t) - this.extra[t];
     this.kFrom[t] = a; this.kTo[t] = Math.round(a) + n;
+    this.spinning[t] = n % 4 === 0 && Math.abs(a - Math.round(a)) < 0.004 ? 1 : 0;
     this.t0[t] = this.now + delay; this.dur[t] = this.reduced ? 0.0001 : dur;
     if (this.reduced) this.t0[t] = this.now - 1;
   }
@@ -251,7 +258,7 @@ export class LoopField {
       if (n === 0) { this.kFrom[t] = this.kTo[t] = cur; this.dur[t] = 0; continue; }
       let dx = Math.abs(i + 0.5 - cx), dy = Math.abs(j + 0.5 - cy);
       dx = Math.min(dx, N - dx); dy = Math.min(dy, M - dy);
-      this.kFrom[t] = cur; this.kTo[t] = cur + n;
+      this.kFrom[t] = cur; this.kTo[t] = cur + n; this.spinning[t] = 0;
       this.t0[t] = this.now + Math.hypot(dx, dy) * spread + (i * 7 + j * 13) % 5 * 0.02;
       this.dur[t] = this.reduced ? 0.0001 : TURN;
       if (this.reduced) this.t0[t] = this.now - 1;
@@ -416,7 +423,9 @@ export class LoopField {
     for (let t = 0; t < T; t++) {
       const ang = this.angle(t);
       const r = Math.round(ang);
-      const s = Math.abs(ang - r) < 0.004 ? (((r % 4) + 4) % 4) : -1;
+      let s = Math.abs(ang - r) < 0.004 ? (((r % 4) + 4) % 4) : -1;
+      // a full spin keeps the tile's connections (and the colour flowing through it)
+      if (s < 0 && this.spinning[t] && this.settled[t] >= 0 && Math.abs(this.extra[t] - Math.round(this.extra[t])) < 0.004) s = this.settled[t];
       if (s !== this.settled[t]) {
         this.dirtyTopo = true;
         this.settled[t] = s as number;

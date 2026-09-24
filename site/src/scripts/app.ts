@@ -41,3 +41,20 @@ function onLoad() {
 }
 
 document.addEventListener('astro:page-load', onLoad);
+
+// Over open field (not over content), the pointer shows a small ring: turning tiles and placing agents happen there.
+if (matchMedia('(pointer: fine)').matches) {
+  const probe = document.querySelector<HTMLElement>('.probe');
+  let x = -99, y = -99, tx = -99, ty = -99, raf = 0;
+  const tick = () => { x += (tx - x) * 0.35; y += (ty - y) * 0.35; if (probe) probe.style.transform = `translate(${x}px, ${y}px)`; raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.3 ? requestAnimationFrame(tick) : 0; };
+  addEventListener('pointermove', (e) => {
+    if (!probe || !field) return;
+    const t = e.target as HTMLElement;
+    const over = field.interactive && !t.closest('.cut, a, button, .top, input, textarea');
+    probe.classList.toggle('on', over);
+    tx = e.clientX; ty = e.clientY;
+    if (!raf) raf = requestAnimationFrame(tick);
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => probe?.classList.remove('on'));
+  addEventListener('pointerdown', () => { if (probe?.classList.contains('on')) { probe.classList.remove('tap'); void probe.offsetWidth; probe.classList.add('tap'); } });
+}

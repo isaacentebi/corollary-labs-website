@@ -33,6 +33,7 @@ const current = Astro.url.pathname;
   </head>
   <body>
     <canvas id="field" class="field" aria-hidden="true" transition:persist="field"></canvas>
+    <div class="probe" aria-hidden="true" transition:persist="probe"><i></i></div>
     <a class="skip" href="#main">Skip to content</a>
     <header class="top">
       <a class="top__home chip" href={href()} aria-label={`${site.name}, home`}>
