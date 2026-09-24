@@ -18,6 +18,11 @@
 .hero__name { font-size: clamp(60px, 8.4vw, 168px); margin-left: -0.04em; width: max-content; pointer-events: none; }
 .hero__name span { display: block; }
 .hero__name span + span { padding-left: 0.62em; }
+html.js:not(.rm) .hero__name span { animation: rise 1.6s var(--spring) both; }
+html.js:not(.rm) .hero__name span + span { animation-delay: 0.12s; }
+html.js:not(.rm) .hero__statement, html.js:not(.rm) .hero__cue { animation: fade 1.2s var(--soft) 0.5s both; }
+@keyframes rise { from { opacity: 0; transform: translateY(0.35em) scale(0.96); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .hero__statement { margin-top: clamp(22px, 3vw, 40px); max-width: 25em; font-size: var(--fs-body); line-height: 1.42; }
 .hero__cue { margin-top: clamp(28px, 5svh, 56px); display: flex; align-items: center; gap: 10px; }
 .hero__cue-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--ink); animation: cue 2.4s var(--soft) infinite; }

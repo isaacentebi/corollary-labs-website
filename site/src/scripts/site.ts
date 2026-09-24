@@ -60,7 +60,7 @@ export function tissueCanvas(canvas: HTMLCanvasElement, opts: { cell?: number; s
   };
   const loop = (now: number) => {
     if (!running) return;
-    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
     t += dt; st = clamp(st + dt * (opts.stainSpeed ?? 0.03), 0, 0.95);
     draw(); raf = requestAnimationFrame(loop);
   };

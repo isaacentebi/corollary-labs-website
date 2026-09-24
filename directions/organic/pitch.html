@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Organic — pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..500,100;1,9..144,300..500,100&family=Newsreader:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root { --paper:#f4eee7; --paper-2:#ece3da; --paper-3:#e2d5ca; --ink:#221b33; --ink-2:#554c68; --ink-3:#978ca4; --rule:#d9cdcb; --eosin:#c33d68; --eosin-2:#e6a2b5; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:18px/1.5 'Newsreader', Georgia, serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 64px 24px 120px; }
+  h1, h2, h3 { font-family:'Fraunces', serif; font-variation-settings:'SOFT' 100; font-weight:320; letter-spacing:-0.02em; margin:0; }
+  h1 { font-size: clamp(56px, 9vw, 128px); line-height:0.92; }
+  h2 { font-size: 40px; margin: 88px 0 20px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  h3 { font-size: 24px; margin: 0 0 8px; }
+  .k { font-family:'Fraunces', serif; font-style:italic; font-size:14px; color:var(--ink-2); }
+  p { max-width: 42em; margin: 0 0 14px; }
+  .lead { font-size: 23px; line-height: 1.42; margin-top: 28px; max-width: 36em; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px; }
+  .card { border:1px solid var(--rule); border-radius: 26px; padding: 22px; background: color-mix(in srgb, var(--paper) 70%, white); }
+  ol.struct { padding-left: 1.2em; } ol.struct li { margin-bottom: 8px; }
+  .sw { display:flex; flex-wrap:wrap; gap:14px; }
+  .sw div { width: 150px; }
+  .sw i { display:block; height: 96px; border-radius: 50%; width: 96px; border: 1px solid var(--rule); margin-bottom: 8px; }
+  .logos { display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; }
+  .logo { border:1px solid var(--rule); border-radius: 26px; padding: 26px; min-height: 250px; display:flex; flex-direction:column; justify-content:space-between; }
+  .logo .row { display:flex; align-items:center; gap: 16px; font-family:'Fraunces', serif; font-variation-settings:'SOFT' 100; font-weight:360; font-size: 30px; letter-spacing:-0.015em; }
+  .frames { display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 22px; }
+  figure { margin:0; } figure img { width:100%; border-radius: 18px; border:1px solid var(--rule); display:block; }
+  figcaption { margin-top: 8px; font-size: 15px; color: var(--ink-2); }
+  .flag { display:inline-block; border:1px dashed var(--ink-3); border-radius: 999px; padding: 4px 12px; font-size: 14px; }
+  code { font-size: 14px; background: var(--paper-2); padding: 1px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<main>
+  <p class="k">Corollary Labs · direction <b>organic</b> · pitch</p>
+  <h1>A firm,<br />under the microscope</h1>
+  <p class="lead">The firm is drawn as one living cell, seen through a round aperture. A cell is the natural picture of a thing that is defined by what crosses its boundary, and automation in the Superdark sense (a supplied input moving inside the boundary) has an exact biological shape: engulfment, the membrane folding around something from outside until it is part of the interior. From there the story is told as a sequence of figure legends beside a specimen that never stops moving: the agent is taken in, it is given an objective instead of a plan, the nucleus of coordination dissolves into a mesh, the membrane deforms without tearing and grows new outputs, and then the view pulls back into a tissue of firms where the same change spreads cell to cell, unevenly, with some firms dividing and their neighbours shrinking. Growth, not machinery: nothing is replaced in a single move; everything is reorganised continuously.</p>
+
+  <h2>Why this, and what it breaks</h2>
+  <div class="grid">
+    <div class="card"><h3>Metaphor that carries the ontology</h3><p>Membrane = the firm's input/output boundary. Engulfment = a supplied input produced inside. Chemical gradient = an objective (no plan, only a direction). Mesh = coordination spread across steps. Continuous deformation of the membrane = reorganisation as homotopy. Tissue = the economy; stain = diffusion.</p></div>
+    <div class="card"><h3>The words stay economic</h3><p>The picture is biological; every label and legend is about firms (inputs, plan, agent, objective, feedback loop, output B). No biology puns. Legends were written clean-room from the founder's words and the Superdark essay.</p></div>
+    <div class="card"><h3>Breaks from Plotter</h3><p><b>Navigation:</b> Plotter has footer-only nav. Here the mark in the corner divides into five daughter cells (one per page) when pressed, because a long scrolling specimen needs a way out at every point, and the dividing cell is the logo doing its job. <b>Colour:</b> a stained section, not white paper with green. <b>Reading model:</b> legends in cards beside a sticky specimen, not captions under a full-bleed stage.</p></div>
+  </div>
+
+  <h2>Page structure</h2>
+  <ol class="struct">
+    <li><b>Home.</b> Left: the name, large, soft serif, and the existing statement placeholders. Right (top on phones): the specimen in its aperture, alive; the cursor presses the membrane. Then five figure legends scroll past the sticky specimen (The firm · Execution inside · Plan-making · Reorganisation · Diffusion). At figure 5 the camera pulls back into the tissue and the aperture opens to fill the screen; the page ends in the tissue footer.</li>
+    <li><b>Essays.</b> A tray of round slides. Each essay gets its own generated specimen (a firm, a tissue, a mesh), seeded by its slug. The essay page keeps a quiet reading column, sidenotes in the margin, and the essay's slide above its contents.</li>
+    <li><b>About.</b> Statement, a live plate of figure 4 (the reorganised firm), and a colophon drawn as a specimen label.</li>
+    <li><b>Team.</b> One cell per person (portrait placeholder inside the cell), with [Name], [Role], one line.</li>
+    <li><b>Contact.</b> [EMAIL] set large beside the firm as it is drawn at the top of the home page.</li>
+    <li><b>Footer (every page).</b> A tissue: cells slowly reorganise; the one under the cursor stains. Links sit on top as round chips.</li>
+  </ol>
+
+  <h2>How the company introduces itself</h2>
+  <p>It shows the thing it looks at before it says what it is. The first screen is the name and a living firm; the first sentence of the story is a figure legend ("A firm, described by its inputs and outputs…"), not a slogan. The statement line is the one already agreed for Plotter (<i>Corollary Labs is a company.</i> + two placeholders), so no new claim is made about the company.</p>
+
+  <h2>Palette: a stained section</h2>
+  <p>Haematoxylin and eosin, the standard stain in histology: violet-black ink for structure, rose for what changes. Warm eosin-washed paper instead of white. One accent, used only for the agent, the objective, the mesh, new outputs and the spread.</p>
+  <div class="sw">
+    <div><i style="background:#f4eee7"></i>Paper <code>#F4EEE7</code></div>
+    <div><i style="background:#e2d5ca"></i>Paper 3 <code>#E2D5CA</code></div>
+    <div><i style="background:#221b33"></i>Haematoxylin ink <code>#221B33</code></div>
+    <div><i style="background:#554c68"></i>Ink 2 <code>#554C68</code></div>
+    <div><i style="background:#978ca4"></i>Ink 3 <code>#978CA4</code></div>
+    <div><i style="background:#c33d68"></i>Eosin (accent) <code>#C33D68</code></div>
+  </div>
+
+  <h2>Type</h2>
+  <div class="grid">
+    <div class="card"><p class="k">Display, titles, labels</p><h3 style="font-size:56px;line-height:1">Fraunces</h3><p>Variable, with the SOFT axis at 100: the serifs round off, like a letter drawn in ink on damp paper. Labels on the drawings are Fraunces italic, lower case, the way hand annotations sit on a scientific plate.</p></div>
+    <div class="card"><p class="k">Reading</p><h3 style="font-family:Newsreader;font-size:44px;line-height:1.05;font-weight:400">Newsreader</h3><p>A text serif built for long reading on screens; it carries the legends and the essays.</p></div>
+  </div>
+
+  <h2>Logo options</h2>
+  <div class="logos">
+    <div class="logo"><p class="k">A · chosen · the limaçon</p><svg viewBox="0 0 100 100" width="140" height="140"><path id="limA" fill="none" stroke="#221b33" stroke-width="2.4" stroke-linejoin="round" /></svg><div class="row"><svg viewBox="0 0 100 100" width="40" height="40"><path class="limS" fill="none" stroke="#221b33" stroke-width="5" /></svg>Corollary Labs</div><p style="font-size:15px;margin:10px 0 0">r = 1 + 1.6 cos θ. One closed line that is a boundary and, through its inner loop, the input it has drawn inside itself. A mathematical curve (the founder liked a math logo) that reads as a cell engulfing something. It is the menu button; pressed, it divides.</p></div>
+    <div class="logo"><p class="k">B · the bud</p><svg viewBox="0 0 110 100" width="150" height="140"><circle cx="46" cy="52" r="32" fill="none" stroke="#221b33" stroke-width="2.4"/><circle cx="84" cy="36" r="13" fill="none" stroke="#c33d68" stroke-width="2.4"/><circle cx="46" cy="52" r="30.8" fill="#f4eee7"/><circle cx="84" cy="36" r="11.8" fill="#f4eee7"/></svg><div class="row">Corollary Labs</div><p style="font-size:15px;margin:10px 0 0">A cell with a daughter budding from it: a corollary is what follows from a theorem, as a bud follows from a cell. Simple, warm, less exact.</p></div>
+    <div class="logo"><p class="k">C · wordmark only</p><div class="row" style="font-size:54px;font-weight:300;line-height:0.9">corollary<br />labs</div><p style="font-size:15px;margin:10px 0 0">Lower-case Fraunces at SOFT 100, no symbol. The softness of the letters does the work; nothing is added (the founder disliked dots and a superscript "Labs").</p></div>
+  </div>
+
+  <h2>Key frames</h2>
+  <div class="frames">
+    <figure><img src="frames/00-hero.jpg" alt="Hero: the name beside the living firm in its aperture" /><figcaption>Hero. The firm, alive; the cursor presses the membrane.</figcaption></figure>
+    <figure><img src="frames/01-the-firm.jpg" alt="Figure 1" /><figcaption>1 · The firm. Inputs, three people in sequence, coordination issuing plans, output A.</figcaption></figure>
+    <figure><img src="frames/02-execution-inside.jpg" alt="Figure 2" /><figcaption>2 · Execution inside. The boundary folds round the agent and closes.</figcaption></figure>
+    <figure><img src="frames/03-plan-making.jpg" alt="Figure 3" /><figcaption>3 · Plan-making. An objective gradient; alternatives explored; one selected.</figcaption></figure>
+    <figure><img src="frames/04-reorganisation.jpg" alt="Figure 4" /><figcaption>4 · Reorganisation. Coordination as a mesh, agents at every step, people on the feedback loop, a new lobe with outputs B and C.</figcaption></figure>
+    <figure><img src="frames/05-diffusion.jpg" alt="Figure 5" /><figcaption>5 · Diffusion. The aperture opens onto the tissue; the change spreads unevenly; some firms divide, neighbours shrink.</figcaption></figure>
+    <figure><img src="frames/06-menu.jpg" alt="Menu" /><figcaption>Navigation. The mark divides into one cell per page.</figcaption></figure>
+    <figure><img src="frames/07-essays.jpg" alt="Essays" /><figcaption>Essays. A tray of generated slides.</figcaption></figure>
+    <figure><img src="frames/08-mobile.jpg" alt="Phone" /><figcaption>375 px. Aperture on top, legends beneath.</figcaption></figure>
+  </div>
+
+  <h2>References</h2>
+  <p>See <code>REFERENCES.md</code> beside this file: Golgi and Cajal plates (Public Domain Review) for the stained-section look; inconvergent's hyphae and differential line for growth; Sage Jenson's Physarum work for the mesh; Distill's Growing Neural CA for AI-as-local-rule inside cells; Emergence Magazine (Awwwards SOTD 2018) for soft serif reading; Oxman for the single thin circle as a field of view.</p>
+
+  <h2>New copy for founder review</h2>
+  <p><span class="flag">unreviewed</span> The five figure titles and legends (clean-room writer, verbatim), the drawing labels, the meta description, the "Scroll" cue, "Draft, placeholders in brackets", "Figure 4, Reorganisation" on About, the Contact "Press" row, and alt text on canvases. Everything else is placeholder in [brackets].</p>
+</main>
+<script>
+  function lim(a, b, n, size, pad) { const pts = []; for (let i = 0; i <= n; i++) { const t = i / n * Math.PI * 2, r = b + a * Math.cos(t); pts.push([r * Math.cos(t), r * Math.sin(t)]); }
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]); const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const s = (size - pad * 2) / Math.max(maxX - minX, maxY - minY); const ox = pad + (size - pad * 2 - (maxX - minX) * s) / 2 - minX * s, oy = pad + (size - pad * 2 - (maxY - minY) * s) / 2 - minY * s;
+    return pts.map((p, i) => (i ? 'L' : 'M') + (ox + p[0] * s).toFixed(1) + ' ' + (oy + p[1] * s).toFixed(1)).join(' ') + 'Z'; }
+  const d = lim(1.6, 1, 240, 100, 8);
+  document.getElementById('limA').setAttribute('d', d);
+  document.querySelectorAll('.limS').forEach((e) => e.setAttribute('d', d));
+</script>
+</body>
+</html>

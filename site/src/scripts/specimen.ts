@@ -77,7 +77,7 @@ export class Specimen {
     if (this.running) return; this.running = true; this.last = performance.now();
     const loop = (now: number) => {
       if (!this.running) return;
-      const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now;
+      const dt = Math.max(0, Math.min(0.05, (now - this.last) / 1000)); this.last = now;
       this.tick(dt); this.draw(); this.onFrame?.(this.s);
       this.raf = requestAnimationFrame(loop);
     };
@@ -549,7 +549,7 @@ export class Specimen {
       ];
       nodes[nodes.length - 1][1] += ((i * 31) % 13 - 6) / 40;
       // path time weights (outside legs quick, steps linger)
-      const u = (this.phase * 0.035 + i / N) % 1;
+      const u = (((this.phase * 0.035 + i / N) % 1) + 1) % 1;
       const segs = nodes.length - 1;
       const f = u * segs; const k = Math.min(segs - 1, Math.floor(f)); let q = f - k;
       q = q - Math.sin(q * TAU) / TAU * 0.85; // linger at nodes

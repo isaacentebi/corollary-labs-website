@@ -28,7 +28,7 @@ export function initHome() {
       // reduced motion: show each figure's settled state, no in-betweens
       s = s < 0 ? -1 : Math.min(6, Math.ceil(s - 0.15));
     }
-    sp.sTarget = s;
+    sp.sTarget = s; if (RM) sp.s = s;
     const active = Math.floor(s) + 1; // 1-based figure index
     figs.forEach((f) => f.classList.toggle('is-active', +f.dataset.block! === Math.min(5, Math.max(0, s < 0 ? 0 : active))));
     root.classList.toggle('past-hero', scrollY > innerHeight * 0.45);
