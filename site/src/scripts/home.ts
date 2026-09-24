@@ -53,9 +53,9 @@ function stateFor(c: Ctl) {
     }
   }
   if (c.mode === 'linear') {
-    const lastTop = tops[tops.length - 1], sec = c.sec.getBoundingClientRect();
-    // t reaches 1 when the bottom of the section reaches the bottom of the screen
-    const end = sec.bottom + window.scrollY - window.innerHeight + readingLine(c.sec) - 20;
+    // t reaches 1 when the last statement is 60% of the way past the reading line, so it is still being read
+    const lastTop = tops[tops.length - 1], last = c.blocks[c.blocks.length - 1];
+    const end = lastTop + Math.max(120, last.offsetHeight * 0.6);
     const f = clamp((line - lastTop) / Math.max(1, end - lastTop));
     return c.states[c.states.length - 1] + f * (1 - c.states[c.states.length - 1]);
   }
@@ -67,7 +67,7 @@ function setType(el: Element | null, types: TypeLine[], s: number, base = 0) {
   const i = Math.max(0, Math.min(types.length - 1, Math.round(s)));
   if ((el as HTMLElement).dataset.cur !== String(i)) {
     (el as HTMLElement).dataset.cur = String(i);
-    el.innerHTML = `<span class="fig__t">${types[i].t}</span><span class="fig__gl">${types[i].g}</span>`;
+    el.innerHTML = `<span class="fig__t">${types[i].t}</span>${types[i].g ? `<span class="fig__gl">${types[i].g}</span>` : ''}`;
     el.classList.toggle('-changed', types[i].t !== types[base].t);
   }
 }
@@ -129,11 +129,23 @@ function updateRail() {
   const plate = document.querySelector('[data-plate]')?.getBoundingClientRect();
   const hero = document.querySelector('[data-hero]')?.getBoundingClientRect();
   const bib = document.querySelector('.biblio')?.getBoundingClientRect();
-  const band = document.querySelector('[data-sec="3"] .sec__grid')?.getBoundingClientRect();
-  const inBand = band && band.top < window.innerHeight * 0.6 && band.bottom > window.innerHeight * 0.4;
+  const inBand = [...document.querySelectorAll('.sec.-wide .sec__grid')].some((g) => {
+    const band = g.getBoundingClientRect();
+    return band.top < window.innerHeight * 0.6 && band.bottom > window.innerHeight * 0.4;
+  });
   const hide = (plate && plate.top < window.innerHeight * 0.75 && plate.bottom > window.innerHeight * 0.25) || (hero && hero.bottom > window.innerHeight * 0.3) || (bib && bib.top < window.innerHeight * 0.8) || inBand;
   rail.classList.toggle('-hide', !!hide);
 }
+
+// labels inside the figures keep a readable size on small screens: --s is the SVG's scale (CSS px per user unit)
+function fitLabels() {
+  document.querySelectorAll<SVGSVGElement>('svg.dg').forEach((svg) => {
+    const vb = svg.viewBox.baseVal; const w = svg.getBoundingClientRect().width;
+    if (vb && w) svg.style.setProperty('--s', String(Math.min(w / vb.width, (svg.getBoundingClientRect().height || 1e9) / vb.height)));
+  });
+}
+fitLabels();
+window.addEventListener('resize', fitLabels);
 
 let ticking = false;
 function frame() {

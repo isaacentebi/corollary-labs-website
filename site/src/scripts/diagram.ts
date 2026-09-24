@@ -5,13 +5,13 @@
 
 export type Port = { b: string; side: 'in' | 'out'; dy?: number } | { x: number; y: number };
 export interface BoxS { x: number; y: number; w: number; h: number; solid?: number; label?: string; blue?: number; o?: number; dot?: boolean; firm?: number }
-export interface WireS { from: Port; to: Port; blue?: number; dash?: number; o?: number; bend?: number; loop?: number; label?: string; note?: string; lt?: number; ldx?: number; ldy?: number }
+export interface WireS { from: Port; to: Port; blue?: number; dash?: number; o?: number; bend?: number; loop?: number; label?: string; note?: string; na?: 'start' | 'end'; lt?: number; ldx?: number; ldy?: number }
 export interface BndS { x: number; y: number; w: number; h: number; blue?: number; o?: number; tag?: string }
 export interface LabS { x: number; y: number; text: string; o?: number; blue?: number; cls?: string; anchor?: 'start' | 'middle' | 'end' }
 export interface State { boxes?: Record<string, BoxS>; wires?: Record<string, WireS>; bounds?: Record<string, BndS>; labels?: Record<string, LabS> }
 
 interface End { b?: string; side?: 'in' | 'out'; dy: number; x: number; y: number }
-interface WireG { e1: End; e2: End; x1: number; y1: number; x2: number; y2: number; blue: number; dash: number; o: number; draw: number; bend: number; loop: number; label?: string; note?: string; lt: number; ldx: number; ldy: number }
+interface WireG { e1: End; e2: End; x1: number; y1: number; x2: number; y2: number; blue: number; dash: number; o: number; draw: number; bend: number; loop: number; label?: string; note?: string; na?: 'start' | 'end'; lt: number; ldx: number; ldy: number }
 interface BoxG { x: number; y: number; w: number; h: number; solid: number; blue: number; o: number; label?: string; dot: number; firm: number }
 interface BndG { x: number; y: number; w: number; h: number; blue: number; o: number; tag?: string }
 interface LabG { x: number; y: number; o: number; blue: number; text: string; cls?: string; anchor: string }
@@ -42,7 +42,7 @@ function toGeo(s: State): Geo {
   for (const [k, w] of Object.entries(s.wires ?? {})) {
     const [x1, y1] = resolvePort(w.from, bx), [x2, y2] = resolvePort(w.to, bx);
     const end = (p: Port, x: number, y: number): End => ('b' in p ? { b: p.b, side: p.side, dy: p.dy ?? 0, x, y } : { dy: 0, x, y });
-    g.wires[k] = { e1: end(w.from, x1, y1), e2: end(w.to, x2, y2), x1, y1, x2, y2, blue: w.blue ?? 0, dash: w.dash ?? 0, o: w.o ?? 1, draw: 1, bend: w.bend ?? 0.5, loop: w.loop ?? 0, label: w.label, note: w.note, lt: w.lt ?? 0.5, ldx: w.ldx ?? 0, ldy: w.ldy ?? -10 };
+    g.wires[k] = { e1: end(w.from, x1, y1), e2: end(w.to, x2, y2), x1, y1, x2, y2, blue: w.blue ?? 0, dash: w.dash ?? 0, o: w.o ?? 1, draw: 1, bend: w.bend ?? 0.5, loop: w.loop ?? 0, label: w.label, note: w.note, na: w.na, lt: w.lt ?? 0.5, ldx: w.ldx ?? 0, ldy: w.ldy ?? -10 };
   }
   for (const [k, b] of Object.entries(s.bounds ?? {})) g.bounds[k] = { x: b.x, y: b.y, w: b.w, h: b.h, blue: b.blue ?? 0, o: b.o ?? 1, tag: b.tag };
   for (const [k, l] of Object.entries(s.labels ?? {})) g.labels[k] = { x: l.x, y: l.y, o: l.o ?? 1, blue: l.blue ?? 0, text: l.text, cls: l.cls, anchor: l.anchor ?? 'middle' };
@@ -66,7 +66,7 @@ function lerpGeo(A: Geo, B: Geo, t: number): Geo {
       e1: le(a.e1, b.e1), e2: le(a.e2, b.e2),
       x1: lerp(a.x1, b.x1, t), y1: lerp(a.y1, b.y1, t), x2: lerp(a.x2, b.x2, t), y2: lerp(a.y2, b.y2, t),
       blue: lerp(a.blue, b.blue, t), dash: lerp(a.dash, b.dash, t), o: lerp(a.o, b.o, t), draw: lerp(a.draw, b.draw, t),
-      bend: lerp(a.bend, b.bend, t), loop: lerp(a.loop, b.loop, t), label: (t < 0.5 ? a : b).label, note: (t < 0.5 ? a : b).note, lt: lerp(a.lt, b.lt, t), ldx: lerp(a.ldx, b.ldx, t), ldy: lerp(a.ldy, b.ldy, t),
+      bend: lerp(a.bend, b.bend, t), loop: lerp(a.loop, b.loop, t), label: (t < 0.5 ? a : b).label, note: (t < 0.5 ? a : b).note, na: (t < 0.5 ? a : b).na, lt: lerp(a.lt, b.lt, t), ldx: lerp(a.ldx, b.ldx, t), ldy: lerp(a.ldy, b.ldy, t),
     };
     // wires that leave: dash first, then fade; wires that arrive: draw in along their length
     if (inA && !inB) { w.dash = Math.min(1, t * 3); w.o = t < 0.4 ? 1 : Math.max(0, 1 - (t - 0.4) / 0.6); }
@@ -111,7 +111,7 @@ export class Diagram {
   constructor(svg: SVGSVGElement, states: State[], pal: Palette) {
     this.svg = svg; this.pal = pal;
     this.states = states.map(toGeo);
-    for (const n of ['bounds', 'wires', 'boxes', 'labels']) {
+    for (const n of ['bounds', 'boxes', 'wires', 'labels']) {
       const g = document.createElementNS(NS, 'g'); g.setAttribute('class', `dg-${n}`); svg.appendChild(g); this.layers[n] = g;
     }
   }
@@ -165,8 +165,10 @@ export class Diagram {
         t.setAttribute('opacity', `${Math.min(1, w.draw * 1.5)}`);
       } else t.textContent = '';
       if (w.note) {
-        const [lx, ly] = pointOn(w, w.lt);
-        nt.textContent = w.note; nt.setAttribute('x', `${lx + w.ldx}`); nt.setAttribute('y', `${ly + 24}`);
+        // a word under a wire: at the wire's outer end when anchored ('start' = left end, 'end' = right end), else at lt
+        const [lx, ly] = w.na === 'start' ? [w.x1 + 2, w.y1] : w.na === 'end' ? [w.x2 - 2, w.y2] : pointOn(w, w.lt);
+        nt.textContent = w.note; nt.setAttribute('x', `${w.na ? lx : lx + w.ldx}`); nt.setAttribute('y', `${ly + 22}`);
+        nt.style.textAnchor = w.na ?? 'middle';
         nt.setAttribute('fill', mix(ink, blue, w.blue));
         nt.setAttribute('opacity', `${Math.min(1, w.draw * 1.5)}`);
       } else nt.textContent = '';

@@ -87,7 +87,7 @@ sub, sup { font-size: 0.68em; line-height: 0; }
 .refs__list a { text-decoration: none; }
 .refs__list a:hover { text-decoration: underline; }
 .refs__list a[aria-current='page'] { color: var(--blue); }
-.refs__copy { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-2); margin-top: 48px; }
+.refs__copy { font-size: 0.85rem; color: var(--ink-2); margin-top: 48px; }
 @media (max-width: 800px) {
   .refs__grid { grid-template-columns: 1fr; gap: 26px; }
 }

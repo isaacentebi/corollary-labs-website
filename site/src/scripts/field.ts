@@ -81,7 +81,11 @@ export function initField(canvas: HTMLCanvasElement, opts: { reduced: boolean; o
     const pad = W < 700 ? 12 : 20;
     obs = opts.obstacles.filter((o) => o.el.offsetParent !== null).map((o) => {
       const r = o.el.getBoundingClientRect();
-      return { l: r.left - cr.left - pad, r: r.right - cr.left + pad, t: r.top - cr.top - pad, b: r.bottom - cr.top + pad, dir: o.dir, m: W < 700 ? 50 : 140 };
+      const t = r.top - cr.top - pad, bt = r.bottom - cr.top + pad;
+      // the taper width is at least the largest vertical shift the obstacle causes, so where the wires bend around it
+      // their slope stays below about 58° (the steepest part of a smoothstep has slope 1.5·shift/m)
+      const shift = o.dir === 'up' ? H - t : bt;
+      return { l: r.left - cr.left - pad, r: r.right - cr.left + pad, t, b: bt, dir: o.dir, m: Math.max(W < 700 ? 50 : 160, shift * 0.95) };
     }).sort((a, b) => (a.dir === b.dir ? 0 : a.dir === 'up' ? -1 : 1)); // bottom obstacles first, then top ones
   }
   const smooth = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u));
@@ -137,17 +141,19 @@ export function initField(canvas: HTMLCanvasElement, opts: { reduced: boolean; o
     ctx.globalAlpha = 1;
     // boxes are carried by the same map (their top and bottom edges), so every port stays on its wire
     for (const b of boxes) {
-      const top = phi(b.x, b.y0), h = phi(b.x, b.y1) - top, ny = top + h / 2;
+      // each box is carried by the same map as the wires: its left edge is mapped at the left edge's x and its right
+      // edge at the right edge's x, so it shears with the flow and every port stays on its wire
       const bw = W < 700 ? 9 : 14;
+      const xl = b.x - bw / 2, xr = b.x + bw / 2;
+      const l0 = phi(xl, b.y0), l1 = phi(xl, b.y1), r0 = phi(xr, b.y0), r1 = phi(xr, b.y1);
+      const ny = (l0 + l1 + r0 + r1) / 4;
       const near = ptr.a > 0.01 ? Math.exp(-(((b.x - ptr.x) / 190) ** 2 + ((ny - ptr.y) / 150) ** 2)) * ptr.a : 0;
+      ctx.beginPath(); ctx.moveTo(xl, l0); ctx.lineTo(xr, r0); ctx.lineTo(xr, r1); ctx.lineTo(xl, l1); ctx.closePath();
       if (b.open) {
-        ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
-        ctx.fillRect(b.x - bw / 2, ny - h / 2, bw, h);
-        ctx.strokeStyle = near > 0.35 ? blue : ink; ctx.lineWidth = 1.2;
-        ctx.strokeRect(b.x - bw / 2 + 0.6, ny - h / 2 + 0.6, bw - 1.2, h - 1.2);
+        ctx.fillStyle = getComputedStyle(document.body).backgroundColor; ctx.fill();
+        ctx.strokeStyle = near > 0.35 ? blue : ink; ctx.lineWidth = 1.2; ctx.stroke();
       } else {
-        ctx.fillStyle = near > 0.35 ? blue : ink;
-        ctx.fillRect(b.x - bw / 2, ny - h / 2, bw, h);
+        ctx.fillStyle = near > 0.35 ? blue : ink; ctx.fill();
       }
     }
   }

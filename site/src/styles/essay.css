@@ -34,7 +34,8 @@
 
 /* Figures inside essays (components/Figure.astro), in the site's ink + blue */
 .fig { margin: 2.4em 0; }
-.fig__plate { background: var(--paper-3); border: 1px solid var(--rule); padding: 18px; }
+.fig__plate { background: var(--paper-3); border: 1px solid var(--rule); padding: 18px; position: relative; }
+.fig__ph { font-family: var(--mono); font-size: 0.72rem; color: var(--blue); margin: 0 0 10px; letter-spacing: 0.02em; }
 .fig__plate svg { width: 100%; height: auto; overflow: visible; }
 .fig__cap { font-size: 0.85rem; color: var(--ink-2); margin-top: 10px; }
 .fig__n { font-variant-caps: all-small-caps; letter-spacing: 0.06em; color: var(--ink); margin-right: 0.3em; }

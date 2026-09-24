@@ -75,7 +75,7 @@
 .fig { margin: 0; position: sticky; top: 10vh; }
 .fig__stick { width: 100%; }
 .dg { width: 100%; height: auto; overflow: visible; max-height: 64vh; }
-.fig figcaption { margin-top: 18px; font-size: 15px; color: var(--ink-2); line-height: 1.45; max-width: 44rem; }
+.fig figcaption { text-wrap: pretty; margin-top: 18px; font-size: 15px; color: var(--ink-2); line-height: 1.45; max-width: 44rem; }
 .fig figcaption .sc { color: var(--ink); }
 .fig__type { display: block; margin-top: 10px; color: var(--ink); transition: color 0.3s; }
 .fig__t { display: block; font-size: clamp(20px, 1.8vw, 26px); }
@@ -94,12 +94,15 @@
 .dg-wire { fill: none; stroke-width: 1.7; vector-effect: non-scaling-stroke; stroke-linecap: round; }
 .dg-box { stroke-width: 1.6; vector-effect: non-scaling-stroke; }
 .dg-bnd { fill: none; stroke-width: 1.5; stroke-dasharray: 8 6; vector-effect: non-scaling-stroke; }
-.dg-bl, .dg-wl, .dg-tag, .dg-it { font-family: var(--serif); font-style: italic; font-size: 24px; }
+.dg { --dg-bg: var(--paper); }
+.dg-bl, .dg-wl, .dg-tag, .dg-it { font-family: var(--serif); font-style: italic; font-size: max(24px, calc(14px / var(--s, 1))); }
 .dg-bl { text-anchor: middle; }
-.dg-wl { text-anchor: middle; font-size: 22px; }
+.dg-wl { text-anchor: middle; font-size: max(22px, calc(14px / var(--s, 1))); }
+/* a paper halo, so a word never merges with a wire or the dashed boundary it sits near */
+.dg-wl, .dg-note, .dg-lab, .dg-tag { paint-order: stroke; stroke: var(--dg-bg); stroke-width: 5px; stroke-linejoin: round; }
 .dg-sub { font-size: 0.66em; font-style: normal; }
-.dg-note { font-family: var(--mono); font-size: 13px; letter-spacing: 0.02em; text-anchor: middle; }
-.dg-lab.dg-it { font-size: 26px; }
+.dg-note { font-family: var(--mono); font-size: max(13px, calc(11px / var(--s, 1))); letter-spacing: -0.01em; text-anchor: middle; }
+.dg-lab.dg-it { font-size: max(26px, calc(14px / var(--s, 1))); }
 
 /* §3 breaks the grid: the figure is a full-bleed band pinned to the top; the statements pass beneath it. */
 @media (min-width: 900px) {
@@ -107,6 +110,9 @@
   .sec.-wide .sec__h { padding: 0 var(--gut); max-width: 1480px; margin-left: auto; margin-right: auto; }
   .sec.-wide .sec__grid { grid-template-columns: 1fr; }
   .sec.-wide .fig { order: -1; top: 0; z-index: 5; background: var(--paper-2); border-bottom: 1px solid var(--rule); padding: 3vh var(--gut) 2.5vh; }
+  .sec.-wide .dg { --dg-bg: var(--paper-2); }
+  .sec.-wide.-flip .fig__stick { grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr); }
+  .sec.-wide.-flip figcaption { order: -1; }
   .sec.-wide .fig__stick { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem); gap: 0 4vw; align-items: end; max-width: 1480px; margin: 0 auto; }
   .sec.-wide .dg { width: auto; height: 58vh; max-height: none; max-width: 100%; justify-self: center; }
   .sec.-wide .fig figcaption { margin: 0 0 1vh; }
@@ -149,6 +155,8 @@
   .sec__grid, .sec.-plate .sec__grid { grid-template-columns: 1fr; }
   .fig { order: -1; top: 0; z-index: 5; background: var(--paper); padding: 10px var(--gut) 10px; margin: 0 calc(-1 * var(--gut)); border-bottom: 1px solid var(--rule); }
   .sec.-plate .fig { top: 0; background: var(--ink); border-bottom-color: #3a3630; }
+  .sec.-plate { padding-bottom: 2vh; }
+  .biblio { margin-top: 10vh; }
   .dg { max-height: 36vh; }
   .eco { max-height: 38vh; }
   .fig figcaption { font-size: 13px; margin-top: 6px; }
@@ -158,12 +166,12 @@
   .legend { font-size: 12px; gap: 4px 12px; margin-top: 8px; padding-top: 8px; }
   .legend svg { width: 16px; height: 12px; }
   .sec__text { padding-top: 32px; }
-  .stmt { margin-bottom: 24vh; }
+  .stmt { margin-bottom: 14vh; }
   .stmt:last-child { margin-bottom: 12vh; }
   .sec__text { padding-bottom: 0; }
   .stmt[data-stmt]::before { left: -10px; }
 }
 
 /* §4 runs on after its last statement, so the figure can finish (t → 1) while that statement stays in view */
-.sec.-plate .stmt:last-child { margin-bottom: 64vh; }
-@media (min-width: 900px) { .sec.-plate .stmt:last-child { position: sticky; top: 50vh; } }
+.sec.-plate .stmt:last-child { margin-bottom: 14vh; }
+@media (min-width: 900px) { .sec.-plate .stmt:last-child { margin-bottom: 34vh; } }

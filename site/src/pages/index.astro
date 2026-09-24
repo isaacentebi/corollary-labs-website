@@ -86,7 +86,7 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
       <div class="sec__grid">
         <div class="sec__text">
           <div class="stmt" id="def-1-1" data-stmt data-state="0">
-            <p><span class="stmt__h">Definition 1.1</span> <span class="stmt__t">(Firm).</span> A <em>firm</em> is a morphism <span class="m" set:html={`<i>f</i> : <i>X</i> ${TO} <i>Y</i>`} /> in a traced symmetric monoidal category in which objectives can be copied: the object <i>O</i> of objectives has a copy map <span class="m" set:html={`<i>O</i> ${TO} <i>O</i> ${OT} <i>O</i>`} />. The objects of the category are the kinds of thing firms take in and give out, and its morphisms are processes. <i>X</i> is the firm’s input and <i>Y</i> its output.</p>
+            <p><span class="stmt__h">Definition 1.1</span> <span class="stmt__t">(Firm).</span> A <em>firm</em> is a morphism <span class="m" set:html={`<i>f</i> : <i>X</i> ${TO} <i>Y</i>`} /> in a traced symmetric monoidal category in which objectives can be copied: the object <i>O</i> of objectives has a coassociative copy map <span class="m" set:html={`<i>O</i> ${TO} <i>O</i> ${OT} <i>O</i>`} />, so copying <i>O</i> to any number <i>n</i> ≥ 2 of places is well defined. The objects of the category are the kinds of thing firms take in and give out, and its morphisms are processes. <i>X</i> is the firm’s input and <i>Y</i> its output.</p>
             <p class="note" set:html={`Diagrams are read from left to right. A box is a morphism and a wire is an object. Boxes stacked vertically are combined by the tensor product ${OT}, and boxes joined along a wire by composition ${CO}. The trace returns an output of a box to one of its inputs, drawn as a feedback wire.`} />
           </div>
           <div class="stmt" id="rem-1-2" data-stmt data-state="1">
@@ -95,7 +95,7 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
         </div>
         <figure class="fig" aria-label="Figure 1">
           <div class="fig__stick">
-            <svg class="dg" data-dg viewBox="0 0 640 400" role="img" aria-label="Figure 1: a firm f from inputs X to outputs Y, drawn first as one box with a thick outline and then opened to show three processes inside a dashed boundary."></svg>
+            <svg class="dg" data-dg viewBox="0 56 640 290" role="img" aria-label="Figure 1: a firm f from inputs X to outputs Y, drawn first as one box with a thick outline and then opened to show three processes inside a dashed boundary."></svg>
             <figcaption>
               <span class="sc">Fig. 1.</span> The firm <i>f</i>, closed and opened.
               <span class="fig__type" data-type></span>
@@ -113,7 +113,7 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
     </section>
 
     <!-- §2 ───────────────────────────────────────────────────────── -->
-    <section class="sec" data-sec="2" aria-labelledby="s2">
+    <section class="sec -wide -flip" data-sec="2" aria-labelledby="s2">
       <h2 class="sec__h" id="s2"><span class="sec__n">2</span> Automation</h2>
       <div class="sec__grid">
         <div class="sec__text">
@@ -130,8 +130,8 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
         </div>
         <figure class="fig" aria-label="Figure 2">
           <div class="fig__stick">
-            <svg class="dg" data-dg viewBox="0 0 640 400" role="img" aria-label="Figure 2: the boundary of the firm, drawn in blue, moves outward to enclose the process g that turns an objective O into a plan P."></svg>
-            <figcaption><span class="sc">Fig. 2.</span> The boundary (blue) is redrawn around <i>g</i>. <span class="fig__type" data-type></span></figcaption>
+            <svg class="dg" data-dg viewBox="0 70 640 270" role="img" aria-label="Figure 2: the boundary of the firm, drawn in blue, moves outward to enclose the process g that turns an objective O into a plan P."></svg>
+            <figcaption><span class="sc">Fig. 2.</span> The boundary (blue) is redrawn around <i>g</i>, here carried out by an agent. <span class="fig__type" data-type></span></figcaption>
           </div>
         </figure>
       </div>
@@ -153,8 +153,8 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
             <p class="note">In Figure 3 the boxes are now moving without any wire being cut, joined or crossed: a planar isotopy.</p>
           </div>
           <div class="stmt -thm" id="cor-3-3" data-stmt data-state="2">
-            <p><span class="stmt__h">Corollary 3.3.</span> <em>Replacing boxes by boxes of the same type, and deforming a diagram by a planar isotopy, both leave the type of the firm unchanged. The type changes only if boxes are added or removed, or wires are cut and rejoined.</em></p>
-            <p class="proof"><em>Proof.</em> The type of a diagram is read from the wires that cross its boundary (Remark 1.2). Replacing a box by one of the same type leaves those wires as they are (Remark 3.1). A planar isotopy moves boxes and wires without cutting, joining or crossing them, so it leaves them as they are too; by Theorem 3.2 it does not change even the morphism. Any other change to a diagram adds or removes a box, or changes how wires are joined. <span class="qed" aria-label="End of proof"></span></p>
+            <p><span class="stmt__h">Corollary 3.3.</span> <em>Replacing boxes by boxes of the same type, and deforming a diagram by a planar isotopy, both leave the type of the firm unchanged. The type changes only if boxes or wires are added or removed, or wires are cut and rejoined.</em></p>
+            <p class="proof"><em>Proof.</em> The type of a diagram is read from the wires that cross its boundary (Remark 1.2). Replacing a box by one of the same type leaves those wires as they are (Remark 3.1). A planar isotopy moves boxes and wires without cutting, joining or crossing them, so it leaves them as they are too; by Theorem 3.2 it does not change even the morphism. Any other change adds or removes a box or a wire, or changes how wires are joined. <span class="qed" aria-label="End of proof"></span></p>
           </div>
           <div class="stmt" id="rem-3-4" data-stmt data-state="3">
             <p><span class="stmt__h">Remark 3.4</span> <span class="stmt__t">(Reorganisation).</span> Removing a box, or cutting and rejoining wires, is not a planar isotopy, so Corollary 3.3 does not apply and the type can change. In Figure 3, <i>c</i> is removed; the objective is copied to the three agents by the copy map of Definition 1.1 (the dot); a feedback wire, a trace in the sense of [2], returns part of the output of <i>e</i><sub>3</sub> through a person <i>r</i> to <i>e</i><sub>1</sub>; and a person <i>h</i> makes a new output <i>Z</i>. The type becomes <span class="m" set:html={`<i>A</i> ${OT} <i>O</i> ${TO} <i>Y</i> ${OT} <i>Z</i>`} />.</p>
@@ -162,8 +162,8 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
         </div>
         <figure class="fig" aria-label="Figure 3">
           <div class="fig__stick">
-            <svg class="dg" data-dg viewBox="0 0 740 460" role="img" aria-label="Figure 3: a firm F with a coordinating process c and three steps. One step is replaced by an agent; the diagram is deformed; then c is removed, the objective goes to three agents, a feedback loop passes through a person r, and a person h makes a new output Z."></svg>
-            <figcaption><span class="sc">Fig. 3.</span> Replacement, deformation, surgery. Open: people. Solid: agents. Blue: what changes. Dashed: the boundary of&nbsp;<i>F</i>. <span class="fig__type" data-type></span></figcaption>
+            <svg class="dg" data-dg viewBox="-50 0 850 460" role="img" aria-label="Figure 3: a firm F with a coordinating process c and three steps. One step is replaced by an agent; the diagram is deformed; then c is removed, the objective goes to three agents, a feedback loop passes through a person r, and a person h makes a new output Z."></svg>
+            <figcaption><span class="sc">Fig. 3.</span> Replacement, deformation, surgery. Open: people. Solid: agents. Blue: what changes. Dashed: the&nbsp;boundary&nbsp;of&nbsp;<i>F</i>. <span class="fig__type" data-type></span></figcaption>
           </div>
         </figure>
       </div>
