@@ -1,0 +1,12 @@
+---
+// The open window onto the sheet at the top of a page. The WebGL layer draws the title into the gratings
+// (a latent image: the letters are the same lines, shifted half a pitch). Without WebGL the h1 shows as text.
+interface Props { lines: string[]; state: 'front' | 'agent' | 'four' | 'rest' | 'plate'; short?: boolean }
+const { lines, state, short = false } = Astro.props;
+---
+<header class:list={['band', { 'band--short': short }]} data-band data-state={state}>
+  {lines.length > 0 && (
+    <h1 class="band__title" data-latent>{lines.map((l) => <span class="band__line">{l}</span>)}</h1>
+  )}
+  <slot />
+</header>

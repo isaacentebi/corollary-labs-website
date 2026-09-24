@@ -1,0 +1,16 @@
+---
+import Sheet from '../layouts/Sheet.astro';
+import Band from '../components/Band.astro';
+import { site } from '../config/site';
+---
+<Sheet active="contact" page="contact" title="Contact">
+  <Band lines={['Contact']} state="rest" />
+  <section class="page">
+    <a class="mail" href="mailto:"><span>{site.email}</span></a>
+    <dl class="colophon">
+      <div><dt>Enquiries</dt><dd class="ph">[Contact — one line]</dd></div>
+      <div><dt>Address</dt><dd class="ph">[Address]</dd></div>
+      <div><dt>Press</dt><dd class="ph">[Email]</dd></div>
+    </dl>
+  </section>
+</Sheet>

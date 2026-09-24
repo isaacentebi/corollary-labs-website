@@ -1,40 +1,27 @@
 ---
-// Team — placeholders until names, roles and portraits are chosen. Same band + hairline system as About and Essays.
-import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
-import '../styles/about.css';
-
-const people = Array.from({ length: 4 }, (_, i) => ({ n: String(i + 1).padStart(2, '0'), name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]' }));
+import Sheet from '../layouts/Sheet.astro';
+import Band from '../components/Band.astro';
+import Rings from '../components/Rings.astro';
+const people = [
+  { dx: 7, dy: 2, hx: -10, hy: 6 },
+  { dx: -5, dy: 6, hx: 9, hy: -7 },
+  { dx: 3, dy: -8, hx: -6, hy: 11 },
+  { dx: -8, dy: -3, hx: 12, hy: 4 },
+];
 ---
-<Base page="team" title="Team" description="[Meta description]">
-  <article class="about o-container" aria-labelledby="team-title">
-    <header class="about-band">
-      <canvas class="field about-band__field" data-field="index" data-word="Team" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="team-title">Team</h1>
-      <span class="about-band__note t-label" aria-hidden="true" data-reveal="scramble">Draft — placeholders in brackets</span>
-    </header>
-    <div class="rule" data-reveal="rule"></div>
-
-    <p class="about-statement" data-reveal="lines">
-      <span class="ph">[Placeholder — one sentence on who works at {site.name}.]</span>
-    </p>
-
-    <ol class="team-list" data-reveal="rows">
-      {people.map((p) => (
-        <li class="team-row">
-          <span class="team-row__n t-label">{p.n}</span>
-          <span class="team-row__name ph">{p.name}</span>
-          <span class="team-row__role t-label ph">{p.role}</span>
-          <span class="team-row__line ph">{p.line}</span>
+<Sheet active="team" page="team" title="Team">
+  <Band lines={['Team']} state="four" />
+  <section class="page">
+    <p class="lede ph">[Team — one line]</p>
+    <ul class="people">
+      {people.map((o) => (
+        <li class="person">
+          <Rings cls="person__disc" dx={o.dx} dy={o.dy} hx={o.hx} hy={o.hy} />
+          <p class="person__name ph">[Name]</p>
+          <p class="person__role ph">[Role]</p>
+          <p class="person__bio ph">[Two sentences]</p>
         </li>
       ))}
-    </ol>
-
-    <section class="about-colophon" aria-label="Contact">
-      <dl>
-        <div class="about-colophon__row"><dt class="t-label">JOIN</dt><dd class="ph">[Placeholder — how to get in touch about working here.]</dd></div>
-        <div class="about-colophon__row"><dt class="t-label">CONTACT</dt><dd><a href={`mailto:${site.email}`}>{site.email}</a></dd></div>
-      </dl>
-    </section>
-  </article>
-</Base>
+    </ul>
+  </section>
+</Sheet>

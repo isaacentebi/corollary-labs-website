@@ -1,8 +1,44 @@
 ---
-import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import '../styles/landing.css';
+import Sheet from '../layouts/Sheet.astro';
+import { getCollection } from 'astro:content';
+import { url } from '../config/site';
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 ---
-<Base page="home">
-  <Story />
-</Base>
+<Sheet active="home" page="home">
+  <section class="hero" data-hero aria-label="Corollary Labs">
+    <div class="hero__stage band" data-band data-state="home">
+      <h1 class="band__title hero__name" data-latent><span class="band__line">Corollary</span><span class="band__line">Labs</span></h1>
+      <p class="hero__statement ph">[Statement]</p>
+      <div class="hero__meter" aria-hidden="true"><i data-meter></i></div>
+    </div>
+  </section>
+
+  <section class="brief" aria-labelledby="brief-h">
+    <h2 id="brief-h" class="kicker">About</h2>
+    <p class="brief__about ph">[About — one paragraph]</p>
+    <ul class="stretch-links">
+      <li><a href={url('about/')}><span>About</span></a></li>
+      <li><a href={url('team/')}><span>Team</span></a></li>
+      <li><a href={url('contact/')}><span>Contact</span></a></li>
+    </ul>
+  </section>
+
+  <section class="latest" aria-labelledby="latest-h">
+    <div class="latest__head">
+      <h2 id="latest-h" class="kicker">Essays</h2>
+      <a class="more" href={url('essays/')}>All essays</a>
+    </div>
+    <ol class="rows">
+      {essays.map((e) => (
+        <li>
+          <a class="row" href={url(`essays/${e.id}/`)}>
+            <time class="row__date" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+            <span class="row__title">{e.data.title}</span>
+            <span class="row__dek">{e.data.dek}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </section>
+</Sheet>

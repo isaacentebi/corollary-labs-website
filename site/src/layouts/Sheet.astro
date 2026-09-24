@@ -1,0 +1,60 @@
+---
+// One sheet, five regions in a fixed order. The active region is stretched open; the others stay on screen,
+// folded to strips (desktop: full-height columns; phones: a strip across the top). Nothing is ever removed.
+import '@fontsource-variable/anybody/wdth.css';
+import '@fontsource-variable/newsreader/opsz.css';
+import '@fontsource-variable/newsreader/opsz-italic.css';
+import '../styles/global.css';
+import { site, regions, indexOf, url, type RegionKey } from '../config/site';
+
+interface Props { title?: string; description?: string; active: RegionKey; page: string }
+const { title, description = site.description, active, page } = Astro.props;
+const a = indexOf(active);
+const full = title ? `${title} — ${site.name}` : site.name;
+const place = (i: number) =>
+  i < a ? `--x:calc(${i} * var(--s));--w:var(--s)`
+  : i === a ? `--x:calc(${a} * var(--s));--w:calc(100% - 4 * var(--s))`
+  : `--x:calc(100% - ${5 - i} * var(--s));--w:var(--s)`;
+---
+<!doctype html>
+<html lang="en" style={`--a:${a}`} data-page={page}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{full}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#E9E7EF" />
+    <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
+    <meta property="og:title" content={full} />
+    <meta property="og:description" content={description} />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('still');
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#leaf">Skip to content</a>
+    <canvas class="gl" aria-hidden="true"></canvas>
+    <nav class="folds" aria-label="Site">
+      {regions.map((r, i) => (
+        <a class:list={['fold', { 'is-open': i === a }]} data-k={i} data-key={r.key} href={r.href} style={place(i)} aria-current={i === a ? 'page' : undefined}>
+          <span class="fold__label">{r.key === 'home' ? <><span>Corollary</span> <span>Labs</span></> : r.label}</span>
+        </a>
+      ))}
+    </nav>
+    <main id="leaf" class="leaf" data-k={a} data-page={page} data-title={full} tabindex="-1">
+      <slot />
+      <footer class="foot">
+        <a class="foot__name" href={url('')}>{site.name}</a>
+        <nav class="foot__nav" aria-label="Footer">
+          {regions.slice(1).map((r) => <a href={r.href}>{r.label}</a>)}
+        </nav>
+        <a class="foot__mail" href="mailto:">{site.email}</a>
+        <span class="foot__year">© 2026</span>
+      </footer>
+    </main>
+    <script>
+      import '../scripts/app';
+    </script>
+  </body>
+</html>

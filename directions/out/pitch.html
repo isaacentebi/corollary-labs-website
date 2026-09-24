@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interference — pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,100..900&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap" rel="stylesheet">
+<style>
+  :root { --ground:#e9e7ef; --ground-2:#dfdce7; --ink:#17141f; --ink-2:#4c4760; --ink-3:#6f6a82; --rule:rgba(23,20,31,.16); --accent:#f2305f;
+    --sans:'Anybody',sans-serif; --serif:'Newsreader',Georgia,serif; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--ground); color:var(--ink); font:400 19px/1.55 var(--serif); }
+  .wrap { max-width:1240px; margin:0 auto; padding:56px 28px 120px; }
+  .k { font:650 12px/1 var(--sans); font-stretch:80%; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2); margin:0 0 14px; }
+  h1 { font:820 clamp(64px,11vw,168px)/.84 var(--sans); font-stretch:150%; letter-spacing:-.02em; margin:10px 0 28px; }
+  h2 { font:760 30px/1.05 var(--sans); font-stretch:112%; margin:0 0 18px; }
+  section { border-top:1px solid var(--ink); padding:40px 0 48px; display:grid; grid-template-columns:260px 1fr; gap:24px 48px; }
+  section > .k { padding-top:10px; }
+  p { margin:0 0 1em; max-width:44em; }
+  .lead { font:360 clamp(24px,2.4vw,32px)/1.25 var(--serif); max-width:30em; }
+  ul { margin:0; padding-left:1.1em; } li { margin:0 0 .5em; max-width:44em; } li::marker { color:var(--accent); }
+  .sw { display:flex; flex-wrap:wrap; gap:14px; }
+  .sw div { width:150px; } .sw i { display:block; height:92px; box-shadow:0 0 0 1px var(--rule); margin-bottom:8px; }
+  .sw b { display:block; font:700 13px/1.3 var(--sans); } .sw span { font:500 12px/1.3 var(--sans); color:var(--ink-2); }
+  .type .a { font:820 64px/1 var(--sans); font-stretch:150%; } .type .b { font:620 20px/1.2 var(--sans); font-stretch:60%; letter-spacing:.1em; text-transform:uppercase; }
+  .type .c { font:380 30px/1.3 var(--serif); }
+  .logos { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .logo { background:var(--ground-2); padding:26px; box-shadow:0 0 0 1px var(--rule); display:flex; flex-direction:column; gap:16px; }
+  .logo svg { width:100%; height:auto; display:block; }
+  .logo p { font-size:15px; margin:0; color:var(--ink-2); }
+  .wm { font:820 34px/1 var(--sans); display:flex; align-items:baseline; white-space:nowrap; }
+  .frames { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; }
+  .frames figure { margin:0; } .frames img { width:100%; display:block; box-shadow:0 0 0 1px var(--rule); }
+  .frames figcaption { font:500 14px/1.4 var(--sans); color:var(--ink-2); margin-top:8px; }
+  .phones { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .phones img { width:100%; display:block; box-shadow:0 0 0 1px var(--rule); }
+  @media (max-width:800px) { section { grid-template-columns:1fr; } .logos, .frames { grid-template-columns:1fr; } .phones { grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="k">Corollary Labs · direction <b>out</b> · the wildcard</p>
+  <h1>Interference</h1>
+  <p class="lead">The whole site is one sheet ruled with two identical gratings, one on top of the other. Where nothing has changed they line up and the page is plain. Where something has entered the sheet and pulled it into a new shape, the lower grating slips and a colour shows through as fringes.</p>
+
+  <section>
+    <p class="k">Concept</p>
+    <div>
+      <p>The company's subject is a set of continuous deformations: agents enter an organisation, the organisation reorganises around them (it is not replaced), and the change spreads outward through the economy. We express this with an optical fact, not a diagram. When two superimposed gratings differ by a displacement field, the moiré fringes are the <em>contour lines of that displacement</em>. A reorganised region carries its history as fringes. A region that has fully shifted looks uniform again, only in a new colour. At no point do we draw a firm, a box or a label.</p>
+      <p>The same rule shapes the navigation. The five pages (Home, Essays, About, Team, Contact) are five regions of the sheet, always in the same order, always on screen. Opening one stretches it; the others fold to narrow strips at its sides, and the fold shows in the strips as strain. Moving between pages is a continuous deformation of one surface: nothing is cut, nothing leaves, and the topology never changes.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="k">Structure</p>
+    <ul>
+      <li><b>Home.</b> A short, sticky scene (about 2.2 viewport heights) in four continuous states. <i>Rest:</i> plain lilac, "Corollary Labs" latent in the gratings, and the cursor bends the sheet like a lens. <i>Entry:</i> five points glide in from the edge and each one pulls the sheet into rings. <i>Spread:</i> from each point a front of fringes travels outward and the fronts merge. <i>Settled:</i> the whole sheet has shifted and turned rose, and the name inverts. Directly after that come [About — one paragraph], three stretch-links (About · Team · Contact) and the latest essays.</li>
+      <li><b>Essays / Essay.</b> A band of sheet with a front halfway across it, then a plain index of rows. Essays are read in a calm Newsreader column with sidenotes; figures are interference plates.</li>
+      <li><b>About.</b> The title latent in the band, one point with its rings, then [About — one paragraph], two paragraphs and a colophon.</li>
+      <li><b>Team.</b> Four small displacements in the band. Each person is a disc of two ring gratings; hovering moves one of them.</li>
+      <li><b>Contact.</b> The sheet at rest. The email is set very large and stretches on hover.</li>
+    </ul>
+  </section>
+
+  <section>
+    <p class="k">Interaction model</p>
+    <ul>
+      <li><b>Folds replace the navbar and the footer-only rule.</b> Every other page is always one click away and always visible as a strip. This breaks Plotter's "no nav" default on purpose: here the nav <i>is</i> the idea (reorganisation without removal).</li>
+      <li><b>Page transitions</b> squash the open page horizontally, without reflow, into its strip while the new page stretches out of its own. A wave of strain crosses the sheet from one to the other (about 1.1 s).</li>
+      <li><b>Hovering a fold</b> relaxes its strain and stretches its label from condensed to expanded (the Anybody width axis).</li>
+      <li><b>Cursor:</b> a moving lens of fringes. <b>Click on the sheet:</b> a ring travels out and decays, a small diffusion you can set off yourself.</li>
+      <li><b>Phones:</b> the folds become a strip across the top: five segments, with the open one wider.</li>
+      <li><b>Reduced motion:</b> no sticky scene; a single still frame of the spread state, instant page changes. Without WebGL, CSS gratings produce real moiré and the titles show as text.</li>
+    </ul>
+  </section>
+
+  <section>
+    <p class="k">Palette</p>
+    <div>
+      <div class="sw">
+        <div><i style="background:#e9e7ef"></i><b>Lilac film</b><span>#E9E7EF · ground</span></div>
+        <div><i style="background:#17141f"></i><b>Aubergine ink</b><span>#17141F · the fixed grating, text</span></div>
+        <div><i style="background:#f2305f"></i><b>Signal rose</b><span>#F2305F · the moving grating: appears only where there is change</span></div>
+        <div><i style="background:#dfdce7"></i><b>Lilac 2</b><span>#DFDCE7 · plates</span></div>
+        <div><i style="background:repeating-linear-gradient(90deg,#17141f 0 2px,transparent 2px 7px),repeating-linear-gradient(93deg,#f2305f 0 2px,transparent 2px 7px),#e9e7ef"></i><b>The mix</b><span>ink over rose: fringes</span></div>
+      </div>
+      <p style="margin-top:18px">Unlike the other versions: no paper and green, no bone and ochre, no cream and blue, no black and orange. The accent is never used decoratively. It is the colour of displacement.</p>
+    </div>
+  </section>
+
+  <section class="type">
+    <p class="k">Type</p>
+    <div>
+      <p class="a">Anybody 820 / 150%</p>
+      <p class="b">Anybody 620 / 60% · fold labels, kickers</p>
+      <p class="c">Newsreader: reading text, placeholders in italic</p>
+      <p>A width-variable grotesk (wdth 50–150) lets the type itself be deformed continuously: condensed in the strips, expanded when open, stretched on hover. Newsreader (optical sizes) carries all the reading.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="k">Logo options</p>
+    <div class="logos">
+      <div class="logo">
+        <svg viewBox="0 0 120 120"><defs><clipPath id="lc"><circle cx="60" cy="60" r="34"/></clipPath></defs><rect width="120" height="120" fill="#e9e7ef"/><g fill="#f2305f" clip-path="url(#lc)"></g><g id="la"></g></svg>
+        <p><b>A · Latent disc.</b> A square of ruled lines; inside a circle the lower grating is shifted half a pitch, so the disc appears only as colour. This is the site's mechanism in one mark, and it is the favicon.</p>
+      </div>
+      <div class="logo">
+        <svg viewBox="0 0 120 120" id="lb"></svg>
+        <p><b>B · Two centres.</b> Two identical sets of rings, one displaced. Their interference draws the mark, which changes whenever the displacement does. It animates on hover.</p>
+      </div>
+      <div class="logo">
+        <div class="wm" id="lw" aria-label="Corollary Labs"></div>
+        <p><b>C · Folding wordmark.</b> "Corollary Labs" set in one continuous width gradient, from 150 % down to 50 %: the name as a region being folded.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="k">Key frames · desktop</p>
+    <div class="frames">
+      <figure><img src="frames/d-01-home-rest.png" alt=""><figcaption>1 · Rest: the name is latent, the cursor is a lens</figcaption></figure>
+      <figure><img src="frames/d-02-home-enter.png" alt=""><figcaption>2 · Entry: points arrive; the sheet rings around them</figcaption></figure>
+      <figure><img src="frames/d-03-home-spread.png" alt=""><figcaption>3 · Spread: fronts merge and the whole sheet shifts</figcaption></figure>
+      <figure><img src="frames/d-05-home-brief.png" alt=""><figcaption>4 · Business right after: [About], About · Team · Contact</figcaption></figure>
+      <figure><img src="frames/d-13-transition-a.png" alt=""><figcaption>5 · Transition: About folds into its strip</figcaption></figure>
+      <figure><img src="frames/d-09-about.png" alt=""><figcaption>6 · About open; the other four regions are folds</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <p class="k">Key frames · phone</p>
+    <div class="phones">
+      <img src="frames/m-01-home-rest.png" alt="">
+      <img src="frames/m-03-home-spread.png" alt="">
+      <img src="frames/m-05-home-brief.png" alt="">
+      <img src="frames/m-09-about.png" alt="">
+    </div>
+  </section>
+</div>
+<script>
+  // logo A: ruled square with a latent disc
+  const NS = 'http://www.w3.org/2000/svg';
+  const a = document.getElementById('la').ownerSVGElement;
+  const g1 = a.querySelector('g[clip-path]');
+  for (let x = 12; x < 110; x += 8) {
+    const r = document.createElementNS(NS, 'rect'); r.setAttribute('x', x + 4); r.setAttribute('y', 14); r.setAttribute('width', 3); r.setAttribute('height', 92); g1.appendChild(r);
+    const k = document.createElementNS(NS, 'rect'); k.setAttribute('x', x); k.setAttribute('y', 14); k.setAttribute('width', 3); k.setAttribute('height', 92); k.setAttribute('fill', '#17141f'); a.appendChild(k);
+  }
+  // logo B: two ring systems
+  const b = document.getElementById('lb');
+  b.innerHTML = '<rect width="120" height="120" fill="#e9e7ef"/><clipPath id="bc"><circle cx="60" cy="60" r="50"/></clipPath>';
+  const mk = (cx, col, w) => { const g = document.createElementNS(NS, 'g'); g.setAttribute('clip-path', 'url(#bc)'); for (let r = 3; r < 90; r += 5) { const c = document.createElementNS(NS, 'circle'); c.setAttribute('cx', cx); c.setAttribute('cy', 60); c.setAttribute('r', r); c.setAttribute('fill', 'none'); c.setAttribute('stroke', col); c.setAttribute('stroke-width', w); g.appendChild(c); } b.appendChild(g); return g; };
+  const moving = mk(66, '#f2305f', 1.7); mk(56, '#17141f', 1.7);
+  moving.style.transition = 'transform 1.2s cubic-bezier(.22,1,.36,1)';
+  b.addEventListener('mouseenter', () => moving.style.transform = 'translate(-14px, 6px)');
+  b.addEventListener('mouseleave', () => moving.style.transform = '');
+  // logo C: width gradient
+  const w = document.getElementById('lw'); const t = 'Corollary Labs';
+  [...t].forEach((ch, i) => { const s = document.createElement('span'); s.textContent = ch === ' ' ? ' ' : ch; s.style.fontStretch = (150 - (100 * i) / (t.length - 1)).toFixed(0) + '%'; w.appendChild(s); });
+</script>
+</body>
+</html>

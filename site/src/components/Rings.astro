@@ -1,0 +1,23 @@
+---
+// Two sets of concentric rings, one (accent) drawn under the other (ink) and slightly displaced.
+// Their interference is the picture; hovering the parent moves the displacement.
+interface Props { w?: number; h?: number; dx?: number; dy?: number; hx?: number; hy?: number; cx?: number; cy?: number; pitch?: number; shape?: 'circle' | 'rect'; cls?: string }
+const { w = 200, h = 200, dx = 6, dy = 0, hx = -8, hy = 5, cx = w / 2, cy = h / 2, pitch = 5.2, shape = 'circle', cls = '' } = Astro.props;
+const R = Math.hypot(Math.max(cx, w - cx), Math.max(cy, h - cy)) + 20;
+const radii = Array.from({ length: Math.ceil(R / pitch) }, (_, i) => (i + 0.5) * pitch);
+const id = `r${Math.random().toString(36).slice(2, 8)}`;
+---
+<svg class:list={['rings', cls]} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={`--hx:${hx}px;--hy:${hy}px`}>
+  <defs>
+    <clipPath id={id}>{shape === 'circle' ? <circle cx={w / 2} cy={h / 2} r={Math.min(w, h) / 2} /> : <rect width={w} height={h} />}</clipPath>
+  </defs>
+  <g clip-path={`url(#${id})`}>
+    <rect width={w} height={h} class="rings__bg" />
+    <g class="rings__b" style={`transform: translate(${dx}px, ${dy}px)`}>
+      {radii.map((r) => <circle cx={cx} cy={cy} r={r} />)}
+    </g>
+    <g class="rings__a">
+      {radii.map((r) => <circle cx={cx} cy={cy} r={r} />)}
+    </g>
+  </g>
+</svg>
