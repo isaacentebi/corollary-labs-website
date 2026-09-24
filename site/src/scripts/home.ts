@@ -1,86 +1,57 @@
-// Home: scroll position → story position `s` for the specimen, legend fades, and the key layer.
-// Block k (1..5) maps to s ∈ [k-1, k]; the hero is s ∈ [-1, 0]; the tail opens the aperture (s ∈ [5, 6]).
-import { Specimen, type Label } from './specimen';
-import { lerp } from './draw';
+// Home: scroll → story position `s` for the drawing, over about three screens.
+//   hero   0.0–0.3 vh   s −1 → 0     (the hero copy fades; the firm idles)
+//   fig 1  0.3–1.0 vh   s  0 → 1     the firm
+//   fig 2  1.0–2.2 vh   s  1 → 4     an agent enters, plan-making, reorganisation
+//   fig 3  2.2–2.9 vh   s  4 → 5.2   the change spreads; the aperture opens
+import { Specimen } from './specimen';
 
-/** Aperture placement. Desktop: right of the legends (figs 1–3), then left and larger (fig 4 onward: `compose`). */
-export const homeLayout = (w: number, h: number, compose: number) => {
+export const homeLayout = (w: number, h: number) => {
   if (w < 760) { const R = Math.min(w * 0.53, h * 0.245); return { cx: w / 2, cy: 42 + R * 0.95, R }; }
-  const R1 = Math.min(h * 0.42, w * 0.29), R2 = Math.min(h * 0.45, w * 0.31);
-  return { cx: lerp(w * 0.665, w * 0.36, compose), cy: h * 0.5 + 8, R: lerp(R1, R2, compose) };
+  const R = Math.min(h * 0.42, w * 0.29);
+  return { cx: w * 0.665, cy: h * 0.5 + 8, R };
+};
+
+const MAP: [number, number, number, number][] = [[0, 0.3, -1, 0], [0.3, 1.0, 0, 1], [1.0, 2.2, 1, 4], [2.2, 2.9, 4, 5.2]];
+const toS = (y: number) => {
+  for (const [a, b, s0, s1] of MAP) if (y <= b) return s0 + (Math.max(0, y - a) / (b - a)) * (s1 - s0);
+  return 5.2;
 };
 
 export function initHome() {
   const canvas = document.querySelector<HTMLCanvasElement>('[data-specimen]');
   const home = document.querySelector<HTMLElement>('[data-home]');
-  const keysEl = document.querySelector<HTMLElement>('[data-keys]');
-  if (!canvas || !home || !keysEl) return;
+  if (!canvas || !home) return;
   const root = document.documentElement;
   const RM = root.classList.contains('rm');
-  const sp = new Specimen({ canvas, reduced: RM, layout: homeLayout, labels: true });
-  const blocks = [...document.querySelectorAll<HTMLElement>('[data-block]')];
+  const sp = new Specimen({ canvas, reduced: RM, layout: homeLayout, labels: false });
   const legends = [...document.querySelectorAll<HTMLElement>('[data-legend]')];
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
   const mobile = () => innerWidth < 760;
-  const hero = document.querySelector<HTMLElement>('.hero');
 
-  // key layer: one element per label id, positioned every frame
-  const els = new Map<string, HTMLSpanElement>();
-  sp.onLabels = (ls: Label[]) => {
-    for (const l of ls) {
-      let e = els.get(l.id);
-      if (!e) {
-        e = document.createElement('span'); e.className = l.key ? '-key' : '-word';
-        if (!l.key && l.letter) { const i = document.createElement('i'); i.textContent = l.letter; e.append(i, l.text); } else e.textContent = l.text;
-        keysEl.appendChild(e); els.set(l.id, e);
-      }
-      if (!l.key) { const dx = l.x - l.ax; e.classList.toggle('-l', dx < -8); e.classList.toggle('-c', Math.abs(dx) <= 8); }
-      e.style.opacity = l.a.toFixed(3);
-      e.style.visibility = l.a > 0.01 ? 'visible' : 'hidden';
-      if (l.a > 0.01) {
-        // keep every label on screen (the phone aperture is wider than the screen)
-        let x = l.x; const W = innerWidth;
-        if (l.key) x = Math.min(W - 14, Math.max(14, x));
-        else { const w = e.offsetWidth; const left = e.classList.contains('-l') ? x - w : e.classList.contains('-c') ? x - w / 2 : x; x += Math.max(0, 10 - left) - Math.max(0, left + w - (W - 10)); }
-        e.style.transform = `translate(${x.toFixed(1)}px, ${l.y.toFixed(1)}px)`;
-      }
-    }
-  };
-
-  const setApertureVars = () => {
-    const L = homeLayout(innerWidth, innerHeight, 0);
+  const setVars = () => {
+    const L = homeLayout(innerWidth, innerHeight);
     if (mobile()) home.style.setProperty('--ap-b', `${Math.round(L.cy + L.R + 10)}px`);
     else home.style.removeProperty('--ap-b');
-    // phones: each legend sits just under the aperture (fig 5's, over the open tissue, is pinned to the bottom)
-    const apB = L.cy + L.R + 10;
-    legends.forEach((lg, i) => { lg.style.top = mobile() ? `${Math.round(i === legends.length - 1 ? Math.max(apB + 14, innerHeight - lg.offsetHeight - 22) : apB + 14)}px` : ''; });
   };
 
   const measure = () => {
-    const vh = innerHeight; const anchor = vh * (mobile() ? 0.86 : 0.82);
-    let s = -1;
-    for (const b of blocks) {
-      const k = +b.dataset.block!; const r = b.getBoundingClientRect();
-      const p = Math.min(1, Math.max(0, (anchor - r.top) / r.height));
-      if (anchor >= r.top) s = k === 0 ? -1 + p : k - 1 + p;
-    }
-    if (RM) s = s < 0 ? -1 : Math.min(6, Math.ceil(s - 0.15)); // reduced motion: settled states only
+    const vh = innerHeight;
+    const y = (scrollY - home.offsetTop) / vh;
+    let s = toS(y);
+    if (RM) s = y < 0.3 ? -1 : y < 1.0 ? 1 : y < 2.2 ? 3.98 : 5.2; // reduced motion: settled states only
     sp.sTarget = s; if (RM) sp.s = s;
-    sp.heroA = 1 - Math.min(1, Math.max(0, scrollY / (vh * (mobile() ? 0.09 : 0.3))));
-    // legend k is fully visible for s ∈ [k-1+0.1, k-0.1]
-    legends.forEach((lg) => {
-      const k = +lg.dataset.legend!;
-      // desktop: fig 1 waits until the hero copy has gone; fig 4 slides in as the aperture moves left
-      const start = k - 1 + (mobile() ? 0.04 : k === 1 ? 0.2 : k === 4 ? 0.09 : 0.04);
-      const a = RM ? (Math.round(s) === k || (s >= 5 && k === 5) ? 1 : 0)
-        : Math.min(1, Math.max(0, (s - start) / 0.08)) * Math.min(1, Math.max(0, (k + (k === 5 ? 0.45 : 0) + 0.05 - s) / 0.08));
+    legends.forEach((lg, i) => {
+      const s0 = +lg.dataset.s0!, s1 = +lg.dataset.s1!, last = i === legends.length - 1;
+      const inAt = s0 + (i === 0 ? 0.12 : 0.04), outAt = last ? 99 : s1 + 0.04;
+      const a = RM ? (s >= s0 && (s < s1 || last) ? 1 : 0)
+        : Math.min(1, Math.max(0, (s - inAt) / 0.08)) * Math.min(1, Math.max(0, (outAt - s) / 0.08));
       lg.style.opacity = a.toFixed(3);
-      if (k === 4 && !mobile() && !RM) lg.style.translate = `${((1 - a) * 60).toFixed(1)}px 0`;
       lg.style.visibility = a > 0.005 ? 'visible' : 'hidden';
     });
+    if (hero) { const ha = RM ? (y < 0.3 ? 1 : 0) : 1 - Math.min(1, Math.max(0, (y - 0.03) / 0.25)); hero.style.opacity = ha.toFixed(3); }
     home.classList.toggle('is-open', s > 4.45);
     root.classList.toggle('is-dark', s > 3.06 && s < 4.0);
-    root.classList.toggle('past-hero', scrollY > vh * 0.3);
-    if (hero) { const ha = RM ? (scrollY < vh * 0.3 ? 1 : 0) : 1 - Math.min(1, Math.max(0, (scrollY - vh * 0.04) / (vh * 0.28))); hero.style.opacity = ha.toFixed(3); }
+    root.classList.toggle('past-hero', y > 0.3);
     if (RM) sp.draw();
   };
 
@@ -88,9 +59,8 @@ export function initHome() {
   canvas.addEventListener('pointerleave', () => sp.setPointer(0, 0, false));
   addEventListener('scroll', measure, { passive: true });
   let rz = 0;
-  addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { setApertureVars(); sp.resize(); measure(); }); });
-  setApertureVars(); measure(); sp.s = sp.sTarget;
-  document.fonts?.ready.then(() => { setApertureVars(); sp.draw(); });
+  addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { setVars(); sp.resize(); measure(); }); });
+  setVars(); measure(); sp.s = sp.sTarget;
 
   if (RM) { sp.draw(); return; }
   let inView = true;

@@ -19,35 +19,10 @@ export const nav = [
   { label: 'Contact', href: u('contact/') },
 ];
 
-// Home figures. Titles are plain nouns or a placeholder; legends are placeholders until the copy is written.
-// `keys` are the short labels on the drawing: one letter per concept for the whole story, written out on the
-// drawing the first time it appears and shown by its letter after that.
-export const figs: { title: string; legend: string; keys: [string, string][]; side?: 'right' }[] = [
-  {
-    title: 'The firm',
-    legend: '[Legend — 1–2 sentences]',
-    keys: [['a', 'inputs'], ['b', 'people'], ['c', 'coordination'], ['d', 'plan'], ['e', 'output A']],
-  },
-  {
-    title: '[Figure title]',
-    legend: '[Legend — 1–2 sentences]',
-    keys: [['a', 'inputs'], ['f', 'agent'], ['d', 'plan']],
-  },
-  {
-    title: 'Plan-making',
-    legend: '[Legend — 1–2 sentences]',
-    keys: [['f', 'agent'], ['g', 'objective'], ['h', 'alternatives'], ['i', 'selected plan']],
-  },
-  {
-    title: 'Reorganisation',
-    legend: '[Legend — 1–2 sentences]',
-    keys: [['c', 'coordination'], ['f', 'agents'], ['b', 'people'], ['j', 'feedback loop'], ['k', 'output B'], ['l', 'output C']],
-    side: 'right',
-  },
-  {
-    title: 'Diffusion',
-    legend: '[Legend — 1–2 sentences]',
-    keys: [],
-    side: 'right',
-  },
+// Home figures: three continuous states of one drawing. Titles are plain nouns; legends are placeholders.
+// The drawing carries no text: roles are read from shape, connection and motion.
+export const figs: { title: string; legend: string; s: [number, number] }[] = [
+  { title: 'The firm', legend: '[Legend — 1–2 sentences]', s: [0, 1] },
+  { title: 'Reorganisation', legend: '[Legend — 1–2 sentences]', s: [1, 4] },
+  { title: 'Diffusion', legend: '[Legend — 1–2 sentences]', s: [4, 5.2] },
 ];

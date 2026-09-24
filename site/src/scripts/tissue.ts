@@ -131,50 +131,47 @@ export function drawTissue(ctx: CanvasRenderingContext2D, T: Tissue, S: TissueSt
     const inset = (f: number) => poly.map((p) => [cx + (p[0] - cx) * f, cy + (p[1] - cy) * f] as [number, number]);
     const split = clamp((c.dk ?? 0) * 1.4), shrink = c.sk ?? 0;
     ctx.beginPath(); roundPoly(ctx, inset(0.9));
-    ctx.fillStyle = rgba(mixc(P.body, P.accent, stain), a * (0.05 + stain * 0.08 + hot * 0.1) * (1 - shrink * 0.6));
+    ctx.fillStyle = rgba(mixc(P.body, P.accent, stain), a * (0.06 + stain * 0.08 + hot * 0.1) * (1 - shrink * 0.6));
     ctx.fill();
-    // wall: heavier once a firm has split; dashed while a firm is being absorbed
-    ctx.lineWidth = px * (1 + stain * 0.3 + hot * 0.6 + split * 1.1);
-    ctx.strokeStyle = rgba(mixc(P.ink, P.accent, Math.max(stain * 0.85, hot, split)), a * (0.6 + stain * 0.2));
+    // the firm's boundary: 1.6 once it has split, 1 otherwise; dashed while it is being absorbed
+    ctx.lineWidth = px * (split > 0.5 ? 1.6 : 1);
+    ctx.strokeStyle = rgba(mixc(P.ink, P.accent, Math.max(stain * 0.85, hot, split)), a * (0.7 + stain * 0.2));
     if (shrink > 0.02) ctx.setLineDash([px * 4, px * 3]);
     ctx.stroke(); ctx.setLineDash([]);
     ctx.beginPath(); roundPoly(ctx, inset(0.83));
-    ctx.lineWidth = px * 0.7; ctx.strokeStyle = rgba(mixc(P.ink3, P.accent, stain * 0.6), a * 0.5); ctx.stroke();
-    // inside each firm: coordination is a ring. As the firm reorganises (partly, then fully) the ring fades and a
-    // mesh grows across the firm, edge by edge, with agents (reticles) at some of its nodes. Every firm grows its own mesh.
+    ctx.lineWidth = px * 0.6; ctx.strokeStyle = rgba(mixc(P.ink3, P.accent, stain * 0.6), a * 0.6); ctx.stroke();
+    // inside: an unreached firm is the fig 1 hierarchy in miniature (a ring issuing three links to three people,
+    // drawn as ink dots). A reorganised firm holds a mesh: a ring of nodes around a centre, spokes and rim, with agents.
     const r = sp * 0.1;
     const conv = i === 0 && S.firstStained ? 1 : clamp((st - c.tau) / 0.32);
-    const wob = (q: number): [number, number] => [Math.sin(t * 0.6 + q + c.ph) * r * 0.08, Math.cos(t * 0.5 + q * 1.7 + c.ph) * r * 0.08];
-    const ringA = a * (1 - ss(0.1, 0.6, conv));
-    if (ringA > 0.02) {
-      // an unreached firm is a tiny version of the fig 1 hierarchy: coordination (a ring) issuing three plans to three people
-      const top: [number, number] = [cx, cy - r * 1.3], rr = r * 0.62;
-      ctx.beginPath(); ctx.arc(top[0], top[1], rr, 0, TAU); ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.ink, ringA * 0.85); ctx.stroke();
+    const hierA = a * (1 - ss(0.1, 0.6, conv));
+    if (hierA > 0.02) {
+      const top: [number, number] = [cx, cy - r * 1.2], rr = r * 0.55;
+      ctx.beginPath(); ctx.arc(top[0], top[1], rr, 0, TAU); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.ink, hierA); ctx.stroke();
       ctx.beginPath();
-      for (const k of [-1, 0, 1]) {
-        const hx = cx + k * r * 1.5, hy = cy + r * 0.9;
-        ctx.moveTo(top[0] + k * rr * 0.5, top[1] + rr * 0.85); ctx.lineTo(hx, hy - r * 0.42);
-        ctx.moveTo(hx + r * 0.2, hy); ctx.arc(hx, hy, r * 0.2, 0, TAU);
-        ctx.moveTo(hx - r * 0.38, hy + r * 0.62); ctx.quadraticCurveTo(hx, hy + r * 0.02, hx + r * 0.38, hy + r * 0.62);
-      }
-      ctx.lineWidth = px * 0.9; ctx.strokeStyle = rgba(P.ink, ringA * 0.75); ctx.stroke();
+      for (const k of [-1, 0, 1]) { ctx.moveTo(top[0] + k * rr * 0.55, top[1] + rr * 0.85); ctx.lineTo(cx + k * r * 1.4, cy + r * 0.85); }
+      ctx.lineWidth = px * 0.6; ctx.strokeStyle = rgba(P.ink, hierA * 0.9); ctx.stroke();
+      ctx.fillStyle = rgba(P.ink, hierA);
+      for (const k of [-1, 0, 1]) { ctx.beginPath(); ctx.arc(cx + k * r * 1.4, cy + r * 0.95, r * 0.24, 0, TAU); ctx.fill(); }
     }
     if (conv > 0.01) {
-      const pt = (q: number): [number, number] => { const [ux, uy] = c.nuc[q]; const w = wob(q); return [cx + ux * r * 3.2 + w[0], cy + uy * r * 2.6 + w[1]]; };
-      // the mesh deepens with conversion: all links present, their weight and ink rising together
-      const n = c.links.length;
+      const n = c.nuc.length; // 5–8 nodes per firm, evenly spaced on a small ring, each firm at its own rotation
+      const R2 = r * 1.9;
+      const node = (q: number): [number, number] => { const an = c.ph + (q / n) * TAU; return [cx + Math.cos(an) * R2, cy + Math.sin(an) * R2 * 0.85]; };
+      const ma = a * (0.2 + 0.7 * conv);
       ctx.beginPath();
-      for (let q = 0; q < n; q++) { const [p0, p1] = c.links[q]; const A0 = pt(p0), B0 = pt(p1); ctx.moveTo(A0[0], A0[1]); ctx.lineTo(B0[0], B0[1]); }
-      ctx.lineWidth = px * (0.7 + conv * 0.7); ctx.strokeStyle = rgba(P.accent, a * (0.15 + 0.75 * conv)); ctx.lineCap = 'round'; ctx.stroke();
-      for (let q = 0; q < c.nuc.length; q++) { const [x, y] = pt(q); ctx.beginPath(); ctx.arc(x, y, px * 1.8, 0, TAU); ctx.fillStyle = rgba(P.paper, a); ctx.fill(); ctx.lineWidth = px * 0.9; ctx.strokeStyle = rgba(P.accent, a * (0.2 + 0.7 * conv)); ctx.stroke(); }
-      // agents at two nodes once the mesh is mostly there
+      for (let q = 0; q < n; q++) { const A0 = node(q), B0 = node((q + 1) % n); ctx.moveTo(A0[0], A0[1]); ctx.lineTo(B0[0], B0[1]); if (q % 2 === 0) { ctx.moveTo(cx, cy); ctx.lineTo(A0[0], A0[1]); } }
+      ctx.lineWidth = px; ctx.strokeStyle = rgba(P.accent, ma); ctx.lineCap = 'round'; ctx.stroke();
+      for (let q = 0; q < n; q++) { if (q % 2 === 0) continue; const [x, y] = node(q); ctx.beginPath(); ctx.arc(x, y, px * 1.8, 0, TAU); ctx.fillStyle = rgba(P.paper, a); ctx.fill(); ctx.lineWidth = px * 0.6; ctx.strokeStyle = rgba(P.accent, ma); ctx.stroke(); }
       const ag = a * ss(0.55, 0.9, conv);
-      if (ag > 0.02) for (const q of [c.links[0][0], c.links[Math.floor(n / 2)][1]]) {
-        const [x, y] = pt(q);
-        ctx.beginPath(); ctx.arc(x, y, sp * 0.032, 0, TAU); ctx.fillStyle = rgba(P.paper, ag); ctx.fill();
+      if (ag > 0.02) for (const q of [0, Math.floor(n / 2) * 2 % n]) {
+        const [x, y] = node(q); const rr = sp * 0.03;
+        ctx.beginPath(); ctx.arc(x, y, rr, 0, TAU); ctx.fillStyle = rgba(P.paper, ag); ctx.fill();
         ctx.lineWidth = px * 1.2; ctx.strokeStyle = rgba(P.accent, ag); ctx.stroke();
-        ctx.beginPath(); ctx.arc(x, y, sp * 0.012, 0, TAU); ctx.fillStyle = rgba(P.accent, ag); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y, rr * 0.36, 0, TAU); ctx.fillStyle = rgba(P.accent, ag); ctx.fill();
       }
+      // the centre node
+      ctx.beginPath(); ctx.arc(cx, cy, px * 2, 0, TAU); ctx.fillStyle = rgba(P.accent, ma); ctx.fill();
     }
   }
 }

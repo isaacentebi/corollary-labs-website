@@ -11,10 +11,9 @@
 .s-cell.s-on { fill: var(--accent-wash); stroke: var(--accent); }
 .s-ring { fill: none; stroke: var(--ink); stroke-width: 0.9; }
 .s-ring2 { fill: none; stroke: var(--ink-2); stroke-width: 0.7; vector-effect: non-scaling-stroke; }
-.s-strand { fill: none; stroke: var(--ink-2); stroke-width: 1; }
+.s-strand { fill: none; stroke: var(--ink); stroke-width: 0.6; vector-effect: non-scaling-stroke; }
 .s-strand.-gone { stroke-dasharray: 2 4; opacity: 0.6; }
-.s-person path { fill: none; stroke: var(--ink); stroke-width: 1; }
-.s-person circle { fill: var(--paper); stroke: var(--ink); stroke-width: 1; }
+.s-person { fill: var(--ink); }
 .s-agent circle, .s-agent path { fill: var(--paper); stroke: var(--accent); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .s-agent .-c { fill: var(--accent); stroke: none; }
 .s-seed { fill: var(--accent); }

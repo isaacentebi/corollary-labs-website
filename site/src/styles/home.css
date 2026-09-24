@@ -1,21 +1,18 @@
-/* Home: sticky specimen stage + legends set directly on the paper, like the legend of a plate.
-   Aperture geometry mirrors homeLayout() in scripts/home.ts. Keep them in sync. */
+/* Home: a sticky stage (the drawing, with the three legends layered in it) over ~3 screens of scroll,
+   then the business content. Aperture geometry mirrors homeLayout() in scripts/home.ts. */
 .home {
   --ap-r: min(42svh, 29vw);
   --ap-cx: 66.5vw;
   --col: calc(var(--ap-cx) - var(--ap-r) - var(--gutter) - 56px);
-  --right-x: calc(36vw + min(45svh, 31vw) + 56px);
   position: relative;
 }
 .stage { position: sticky; top: 0; height: 100svh; width: 100%; z-index: 1; }
 .stage__canvas { width: 100%; height: 100%; touch-action: pan-y; }
 .flow { position: relative; z-index: 2; margin-top: -100svh; pointer-events: none; }
+.flow a { pointer-events: auto; }
 
-.block { position: relative; padding-left: var(--gutter); width: calc(var(--col) + var(--gutter)); }
-.block.-right { margin-left: var(--right-x); padding-left: 0; width: calc(100vw - var(--right-x) - var(--gutter)); }
-
-/* hero */
-.hero { min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 11svh; }
+/* hero (scrolls away over the drawing's first state) */
+.hero { min-height: 100svh; width: calc(var(--col) + var(--gutter)); padding: 0 0 11svh var(--gutter); display: flex; flex-direction: column; justify-content: flex-end; }
 .hero__name { font-size: clamp(60px, 8.4vw, 168px); margin-left: -0.04em; width: max-content; }
 .hero__name span { display: block; }
 .hero__name span + span { padding-left: 0.62em; }
@@ -28,53 +25,50 @@ html.js:not(.rm) .hero__statement, html.js:not(.rm) .hero__cue { animation: fade
 .hero__cue { margin-top: clamp(28px, 5svh, 56px); display: flex; align-items: center; gap: 10px; }
 .hero__cue-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--ink); animation: cue 2.4s var(--soft) infinite; }
 @keyframes cue { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(6px) scale(0.8); background: var(--accent); border-color: var(--accent); } }
+.run { height: 290svh; }
 
-/* legends: set on the paper, fading with the story (opacity is driven by scripts/home.ts) */
-.fig { min-height: 170svh; }
-.fig.-last { min-height: 160svh; }
-.legend { position: sticky; top: 50svh; transform: translateY(-50%); max-width: 30em; }
-html.js .legend { opacity: 0; }
+/* legends: layered in the stage, crossfaded by the story position (scripts/home.ts) */
+.legends { position: absolute; left: var(--gutter); top: 50%; width: var(--col); transform: translateY(-50%); pointer-events: none; }
+.legend { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); max-width: 30em; transition: background-color 0.7s var(--soft); }
+html.js .legend { opacity: 0; visibility: hidden; }
 .legend__n { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
 .legend__title { font-size: clamp(40px, 4.2vw, 68px); margin-top: 6px; }
 .legend__text { margin-top: 18px; font-size: clamp(18px, 1.35vw, 21px); line-height: 1.46; }
-.legend__keys { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--f-mono); font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); }
-.legend__keys i { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 6px; border-radius: 50%; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); font-style: normal; font-size: 13px; line-height: 1; text-transform: lowercase; }
-.fig.-last .legend { padding: 30px 34px; margin-left: -34px; background: var(--paper); box-shadow: 0 0 48px 36px var(--paper); }
-.legend { transition: background-color 0.7s var(--soft); }
-.tail { min-height: 90svh; }
+.legend.-last { padding: 30px 34px; margin-left: -34px; background: var(--paper); box-shadow: 0 0 48px 36px var(--paper); }
 
-/* keys drawn on the specimen (positions set per frame) */
-.keys { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.keys span { position: absolute; left: 0; top: 0; will-change: transform, opacity; font-family: var(--f-mono); color: var(--ink); white-space: nowrap; transition: background-color 0.7s var(--soft), color 0.7s var(--soft), border-color 0.7s var(--soft); }
-.keys .-key { width: 24px; height: 24px; margin: -12px 0 0 -12px; display: grid; place-items: center; border-radius: 50%; background: var(--paper); border: 1px solid var(--ink); font-size: 13px; line-height: 1; }
-.keys .-word { font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 7px 2px; margin-top: -0.8em; background: var(--paper); border: 1px solid var(--ink); }
-.keys .-word i { display: inline-grid; place-items: center; width: 16px; height: 16px; margin: -2px 7px 0 -2px; vertical-align: middle; border-radius: 50%; border: 1px solid var(--ink); font-style: normal; font-size: 11px; text-transform: lowercase; line-height: 1; }
-.keys .-word.-l { translate: -100% 0; }
-.keys .-word.-c { translate: -50% 0; }
-
-html[data-page='home'] .foot { margin-top: -1px; }
-/* the open tissue fades into the paper at the bottom, where the footer's tissue fades in: no seam */
+/* the open field fades into the paper at the bottom */
 .home.is-open .stage__canvas { -webkit-mask-image: linear-gradient(#000 72%, transparent 100%); mask-image: linear-gradient(#000 72%, transparent 100%); }
 
-/* phones: aperture on top (bleeding past the edges), legends pinned just beneath it.
-   The stage sits above the text, and paints the aperture band solid, so text never shows through the specimen. */
+/* after the drawing: the business content, reached within three screens */
+.after { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(20px, 3vw, 48px); row-gap: clamp(48px, 7vw, 96px); padding: clamp(40px, 8vw, 110px) var(--gutter) clamp(64px, 9vw, 130px); }
+.after__about { grid-column: 1 / span 6; }
+.after__essays { grid-column: 8 / span 5; }
+.after__text { margin-top: 16px; font-family: var(--f-display); font-variation-settings: 'SOFT' 100; font-weight: 320; font-size: clamp(28px, 3vw, 46px); line-height: 1.12; letter-spacing: -0.015em; }
+.after__more { display: inline-block; margin-top: 22px; font-size: var(--fs-body); }
+.after__essays ol { margin-top: 12px; border-top: 1px solid var(--ink); }
+.after__essays li a { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: baseline; padding: 14px 0 13px; border-bottom: 1px solid var(--rule); }
+.after__etitle { font-family: var(--f-display); font-variation-settings: 'SOFT' 100; font-weight: 350; font-size: clamp(20px, 1.6vw, 25px); line-height: 1.2; transition: color 0.3s var(--soft); }
+.after__essays li a:hover .after__etitle { color: var(--accent); }
+.after__links { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px clamp(24px, 4vw, 64px); border-top: 1px solid var(--rule); padding-top: clamp(24px, 3vw, 40px); }
+.after__links a { font-family: var(--f-display); font-variation-settings: 'SOFT' 100; font-weight: 320; font-size: clamp(34px, 4.4vw, 72px); letter-spacing: -0.02em; line-height: 1.05; transition: color 0.3s var(--soft); }
+.after__links a::after { content: ' →'; font-size: 0.6em; color: var(--ink-3); }
+.after__links a:hover { color: var(--accent); }
+
+/* phones: aperture on top (bleeding past the edges), legends just beneath it.
+   The stage sits above the text and paints the aperture band solid, so text never shows through the drawing. */
 @media (max-width: 759px) {
   .home { --col: 100vw; --ap-b: 470px; }
   .stage { z-index: 3; }
   .home.is-open .stage { z-index: 1; }
-  .block, .block.-right { width: 100%; margin-left: 0; padding: 0 var(--gutter); }
-  .hero { justify-content: flex-start; padding-top: calc(var(--ap-b) + 18px); padding-bottom: 12svh; }
+  .hero { width: 100%; justify-content: flex-start; padding: calc(var(--ap-b) + 18px) var(--gutter) 12svh; }
   .hero__name { font-size: clamp(50px, 15.5vw, 92px); }
   .hero__name span + span { padding-left: 0; }
   .hero__statement { margin-top: 16px; font-size: 16.5px; }
   .hero__cue { margin-top: 18px; }
-  .fig { min-height: 150svh; }
-  .legend { top: calc(var(--ap-b) + 16px); transform: none; }
+  .legends { top: calc(var(--ap-b) + 14px); bottom: 0; left: var(--gutter); right: var(--gutter); width: auto; transform: none; }
+  .legend { top: 0; transform: none; }
   .legend__title { font-size: 30px; margin-top: 2px; }
   .legend__text { margin-top: 10px; font-size: 16.5px; line-height: 1.42; }
-  .legend__keys { margin-top: 12px; padding-top: 10px; font-size: 12px; gap: 6px 14px; }
-  .legend__keys i { width: 20px; height: 20px; font-size: 12px; }
-  .fig.-last .legend { margin: 0 calc(-1 * var(--gutter)); padding: 20px var(--gutter) 30px; border-radius: 0; box-shadow: 0 -18px 36px 8px var(--paper); }
-  .keys .-key { width: 22px; height: 22px; margin: -11px 0 0 -11px; font-size: 13px; }
-  .keys .-word { font-size: 11.5px; padding: 2px 5px 1px; }
+  .legend.-last { top: auto; bottom: 0; margin: 0 calc(-1 * var(--gutter)); padding: 20px var(--gutter) 30px; }
+  .after__about, .after__essays { grid-column: 1 / -1; }
 }

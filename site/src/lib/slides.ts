@@ -6,8 +6,7 @@ import { rng, hash, blob } from './blob';
 
 const f = (n: number) => n.toFixed(1);
 // the site's glyphs: a person (head over an open shoulder arc) and an agent (a reticle: ring, centre point, ticks)
-const person = (x: number, y: number, s = 1) =>
-  `<g class="s-person" transform="translate(${f(x)} ${f(y)}) scale(${s})"><path d="M-6.5 7.5 A7 6.4 0 0 1 6.5 7.5"/><circle cx="0" cy="-2.6" r="3.2"/></g>`;
+const person = (x: number, y: number, s = 1) => `<circle class="s-person" cx="${f(x)}" cy="${f(y)}" r="${f(4 * s)}"/>`;
 const seed = (x: number, y: number, r = 4) =>
   `<g class="s-agent"><circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}"/><circle class="-c" cx="${f(x)}" cy="${f(y)}" r="${f(r * 0.36)}"/><path d="M${f(x + r * 1.2)} ${f(y)}h${f(r * 0.45)}M${f(x - r * 1.2)} ${f(y)}h${f(-r * 0.45)}M${f(x)} ${f(y + r * 1.2)}v${f(r * 0.45)}M${f(x)} ${f(y - r * 1.2)}v${f(-r * 0.45)}"/></g>`;
 
@@ -37,10 +36,11 @@ export function slideSVG(slug: string, kind: number): string {
       body += `<path class="${on ? 's-cell s-on' : 's-cell'}" d="${d(0.88)}"/><path class="s-wall2" d="${d(0.8)}"/>`;
       if (on) {
         // each reorganised firm grows its own small mesh (a tree over a few points), with one agent
-        const P: [number, number][] = Array.from({ length: 4 + Math.floor(R() * 3) }, () => [mx + (R() - 0.5) * 16, my + (R() - 0.5) * 13]);
-        let d2 = ''; P.forEach((p, k) => { if (!k) return; let b = 0, bd = 1e9; for (let j = 0; j < k; j++) { const q = P[j]; const dd = Math.hypot(q[0] - p[0], q[1] - p[1]); if (dd < bd) { bd = dd; b = j; } } d2 += `M${f(P[b][0])} ${f(P[b][1])}L${f(p[0])} ${f(p[1])}`; });
+        const n = 5 + Math.floor(R() * 3), ph = R() * 6.28;
+        const P: [number, number][] = Array.from({ length: n }, (_, k) => [mx + Math.cos(ph + (k / n) * 6.28) * 7.5, my + Math.sin(ph + (k / n) * 6.28) * 6.4]);
+        let d2 = ''; P.forEach((p, k) => { const q = P[(k + 1) % n]; d2 += `M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}`; if (k % 2 === 0) d2 += `M${f(mx)} ${f(my)}L${f(p[0])} ${f(p[1])}`; });
         body += `<path class="s-tube" style="stroke-width:1" d="${d2}"/>` + seed(P[0][0], P[0][1], 2.4);
-      } else body += `<circle class="s-ring" cx="${f(mx)}" cy="${f(my)}" r="${f(3 + R() * 1.4)}"/>`;
+      } else body += `<circle class="s-ring" cx="${f(mx)}" cy="${f(my - 4)}" r="2.6"/><path class="s-strand" d="M${f(mx - 1.5)} ${f(my - 1.8)}L${f(mx - 5.5)} ${f(my + 4)}M${f(mx)} ${f(my - 1.4)}L${f(mx)} ${f(my + 4)}M${f(mx + 1.5)} ${f(my - 1.8)}L${f(mx + 5.5)} ${f(my + 4)}"/>` + [-5.5, 0, 5.5].map((dx) => `<circle class="s-node" cx="${f(mx + dx)}" cy="${f(my + 5)}" r="1.3"/>`).join('');
     });
   } else {
     // a mesh: coordination spread across many steps. A spanning tree plus a few loops, tubes thinning outward,
