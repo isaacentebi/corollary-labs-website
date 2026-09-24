@@ -82,8 +82,17 @@ Past lessons from the founder: they disliked the wordmark with dots and "Labs" a
 - **Keep subagent briefs clean.** Give the founder's words plus the references, not my framing.
 - **Show outputs unedited**, and let the founder choose.
 
-## Open questions for the founder, to settle before building
+## Founder's go-ahead (2026-09-24)
 
-1. **"The math logo."** Which one did you mean? There's the name drawn as a point cloud, a mathematical symbol such as ∴ ("therefore") or ⊢ ("proves"), or something you saw elsewhere. This decides where it gets used.
-2. **Versions.** Organic, Proof and Atlas as seeds, or should the creative leads propose their own directions from scratch?
-3. **References.** Do you want to vet the Awwwards picks before we build, as last time? (Recommended.)
+> "Let's keep the one we currently have because I do quite like it. And then we can do the next versions and then we can do some mergers between those. Have creativity… I want this to be a pleasant surprise. But sometimes they pick really shitty websites that are like very 2010 SaaS. And also like it's okay to choose very creative and abstract websites because the best websites there are not landing pages… They're sometimes more abstract from very creative designers. It's okay if we choose that as inspiration. And then do our spin. Understanding this is a startup."
+
+What this settles:
+- **Plotter stays** exactly as it is, on `master` at https://corollarylabs.vercel.app.
+- **The new versions are a surprise.** The founder does not vet references or pitches in advance. The creative leads decide, and the blind critic loop is the quality gate.
+- **Reference taste.** Draw on abstract, experimental, designer-led and portfolio sites, and on art, science and mathematical visualisation. **Not** product or landing pages, and nothing that looks like SaaS from around 2010: no hero-with-CTA, feature grids, testimonial carousels, gradient blobs or stock 3D. Then add our own spin, remembering this is a startup.
+- **Mergers come later.** Once the versions exist, the founder will pick parts to combine, so each version should have strong, separable ideas.
+- **The logo is open.** The founder "really likes the math logo". It's unclear which one they meant, so leads may explore mathematical marks alongside wordmarks.
+- **Where files go.**
+  - Reference captures (screenshots, HTML, extracts) go in `research/` (gitignored, never published).
+  - Written reference notes with URLs go in `directions/<key>/REFERENCES.md`.
+  - Pitch pages go in `directions/<key>/pitch.html`.
