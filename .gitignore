@@ -15,3 +15,4 @@ clone-workspace/locomotive/
 clone-workspace/superdark/
 research/
 deploy/
+.claude/worktrees/
