@@ -1,7 +1,7 @@
 // Builds every version of the site into ONE static folder and adds a version switcher to every page.
 //   /           Plotter (master, site/)
 //   /<key>/     each direction branch (direction/<key>), built with Astro `base: '/<key>'`
-// Usage: node tools/combine.mjs [--deploy]
+// Usage: node tools/combine.mjs [--deploy] [--only=wild,organic]   (Plotter is always included)
 //   --deploy  deploys deploy/out to the Vercel project linked in site/.vercel (corollarylabs.vercel.app)
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -42,8 +42,10 @@ function buildInto(siteDir, dest) {
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
+const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',');
 const built = [];
 for (const v of VERSIONS) {
+  if (v.key && only && !only.includes(v.key)) continue;
   if (!v.key) { buildInto(path.join(ROOT, 'site'), OUT); built.push(v); continue; }
   const wt = worktreeFor(`direction/${v.key}`);
   if (!wt) { console.warn(`skip ${v.key}: no branch direction/${v.key} yet`); continue; }
