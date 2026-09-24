@@ -1,22 +1,20 @@
 ---
-// Contact: one column of cells; the address is the lit cell.
 import Base from '../layouts/Base.astro';
 import { site, url } from '../config/site';
 import '../styles/pages.css';
 ---
-<Base page="contact" title="Contact" description={`Contact ${site.name}.`}>
+<Base page="contact" title="Contact" description="[Meta description]">
   <section class="page">
     <header class="ph-row reveal">
       <p class="ph-row__n mono">04</p>
       <h1 class="ph-row__t">Contact</h1>
-      <p class="ph-row__m mono"><span><b>Table 4.</b> Contact</span><span>One column</span></p>
     </header>
 
-    <div class="cc cc--contact reveal" role="table" aria-label="Contact details">
+    <div class="cc cc--contact reveal" role="table" aria-label="Contact">
       <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Email</span><a class="cc__cell -on -big" role="cell" href={`mailto:${site.email}`}>{site.email}</a></div>
-      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Location</span><span class="cc__cell -ph" role="cell" title="[City]"><span class="nyw mono">Not yet written</span></span></div>
-      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Writing to us</span><span class="cc__cell -ph" role="cell" title="[What to write about]"><span class="nyw mono">Not yet written</span></span></div>
-      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Reading</span><span class="cc__cell -fact" role="cell"><a href={url('essays/')}>Essays</a></span></div>
+      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Location</span><span class="cc__cell -ph" role="cell"><span class="nyw mono">[City]</span></span></div>
+      <div class="cc__row" role="row"><span class="cc__k mono ph" role="rowheader">[Label]</span><span class="cc__cell -ph" role="cell"><span class="nyw mono">[Contact — one line]</span></span></div>
+      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Essays</span><span class="cc__cell -fact" role="cell"><a href={url('essays/')}>Essays</a></span></div>
     </div>
   </section>
 </Base>

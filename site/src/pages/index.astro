@@ -36,8 +36,8 @@ const rounds = makeEconomy().R;
 
       <div class="st__hero" data-hero>
         <h1 class="st__name"><span>Corollary</span> <span>Labs</span></h1>
-        <p class="st__intro">{site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span></p>
-        <p class="st__hint mono"><span class="-fine">Hover to read a cell. Click a column to trace its suppliers, round by round.</span><span class="-coarse">Tap a column to trace its suppliers, round by round.</span></p>
+        <p class="st__intro ph">[Statement]</p>
+        <p class="st__hint mono">[Hint]</p>
       </div>
 
       <ol class="st__rail mono" data-rail aria-label="States of the table">
@@ -57,9 +57,9 @@ const rounds = makeEconomy().R;
       </div>
 
       <div class="st__t mono" data-coda>
-        <span class="st__t-end"><b>A<sub>0</sub></b><em>before agents</em></span>
+        <span class="st__t-end"><b>A<sub>0</sub></b></span>
         <input type="range" min="0" max="1" step="0.001" value="1" data-trange aria-label="t, from the first table to the second" />
-        <span class="st__t-end"><b>A<sub>1</sub></b><em>after round {rounds}</em></span>
+        <span class="st__t-end"><b>A<sub>1</sub></b></span>
         <output data-tout>t = 0.00</output>
         <span class="st__t-f">H(t) = (1 − t)·A<sub>0</sub> + t·A<sub>1</sub></span>
       </div>
@@ -70,10 +70,9 @@ const rounds = makeEconomy().R;
   <section class="he" aria-labelledby="he-title">
     <div class="he__head">
       <h2 id="he-title" class="he__title">Essays</h2>
-      <a class="mono link" href={url('essays/')}>All essays →</a>
+      <a class="mono link" href={url('essays/')}>All essays</a>
     </div>
     <table class="tb he__tb">
-      <caption class="mono"><b>Table 2.</b> Essays, newest first</caption>
       <thead class="mono"><tr><th class="num">No.</th><th>Title</th><th class="-hide-s">Date</th><th class="num">Min.</th></tr></thead>
       <tbody>
         {rows.map(({ e, fm }, i) => (

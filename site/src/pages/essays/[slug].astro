@@ -28,7 +28,7 @@ const pad = (x: number) => String(x).padStart(2, '0');
       </dl>
       <h1 class="es__title">{entry.data.title}</h1>
       <p class="es__dek">{entry.data.dek}</p>
-      {entry.data.placeholder && <p class="es__flag mono">[Placeholder essay — written to prove the reading template]</p>}
+      {entry.data.placeholder && <p class="es__flag mono">[Placeholder essay]</p>}
     </header>
 
     {sections.length > 0 && (

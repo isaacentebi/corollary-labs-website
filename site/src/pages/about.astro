@@ -1,6 +1,6 @@
 ---
-// About: the company described the way the home page describes every firm, as one annotated column of cells:
-// its inputs, its outputs, and the facts about it. Everything in [brackets] is a placeholder. FOR FOUNDER REVIEW.
+// About: one column of cells (inputs, outputs, details), in the home table's cell style.
+// Everything in [brackets] is a placeholder.
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 import { site, url } from '../config/site';
@@ -9,45 +9,42 @@ import '../styles/pages.css';
 const essays = await getCollection('essays', ({ data }) => !data.draft);
 const pad = (n: number) => String(n).padStart(2, '0');
 type Cell = { k: string; v: string; href?: string; kind?: 'ph' | 'on' | 'fact' };
-const groups: { name: string; note: string; cells: Cell[] }[] = [
-  { name: 'Inputs', note: '', cells: Array.from({ length: 4 }, () => ({ k: '[Input]', v: '[Placeholder]', kind: 'ph' as const })) },
+const groups: { name: string; cells: Cell[] }[] = [
+  { name: 'Inputs', cells: Array.from({ length: 4 }, () => ({ k: '[Input]', v: '[Input — description]', kind: 'ph' as const })) },
   {
-    name: 'Outputs', note: '', cells: [
-      // FOR FOUNDER REVIEW: the essays are placeholder drafts, so the cell says so
+    name: 'Outputs', cells: [
       { k: 'Essays', v: `${pad(essays.length)} essays (drafts)`, href: url('essays/'), kind: 'on' },
-      { k: '[Output]', v: '[Placeholder]', kind: 'ph' },
-      { k: '[Output]', v: '[Placeholder]', kind: 'ph' },
+      { k: '[Output]', v: '[Output — description]', kind: 'ph' },
+      { k: '[Output]', v: '[Output — description]', kind: 'ph' },
     ],
   },
   {
-    name: 'Colophon', note: '', cells: [
-      { k: 'Entity', v: `${site.name} is a company.`, kind: 'fact' },
+    name: 'Details', cells: [
+      { k: 'Company', v: '[Company]', kind: 'ph' },
       { k: 'Founded', v: '[Year]', kind: 'ph' },
       { k: 'Location', v: '[City]', kind: 'ph' },
-      { k: 'Contact', v: site.email, href: `mailto:${site.email}`, kind: 'fact' },
+      { k: 'Email', v: site.email, href: `mailto:${site.email}`, kind: 'fact' },
     ],
   },
 ];
 ---
-<Base page="about" title="About" description={`About ${site.name}.`}>
+<Base page="about" title="About" description="[Meta description]">
   <section class="page">
     <header class="ph-row reveal">
       <p class="ph-row__n mono">02</p>
       <h1 class="ph-row__t">About</h1>
-      <p class="ph-row__m mono"><span><b>Table 0.</b> {site.name}</span><span>One column</span></p>
     </header>
-    <p class="page__lede reveal">{site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span></p>
+    <p class="page__lede ph reveal">[About — one paragraph]</p>
 
-    <div class="cc reveal" role="table" aria-label={`${site.name} as one column: inputs, outputs and colophon`}>
-      <p class="cc__head mono" role="row"><span role="columnheader"></span><span role="columnheader">Col. CL · {site.name}</span></p>
+    <div class="cc reveal" role="table" aria-label="About">
       {groups.map((g) => (
         <div class="cc__group" role="rowgroup">
-          <p class="cc__gname mono" role="row"><span role="rowheader">{g.name}</span><span class="cc__note">{g.note}</span></p>
+          <p class="cc__gname mono" role="row"><span role="rowheader">{g.name}</span></p>
           {g.cells.map((c) => (
             <div class="cc__row" role="row">
               <span class:list={['cc__k mono', { ph: c.kind === 'ph' }]} role="rowheader">{c.k}</span>
               {c.kind === 'ph'
-                ? <span class="cc__cell -ph" role="cell" title={c.v}><span class="nyw mono">Not yet written</span></span>
+                ? <span class="cc__cell -ph" role="cell"><span class="nyw mono">{c.v}</span></span>
                 : <span class:list={['cc__cell', `-${c.kind}`]} role="cell">{c.href ? <a href={c.href}>{c.v}</a> : c.v}</span>}
             </div>
           ))}

@@ -1,5 +1,5 @@
 ---
-// Team: each person is a column of the table, as each firm is on the home page. Placeholders until names are chosen.
+// Team: one column per person. Placeholders until names are chosen.
 // Below 600px each person's column stacks under the previous one.
 import Base from '../layouts/Base.astro';
 import { site, url } from '../config/site';
@@ -9,19 +9,18 @@ const people = Array.from({ length: 4 }, (_, i) => ({ n: String(i + 1).padStart(
 const rows = [
   { k: 'Name', cls: '-name', ph: '[Name]' },
   { k: 'Role', cls: '-role', ph: '[Role]' },
-  { k: 'Work', cls: '-work', ph: '[One line on their work]' },
+  { k: 'Work', cls: '-work', ph: '[Work — one line]' },
 ];
 ---
-<Base page="team" title="Team" description={`The team at ${site.name}.`}>
+<Base page="team" title="Team" description="[Meta description]">
   <section class="page">
     <header class="ph-row reveal">
       <p class="ph-row__n mono">03</p>
       <h1 class="ph-row__t">Team</h1>
-      <p class="ph-row__m mono"><span><b>Table 3.</b> People</span><span>{String(people.length).padStart(2, '0')} columns</span></p>
     </header>
-    <p class="page__lede reveal"><span class="ph">[Placeholder — one sentence on who works at {site.name}.]</span></p>
+    <p class="page__lede ph reveal">[Team — one sentence]</p>
 
-    <div class="tg reveal" role="table" aria-label="Team, one column per person" style={`--n:${people.length}`}>
+    <div class="tg reveal" role="table" aria-label="Team" style={`--n:${people.length}`}>
       <div class="tg__keys mono" aria-hidden="true">
         <span class="tg__h"></span>
         {rows.map((r) => <span class:list={['tg__k', r.cls]}>{r.k}</span>)}
@@ -30,17 +29,17 @@ const rows = [
         <div class="tg__col" role="rowgroup">
           <span class="tg__h mono" role="columnheader">{p.n}</span>
           {rows.map((r) => (
-            <span class:list={['tg__c', r.cls]} role="cell" title={r.ph}>
-              <em class="mono">{r.k}</em><span class="nyw mono">Not yet written</span>
+            <span class:list={['tg__c', r.cls]} role="cell">
+              <em class="mono">{r.k}</em><span class="nyw mono">{r.ph}</span>
             </span>
           ))}
         </div>
       ))}
     </div>
 
-    <div class="cc cc--short reveal" role="table" aria-label="Joining">
-      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Work here</span><span class="cc__cell -ph" role="cell" title="[How to get in touch about working here]"><span class="nyw mono">Not yet written</span></span></div>
-      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Contact</span><span class="cc__cell -fact" role="cell"><a href={url('contact/')}>Contact page</a></span></div>
+    <div class="cc cc--short reveal" role="table" aria-label="Jobs">
+      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Jobs</span><span class="cc__cell -ph" role="cell"><span class="nyw mono">[Jobs — one line]</span></span></div>
+      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Contact</span><span class="cc__cell -fact" role="cell"><a href={url('contact/')}>Contact</a></span></div>
     </div>
   </section>
 </Base>

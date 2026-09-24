@@ -12,15 +12,13 @@ const rows = await Promise.all(essays.map(async (e) => {
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
-<Base page="essays" title="Essays" description="Essays by Corollary Labs.">
+<Base page="essays" title="Essays" description="[Meta description]">
   <section class="page">
     <header class="ph-row reveal">
       <p class="ph-row__n mono">01</p>
       <h1 class="ph-row__t">Essays</h1>
-      <p class="ph-row__m mono"><span><b>Table 2.</b> Essays</span><span>{pad(rows.length)} rows</span></p>
     </header>
     <table class="tb ix" data-sortable>
-      <caption class="mono reveal">Sort by any column heading.</caption>
       <thead class="mono">
         <tr>
           <th class="num"><button type="button" data-sort="n" data-type="num">No.</button></th>
