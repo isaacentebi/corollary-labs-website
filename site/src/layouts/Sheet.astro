@@ -2,9 +2,10 @@
 // One sheet, five regions in a fixed order. The active region is stretched open; the others stay on screen,
 // folded to strips (desktop: full-height columns; phones: a strip across the top). Nothing is ever removed.
 import '@fontsource-variable/anybody/wdth.css';
-import '@fontsource-variable/newsreader/opsz.css';
-import '@fontsource-variable/newsreader/opsz-italic.css';
+import '@fontsource-variable/newsreader/wght.css';
+import '@fontsource-variable/newsreader/wght-italic.css';
 import '../styles/global.css';
+import anybodyLatin from '@fontsource-variable/anybody/files/anybody-latin-wdth-normal.woff2?url';
 import { site, regions, indexOf, url, type RegionKey } from '../config/site';
 
 interface Props { title?: string; description?: string; active: RegionKey; page: string }
@@ -24,6 +25,7 @@ const place = (i: number) =>
     <title>{full}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#E9E7EF" />
+    <link rel="preload" href={anybodyLatin} as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
     <meta property="og:title" content={full} />
     <meta property="og:description" content={description} />

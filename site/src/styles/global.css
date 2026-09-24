@@ -168,8 +168,8 @@ html:not(.gl-on) .band__title { background: var(--ground); padding: 0.06em 0.1em
 }
 .hero__meter { position: absolute; right: var(--pad); bottom: calc(var(--pad) * 0.8 + 12px); width: 88px; height: 2px; background: var(--rule); }
 .hero__meter i { display: block; height: 100%; width: 100%; background: var(--accent); transform: scaleX(var(--p, 0)); transform-origin: 0 50%; }
-.still .hero { height: auto; }
-.still .hero__stage { position: relative; top: 0; }
+.still .hero, html:not(.js) .hero { height: auto; }
+.still .hero__stage, html:not(.js) .hero__stage { position: relative; top: 0; }
 .still .hero__meter { display: none; }
 
 .kicker {
@@ -194,20 +194,18 @@ html:not(.gl-on) .band__title { background: var(--ground); padding: 0.06em 0.1em
 .stretch-links li + li { border-left: 1px solid var(--ink); }
 .stretch-links a {
   display: flex; align-items: center; justify-content: center; height: clamp(96px, 12vw, 190px);
-  text-decoration: none; overflow: hidden; position: relative;
+  text-decoration: none; overflow: hidden; position: relative; isolation: isolate;
   font: 800 clamp(36px, 7vw, 124px)/1 var(--sans); font-stretch: 58%; letter-spacing: -0.01em;
   transition: font-stretch 0.7s var(--ease), color 0.3s;
 }
-.stretch-links a::before {
-  content: ''; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity 0.4s;
-  background:
-    repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px var(--pitch)),
-    repeating-linear-gradient(92deg, var(--accent) 0 2px, transparent 2px var(--pitch));
+.stretch-links a::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 5px; background: var(--accent);
+  transform: scaleX(0); transition: transform 0.7s var(--ease);
 }
-.stretch-links a span { background: var(--ground); padding: 0 0.12em; position: relative; }
+.stretch-links a span { position: relative; }
 .stretch-links:hover li:hover, .stretch-links li:focus-within { flex-grow: 2.4; }
 .stretch-links li:hover a, .stretch-links li a:focus-visible { font-stretch: 150%; }
-.stretch-links li:hover a::before, .stretch-links li a:focus-visible::before { opacity: 1; }
+.stretch-links li:hover a::after, .stretch-links li a:focus-visible::after { transform: scaleX(1); }
 
 .latest { padding: calc(var(--pad) * 1.2) var(--pad) calc(var(--pad) * 1.4); }
 .latest__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
@@ -328,7 +326,7 @@ html:not(.gl-on) .band__title { background: var(--ground); padding: 0.06em 0.1em
   .band.hero__stage { height: calc(100vh - var(--strip)); height: calc(100svh - var(--strip)); padding: 22px; }
   .hero__stage { align-items: center; }
   .hero__statement { left: 22px; bottom: 22px; font-size: 16px; }
-  .hero__meter { right: 22px; bottom: 32px; width: 56px; }
+  .hero__meter { right: 22px; top: 26px; bottom: auto; width: 56px; }
   .band__back { left: 22px; top: 22px; }
   .brief { grid-template-columns: 1fr; gap: 16px; padding: 44px 22px 30px; }
   .brief .kicker { padding-top: 0; }

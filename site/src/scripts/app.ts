@@ -40,6 +40,8 @@ function buildMask() {
   const widest = Math.max(...[...title.querySelectorAll<HTMLElement>('.band__line')].map((l) => l.offsetWidth));
   if (widest > inner) title.style.fontSize = `${(parseFloat(getComputedStyle(title).fontSize) * inner) / widest * 0.98}px`;
   if (!R) return;
+  // draw nothing until the display face is in: the latent title must never be set in a fallback font
+  if (document.fonts && !document.fonts.check(`800 40px "Anybody Variable"`)) { R.setMask(null); maskKey = ''; return; }
   const br = band.getBoundingClientRect();
   const w = band.offsetWidth, h = band.offsetHeight;
   const scale = Math.min(2, window.devicePixelRatio || 1);
@@ -150,12 +152,12 @@ function bandState(w: number, h: number, t: number) {
     // a front coming down from above, stopping short of the title
     const src = [w * 0.72, -w * 0.9];
     agents = [[src[0], src[1], 0, 1]];
-    front = [Math.hypot(w * 0.72, w * 0.9) * 0.985 + h * (0.2 + (still ? 0 : 0.03 * Math.sin(t * 0.35))), 6.5, phone ? 40 : 70];
+    front = [w * 0.9 + h * (0.2 + (still ? 0 : 0.03 * Math.sin(t * 0.35))), 6.5, phone ? 40 : 70];
   } else if (state === 'plate') {
     agents = [[-w * 0.15, h * 1.2, 0, 1]];
     front = [w * (0.5 + (still ? 0 : 0.03 * Math.sin(t * 0.3))), 6.5, 110];
   } else if (state === 'agent') {
-    const x = w * 0.86, y = h * (phone ? 0.2 : 0.24);
+    const x = w * (phone ? 0.86 : 0.95), y = h * (phone ? 0.2 : 0.2);
     agents = [[x, y, 2.8 + (still ? 0 : 0.35 * Math.sin(t * 1.1)), m * (phone ? 0.1 : 0.12) + 20]];
     front = [m * (phone ? 0.2 : 0.26), 5.5, phone ? 36 : 60];
   } else if (state === 'four') {
@@ -229,11 +231,12 @@ function frame(now: number) {
 
   const rip = ripples.map((r) => [r.x, r.y, (now - r.t) / 1000, 1]).filter((r) => r[2] < 3.5);
   const f: Frame = {
-    bounds, comps: comps.slice(), strip: phone ? parseFloat(getComputedStyle(root).getPropertyValue('--strip')) || 50 : 1e5,
+    bounds, comps: comps.slice(), strip: phone ? stripH : 1e5,
     band: bandRect, bandOn,
     agents: st.agents, front: st.front, breath: still ? 0 : st.breath,
     cursor: [cursor.x, cursor.y, still ? 0 : cursor.s], wave, ripples: rip,
     time: t, pitch: phone ? 6 : 7,
+    intro: still ? 0 : Math.pow(1 - smooth(0.15, 1.9, t), 2),
   };
   R.draw(f);
 }
@@ -374,10 +377,14 @@ window.addEventListener('popstate', () => go(location.href, false));
 
 // ---------------------------------------------------------------- boot
 let rz = 0;
+let stripH = 50;
+const readStrip = () => { stripH = parseFloat(getComputedStyle(root).getPropertyValue('--strip')) || 50; };
+readStrip();
 window.addEventListener('resize', () => {
-  R?.resize();
+  R?.resize(); readStrip();
   clearTimeout(rz); rz = window.setTimeout(() => { maskKey = ''; buildMask(); }, 120);
 });
 pageInit();
 document.fonts?.ready.then(() => { maskKey = ''; buildMask(); });
+document.fonts?.addEventListener?.('loadingdone', () => { maskKey = ''; buildMask(); });
 requestAnimationFrame(frame);

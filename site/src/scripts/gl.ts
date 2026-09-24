@@ -18,6 +18,7 @@ export interface Frame {
   ripples: number[][];   // [x, y, age s, amp]
   time: number;
   pitch: number;
+  intro: number;         // 0..1: the gratings settle into register on first load
 }
 
 const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
@@ -29,7 +30,7 @@ uniform float u_b[6]; uniform float u_comp[5]; uniform float u_strip;
 uniform vec4 u_band; uniform float u_bandOn; uniform sampler2D u_mask; uniform float u_hasMask;
 uniform vec4 u_ag[6]; uniform float u_nag;
 uniform vec3 u_front; uniform float u_breath;
-uniform vec3 u_cur; uniform vec3 u_wave; uniform vec4 u_rip[4];
+uniform vec3 u_cur; uniform vec3 u_wave; uniform vec4 u_rip[4]; uniform float u_intro;
 uniform vec3 u_ground; uniform vec3 u_ink; uniform vec3 u_acc;
 
 float cov(float s, float w) {
@@ -86,6 +87,7 @@ void main() {
       D += rp.w * u_p * 1.7 * exp(-q * q) * exp(-rp.z * 1.1);
     }
   }
+  D += u_intro * u_p * (7.0 * x / u_res.x + 2.5 * y / u_res.y + 1.5 * sin(x * 0.004 + y * 0.003));
   float wq = (x - u_wave.x) / u_wave.z;
   D += u_wave.y * u_p * exp(-wq * wq);
 
@@ -119,7 +121,7 @@ export function createRenderer(canvas: HTMLCanvasElement) {
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U: Record<string, WebGLUniformLocation | null> = {};
-  for (const n of ['u_res', 'u_dpr', 'u_time', 'u_p', 'u_b', 'u_comp', 'u_strip', 'u_band', 'u_bandOn', 'u_mask', 'u_hasMask', 'u_ag', 'u_nag', 'u_front', 'u_breath', 'u_cur', 'u_wave', 'u_rip', 'u_ground', 'u_ink', 'u_acc'])
+  for (const n of ['u_res', 'u_dpr', 'u_time', 'u_p', 'u_b', 'u_comp', 'u_strip', 'u_band', 'u_bandOn', 'u_mask', 'u_hasMask', 'u_ag', 'u_nag', 'u_front', 'u_breath', 'u_cur', 'u_wave', 'u_rip', 'u_ground', 'u_ink', 'u_acc', 'u_intro'])
     U[n] = gl.getUniformLocation(prog, n);
 
   const cs = getComputedStyle(document.documentElement);
@@ -167,6 +169,7 @@ export function createRenderer(canvas: HTMLCanvasElement) {
     g.uniform3fv(U.u_cur, f.cursor); g.uniform3fv(U.u_wave, f.wave);
     const rp = new Float32Array(16); f.ripples.slice(0, 4).forEach((r, i) => rp.set(r, i * 4));
     g.uniform4fv(U.u_rip, rp);
+    g.uniform1f(U.u_intro, f.intro);
     g.drawArrays(g.TRIANGLES, 0, 3);
   }
 
