@@ -1,7 +1,7 @@
 // Home page: title-plate field, scroll-scrubbed figures 1–4, and the dependency-graph rail.
 import { initField } from './field';
 import { Diagram, type Palette } from './diagram';
-import { fig1, fig1Types, fig2, fig2Types, fig3, fig3Types } from './figs';
+import { fig1, fig1Types, fig2, fig2Types, fig3, fig3Types, type TypeLine } from './figs';
 import { makeEconomy } from './economy';
 
 const RM = document.documentElement.classList.contains('rm');
@@ -10,7 +10,17 @@ const v = (n: string) => css.getPropertyValue(n).trim();
 const PAPER: Palette = { ink: v('--ink'), paper: v('--paper-3'), blue: v('--blue') };
 
 const hero = document.querySelector<HTMLCanvasElement>('[data-field]');
-if (hero) initField(hero, { reduced: RM, title: document.querySelector<HTMLElement>('.plate0__title') });
+if (hero) {
+  const q = (s: string) => document.querySelector<HTMLElement>(s);
+  const cap = q('.plate0__cap');
+  if (cap) document.documentElement.style.setProperty('--cap-h', `${cap.offsetHeight + 16}px`);
+  const obstacles = [
+    { el: q('.plate0__mark'), dir: 'down' as const },
+    { el: q('.plate0__cap'), dir: (window.innerWidth < 700 ? 'up' : 'down') as 'up' | 'down' },
+    { el: q('.plate0__text'), dir: 'up' as const },
+  ].filter((o): o is { el: HTMLElement; dir: 'up' | 'down' } => !!o.el);
+  initField(hero, { reduced: RM, obstacles });
+}
 
 const clamp = (x: number) => Math.max(0, Math.min(1, x));
 const ease = (x: number) => x * x * (3 - 2 * x);
@@ -18,10 +28,20 @@ const ease = (x: number) => x * x * (3 - 2 * x);
 interface Ctl { sec: HTMLElement; blocks: HTMLElement[]; states: number[]; mode: 'hold' | 'linear'; apply: (s: number) => void; s: number; last: number }
 const ctls: Ctl[] = [];
 
+/** The reading line (viewport px) for a section: just under its figure when the figure is pinned above the text
+ * (phones, and §3 on desktop), otherwise half-way down the screen. */
+export function readingLine(sec: HTMLElement) {
+  const top = window.innerWidth < 900 || sec.classList.contains('-wide');
+  if (!top) return window.innerHeight * 0.5;
+  const f = sec.querySelector<HTMLElement>('.fig');
+  const b = f ? Math.min(f.getBoundingClientRect().bottom, window.innerHeight * 0.8) : window.innerHeight * 0.6;
+  return Math.max(b, 0) + 48;
+}
+(window as any).__proofLine = (k: string) => readingLine(document.querySelector<HTMLElement>(`[data-sec="${k}"]`)!);
+
 /** Continuous state for a section, from the positions of its statement blocks relative to a reading line. */
 function stateFor(c: Ctl) {
-  const mobile = window.innerWidth < 900;
-  const line = window.scrollY + window.innerHeight * (mobile ? 0.78 : 0.6);
+  const line = window.scrollY + readingLine(c.sec);
   const tops = c.blocks.map((b) => b.getBoundingClientRect().top + window.scrollY);
   if (line <= tops[0]) return c.states[0];
   for (let k = 0; k < tops.length - 1; k++) {
@@ -34,25 +54,25 @@ function stateFor(c: Ctl) {
   }
   if (c.mode === 'linear') {
     const lastTop = tops[tops.length - 1], sec = c.sec.getBoundingClientRect();
-    const end = sec.bottom + window.scrollY - window.innerHeight * 0.4;
+    // t reaches 1 when the bottom of the section reaches the bottom of the screen
+    const end = sec.bottom + window.scrollY - window.innerHeight + readingLine(c.sec) - 20;
     const f = clamp((line - lastTop) / Math.max(1, end - lastTop));
     return c.states[c.states.length - 1] + f * (1 - c.states[c.states.length - 1]);
   }
   return c.states[c.states.length - 1];
 }
 
-function setType(el: Element | null, types: string[], s: number, base = 0) {
+function setType(el: Element | null, types: TypeLine[], s: number, base = 0) {
   if (!el) return;
-  const i = Math.round(s);
-  const html = types[Math.max(0, Math.min(types.length - 1, i))];
+  const i = Math.max(0, Math.min(types.length - 1, Math.round(s)));
   if ((el as HTMLElement).dataset.cur !== String(i)) {
     (el as HTMLElement).dataset.cur = String(i);
-    el.innerHTML = html;
-    el.classList.toggle('-changed', types[i] !== types[base]);
+    el.innerHTML = `<span class="fig__t">${types[i].t}</span><span class="fig__gl">${types[i].g}</span>`;
+    el.classList.toggle('-changed', types[i].t !== types[base].t);
   }
 }
 
-function mountDiagram(key: string, states: typeof fig1, types: string[]) {
+function mountDiagram(key: string, states: typeof fig1, types: TypeLine[]) {
   const sec = document.querySelector<HTMLElement>(`[data-sec="${key}"]`);
   if (!sec) return null;
   const svg = sec.querySelector<SVGSVGElement>('svg[data-dg]')!;
@@ -83,8 +103,8 @@ const eco = document.querySelector<HTMLElement>('[data-sec="4"]');
 if (eco) {
   const svg = eco.querySelector<SVGSVGElement>('svg[data-eco]')!;
   const mobile = window.innerWidth < 700;
-  const E = makeEconomy(svg, mobile ? { cols: 5, rows: 6, W: 500, H: 620 } : { cols: 8, rows: 6, W: 1000, H: 560 });
-  svg.setAttribute('viewBox', mobile ? '0 0 500 620' : '0 0 1000 560');
+  const E = makeEconomy(svg, mobile ? { cols: 5, rows: 5, W: 500, H: 560 } : { cols: 8, rows: 6, W: 1000, H: 560 });
+  svg.setAttribute('viewBox', mobile ? '0 0 500 560' : '0 0 1000 560');
   const count = eco.querySelector('[data-count]');
   const blocks = [...eco.querySelectorAll<HTMLElement>('[data-state]')];
   ctls.push({
@@ -98,7 +118,7 @@ const rail = document.querySelector<HTMLElement>('[data-rail]');
 const stmts = [...document.querySelectorAll<HTMLElement>('[data-stmt]')];
 function updateRail() {
   if (!rail) return;
-  const line = window.innerHeight * 0.6;
+  const line = window.innerHeight * 0.55;
   let cur = -1;
   stmts.forEach((s, i) => { if (s.getBoundingClientRect().top < line) cur = i; });
   rail.querySelectorAll<SVGGElement>('[data-node]').forEach((n) => {
@@ -109,7 +129,9 @@ function updateRail() {
   const plate = document.querySelector('[data-plate]')?.getBoundingClientRect();
   const hero = document.querySelector('[data-hero]')?.getBoundingClientRect();
   const bib = document.querySelector('.biblio')?.getBoundingClientRect();
-  const hide = (plate && plate.top < window.innerHeight * 0.75 && plate.bottom > window.innerHeight * 0.25) || (hero && hero.bottom > window.innerHeight * 0.3) || (bib && bib.top < window.innerHeight * 0.8);
+  const band = document.querySelector('[data-sec="3"] .sec__grid')?.getBoundingClientRect();
+  const inBand = band && band.top < window.innerHeight * 0.6 && band.bottom > window.innerHeight * 0.4;
+  const hide = (plate && plate.top < window.innerHeight * 0.75 && plate.bottom > window.innerHeight * 0.25) || (hero && hero.bottom > window.innerHeight * 0.3) || (bib && bib.top < window.innerHeight * 0.8) || inBand;
   rail.classList.toggle('-hide', !!hide);
 }
 
@@ -138,3 +160,5 @@ if (f3 && !RM) {
 }
 for (const c of ctls) { c.s = stateFor(c); c.apply(c.s); }
 updateRail();
+
+(window as any).__proofS = () => ctls.map((c) => c.s);

@@ -6,7 +6,7 @@ import { wirePath } from './diagram';
 
 const NS = 'http://www.w3.org/2000/svg';
 interface Firm { id: number; col: number; row: number; x: number; y: number; h: number; h2: number; tau: number; el?: SVGRectElement }
-interface Edge { a: number; b: number; ya: number; yb: number; kind: 'keep' | 'move' | 'drop'; b2: number; yb2: number; ya2: number; el?: SVGPathElement; t0: number; isNew?: boolean }
+interface Edge { a: number; b: number; ya: number; yb: number; kind: 'keep' | 'move' | 'drop'; b2: number; yb2: number; ya2: number; el?: SVGPathElement; t0: number; isNew?: boolean; fa?: number; fb?: number; fb2?: number }
 
 export function makeEconomy(svg: SVGSVGElement, opts: { cols: number; rows: number; W: number; H: number }) {
   const { cols, rows, W, H } = opts;
@@ -39,9 +39,10 @@ export function makeEconomy(svg: SVGSVGElement, opts: { cols: number; rows: numb
   const layoutPorts = () => {
     for (const f of firms) {
       const outs = edges.filter((e) => e.a === f.id).sort((p, q) => firms[p.b].y - firms[q.b].y);
-      outs.forEach((e, k) => { e.ya = port(f, k, outs.length); e.ya2 = f.y - f.h2 / 2 + ((k + 1) / (outs.length + 1)) * f.h2; });
+      // ports are stored as fractions of the box height, so wires stay attached when a box changes height
+      outs.forEach((e, k) => { e.ya = port(f, k, outs.length); e.fa = (k + 1) / (outs.length + 1) - 0.5; });
       const ins = edges.filter((e) => e.b === f.id).sort((p, q) => firms[p.a].y - firms[q.a].y);
-      ins.forEach((e, k) => { e.yb = port(f, k, ins.length); });
+      ins.forEach((e, k) => { e.yb = port(f, k, ins.length); e.fb = (k + 1) / (ins.length + 1) - 0.5; });
     }
   };
   layoutPorts();
@@ -60,7 +61,7 @@ export function makeEconomy(svg: SVGSVGElement, opts: { cols: number; rows: numb
   for (const f of firms) {
     const d = dist.get(f.id) ?? 99;
     if (d === 0) f.tau = 0.08;
-    else if (d <= 6 && rnd() < 0.9 - d * 0.1) f.tau = 0.08 + d * 0.12 + rnd() * 0.1;
+    else if (d <= 6 && rnd() < 0.9 - d * 0.1) f.tau = 0.07 + d * 0.085 + rnd() * 0.07;
     if (f.tau < 1) f.h2 = Math.max(18, f.h + (rnd() - 0.4) * 26);
   }
   for (const e of edges) {
@@ -72,16 +73,25 @@ export function makeEconomy(svg: SVGSVGElement, opts: { cols: number; rows: numb
       if (e.kind === 'move') {
         const others = byCol(firms[e.b].col).filter((f) => f.id !== e.b);
         const alt = others.sort((p, q2) => Math.abs(p.y - firms[e.b].y) - Math.abs(q2.y - firms[e.b].y))[Math.floor(rnd() * 2)];
-        if (alt) { e.b2 = alt.id; e.yb2 = alt.y + (rnd() - 0.5) * alt.h * 0.6; } else e.kind = 'keep';
+        if (alt) { e.b2 = alt.id; e.fb2 = (rnd() - 0.5) * 0.6; } else e.kind = 'keep';
       }
-      if (e.kind === 'keep') { e.b2 = e.b; e.yb2 = e.yb; }
+      if (e.kind === 'keep') { e.b2 = e.b; e.fb2 = e.fb; }
     }
   }
+  // a firm that loses or gains an input wire changes type too, when that wire is rejoined
+  for (const e of edges) if (e.t0 < 1 && e.kind !== 'keep') {
+    const at = e.t0 + 0.07;
+    firms[e.b].tau = Math.min(firms[e.b].tau, at);
+    if (e.kind === 'move') firms[e.b2].tau = Math.min(firms[e.b2].tau, at);
+  }
+  for (const f of firms) if (f.tau < 1 && f.h2 === f.h) f.h2 = Math.max(18, f.h + (rnd() - 0.4) * 26);
   // new wires: changed firms take up new connections
   for (const f of firms) if (f.tau < 1 && f.col < cols - 1 && rnd() < 0.55) {
-    const B = byCol(f.col + 1); const b = B[Math.floor(rnd() * B.length)];
-    edges.push({ a: f.id, b: b.id, ya: f.y + (rnd() - 0.5) * f.h * 0.5, yb: b.y + (rnd() - 0.5) * b.h * 0.5, kind: 'keep', b2: b.id, yb2: 0, ya2: 0, t0: f.tau + 0.1, isNew: true });
-    const e = edges[edges.length - 1]; e.yb2 = e.yb; e.ya2 = e.ya;
+    // a new wire goes only to a firm that has changed type (so every composite is defined at the end)
+    const B = byCol(f.col + 1).filter((b) => b.tau < 1); if (!B.length) continue;
+    const b = B[Math.floor(rnd() * B.length)];
+    const fb = (rnd() - 0.5) * 0.5;
+    edges.push({ a: f.id, b: b.id, ya: 0, yb: 0, kind: 'keep', b2: b.id, yb2: 0, ya2: 0, t0: Math.max(f.tau, b.tau) + 0.08, isNew: true, fa: (rnd() - 0.5) * 0.5, fb, fb2: fb });
   }
 
   // edge wires at the left and right of the economy
@@ -104,16 +114,17 @@ export function makeEconomy(svg: SVGSVGElement, opts: { cols: number; rows: numb
     changedCount: (t: number) => firms.filter((f) => f.tau <= t).length,
     total: firms.length,
     render(t: number) {
+      const hAt = (f: Firm) => f.h + (f.h2 - f.h) * ease(clamp((t - f.tau) / 0.06));
       for (const f of firms) {
-        const k = ease(clamp((t - f.tau) / 0.06));
-        const h = f.h + (f.h2 - f.h) * k;
+        const h = hAt(f);
         f.el!.setAttribute('x', `${f.x - 7}`); f.el!.setAttribute('y', `${f.y - h / 2}`); f.el!.setAttribute('height', `${h}`);
         f.el!.classList.toggle('-on', t >= f.tau);
       }
       for (const e of edges) {
         const A = firms[e.a];
         const u = t - e.t0;
-        let yb = e.yb, bx = firms[e.b].x - 7, o = 1, cls = '', draw = 1;
+        const B = firms[e.b], B2 = firms[e.b2];
+        let yb = B.y + (e.fb ?? 0) * hAt(B), bx = B.x - 7, o = 1, cls = '', draw = 1;
         if (e.isNew) {
           draw = clamp(u / 0.1); cls = '-new';
           if (u < 0) o = 0;
@@ -122,18 +133,17 @@ export function makeEconomy(svg: SVGSVGElement, opts: { cols: number; rows: numb
           else {
             const m = ease(clamp((u - UNDEF) / MOVE));
             cls = '-re';
-            if (e.kind === 'move') { yb = e.yb + (e.yb2 - e.yb) * m; bx = firms[e.b].x - 7 + (firms[e.b2].x - firms[e.b].x) * m; }
+            if (e.kind === 'move') { const y2 = B2.y + (e.fb2 ?? 0) * hAt(B2); yb = yb + (y2 - yb) * m; bx = B.x - 7 + (B2.x - B.x) * m; }
             if (e.kind === 'drop') { o = 1 - m; cls = '-undef'; }
           }
         }
-        const ka = ease(clamp((t - A.tau) / 0.06));
-        const ya = e.ya + (e.ya2 - e.ya) * ka;
+        const ya = A.y + (e.fa ?? 0) * hAt(A);
         e.el!.setAttribute('d', wirePath({ x1: A.x + 7, y1: ya, x2: bx, y2: yb, bend: 0.5, loop: 0 }));
         e.el!.setAttribute('class', `eco-w ${cls}`);
         e.el!.style.opacity = `${o}`;
         if (draw < 1) e.el!.setAttribute('stroke-dasharray', `${draw * 1000} 1000`);
         else if (cls !== '-undef') e.el!.removeAttribute('stroke-dasharray');
-        else e.el!.setAttribute('stroke-dasharray', '14 10');
+        else e.el!.setAttribute('stroke-dasharray', '4 4');
       }
     },
   };

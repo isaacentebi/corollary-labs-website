@@ -7,10 +7,10 @@ const { size = 'sm', link = true } = Astro.props;
 const Tag = link ? 'a' : 'div';
 ---
 <Tag class:list={['mark', `-${size}`]} href={link ? u('') : undefined} aria-label={link ? `${site.name}, home` : undefined}>
-  <svg viewBox="0 0 60 40" aria-hidden="true">
-    <path d="M0 29 H21 M39 29 H60" fill="none" stroke="currentColor" stroke-width="2" />
-    <path class="mark__loop" d="M39 19 H45 Q50 19 50 14 V8 Q50 3 45 3 H15 Q10 3 10 8 V14 Q10 19 15 19 H21" fill="none" stroke="currentColor" stroke-width="2" />
-    <rect x="21" y="13" width="18" height="23" fill="currentColor" />
+  <svg viewBox="0 0 64 40" aria-hidden="true">
+    <path d="M0 30 H22 M42 30 H64" fill="none" stroke="currentColor" stroke-width="3.2" />
+    <path class="mark__loop" d="M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 14 21 H22" fill="none" stroke="currentColor" stroke-width="3.2" />
+    <rect x="22" y="15" width="20" height="23" fill="currentColor" />
   </svg>
   <span>{site.name}</span>
 </Tag>

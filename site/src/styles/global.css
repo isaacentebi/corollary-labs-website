@@ -55,11 +55,9 @@ sub, sup { font-size: 0.68em; line-height: 0; }
 
 /* Mark — top-left, not fixed. */
 .mark { position: absolute; top: 18px; left: var(--gut); z-index: 20; display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
-.mark svg { width: 44px; height: 30px; overflow: visible; }
+.mark svg { width: 46px; height: 29px; overflow: visible; }
 .mark span { font: 400 17px/1 var(--display); letter-spacing: 0.01em; }
 .mark:hover { color: var(--ink); }
-.mark:hover .mark__loop { stroke: var(--blue); }
-.mark__loop { transition: stroke 0.3s; }
 
 /* Page scaffolding for inner pages */
 .page { padding: 120px var(--gut) 0; max-width: 1360px; margin: 0 auto; }
@@ -77,7 +75,7 @@ sub, sup { font-size: 0.68em; line-height: 0; }
 @media (max-width: 700px) { .fm { grid-template-columns: 1fr; gap: 4px; } }
 
 /* Footer: the site's references. */
-.refs { margin-top: 18vh; padding: 0 var(--gut) 96px; max-width: 1360px; margin-left: auto; margin-right: auto; }
+.refs { margin-top: 18vh; padding: 0 var(--gut) 88px; max-width: 1360px; margin-left: auto; margin-right: auto; }
 .refs__end { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--ink); padding-bottom: 14px; }
 .refs__qed { width: clamp(28px, 3.2vw, 44px); aspect-ratio: 0.78; background: var(--ink); }
 .refs__h { font: 400 clamp(34px, 5vw, 64px)/1 var(--display); margin: 0; }
@@ -89,11 +87,11 @@ sub, sup { font-size: 0.68em; line-height: 0; }
 .refs__list a { text-decoration: none; }
 .refs__list a:hover { text-decoration: underline; }
 .refs__list a[aria-current='page'] { color: var(--blue); }
-.refs__copy { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-3); margin-top: 48px; max-width: calc(100% - 240px); }
+.refs__copy { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-2); margin-top: 48px; }
 @media (max-width: 800px) {
   .refs__grid { grid-template-columns: 1fr; gap: 26px; }
-  .refs__copy { max-width: calc(100% - 200px); }
 }
 
 /* Mathematical operators: the Latin subsets of Libertinus map some of these to blank glyphs, so set them in Libertinus Math. */
 .op { font-family: 'STIX Two Math', serif; font-style: normal; padding: 0 0.1em; font-size: 0.92em; }
+.up { font-style: normal; }

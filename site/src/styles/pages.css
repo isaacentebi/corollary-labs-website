@@ -22,13 +22,13 @@
 
 /* About: the mark, drawn large */
 .markfig { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 5vw; align-items: center; margin: 4vh 0 10vh; }
-.markfig__art { background: var(--paper-3); border: 1px solid var(--rule); padding: 5vw 4vw; }
+.markfig__art { padding: 2vw 0; }
 .markfig__art svg { width: 100%; height: auto; overflow: visible; }
-.mk-w { fill: none; stroke: var(--ink); stroke-width: 2.2; vector-effect: non-scaling-stroke; }
-.mk-loop { stroke: var(--blue); }
+.mk-w { fill: none; stroke: var(--ink); stroke-width: 3.2; vector-effect: non-scaling-stroke; }
+.mk-loop { stroke: var(--ink); }
 .mk-b { fill: var(--ink); }
 .mk-t { font: italic 26px var(--serif); fill: var(--ink); text-anchor: middle; }
-.mk-t.-b { fill: var(--blue); }
+.mk-t.-b { fill: var(--ink); }
 .mk-in { fill: var(--paper); font-size: 34px; }
 .markfig__text .fm__k { margin: 0 0 12px; font-weight: 400; }
 .markfig__text a { color: var(--blue); }

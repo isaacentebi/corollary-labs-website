@@ -89,5 +89,5 @@ if (kind === 'layers') {
   <div class="fig__plate">
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Figure ${n}. ${caption}`} set:html={body} />
   </div>
-  <figcaption class="fig__cap"><span class="fig__n">Fig. {String(n).padStart(2, '0')}</span> {caption}</figcaption>
+  <figcaption class="fig__cap"><span class="fig__n">Fig. {String(n).padStart(2, '0')}</span> <span class="ph">[Placeholder figure and data.]</span> {caption}</figcaption>
 </figure>
