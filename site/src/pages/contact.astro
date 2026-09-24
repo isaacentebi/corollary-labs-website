@@ -9,7 +9,7 @@ import '../styles/pages.css';
     <p class="page__kicker">Contact</p>
     <h1 class="page__title">Correspondence</h1>
     <div class="rule"></div>
-    <p class="statement"><a class="mail ph" href={`mailto:${site.email}`}>{site.email}</a></p>
+    <p class="statement">{site.email.startsWith('[') ? <span class="ph">{site.email}</span> : <a class="mail" href={`mailto:${site.email}`}>{site.email}</a>}</p>
     <section class="fmblock" aria-label="Details">
       <div class="fm"><div class="fm__k">Write about</div><div class="fm__v ph">[Placeholder: one line on what to write to us about.]</div></div>
       <div class="fm"><div class="fm__k">Location</div><div class="fm__v ph">[City]</div></div>

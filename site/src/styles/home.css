@@ -8,7 +8,9 @@
 .plate0__cap { position: absolute; z-index: 3; top: 20px; right: var(--gut); max-width: 22rem; margin: 0; font-size: 15px; line-height: 1.45; color: var(--ink-2); }
 .plate0__cap .sc { color: var(--ink); }
 .plate0__cap a { color: var(--blue); text-decoration: none; }
-.plate0__cap .-coarse { display: none; }
+.plate0__cap .-coarse, .plate0__cap .-narrow { display: none; }
+/* on phones the wires lie above the text and are not bent around it, so the caption does not say they are */
+@media (max-width: 699px) { .plate0__cap .-wide { display: none; } .plate0__cap .-narrow { display: inline; } }
 @media (pointer: coarse) { .plate0__cap .-coarse { display: inline; } .plate0__cap .-fine { display: none; } }
 .plate0__text { position: absolute; z-index: 2; left: var(--gut); bottom: clamp(20px, 5vh, 48px); pointer-events: none; }
 .plate0__title { margin: 0 0 0 -0.04em; font: 400 clamp(76px, 14.5vw, 260px)/0.8 var(--display); letter-spacing: -0.022em; color: var(--ink); }

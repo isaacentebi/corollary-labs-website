@@ -125,7 +125,7 @@ const f3d: State = {
     U: { from: { b: 'e3', side: 'out', dy: 28 }, to: { b: 'r', side: 'in' }, loop: -32, blue: 1, note: 'feedback', lt: 0.45 },
     R: { from: { b: 'r', side: 'out' }, to: { b: 'e1', side: 'in', dy: 34 }, blue: 1, bend: 0.45 },
     Zf: { from: { b: 'e3', side: 'out', dy: -26 }, to: { b: 'h', side: 'in' }, blue: 1 },
-    Z: { from: { b: 'h', side: 'out' }, to: { x: 796, y: 196 }, label: 'Z', note: 'new product', na: 'end', lt: at(618, 796, Rm), blue: 1 },
+    Z: { from: { b: 'h', side: 'out' }, to: { x: 796, y: 196 }, label: 'Z', note: 'new product', noteShort: 'new', na: 'end', lt: at(618, 796, Rm), blue: 1 },
     Y: { from: { b: 'e3', side: 'out' }, to: { x: 796, y: 300 }, ...Yw(558) },
   },
 };

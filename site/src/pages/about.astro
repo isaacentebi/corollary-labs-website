@@ -37,7 +37,7 @@ import '../styles/pages.css';
       <div class="fm"><div class="fm__k">Location</div><div class="fm__v ph">[City]</div></div>
       <div class="fm"><div class="fm__k">Classification</div><div class="fm__v">JEL O33, L23 · MSC 2020 18M30, 18M35</div></div>
       <div class="fm"><div class="fm__k">Type</div><div class="fm__v">Libertinus Serif, Libertinus Serif Display and Libertinus Mono (SIL Open Font License).</div></div>
-      <div class="fm"><div class="fm__k">Correspondence</div><div class="fm__v"><a href={`mailto:${site.email}`} class="ph">{site.email}</a></div></div>
+      <div class="fm"><div class="fm__k">Correspondence</div><div class="fm__v">{site.email.startsWith('[') ? <span class="ph">{site.email}</span> : <a href={`mailto:${site.email}`}>{site.email}</a>}</div></div>
     </section>
   </article>
 </Base>

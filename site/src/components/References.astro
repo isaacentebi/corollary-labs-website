@@ -29,7 +29,7 @@ const cur = (h: string) => (h.replace(/\/$/, '') === path ? 'page' : undefined);
     <div class="refs__col">
       <h2>Correspondence</h2>
       <ol class="refs__list">
-        <li><a href={`mailto:${site.email}`} class="ph">{site.email}</a></li>
+        <li>{site.email.startsWith('[') ? <span class="ph">{site.email}</span> : <a href={`mailto:${site.email}`}>{site.email}</a>}</li>
         <li><span class="ph">[City]</span></li>
       </ol>
     </div>
