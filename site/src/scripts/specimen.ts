@@ -21,20 +21,23 @@ type V = [number, number];
 const R0 = 0.7;
 // The drawing sits on one horizontal axis (y = 0.12): input port, three steps, output port.
 const TH_IN = Math.PI - 0.17;
-const TH_A = 0.17, TH_B = -0.95, TH_C = -0.4, TH_LOBE = -0.66, TH_O = 1.3;
+const TH_A = 0.17, TH_B = -1.12, TH_C = -0.36, TH_LOBE = -0.72, TH_O = 1.3; // B and C ports 44° apart
 const STEP: V[] = [[-0.34, 0.12], [0, 0.12], [0.34, 0.12]];
 const S4: V = [0.46, -0.3];
 const NUC: V = [0, -0.3];
 const RN = 0.12;
-const ASIDE: V = [0.17, 0.12]; // fig 2: the person keeps working on the line, beside the agent
-const PEOPLE_IN = [-2.25, 2.25, 0.55]; // angles at which the people sit inside the boundary in fig 4
+// fig 2: four units share the line, evenly spaced (person, agent, the person who stepped aside, person)
+const LANE3 = [-0.34, 0, 0.34], LANE4 = [-0.39, -0.13, 0.13, 0.39];
+// fig 4: each person tends a port (input, output B, output C), just inside the boundary, on a small loop through it
+const POSTS = [Math.PI - 0.62, -1.12 - 0.34, -0.36 + 0.34];
+const POST_NODE = [7, 4, 6]; // the mesh node each person is linked to
 // fig 4: coordination as a mesh, laid out symmetrically over the three steps
 const MESH_N: V[] = [STEP[0], STEP[1], STEP[2], S4, NUC, [-0.32, -0.16], [0.3, -0.16], [-0.18, 0.38], [0.18, 0.38]];
 const MESH_E: [number, number][] = [[4, 5], [4, 6], [4, 1], [5, 0], [5, 1], [6, 1], [6, 2], [6, 3], [2, 3], [0, 7], [7, 1], [1, 8], [8, 2], [7, 8]];
 const FIL = [-2.62, -1.57, -0.52, 0.52, 1.57, 2.62]; // explored directions; index 3 is replaced by the direction to the objective
 const SEL = 3;
 // the channel the boundary makes from the input pore to the middle step (fig 2)
-const TUBE_C: V = [-0.34, 0.4], TUBE_B: V = STEP[1];
+const TUBE_C: V = [-0.36, 0.4], TUBE_B: V = [LANE4[1], 0.12];
 
 const add = (a: V, b: V): V => [a[0] + b[0], a[1] + b[1]];
 const lerpV = (a: V, b: V, t: number): V => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
@@ -120,10 +123,11 @@ export class Specimen {
       close: ss(1.6, 1.8, s), fuse: ss(1.8, 1.93, s), tether: 0,
       wither: ss(2.03, 2.3, s), obj: ss(2.12, 2.45, s), explore: ss(2.33, 2.68, s), select: ss(2.62, 2.95, s),
       compose: 0, dark: this.plate == null ? ss(3.03, 3.09, s) * (1 - ss(3.985, 4.02, s)) : 0,
-      dissolve: ss(3.04, 3.3, s), mesh: ss(3.1, 3.55, s), divide: ss(3.22, 3.56, s), out: ss(3.3, 3.62, s),
-      lobe: ss(3.4, 3.8, s), newOut: ss(3.62, 3.9, s), loop: ss(3.5, 3.86, s),
-      zoom: ss(4.0, 4.42, s), detail: 1 - ss(4.08, 4.3, s), tissueA: ss(4.02, 4.24, s),
-      stain: 0.85 * clamp((s - 4.25) / 0.72) + 0.15 * clamp(s - 5), open: ss(4.5, 4.9, s),
+      dissolve: ss(3.04, 3.26, s), mesh: ss(3.24, 3.62, s), divide: ss(3.36, 3.66, s), out: ss(3.1, 3.38, s),
+      lobe: ss(3.4, 3.8, s), newOut: ss(3.62, 3.9, s), loop: ss(3.4, 3.8, s),
+      simplify: ss(4.0, 4.1, s), detail: 1 - ss(4.08, 4.18, s), tissueA: ss(4.08, 4.18, s),
+      zoom: ss(4.16, 4.52, s), others: ss(4.41, 4.56, s),
+      stain: 0.85 * clamp((s - 4.45) / 0.7) + 0.15 * clamp(s - 5.15), open: ss(4.58, 4.98, s),
     };
   }
 
@@ -171,7 +175,6 @@ export class Specimen {
     ctx.setTransform(dpr * k, 0, 0, dpr * k, this.cx * dpr, this.cy * dpr);
     const px = 1 / k;
     if (S.tissueA > 0) this.drawTissueLayer(S, px, cam);
-    const labels: Label[] = [];
     if (S.detail > 0.001) {
       ctx.globalAlpha = S.detail;
       this.drawCell(S, px);
@@ -192,19 +195,18 @@ export class Specimen {
       for (let i = 0; i < 72; i++) { const a = (i / 72) * TAU, l = i % 6 === 0 ? 9 : 4; ctx.moveTo(this.cx + Math.cos(a) * clipR, this.cy + Math.sin(a) * clipR); ctx.lineTo(this.cx + Math.cos(a) * (clipR - l), this.cy + Math.sin(a) * (clipR - l)); }
       ctx.lineWidth = 0.6; ctx.strokeStyle = rgba(P.ink, 0.6 * ringA); ctx.stroke();
     }
-    if (this.withLabels) { this.labels(S, s, labels); this.drawLeaders(labels); this.onLabels?.(labels); }
   }
 
   toScreen(v: V, cam = 1): V { return [this.cx + v[0] * this.R * cam, this.cy + v[1] * this.R * cam]; }
 
   drawTissueLayer(S: St, px: number, cam: number) {
     const { ctx } = this;
-    const tk = R0 / 0.95;
+    const tk = R0 / 0.86;
     ctx.save(); ctx.scale(tk, tk);
     stepTissue(this.tissue, S.stain, this.t, this.reduced ? 0 : 1);
     const k = this.R * cam * tk;
     const view: [number, number, number, number] = [-this.cx / k, -this.cy / k, (this.w - this.cx) / k, (this.h - this.cy) / k];
-    drawTissue(ctx, this.tissue, { P: this.P, px: px / tk, st: S.stain, t: this.t, alpha: S.tissueA, view, firstStained: true });
+    drawTissue(ctx, this.tissue, { P: this.P, px: px / tk, st: S.stain, t: this.t, alpha: S.tissueA, others: S.others, view, firstStained: true });
     ctx.restore();
   }
 
@@ -213,9 +215,10 @@ export class Specimen {
     const { ctx, P } = this; const t = this.t;
     const N = 220;
     const mem: V[] = [];
+    const simp = 1 - S.simplify;
     for (let i = 0; i < N; i++) { const th = (i / N) * TAU; mem.push(polar(th, this.memR(th, S))); }
     const O = polar(TH_O, this.memR(TH_O, S));
-    const objA = S.obj * (1 - 0.5 * S.loop);
+    const objA = S.obj * (1 - S.loop);
     // interior wash + a few granules
     ctx.beginPath(); smoothClosed(ctx, mem);
     const g = ctx.createRadialGradient(0, 0, 0.1, 0, 0, R0 * 1.05);
@@ -256,15 +259,14 @@ export class Specimen {
       ctx.beginPath(); ctx.arc(O[0], O[1], 0.02 + 0.005 * Math.sin(t * 2), 0, TAU); ctx.fillStyle = rgba(P.accent, objA); ctx.fill();
       ctx.beginPath(); ctx.arc(O[0], O[1], 0.034, 0, TAU); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.accent, objA * 0.7); ctx.stroke();
     }
-    if (S.loop > 0) this.drawLoop(S, px, occ.people);
-    // the person who stepped aside stays attached to the agent at their old step
+    if (S.loop > 0 && simp > 0.01) { ctx.globalAlpha *= simp; this.drawLoops(S, px, occ.people); ctx.globalAlpha /= Math.max(simp, 1e-3); }
     if (S.tether > 0.01) {
       const a = occ.people[1], b = occ.agent[0].p;
       ctx.beginPath(); ctx.moveTo(a[0], a[1] - 0.02); ctx.lineTo(b[0], b[1] + 0.03);
       ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.ink, 0.75 * S.tether); ctx.stroke();
     }
     this.drawFlow(S, px);
-    occ.people.forEach((p) => this.drawPerson(p, px));
+    ctx.globalAlpha *= simp; occ.people.forEach((p) => this.drawPerson(p, px)); ctx.globalAlpha /= Math.max(simp, 1e-3);
     this.drawAgents(S, px, occ);
   }
 
@@ -328,13 +330,19 @@ export class Specimen {
   }
 
   drawCoordination(S: St, px: number) {
+    // the hub dissolves as its ring breaks into arcs that shorten and fade, one after another
     const { ctx, P } = this;
     const env = 1 - S.dissolve;
     if (env <= 0.01) return;
+    const n = 8;
     for (const [rr, lw, col] of [[RN, 1.6, P.ink], [RN - 0.018, 0.6, P.ink2]] as const) {
-      ctx.beginPath(); ctx.arc(NUC[0], NUC[1], rr, 0, TAU);
-      ctx.setLineDash(S.dissolve > 0 ? [px * 10 * env, px * 14 * S.dissolve] : []);
-      ctx.lineWidth = px * lw; ctx.strokeStyle = rgba(col, env); ctx.stroke(); ctx.setLineDash([]);
+      for (let k = 0; k < n; k++) {
+        const f = clamp(S.dissolve * 1.6 - (k % 4) * 0.15); // staggered
+        const span = (TAU / n) * (1 - f * 0.9);
+        const mid = (k + 0.5) * (TAU / n) - Math.PI / 2;
+        ctx.beginPath(); ctx.arc(NUC[0], NUC[1], rr, mid - span / 2, mid + span / 2);
+        ctx.lineWidth = px * lw; ctx.strokeStyle = rgba(col, 1 - f); ctx.stroke();
+      }
     }
   }
 
@@ -371,27 +379,35 @@ export class Specimen {
     }
   }
 
-  inPos(i: number, S: St): V { const th = PEOPLE_IN[i]; return polar(th, this.memR(th, S) - 0.19); }
+  inPos(i: number, S: St): V { const th = POSTS[i]; return polar(th, this.memR(th, S) - 0.1); }
+  /** x positions on the line: three steps, or four units while the displaced person works beside the agent */
+  lane(S: St) {
+    const k = spring(S.aside) * (1 - ss(0, 1, S.out));
+    return { p0: lerp(LANE3[0], LANE4[0], k), mid: lerp(LANE3[1], LANE4[1], k), aside: LANE4[2], p2: lerp(LANE3[2], LANE4[3], k), k };
+  }
 
   occupants(S: St) {
     const t = this.t;
     const w = (_i: number): V => [0, 0]; void t;
     const k = spring(S.out);
+    const ln = this.lane(S); const y = STEP[0][1];
     const people = [
-      add(lerpV(STEP[0], this.inPos(0, S), k), w(0)),
-      add(lerpV(lerpV(STEP[1], ASIDE, spring(S.aside)), this.inPos(1, S), k), w(1)),
-      add(lerpV(STEP[2], this.inPos(2, S), k), w(2)),
+      add(lerpV([ln.p0, y], this.inPos(0, S), k), w(0)),
+      add(lerpV(lerpV([0, y], [ln.aside, y], spring(S.aside)), this.inPos(1, S), k), w(1)),
+      add(lerpV([ln.p2, y], this.inPos(2, S), k), w(2)),
     ];
     const agent: { p: V; a: number }[] = [];
     let a0: V;
     const pin = polar(TH_IN, this.memR(TH_IN, S));
     if (S.ride <= 0) { const from: V = [-1.25, STEP[0][1]]; a0 = [lerp(from[0], pin[0] - 0.06, S.aIn), lerp(from[1], pin[1], S.aIn)]; }
-    else a0 = quad(pin, TUBE_C, TUBE_B, S.ride);
+    else if (S.fuse < 1) a0 = quad(pin, TUBE_C, TUBE_B, S.ride);
+    else a0 = [ln.mid, y];
     if (S.divide <= 0) agent.push({ p: add(a0, w(5)), a: S.aIn > 0 ? 1 : 0 });
     else {
-      [STEP[0], STEP[1], STEP[2], S4].forEach((tg, i) => {
+      const m: V = [ln.mid, y];
+      [STEP[0], m, STEP[2], S4].forEach((tg, i) => {
         const kk = i === 1 ? 1 : spring(clamp((S.divide - (i === 3 ? 0.25 : 0)) / 0.75));
-        agent.push({ p: add(lerpV(STEP[1], tg, kk), w(6 + i)), a: i === 1 ? 1 : clamp(kk * 3) });
+        agent.push({ p: add(lerpV(m, tg, kk), w(6 + i)), a: i === 1 ? 1 : clamp(kk * 3) });
       });
     }
     return { people, agent };
@@ -404,7 +420,7 @@ export class Specimen {
     const from: V = [NUC[0], NUC[1] + RN];
     const strands: { to: V; a: number; mid: boolean }[] = [
       { to: occ.people[0], a: 1 - S.out, mid: false },
-      { to: STEP[1], a: 1 - S.wither, mid: true }, // the plan reaches the middle step, whoever works it
+      { to: [this.lane(S).mid, STEP[1][1]], a: 1 - S.wither, mid: true }, // the plan reaches the middle step, whoever works it
       { to: occ.people[2], a: 1 - S.out, mid: false },
     ];
     strands.forEach((st, i) => {
@@ -450,30 +466,20 @@ export class Specimen {
   }
 
   /** the feedback loop: inside the boundary where the people sit, outside it between them */
-  loopPath(S: St): V[] {
-    const pts: V[] = []; const n = 200;
-    for (let i = 0; i < n; i++) {
-      const th = (i / n) * TAU;
-      let m = 0; for (const a of PEOPLE_IN) m = Math.max(m, gauss(angDiff(th, a), 0.55));
-      pts.push(polar(th, this.memR(th, S) + 0.1 - 0.29 * m));
-    }
-    return pts;
-  }
-  drawLoop(S: St, px: number, people: V[]) {
+  /** fig 4: each person, just inside the boundary at a port, runs one small closed loop out through it and back */
+  drawLoops(S: St, px: number, people: V[]) {
     const { ctx, P } = this; const t = this.t;
-    const pts = this.loopPath(S);
-    const m = Math.round(pts.length * S.loop);
-    ctx.beginPath();
-    for (let i = 0; i <= m; i++) { const p = pts[(i + 20) % pts.length]; i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
-    ctx.setLineDash([px * 5, px * 5]); ctx.lineDashOffset = -t * 12 * px;
-    ctx.lineWidth = px; ctx.strokeStyle = rgba(P.ink, 0.85); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
-    if (S.loop > 0.95) for (let q = 0; q < 3; q++) {
-      const p = pts[Math.floor(((t * 0.045 + q / 3) % 1) * pts.length)];
-      ctx.beginPath(); ctx.arc(p[0], p[1], px * 2.2, 0, TAU); ctx.fillStyle = rgba(P.ink, 1); ctx.fill();
-    }
-    ctx.beginPath();
-    people.forEach((p, i) => { const tg = MESH_N[[5, 7, 8][i]]; const q = lerpV(p, tg, 0.82 * S.loop); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); });
-    ctx.setLineDash([px * 1.5, px * 3.5]); ctx.lineWidth = px * 0.6; ctx.strokeStyle = rgba(P.ink, 0.8 * S.loop); ctx.stroke(); ctx.setLineDash([]);
+    POSTS.forEach((th, i) => {
+      const c = polar(th, this.memR(th, S)); const r = 0.1;
+      const a0 = th + Math.PI; // start at the person (the inner point) and go round
+      ctx.beginPath(); ctx.arc(c[0], c[1], r, a0, a0 + TAU * S.loop);
+      ctx.setLineDash([px * 4, px * 4]); ctx.lineDashOffset = -t * 10 * px;
+      ctx.lineWidth = px; ctx.strokeStyle = rgba(P.ink, 0.9); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+      if (S.loop > 0.95) { const an = a0 + ((t * 0.35 + i / 3) % 1) * TAU; ctx.beginPath(); ctx.arc(c[0] + Math.cos(an) * r, c[1] + Math.sin(an) * r, px * 2.2, 0, TAU); ctx.fillStyle = rgba(P.ink, 1); ctx.fill(); }
+      // a solid link from the person to the mesh
+      const tg = MESH_N[POST_NODE[i]]; const q = lerpV(people[i], tg, S.loop);
+      ctx.beginPath(); ctx.moveTo(people[i][0], people[i][1]); ctx.lineTo(q[0], q[1]); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.ink, 0.9 * S.loop); ctx.stroke();
+    });
   }
 
   drawFlow(S: St, px: number) {
@@ -481,7 +487,8 @@ export class Specimen {
     const pin = polar(TH_IN, this.memR(TH_IN, S));
     const pa = polar(TH_A, this.memR(TH_A, S)), pb = polar(TH_B, this.memR(TH_B, S)), pc = polar(TH_C, this.memR(TH_C, S));
     const L = S.newOut;
-    const N0 = 30, N = N0 + 60; const base = ctx.globalAlpha;
+    const N0 = 30, N = N0 + 26; const base = ctx.globalAlpha * (1 - S.simplify);
+    const ln = this.lane(S); const Y = STEP[0][1];
     for (let i = 0; i < N; i++) {
       const extra = i >= N0; const va = extra ? L : 1; // more passes through once reorganised
       if (va <= 0.01) continue;
@@ -491,7 +498,7 @@ export class Specimen {
       // outside the firm particles keep to one of three lanes; inside they run on the axis
       const lane = ((i % 3) - 1) * 0.022;
       const ex0 = polar(exitTh, 1.3), ed = exitTh;
-      const nodes: V[] = [[-1.3, pin[1] + lane], [pin[0] - 0.14, pin[1] + lane], pin, STEP[0], STEP[1], STEP[2], via, exitP,
+      const nodes: V[] = [[-1.3, pin[1] + lane], [pin[0] - 0.14, pin[1] + lane], pin, [ln.p0, Y], [ln.mid, Y], [ln.p2, Y], via, exitP,
         [ex0[0] - Math.sin(ed) * lane, ex0[1] + Math.cos(ed) * lane]];
       const u = (((this.phase * 0.035 + i / (extra ? N - N0 : N0) + (extra ? 0.017 : 0)) % 1) + 1) % 1;
       const segs = nodes.length - 1;
@@ -539,62 +546,4 @@ export class Specimen {
   }
 
   // ── labels: letter keys (figures) and words (hero), laid out in screen space, kept inside the aperture ──
-  labels(S: St, s: number, out: Label[]) {
-    const win = (k: number) => ss(k - 1 + 0.04, k - 1 + 0.16, s) * (1 - ss(k - 0.02, k + 0.06, s));
-    const occ = this.occupants(S);
-    const O = polar(TH_O, this.memR(TH_O, S));
-    const strandMid = (to: V): V => [lerp(NUC[0], to[0], 0.55) + 0.01, lerp(NUC[1] + RN, to[1] - 0.07, 0.55)];
-    const sel = S.explore > 0 ? this.filamentPath(SEL, S, occ.agent[0].p) : null;
-    const alt = S.explore > 0 ? this.filamentPath(1, S, occ.agent[0].p) : null;
-    const loopP = this.loopPath(S)[Math.round(180 * ((TAU - 1.25) / TAU))];
-    const exitB = polar(TH_B, this.memR(TH_B, S) + 0.1), exitC = polar(TH_C, this.memR(TH_C, S) + 0.1);
-    const hero = S.hero * (this.plate == null ? 1 : 0);
-    // One letter per concept for the whole story (listed under each legend). A concept is written out in
-    // words the first time it appears on the drawing, and shown by its letter after that.
-    // [id, word, letter, first appearance?, anchor, direction (deg), alpha]
-    const L: [string, string, string, boolean, V, number, number][] = [
-      ['h-in', 'inputs', '', true, [-0.88, 0.075], 100, hero],
-      ['h-firm', 'firm', '', true, polar(-2.35, this.memR(-2.35, S)), -135, hero],
-      ['h-out', 'output A', '', true, [0.86, 0.19], 90, hero],
-      ['1a', 'inputs', 'a', true, [-0.88, 0.075], 100, win(1)],
-      ['1b', 'people', 'b', true, add(occ.people[0], [0, -0.06]), -100, win(1)],
-      ['1c', 'coordination', 'c', true, [NUC[0] + RN * 0.8, NUC[1] - RN * 0.6], -35, win(1)],
-      ['1d', 'plan', 'd', true, strandMid(STEP[2]), 0, win(1)],
-      ['1e', 'output A', 'e', true, [0.86, 0.19], 90, win(1)],
-      ['2f', 'agent', 'f', true, occ.agent[0].p, -120, win(2)],
-      ['2d', 'plan', 'd', false, strandMid(STEP[1]), 20, win(2)],
-      ['3f', 'agent', 'f', false, occ.agent[0].p, -150, win(3)],
-      ['3g', 'objective', 'g', true, O, 60, win(3) * S.obj],
-      ['3h', 'alternatives', 'h', true, alt ? alt[alt.length - 1] : [0, 0], -120, win(3) * S.explore * (1 - S.select * 0.8)],
-      ['3i', 'selected plan', 'i', true, sel ? sel[9] : [0, 0], 15, win(3) * S.select],
-      ['4c', 'coordination', 'c', false, MESH_N[5], -150, win(4) * S.mesh],
-      ['4f', 'agents', 'f', false, occ.agent[3]?.p ?? S4, -60, win(4) * S.divide],
-      ['4b', 'people', 'b', false, add(occ.people[1], [0, 0.06]), 120, win(4) * S.out],
-      ['4j', 'feedback loop', 'j', true, loopP, this.mobile ? -150 : -60, win(4) * S.loop],
-      ['4k', 'output B', 'k', true, exitB, this.mobile ? -40 : -80, win(4) * S.newOut],
-      ['4l', 'output C', 'l', true, exitC, this.mobile ? 75 : -10, win(4) * S.newOut],
-    ];
-    const m = this.mobile ? 0.8 : 1;
-    for (const [id, word, letter, first, anchor, deg, a] of L) {
-      const key = !first;
-      const [ax, ay] = this.toScreen(anchor);
-      const d = (key ? 30 : id === '4l' && this.mobile ? 96 : 38) * m, r = (deg * Math.PI) / 180;
-      let x = ax + Math.cos(r) * d, y = ay + Math.sin(r) * d;
-      const dx = x - this.cx, dy = y - this.cy, dist = Math.hypot(dx, dy), lim = this.R - (key ? 18 : 24);
-      if (dist > lim) { x = this.cx + (dx / dist) * lim; y = this.cy + (dy / dist) * lim; }
-      out.push({ id, text: key ? letter : word, letter, key, x, y, ax, ay, a: clamp(a) });
-    }
-  }
-  drawLeaders(labels: Label[]) {
-    const { ctx, P } = this;
-    for (const l of labels) {
-      if (l.a <= 0.01) continue;
-      const dx = l.x - l.ax, dy = l.y - l.ay, d = Math.hypot(dx, dy) || 1, stop = l.key ? 11 : 6;
-      ctx.globalAlpha = l.a;
-      ctx.beginPath(); ctx.moveTo(l.ax, l.ay); ctx.lineTo(l.x - (dx / d) * stop, l.y - (dy / d) * stop);
-      ctx.lineWidth = 0.8; ctx.strokeStyle = rgba(P.ink2, 0.9); ctx.stroke();
-      ctx.beginPath(); ctx.arc(l.ax, l.ay, 1.8, 0, TAU); ctx.fillStyle = rgba(P.ink, 1); ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-  }
 }

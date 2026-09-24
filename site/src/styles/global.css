@@ -85,7 +85,7 @@ html.nav-hidden .nav:not(.is-open):not(:focus-within) { transform: translateY(-1
 .nav__mark path { fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .nav__name { position: relative; display: grid; font-family: var(--f-display); font-variation-settings: 'SOFT' 100; font-weight: 400; font-size: 20px; letter-spacing: -0.01em; white-space: nowrap; }
 .nav__name > span { grid-area: 1 / 1; justify-self: start; text-align: left; transition: opacity 0.3s var(--soft), transform 0.45s var(--soft); }
-.nav__name .-close { opacity: 0; transform: translateY(6px); font-style: italic; }
+.nav__name .-close { opacity: 0; transform: translateY(6px); font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; align-self: center; }
 .nav.is-open .nav__name .-name { opacity: 0; transform: translateY(-6px); }
 .nav.is-open .nav__name .-close { opacity: 1; transform: none; }
 html[data-page='home']:not(.past-hero) .nav:not(.is-open) .nav__name .-name { opacity: 0; transform: translateX(-6px); }
@@ -108,7 +108,7 @@ html[data-page='home']:not(.past-hero) .nav:not(.is-open) .nav__name .-name { op
 .menu__cell .wall2 { fill: none; stroke: var(--ink); stroke-width: 0.7; opacity: 0.45; vector-effect: non-scaling-stroke; }
 .menu__cell .ring { fill: none; stroke: var(--ink-2); stroke-width: 1; vector-effect: non-scaling-stroke; transition: stroke 0.35s var(--soft); }
 .menu__cell .seed { fill: var(--accent); opacity: 0; transition: opacity 0.35s var(--soft); }
-.menu__cell span { position: relative; padding-top: 1.3em; opacity: 0; transition: opacity 0.15s var(--soft); }
+.menu__cell span { position: relative; opacity: 0; transition: opacity 0.15s var(--soft); }
 .menu__cell:hover .wall, .menu__cell:focus-visible .wall, .menu__cell[aria-current='page'] .wall { fill: color-mix(in srgb, var(--accent) 10%, var(--paper)); stroke: var(--accent); }
 .menu__cell:hover .seed, .menu__cell:focus-visible .seed, .menu__cell[aria-current='page'] .seed { opacity: 1; }
 .menu__cell:focus-visible { outline: none; }

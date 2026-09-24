@@ -2,7 +2,7 @@
 // Home: one drawing that changes in three states over about three screens of scroll (the firm → it reorganises
 // around an agent → the change spreads), then the business content: about, latest essays, links.
 import Base from '../layouts/Base.astro';
-import { figs, u } from '../config/site';
+import { figs, site, u } from '../config/site';
 import { getCollection } from 'astro:content';
 import '../styles/home.css';
 
@@ -35,11 +35,12 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
     </div>
   </section>
 
-  <section class="after" aria-label="About, essays and links">
+  <section class="after" aria-label="About and essays">
     <div class="after__about">
       <p class="t-label">About</p>
       <p class="after__text ph">[About — one paragraph]</p>
       <a class="after__more link-u" href={u('about/')}>About →</a>
+      <p class="after__contact"><span class="t-label">Contact</span><a class="link-u" href={`mailto:${site.email}`}>{site.email}</a></p>
     </div>
     <div class="after__essays">
       <p class="t-label">Essays</p>
@@ -50,11 +51,6 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
       </ol>
       <a class="after__more link-u" href={u('essays/')}>All essays →</a>
     </div>
-    <nav class="after__links" aria-label="Pages">
-      <a href={u('about/')}>About</a>
-      <a href={u('team/')}>Team</a>
-      <a href={u('contact/')}>Contact</a>
-    </nav>
   </section>
   <script>
     import { initHome } from '../scripts/home';

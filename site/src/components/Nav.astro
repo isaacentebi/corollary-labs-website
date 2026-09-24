@@ -23,7 +23,7 @@ const cells = nav.map((n, i) => {
     {cells.map((c) => (
       <li>
         <a class="menu__cell" href={c.href} style={`--i:${c.i}`} aria-current={isCur(c.href) ? 'page' : undefined} tabindex="-1">
-          <svg viewBox="0 0 100 100" aria-hidden="true"><path class="wall" d={c.wall} /><path class="wall2" d={c.wall2} /><circle class="ring" cx={c.rx} cy={c.ry} r="6.5" /><circle class="seed" cx={c.rx} cy={c.ry} r="3" /></svg>
+          <svg viewBox="0 0 100 100" aria-hidden="true"><path class="wall" d={c.wall} /><path class="wall2" d={c.wall2} /></svg>
           <span><small>{String(c.i + 1).padStart(2, '0')}</small>{c.label}</span>
         </a>
       </li>

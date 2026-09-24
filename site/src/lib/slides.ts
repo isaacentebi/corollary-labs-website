@@ -15,13 +15,14 @@ export function slideSVG(slug: string, kind: number): string {
   let body = '';
   if (kind === 0) {
     // one firm: double wall, coordination ring, plans to three steps, an agent at the middle step, inputs and outputs
-    body += `<path class="s-wash" d="${blob(sd, 100, 100, 68, 0.06)}"/>`;
-    body += `<path class="s-wall" d="${blob(sd, 100, 100, 68, 0.06)}"/><path class="s-wall2" d="${blob(sd, 100, 100, 64.5, 0.06)}"/>`;
-    body += `<circle class="s-ring" cx="98" cy="70" r="13"/><circle class="s-ring2" cx="98" cy="70" r="10.5"/>`;
-    body += `<path class="s-strand" d="M98 83 Q84 96 68 104 M98 83 Q116 96 132 104"/><path class="s-strand -gone" d="M98 83 L100 102"/>`;
-    body += person(68, 112) + person(132, 112) + seed(100, 112, 4.6);
-    for (let i = 0; i < 8; i++) body += `<circle class="s-in" cx="${f(8 + R() * 22)}" cy="${f(100 + (R() - 0.5) * 18)}" r="2.2"/>`;
-    for (let i = 0; i < 4; i++) body += `<circle class="s-out" cx="${f(176 + R() * 16)}" cy="${f(104 + (R() - 0.5) * 18)}" r="3.4"/>`;
+    // the refined firm: a smooth boundary, one axis, a ring issuing plans, people as ink dots, an agent at the middle step
+    body += `<path class="s-wash" d="${blob(sd, 100, 100, 66, 0.015)}"/>`;
+    body += `<path class="s-wall" d="${blob(sd, 100, 100, 66, 0.015)}"/><path class="s-wall2" d="${blob(sd, 100, 100, 63, 0.015)}"/>`;
+    body += `<circle class="s-ring" cx="100" cy="70" r="12"/><circle class="s-ring2" cx="100" cy="70" r="9.8"/>`;
+    body += `<path class="s-strand" d="M100 82 Q97 97 68 106 M100 82 Q103 97 132 106"/><path class="s-strand -gone" d="M100 82 L100 104"/>`;
+    body += person(68, 110) + person(132, 110) + seed(100, 110, 4.6);
+    for (let i = 0; i < 4; i++) body += `<circle class="s-in" cx="${f(12 + i * 7)}" cy="110" r="2"/>`;
+    for (let i = 0; i < 3; i++) body += `<circle class="s-out" cx="${f(174 + i * 9)}" cy="110" r="3"/>`;
   } else if (kind === 1) {
     // a tissue, part reorganised: rings in the old firms, meshes and seeds in the new
     const pts: [number, number][] = [];

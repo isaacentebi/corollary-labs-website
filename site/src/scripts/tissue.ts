@@ -38,8 +38,11 @@ export function makeTissue(seed: number, w: number, h: number, spacing: number, 
   cells.push(mk(ox, oy));
   for (let j = -Math.ceil(h / 2 / dy) - 1; j <= Math.ceil(h / 2 / dy) + 1; j++) {
     for (let i = -Math.ceil(w / 2 / spacing) - 1; i <= Math.ceil(w / 2 / spacing) + 1; i++) {
-      const x = i * spacing + (j & 1 ? spacing / 2 : 0) + (R() - 0.5) * spacing * 0.5;
-      const y = j * dy + (R() - 0.5) * spacing * 0.45;
+      // the first ring around the origin firm is regular, so that firm is a near-round cell of the firm's own size
+      const gx = i * spacing + (j & 1 ? spacing / 2 : 0), gy = j * dy;
+      const jit = clamp((Math.hypot(gx - ox, gy - oy) - spacing * 1.2) / spacing);
+      const x = gx + (R() - 0.5) * spacing * 0.5 * jit;
+      const y = gy + (R() - 0.5) * spacing * 0.45 * jit;
       if (Math.hypot(x - ox, y - oy) < spacing * 0.8) continue;
       cells.push(mk(x, y));
     }
@@ -109,6 +112,7 @@ export interface TissueStyle {
   view?: [number, number, number, number]; // visible rect in tissue units (culling)
   hot?: number;                             // index of the cell under the pointer
   firstStained?: boolean;
+  others?: number;                          // alpha of every firm but the first (for the pull-back)
 }
 
 /** Draw the tissue in the current transform (tissue units). */
@@ -126,7 +130,7 @@ export function drawTissue(ctx: CanvasRenderingContext2D, T: Tissue, S: TissueSt
     let cx = 0, cy = 0; for (const p of poly) { cx += p[0]; cy += p[1]; } cx /= poly.length; cy /= poly.length;
     const stain = i === 0 && S.firstStained ? 1 : ss(c.tau, c.tau + 0.32, st);
     const hot = S.hot === i ? 1 : 0;
-    const a = A * c.alive;
+    const a = A * c.alive * (i === 0 ? 1 : S.others ?? 1);
     if (a <= 0.01) continue;
     const inset = (f: number) => poly.map((p) => [cx + (p[0] - cx) * f, cy + (p[1] - cy) * f] as [number, number]);
     const split = clamp((c.dk ?? 0) * 1.4), shrink = c.sk ?? 0;

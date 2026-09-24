@@ -6,15 +6,15 @@
 import { Specimen } from './specimen';
 
 export const homeLayout = (w: number, h: number) => {
-  if (w < 760) { const R = Math.min(w * 0.53, h * 0.245); return { cx: w / 2, cy: 42 + R * 0.95, R }; }
+  if (w < 760) { const R = Math.min(w * 0.66, h * 0.3); return { cx: w / 2, cy: Math.max(30 + R, (h - 150) / 2), R }; }
   const R = Math.min(h * 0.42, w * 0.29);
   return { cx: w * 0.665, cy: h * 0.5 + 8, R };
 };
 
-const MAP: [number, number, number, number][] = [[0, 0.3, -1, 0], [0.3, 1.0, 0, 1], [1.0, 2.2, 1, 4], [2.2, 2.9, 4, 5.2]];
+const MAP: [number, number, number, number][] = [[0, 0.3, -1, 0], [0.3, 1.0, 0, 1], [1.0, 2.2, 1, 4], [2.2, 2.9, 4, 5.3]];
 const toS = (y: number) => {
   for (const [a, b, s0, s1] of MAP) if (y <= b) return s0 + (Math.max(0, y - a) / (b - a)) * (s1 - s0);
-  return 5.2;
+  return 5.3;
 };
 
 export function initHome() {
@@ -38,15 +38,16 @@ export function initHome() {
     const vh = innerHeight;
     const y = (scrollY - home.offsetTop) / vh;
     let s = toS(y);
-    if (RM) s = y < 0.3 ? -1 : y < 1.0 ? 1 : y < 2.2 ? 3.98 : 5.2; // reduced motion: settled states only
+    if (RM) s = y < 0.3 ? -1 : y < 1.0 ? 1 : y < 2.2 ? 3.98 : 5.3; // reduced motion: settled states only
     sp.sTarget = s; if (RM) sp.s = s;
     legends.forEach((lg, i) => {
       const s0 = +lg.dataset.s0!, s1 = +lg.dataset.s1!, last = i === legends.length - 1;
       const inAt = s0 + (i === 0 ? 0.12 : 0.04), outAt = last ? 99 : s1 + 0.04;
       const a = RM ? (s >= s0 && (s < s1 || last) ? 1 : 0)
         : Math.min(1, Math.max(0, (s - inAt) / 0.08)) * Math.min(1, Math.max(0, (outAt - s) / 0.08));
-      lg.style.opacity = a.toFixed(3);
-      lg.style.visibility = a > 0.005 ? 'visible' : 'hidden';
+      const leave = last ? 1 - Math.min(1, Math.max(0, (y - 2.84) / 0.12)) : 1; // gone before the next section arrives
+      lg.style.opacity = (a * leave).toFixed(3);
+      lg.style.visibility = a * leave > 0.005 ? 'visible' : 'hidden';
     });
     if (hero) { const ha = RM ? (y < 0.3 ? 1 : 0) : 1 - Math.min(1, Math.max(0, (y - 0.03) / 0.25)); hero.style.opacity = ha.toFixed(3); }
     home.classList.toggle('is-open', s > 4.45);

@@ -5,11 +5,11 @@
 .s-edge { fill: none; stroke: var(--ink); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .s-wash { fill: var(--body-wash); }
 .s-wall, .s-cell, .s-ring, .s-strand, .s-in, .s-out, .s-person path, .s-person circle { vector-effect: non-scaling-stroke; }
-.s-wall { fill: none; stroke: var(--ink); stroke-width: 1.1; }
+.s-wall { fill: none; stroke: var(--ink); stroke-width: 1; }
 .s-wall2 { fill: none; stroke: var(--ink-2); stroke-width: 0.7; opacity: 0.7; vector-effect: non-scaling-stroke; }
 .s-cell { fill: var(--body-wash); stroke: var(--ink); stroke-width: 0.8; }
 .s-cell.s-on { fill: var(--accent-wash); stroke: var(--accent); }
-.s-ring { fill: none; stroke: var(--ink); stroke-width: 0.9; }
+.s-ring { fill: none; stroke: var(--ink); stroke-width: 1; }
 .s-ring2 { fill: none; stroke: var(--ink-2); stroke-width: 0.7; vector-effect: non-scaling-stroke; }
 .s-strand { fill: none; stroke: var(--ink); stroke-width: 0.6; vector-effect: non-scaling-stroke; }
 .s-strand.-gone { stroke-dasharray: 2 4; opacity: 0.6; }
