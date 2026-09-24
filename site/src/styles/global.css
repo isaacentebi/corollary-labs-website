@@ -1,4 +1,4 @@
-/* Tableau (wild) — tokens + base. One accent (signal) marks only what is produced inside a firm. */
+/* Tableau (wild) — tokens + base. Signal orange appears only on a diagonal cell (in the table and in the mark). */
 :root {
   --g: #0a0a09;          /* carbon: ground */
   --g2: #121211;         /* raised ground */
@@ -33,8 +33,8 @@ ol, ul { padding: 0; list-style: none; }
 a { color: inherit; text-decoration: none; }
 img, svg, canvas { display: block; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
-::selection { background: var(--a); color: var(--g); }
-:focus-visible { outline: 1px solid var(--a); outline-offset: 3px; }
+::selection { background: var(--i); color: var(--g); }
+:focus-visible { outline: 1px solid var(--i); outline-offset: 3px; }
 
 .mono { font-family: var(--f-m); font-stretch: 87.5%; font-size: 10.5px; line-height: 1.4; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 400; }
 .ph { color: var(--i3); }
@@ -49,52 +49,68 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   position: fixed; inset: 0 0 auto 0; z-index: 20; height: var(--head);
   display: flex; align-items: stretch; justify-content: space-between;
   padding: 0 var(--gut); border-bottom: 1px solid var(--ln);
-  background: color-mix(in srgb, var(--g) 82%, transparent);
+  background: color-mix(in srgb, var(--g) 86%, transparent);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
-.hd__brand { display: flex; align-items: center; gap: 12px; font-stretch: 125%; font-weight: 400; font-size: 15px; letter-spacing: -0.005em; white-space: nowrap; }
-.hd__mark { width: 18px; height: 18px; flex: none; }
+.hd__brand { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+.hd__mark { width: 17px; height: 17px; flex: none; }
+.hd__word { font-stretch: 125%; font-weight: 450; font-size: 15px; letter-spacing: -0.02em; }
+.hd__word span { color: var(--i2); font-weight: 350; }
 .hd__nav { display: flex; align-items: stretch; }
 .hd__nav a {
   display: flex; align-items: center; gap: 10px; padding: 0 clamp(10px, 1.6vw, 22px);
   border-left: 1px solid var(--ln); color: var(--i2); transition: color 0.2s, background-color 0.2s;
 }
 .hd__nav a:last-child { padding-right: 0; }
-.hd__nav a:hover, .hd__nav a[aria-current='page'] { color: var(--i); }
-.hd__nav a[aria-current='page'] .hd__n { color: var(--a); }
+.hd__nav a:hover { color: var(--i); background: #111110; }
+.hd__nav a[aria-current='page'] { color: var(--g); background: var(--i); }
+.hd__nav a[aria-current='page'] .hd__n { color: var(--g); }
+.hd__nav a:last-child[aria-current='page'] { padding-right: clamp(10px, 1.6vw, 22px); }
 .hd__n { color: var(--i3); }
 @media (max-width: 640px) {
-  .hd__word { display: none; }
+  :root { --head: 80px; }
+  .hd { flex-direction: column; padding: 0; }
+  .hd__brand { height: 45px; padding: 0 16px; border-bottom: 1px solid var(--ln); }
+  .hd__nav { height: 34px; }
+  .hd__nav a { flex: 1; justify-content: center; padding: 0 4px; gap: 6px; }
+  .hd__nav a:first-child { border-left: 0; }
+  .hd__nav a:last-child { padding-right: 4px; }
+  .hd__nav a:last-child[aria-current='page'] { padding-right: 4px; }
   .hd__n { display: none; }
-  .hd__nav a { padding: 0 11px; }
-  .hd__nav a:last-child { padding-right: 0; }
 }
 
-/* ── footer: colophon as a table ─────────────────────────────────────── */
-.ft { border-top: 1px solid var(--ln); padding: 0 var(--gut); position: relative; }
-.ft__grid { display: grid; grid-template-columns: repeat(4, 1fr); }
-.ft__col { padding: 20px 16px 28px 0; border-right: 1px solid var(--ln); min-height: 180px; }
+/* ── footer: one row of a table, then the name across the full width ──── */
+.ft { border-top: 1px solid var(--ln); position: relative; overflow: hidden; }
+.ft__grid { display: grid; grid-template-columns: repeat(3, 1fr); padding: 0 var(--gut); }
+.ft__col { padding: 16px 16px 26px 0; border-right: 1px solid var(--ln); }
 .ft__col + .ft__col { padding-left: 16px; }
 .ft__col:last-child { border-right: 0; }
-.ft__col h2 { color: var(--i3); margin-bottom: 18px; }
+.ft__col h2 { color: var(--i3); margin-bottom: 14px; }
 .ft__col li { font-size: 15px; line-height: 1.7; }
 .ft__col a { color: var(--i2); transition: color 0.2s; }
 .ft__col a:hover { color: var(--i); }
-.ft__big { font-stretch: 125%; font-weight: 300; font-size: clamp(44px, 10.4vw, 188px); line-height: 0.86; letter-spacing: -0.035em; padding: 28px 0 0; border-top: 1px solid var(--ln); white-space: nowrap; overflow: hidden; }
-.ft__base { display: flex; gap: 24px; padding: 16px 0 22px; color: var(--i3); max-width: calc(100% - 240px); }
+.ft__big { font-stretch: 125%; font-weight: 300; font-size: 16vw; line-height: 0.8; letter-spacing: -0.04em; padding: 0.06em 0 0; border-top: 1px solid var(--ln); white-space: nowrap; text-align: center; }
+.ft__base { display: flex; gap: 24px; padding: 14px var(--gut) 20px; color: var(--i3); max-width: calc(100% - 240px); }
 @media (max-width: 760px) {
   .ft__grid { grid-template-columns: 1fr 1fr; }
-  .ft__col { min-height: 0; border-bottom: 1px solid var(--ln); }
   .ft__col:nth-child(2) { border-right: 0; }
-  .ft__col:nth-child(3) { padding-left: 0; }
-  .ft__base { max-width: none; flex-direction: column; gap: 4px; padding-bottom: 72px; }
+  .ft__col:nth-child(3) { grid-column: 1 / -1; padding-left: 0; border-top: 1px solid var(--ln); }
+  .ft__base { max-width: none; padding-bottom: 64px; }
 }
 
-/* ── shared page frame (non-home pages) ──────────────────────────────── */
-.page { padding: calc(var(--head) + clamp(48px, 9vw, 128px)) var(--gut) clamp(72px, 10vw, 140px); }
-.page__kick { display: flex; gap: 18px; color: var(--i2); margin-bottom: 22px; }
-.page__kick b { color: var(--a); font-weight: 400; }
-.page__title { font-stretch: 125%; font-weight: 300; font-size: clamp(48px, 9vw, 150px); line-height: 0.9; letter-spacing: -0.035em; }
+/* ── shared page frame (non-home pages): the page opens with a header row, like a table ─ */
+.page { padding: calc(var(--head) + clamp(40px, 6vw, 88px)) var(--gut) clamp(72px, 10vw, 140px); }
+.ph-row { display: grid; grid-template-columns: minmax(64px, 1fr) 4fr minmax(0, 2fr); border-top: 1px solid var(--ln2); border-bottom: 1px solid var(--ln); }
+.ph-row > * { padding: 14px 16px 18px 0; }
+.ph-row > * + * { padding-left: 16px; border-left: 1px solid var(--ln); }
+.ph-row__n { color: var(--i3); }
+.ph-row__t { font-stretch: 125%; font-weight: 300; font-size: clamp(40px, 6.4vw, 104px); line-height: 0.9; letter-spacing: -0.035em; }
+.ph-row__m { color: var(--i2); display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
+.ph-row__m b { color: var(--i); font-weight: 400; }
+@media (max-width: 640px) {
+  .ph-row { grid-template-columns: 44px 1fr; }
+  .ph-row__m { grid-column: 1 / -1; border-left: 0 !important; padding-left: 0 !important; border-top: 1px solid var(--ln); flex-direction: row; }
+}
 .page__lede { font-family: var(--f-s); font-weight: 300; font-size: clamp(21px, 2.1vw, 30px); line-height: 1.3; max-width: 30em; margin-top: clamp(28px, 4vw, 56px); }
 
 /* data table (essays, team, about) */
@@ -102,7 +118,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .tb caption { text-align: left; color: var(--i2); padding-bottom: 14px; caption-side: top; }
 .tb caption b { color: var(--i); font-weight: 400; }
 .tb th { text-align: left; font-weight: 400; color: var(--i3); padding: 10px 16px 10px 0; border-top: 1px solid var(--ln2); border-bottom: 1px solid var(--ln); white-space: nowrap; }
-.tb td { padding: 18px 16px 18px 0; border-bottom: 1px solid var(--ln); vertical-align: top; }
+.tb td { padding: 18px 16px 18px 0; border-bottom: 1px solid var(--ln); vertical-align: top; transition: background-color 0.15s, color 0.15s; }
+.tb td:first-child, .tb th:first-child { padding-left: 8px; }
+/* the table's reading grammar: the hovered cell's row and column light, the cell itself inverts */
+.tb .-xr, .tb .-xc { background: #141413; }
+.tb td.-x { background: var(--i); color: var(--g) !important; }
+.tb td.-x * { color: var(--g) !important; }
 .tb .num { text-align: right; }
 .tb th.num { text-align: right; }
 

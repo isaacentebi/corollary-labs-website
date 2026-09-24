@@ -24,8 +24,11 @@ const H = yOf(rows.length - 1) + cellH + 30;
 ---
 <Base page="about" title="About" description={`About ${site.name}.`}>
   <section class="page">
-    <p class="page__kick mono reveal"><b>02</b><span>About</span></p>
-    <h1 class="page__title reveal">About</h1>
+    <header class="ph-row reveal">
+      <p class="ph-row__n mono">02</p>
+      <h1 class="ph-row__t">About</h1>
+      <p class="ph-row__m mono"><span><b>Table 0.</b> {site.name}</span><span>One column</span></p>
+    </header>
     <p class="page__lede reveal">{site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span></p>
 
     <div class="ab">

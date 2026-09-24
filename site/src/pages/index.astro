@@ -9,7 +9,8 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 const pad = (n: number) => String(n).padStart(2, '0');
-const axis = [1, 8, 16, 24, 32];
+const ids = Array.from({ length: 32 }, (_, i) => i);
+const short = ['Exec.', 'Plans', 'Obj.'];
 ---
 <Base page="home">
   <section class="st" data-story aria-label="The table, in seven states">
@@ -17,18 +18,23 @@ const axis = [1, 8, 16, 24, 32];
       <canvas class="st__gl" data-gl aria-hidden="true"></canvas>
 
       <div class="st__labels mono" data-labels aria-hidden="true">
-        {axis.map((a) => <span class="st__ax -top" data-ax-top={a - 1}>{pad(a)}</span>)}
-        {axis.map((a) => <span class="st__ax -left" data-ax-left={a - 1}>{pad(a)}</span>)}
-        {SUPPLIED.map((s, k) => <span class="st__row" data-row={k}>{s}</span>)}
-        <span class="st__row -out" data-row="3">Output</span>
+        <span class="st__title" data-title>Table 1 · 32 firms<span class="-full"> · input coefficients</span></span>
+        <span class="st__axis -buyer" data-buyer>Buyer →</span>
+        <span class="st__axis -supplier" data-supplier>Supplier ↓</span>
+        {ids.map((s) => <span class="st__id -c" data-cl={s}>{pad(s + 1)}</span>)}
+        {ids.map((s) => <span class="st__id -r" data-rl={s}>{pad(s + 1)}</span>)}
+        {SUPPLIED.map((s, k) => <span class="st__row" data-row={k}><span class="-full">{s}</span><span class="-short">{short[k]}</span></span>)}
+        <span class="st__row -out" data-row="3"><span class="-full">Output</span><span class="-short">Out</span></span>
         <span class="st__rule" data-rule></span>
+        <span class="st__rounds" data-rounds></span>
       </div>
       <div class="st__nums mono" data-nums aria-hidden="true"></div>
+      <span class="st__agent" data-agent aria-hidden="true"><i class="mono">Agent</i></span>
       <span class="st__chip mono" data-chip aria-hidden="true"></span>
       <div class="st__tip mono" data-tip aria-hidden="true"></div>
 
       <div class="st__hero" data-hero>
-        <h1 class="st__name">Corollary<br />Labs</h1>
+        <h1 class="st__name"><span>Corollary</span> <span>Labs</span></h1>
         <p class="st__intro">{site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span></p>
         <p class="st__hint mono"><span class="-fine">Hover to read a cell. Click a column to trace its suppliers, round by round.</span><span class="-coarse">Tap a column to trace its suppliers, round by round.</span></p>
       </div>
@@ -44,15 +50,17 @@ const axis = [1, 8, 16, 24, 32];
           <div class="st__cap" data-cap={i}>
             <p class="st__cap-n mono">State {i} <span>/ 6</span></p>
             <h2 class="st__cap-t">{s.title}</h2>
-            {s.lines.map((l) => <p class="st__cap-l">{l}</p>)}
+            {s.lines.map((l) => <p class="st__cap-l" set:html={l} />)}
           </div>
         ))}
       </div>
 
       <div class="st__t mono" data-coda>
-        <label for="t-range">t</label>
-        <input id="t-range" type="range" min="0" max="1" step="0.001" value="1" data-trange />
-        <output data-tout>1.00</output>
+        <span class="st__t-end">A<sub>0</sub></span>
+        <input type="range" min="0" max="1" step="0.001" value="0" data-trange aria-label="t, from the first table to the second" />
+        <span class="st__t-end">A<sub>1</sub></span>
+        <output data-tout>t = 0.00</output>
+        <span class="st__t-f">H(t) = (1 − t)·A<sub>0</sub> + t·A<sub>1</sub></span>
       </div>
       <span class="st__cue mono" data-cue aria-hidden="true">Scroll ↓</span>
     </div>
@@ -64,6 +72,7 @@ const axis = [1, 8, 16, 24, 32];
       <a class="mono link" href={url('essays/')}>All essays →</a>
     </div>
     <table class="tb he__tb">
+      <caption class="mono"><b>Table 2.</b> Essays, newest first</caption>
       <thead class="mono"><tr><th class="num">No.</th><th>Title</th><th class="-hide-s">Date</th><th class="num">Min.</th></tr></thead>
       <tbody>
         {rows.map(({ e, fm }, i) => (
@@ -71,7 +80,7 @@ const axis = [1, 8, 16, 24, 32];
             <td class="num mono">{pad(rows.length - i)}</td>
             <td><a class="he__a" href={url(`essays/${e.id}/`)}><span class="he__t">{e.data.title}</span><span class="he__d">{e.data.dek}</span></a></td>
             <td class="mono -hide-s">{fmt(e.data.date)}</td>
-            <td class="num mono">{fm.minutesRead}</td>
+            <td class="num mono">{pad(fm.minutesRead)}</td>
           </tr>
         ))}
       </tbody>

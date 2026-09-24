@@ -1,18 +1,11 @@
 ---
-import { site, nav, url } from '../config/site';
+import { site, url } from '../config/site';
 ---
-<footer class="ft" id="contact-footer">
+<footer class="ft">
   <div class="ft__grid">
     <div class="ft__col">
-      <h2 class="mono">Pages</h2>
-      <ul>
-        <li><a href={url()}>Index</a></li>
-        {nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
-      </ul>
-    </div>
-    <div class="ft__col">
       <h2 class="mono">Contact</h2>
-      <ul><li><a href={`mailto:${site.email}`}>{site.email}</a></li></ul>
+      <ul><li><a href={`mailto:${site.email}`}>{site.email}</a></li><li><a href={url('contact/')}>Contact page</a></li></ul>
     </div>
     <div class="ft__col">
       <h2 class="mono">Entity</h2>
@@ -23,6 +16,6 @@ import { site, nav, url } from '../config/site';
       <ul><li><a href="#main">Back to top ↑</a></li></ul>
     </div>
   </div>
-  <p class="ft__big" aria-hidden="true">{site.name}</p>
+  <p class="ft__big" aria-hidden="true" data-fit><span>{site.name}</span></p>
   <p class="ft__base mono"><span>©{site.year} {site.name}</span></p>
 </footer>

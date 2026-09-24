@@ -14,8 +14,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
 ---
 <Base page="essays" title="Essays" description="Essays by Corollary Labs.">
   <section class="page">
-    <p class="page__kick mono reveal"><b>01</b><span>Essays</span><span>{pad(rows.length)} entries</span></p>
-    <h1 class="page__title reveal">Essays</h1>
+    <header class="ph-row reveal">
+      <p class="ph-row__n mono">01</p>
+      <h1 class="ph-row__t">Essays</h1>
+      <p class="ph-row__m mono"><span><b>Table 2.</b> Essays</span><span>{pad(rows.length)} rows</span></p>
+    </header>
     <table class="tb ix" data-sortable>
       <caption class="mono reveal">Sort by any column heading.</caption>
       <thead class="mono">
@@ -23,8 +26,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
           <th class="num"><button type="button" data-sort="n" data-type="num">No.</button></th>
           <th><button type="button" data-sort="title">Title</button></th>
           <th class="-hide-s"><button type="button" data-sort="date" data-type="num">Date</button></th>
-          <th class="num -hide-s"><button type="button" data-sort="sections" data-type="num">Sections</button></th>
-          <th class="num -hide-s"><button type="button" data-sort="notes" data-type="num">Notes</button></th>
+          <th class="-hide-s"><button type="button" data-sort="sections" data-type="num">Sections</button></th>
+          <th class="-hide-s"><button type="button" data-sort="notes" data-type="num">Notes</button></th>
           <th class="num"><button type="button" data-sort="min" data-type="num">Min.</button></th>
         </tr>
       </thead>
@@ -34,9 +37,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
             <td class="num mono ix__n">{pad(rows.length - i)}</td>
             <td><a class="ix__a" href={url(`essays/${e.id}/`)}><span class="ix__t">{e.data.title}</span><span class="ix__d">{e.data.dek}</span>{e.data.placeholder && <span class="ix__ph mono">[Placeholder essay]</span>}</a></td>
             <td class="mono -hide-s"><time datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time></td>
-            <td class="num mono -hide-s">{pad(sections)}</td>
-            <td class="num mono -hide-s">{pad(notes)}</td>
-            <td class="num mono">{fm.minutesRead}</td>
+            <td class="mono -hide-s"><span class="ix__cells" aria-label={`${sections} sections`}>{Array.from({ length: sections }, () => <i />)}</span>{pad(sections)}</td>
+            <td class="mono -hide-s"><span class="ix__cells" aria-label={`${notes} notes`}>{Array.from({ length: notes }, () => <i />)}</span>{pad(notes)}</td>
+            <td class="num mono">{pad(fm.minutesRead)}</td>
           </tr>
         ))}
       </tbody>

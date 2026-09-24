@@ -5,8 +5,11 @@ import '../styles/pages.css';
 ---
 <Base page="contact" title="Contact" description={`Contact ${site.name}.`}>
   <section class="page">
-    <p class="page__kick mono reveal"><b>04</b><span>Contact</span></p>
-    <h1 class="page__title reveal">Contact</h1>
+    <header class="ph-row reveal">
+      <p class="ph-row__n mono">04</p>
+      <h1 class="ph-row__t">Contact</h1>
+      <p class="ph-row__m mono"><span><b>Table 4.</b> Contact</span><span>One row</span></p>
+    </header>
     <a class="ct__mail reveal" href={`mailto:${site.email}`}>{site.email}</a>
 
     <table class="tb colo reveal">

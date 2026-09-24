@@ -6,7 +6,7 @@ export const site = {
   name: 'Corollary Labs',
   email: '[EMAIL]',
   year: 2026,
-  description: 'Corollary Labs. [Placeholder: one sentence for search engines.]',
+  description: 'Corollary Labs is a company.',
 } as const;
 
 export const nav = [
@@ -16,17 +16,19 @@ export const nav = [
   { n: '04', label: 'Contact', href: url('contact/') },
 ];
 
-// Home story captions. FOR FOUNDER REVIEW.
-// Set A from one clean-room writer (read Chapter I of the Superdark essay + the founder's words), used verbatim.
+// Home story captions. FOR FOUNDER REVIEW. Lines may contain <sub> markup.
+// Set A from one clean-room writer (read Chapter I of the Superdark essay + the founder's words), used verbatim,
+// except state 4 line 2 and state 6 (both lines), rewritten by the creative lead after the first critique
+// (the old lines described firms leaving the table, which is no longer drawn, and narrated the animation).
 // Set B (same writer, essay's own terms) is kept below, unused, so the founder can choose.
 export const states: { title: string; lines: [string, string] }[] = [
   { title: 'The Table', lines: ['Thirty-two firms. Each column lists what one firm takes from each firm, itself included.', 'Below the rule: execution, plans and objectives, supplied to each firm by people.'] },
   { title: 'One Firm', lines: ['One column, enlarged: the inputs of a single firm, read top to bottom.', 'Inputs from other firms, then execution, plans, objectives. The output sits at the foot.'] },
   { title: 'Execution', lines: ['The execution entry leaves the supplied rows and enters the diagonal cell.', "Agents produce the firm's execution inside it. Orange marks self-supplied input."] },
   { title: 'Plans', lines: ['The plans entry follows the same path into the diagonal.', 'Of the three rows supplied by people, objectives alone remain outside the firm.'] },
-  { title: 'Reorganisation', lines: ['Rows and columns are reordered, and the table resolves into new blocks.', 'Columns for discontinued outputs fade. Columns for new outputs appear.'] },
+  { title: 'Reorganisation', lines: ['Rows and columns are reordered, and the table resolves into new blocks.', 'The entries change first; each firm keeps its number as its row and column move.'] },
   { title: 'Diffusion', lines: ["The change passes to the firm's largest trading partners, then to theirs.", 'Each round reaches further, at uneven rates. Diagonals turn orange column by column.'] },
-  { title: 'Homotopy', lines: ['The table lifts into three dimensions. Height is the size of each input.', 'H(t) = (1 − t)A₀ + tA₁ deforms A₀ into A₁ continuously, t from 0 to 1.'] },
+  { title: 'Homotopy', lines: ["Each cell's height is its input coefficient.", 'As t runs from 0 to 1, the first table, A<sub>0</sub>, passes continuously into the second, A<sub>1</sub>.'] },
 ];
 
 export const statesB = [

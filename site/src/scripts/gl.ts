@@ -1,5 +1,5 @@
 // Minimal WebGL2 instanced renderer for the table: one unit box, per-instance position, size and colour, one draw call.
-// World units are CSS px on the z = 0 plane; the camera is placed so that plane maps 1:1 to the viewport.
+// World units are CSS px; an orthographic camera maps the z = 0 plane 1:1 to the viewport.
 
 const VERT = `#version 300 es
 layout(location=0) in vec3 position;
@@ -31,10 +31,6 @@ const mul = (a: M4, b: M4): M4 => {
     o[c * 4 + r] = s;
   }
   return o;
-};
-const persp = (fovy: number, asp: number, n: number, f: number): M4 => {
-  const t = 1 / Math.tan(fovy / 2), nf = 1 / (n - f);
-  return new Float32Array([t / asp, 0, 0, 0, 0, t, 0, 0, 0, 0, (f + n) * nf, -1, 0, 0, 2 * f * n * nf, 0]);
 };
 const trans = (x: number, y: number, z: number): M4 => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
 const rotX = (a: number): M4 => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1]); };
@@ -117,11 +113,9 @@ export class GL {
   }
 
   draw(data: Float32Array, count: number, pos: [number, number, number], rx: number, rz: number, k: number) {
-    const gl = this.gl, fov = (30 * Math.PI) / 180;
-    const D = this.H / 2 / Math.tan(fov / 2);
-    const P = persp(fov, this.W / this.H, D / 20, D * 6);
-    const M = mul(trans(pos[0], pos[1], pos[2]), mul(rotX(rx), mul(rotZ(rz), scale(k))));
-    const MVP = mul(P, mul(trans(0, 0, -D), M));
+    const gl = this.gl, Z = 8000;
+    const P = new Float32Array([2 / this.W, 0, 0, 0, 0, 2 / this.H, 0, 0, 0, 0, -1 / Z, 0, 0, 0, 0, 1]);
+    const MVP = mul(P, mul(trans(pos[0], pos[1], pos[2]), mul(rotX(rx), mul(rotZ(rz), scale(k)))));
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.useProgram(this.prog);
     gl.uniformMatrix4fv(this.uMVP, false, MVP);

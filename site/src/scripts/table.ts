@@ -1,216 +1,232 @@
 // The table: one instanced WebGL draw of every cell of the input–output table.
-// World units are CSS pixels on the z = 0 plane, so the flat states are pixel-exact and hover needs no raycasting.
+// World units are CSS px (orthographic), so the flat states are pixel-exact and hover needs no raycasting.
+// Colour rule: greys are amounts; white marks what is being read or traced; signal orange appears only on a
+// diagonal cell, and only once that firm's execution is produced inside it.
 import { GL } from './gl';
-import { makeEconomy, N, SLOTS, type Economy } from './economy';
+import { makeEconomy, N, type Economy } from './economy';
 
 export interface Params {
   focus: number;   // 0..1 column K widened, others dimmed
-  eK: number;      // 0..1 execution of K moved inside
-  pK: number;      // 0..1 plans of K moved inside
-  reorg: number;   // 0..1 A0 → A1, order pos0 → pos1
-  front: number;   // 0..Fmax diffusion front
+  eK: number;      // 0..1 flight of K's execution cell to its diagonal
+  pK: number;      // 0..1 flight of K's plans cell
+  vals: number;    // 0..1 entries A0 → A1
+  rows: number;    // 0..1 rows travel to the new order
+  cols: number;    // 0..1 columns travel to the new order
+  front: number;   // diffusion front, in rounds (< -50: nothing has moved inside, except K's own flight)
   lift: number;    // 0..1 flat → height field
-  spin: number;    // radians, slow orbit in the coda
+  t: number;       // 0..1 homotopy parameter for the heights, used while lifted
 }
 
-export interface Layout { W: number; H: number; u: number; ox: number; oy: number; }
+export interface Layout { W: number; H: number; u: number; uy: number; ox: number; oy: number; fit: { x: number; y: number; w: number; h: number; bottom?: boolean } }
 
-const ROWS_H = 37.4;            // table height in units
-const Y_SUP = N + 0.7;          // first supplied row
-const Y_OUT = N + 0.7 + 3 + 0.7;
-const WIDE = 7;                 // width of the focus column when widened
-const GAP = 0.2;
-
-const BG = 0.043;
+const WIDE = 7;
+const EMPTY = 0.078;
 const ACC = [1.0, 0.357, 0.122];
 
 const clamp = (x: number, a = 0, b = 1) => (x < a ? a : x > b ? b : x);
-const ease = (x: number) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+export const ease = (x: number) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const lum = (v: number) => (v <= 0.0001 ? 0.085 : 0.16 + 0.8 * Math.sqrt(v));
+const lum = (v: number) => (v <= 0.0005 ? EMPTY : 0.2 + 0.76 * Math.sqrt(Math.min(1, v / 0.4)));
 
 export class Table {
   e: Economy = makeEconomy();
   gl: GL;
-  count: number;
-  data: Float32Array;                                // per instance: pos(3) size(3) col(3)
-  L: Layout = { W: 1, H: 1, u: 10, ox: 0, oy: 0 };
-  hover: { r: number; c: number } | null = null;   // display row / column (flat, reorg 0)
-  flash = new Float32Array(SLOTS * SLOTS);           // accent pulse per matrix cell
-  // derived per-frame
-  insE = new Float32Array(SLOTS); insP = new Float32Array(SLOTS);
-  thinR = 1; thinC = 1;
-  colX = new Float32Array(SLOTS); colW = new Float32Array(SLOTS); rowY = new Float32Array(SLOTS); slotA = new Float32Array(SLOTS);
+  data: Float32Array;
+  L: Layout = { W: 1, H: 1, u: 10, uy: 10, ox: 0, oy: 0, fit: { x: 0, y: 0, w: 1, h: 1 } };
+  hover: { r: number; c: number } | null = null;
+  flash = new Float32Array(N * N);
+  // derived per frame (read by the DOM layer)
+  rowPos = new Float32Array(N); colPos = new Float32Array(N);
+  colX = new Float32Array(N); colW = new Float32Array(N);   // in u
+  eIn = new Float32Array(N); pIn = new Float32Array(N);       // 0/1: moved inside
+  diag = new Float32Array(N);                                  // current diagonal coefficient
+  moving = new Uint8Array(N);
 
   constructor(public canvas: HTMLCanvasElement) {
-    this.count = SLOTS * SLOTS + SLOTS * 3 + SLOTS * 2 + SLOTS;
-    this.data = new Float32Array(this.count * 9);
-    this.gl = new GL(canvas, this.count);
+    const count = N * N + N * 3 + N + 4;   // + room for the two cells in flight and the holes they leave
+    this.data = new Float32Array(count * 9);
+    this.gl = new GL(canvas, count);
+    this.buildSwaps();
   }
 
-  resize(W: number, H: number, L: Layout) {
-    this.L = L;
-    this.gl.resize(W, H, Math.min(devicePixelRatio || 1, 2));
+  resize(W: number, H: number) { this.gl.resize(W, H, Math.min(devicePixelRatio || 1, 2)); }
+
+  // vertical geometry in px, relative to the table's top edge
+  rowTop(pos: number) { return pos * this.L.uy; }
+  supTop(k: number) { const { u, uy } = this.L; return N * uy + 0.7 * u + k * 1.5 * u; }
+  outTop() { const { u, uy } = this.L; return N * uy + 1.4 * u + 4.5 * u; }
+  static height(u: number, uy: number) { return N * uy + 1.4 * u + 6 * u; }
+
+  swaps: [number, number][] = [];
+  private buildSwaps() {
+    const cur = Array.from({ length: N }, (_, i) => i);       // position → firm
+    const target: number[] = [];
+    for (let s = 0; s < N; s++) target[this.e.pos1[s]] = s;
+    for (let k = 0; k < N; k++) {
+      if (cur[k] === target[k]) continue;
+      const j = cur.indexOf(target[k]);
+      this.swaps.push([k, j]);
+      [cur[k], cur[j]] = [cur[j], cur[k]];
+    }
   }
-
-  /** Layout for a viewport; `box` is the region the table must fit, in px. */
-  static fit(W: number, H: number, box: { x: number; y: number; w: number; h: number }, valign = 0.5): Layout {
-    const u = Math.floor(Math.min(box.w / N, box.h / ROWS_H) * 4) / 4;
-    const tw = u * N, th = u * ROWS_H;
-    return { W, H, u, ox: Math.round(box.x + box.w - tw), oy: Math.round(box.y + (box.h - th) * valign) };
-  }
-
-  static rows = { sup: Y_SUP, out: Y_OUT, total: ROWS_H };
-
-  /** Display position of a slot's column / row, in units. */
-  derive(p: Params) {
-    const e = this.e, K = e.K;
-    const wo = 1 - (p.focus * (WIDE - 1)) / (N - 1), wk = 1 + p.focus * (WIDE - 1);
-    const pk = e.pos0[K];
-    // reorganisation in two strokes, like a rod mechanism: rows travel first, then columns (same permutation)
-    const rp = ease(p.reorg / 0.5), cp = ease((p.reorg - 0.5) / 0.5);
-    this.thinR = 1 - 0.7 * Math.sin(Math.PI * rp);
-    this.thinC = 1 - 0.7 * Math.sin(Math.PI * cp);
-    const fade = ease(p.reorg);
-    for (let s = 0; s < SLOTS; s++) {
-      this.rowY[s] = lerp(e.pos0[s], e.pos1[s], rp);
-      const pos = lerp(e.pos0[s], e.pos1[s], cp);
-      this.colX[s] = pos * wo + clamp(pos - pk) * (wk - wo);
-      this.colW[s] = s === K ? wk : wo;
-      this.slotA[s] = lerp(e.alive0[s], e.alive1[s], fade);
-      const fe = clamp((p.front - e.tE[s]) / 0.7), fp = clamp((p.front - e.tP[s]) / 0.7);
-      this.insE[s] = s === K ? Math.max(p.eK, fe) : fe;
-      this.insP[s] = s === K ? Math.max(p.pK, fp) : fp;
-      if (!e.alive1[s]) { this.insE[s] = 0; this.insP[s] = 0; }
+  private permute(x: number, out: Float32Array) {
+    const pos = Array.from({ length: N }, (_, i) => i);       // firm → position
+    const at = Array.from({ length: N }, (_, i) => i);        // position → firm
+    const M = this.swaps.length;
+    const f = clamp(x) * M, done = Math.min(M, Math.floor(f));
+    for (let q = 0; q < done; q++) {
+      const [a, b] = this.swaps[q], sa = at[a], sb = at[b];
+      at[a] = sb; at[b] = sa; pos[sb] = a; pos[sa] = b;
+    }
+    for (let s = 0; s < N; s++) out[s] = pos[s];
+    if (done < M && f > done) {
+      const [a, b] = this.swaps[done], sa = at[a], sb = at[b], k = ease(f - done);
+      out[sa] = lerp(a, b, k); out[sb] = lerp(b, a, k);
+      this.moving[sa] = 1; this.moving[sb] = 1;
     }
   }
 
   cellAt(px: number, py: number) {
-    const { u, ox, oy } = this.L;
-    const x = (px - ox) / u, y = (py - oy) / u;
+    const { u, uy, ox, oy } = this.L;
+    const x = (px - ox) / u, y = py - oy;
     if (x < 0 || x >= N) return null;
     const c = Math.floor(x);
-    if (y >= 0 && y < N) return { r: Math.floor(y), c };
-    for (let k = 0; k < 3; k++) if (y >= Y_SUP + k && y < Y_SUP + k + 1) return { r: N + k, c };
+    if (y >= 0 && y < N * uy) return { r: Math.floor(y / uy), c };
+    for (let k = 0; k < 3; k++) { const t = this.supTop(k); if (y >= t && y < t + 1.5 * u) return { r: N + k, c }; }
     return null;
   }
 
-  slotAtPos(pos: number) {
-    const e = this.e;
-    for (let s = 0; s < SLOTS; s++) if (e.alive0[s] && e.pos0[s] === pos) return s;
-    return -1;
-  }
-
-  /** Accent pulse: demand on column j passes to its suppliers, then to theirs (x_{r+1} = A x_r). */
-  pulse(j: number, t: number, out: Float32Array) {
-    const e = this.e, A = e.A0;
+  /** Click trace: the clicked firm's suppliers light first, then their suppliers, in white steps. */
+  pulse(j: number, t: number) {
+    const A = this.e.A0, out = this.flash;
     out.fill(0);
-    let x = new Float32Array(SLOTS); x[j] = 1;
-    for (let r = 0; r < 5; r++) {
-      const w = clamp(1 - Math.abs(t - r * 0.42) / 0.5);
-      let m = 0; for (let c = 0; c < SLOTS; c++) m = Math.max(m, x[c]);
-      if (m <= 0) break;
-      if (w > 0) for (let c = 0; c < SLOTS; c++) {
-        const xc = x[c] / m; if (xc < 0.02) continue;
-        for (let i = 0; i < SLOTS; i++) { const v = A[i * SLOTS + c] * xc; if (v > 0) out[i * SLOTS + c] = Math.max(out[i * SLOTS + c], Math.min(1, v * 2.2) * w); }
+    const seen = new Uint8Array(N); seen[j] = 1;
+    let cur = [j];
+    const fade = clamp((3 - t) / 0.5);
+    for (let r = 0; r < 4 && cur.length; r++) {
+      const on = clamp((t - r * 0.45) / 0.12) * (1 - 0.2 * r) * fade;
+      const next: number[] = [];
+      for (const c of cur) for (let i = 0; i < N; i++) {
+        if (i === c || A[i * N + c] <= 0) continue;
+        if (on > 0) out[i * N + c] = Math.max(out[i * N + c], 0.3 + 0.7 * on);
+        if (!seen[i] && A[i * N + c] > 0.03) { seen[i] = 1; next.push(i); }
       }
-      const nx = new Float32Array(SLOTS);
-      for (let i = 0; i < SLOTS; i++) { let t2 = 0; for (let c = 0; c < SLOTS; c++) if (c !== i) t2 += A[i * SLOTS + c] * x[c]; nx[i] = t2; }
-      x = nx;
+      cur = next;
     }
   }
 
   render(p: Params) {
-    this.derive(p);
-    const e = this.e, { u, ox, oy, W, H } = this.L, K = e.K;
-    const D = this.data;
-    const vm = ease(p.reorg);
-    const lift = p.lift;
-    const cx = ox + (N * u) / 2, cy = oy + (ROWS_H * u) / 2;
-    const dim = 1 - 0.82 * p.focus;
+    const e = this.e, K = e.K, D = this.data;
+    const { u, uy, ox, oy, W, H } = this.L;
+    const lifted = p.lift > 0;
+    const vm = lifted ? p.t : ease(p.vals);
+    const wo = 1 - (p.focus * (WIDE - 1)) / (N - 1), wk = 1 + p.focus * (WIDE - 1);
+    // the permutation is carried out as a sequence of swaps, like reordering a physical matrix by hand:
+    // rows first, then columns; only two rows (or columns) are ever in motion, each whole and full size
+    this.moving.fill(0);
+    this.permute(p.rows, this.rowPos);
+    this.permute(p.cols, this.colPos);
+    const pk = this.colPos[K];
+    for (let s = 0; s < N; s++) {
+      const pos = this.colPos[s];
+      this.colX[s] = pos * wo + clamp(pos - pk) * (wk - wo);
+      this.colW[s] = s === K ? wk : wo;
+      const inE = p.front >= e.tE[s] ? 1 : 0, inP = p.front >= e.tP[s] ? 1 : 0;
+      this.eIn[s] = s === K ? Math.max(inE, p.eK >= 0.98 ? 1 : 0) : inE;
+      this.pIn[s] = s === K ? Math.max(inP, p.pK >= 0.98 ? 1 : 0) : inP;
+      this.diag[s] = lerp(e.A0[s * N + s], e.A1[s * N + s], vm) + e.L[s] * this.eIn[s] + e.L[N + s] * this.pIn[s];
+    }
+
+    const dim = 1 - 0.8 * p.focus;
     const hv = this.hover;
-    const gap = Math.max(1, GAP * u);
+    const gx = Math.max(1, Math.round(0.2 * u)), gy = Math.max(1, Math.round(0.2 * Math.min(u, uy)));
+    const tw = N * u, th = N * uy;
+    const cx = ox + tw / 2, cy = oy + th / 2;              // the matrix centre is the pivot of the lift
+    const hmax = 5 * u;
     let n = 0;
     const put = (x: number, y: number, w: number, h: number, z: number, r: number, g: number, b: number) => {
-      // x, y: top-left in units relative to table; w, h in units
       const k = n * 9;
-      D[k] = ox + (x + w / 2) * u - cx; D[k + 1] = -(oy + (y + h / 2) * u - cy); D[k + 2] = 0;
-      D[k + 3] = Math.max(0, w * u - gap); D[k + 4] = Math.max(0, h * u - gap); D[k + 5] = z;
+      D[k] = ox + x + w / 2 - cx; D[k + 1] = -(oy + y + h / 2 - cy); D[k + 2] = 0;
+      D[k + 3] = Math.max(0, w - gx); D[k + 4] = Math.max(0, h - gy); D[k + 5] = z;
       D[k + 6] = r; D[k + 7] = g; D[k + 8] = b;
       n++;
     };
-    const mixc = (l: number, a: number): [number, number, number] => [lerp(l, ACC[0], a), lerp(l, ACC[1], a), lerp(l, ACC[2], a)];
-    const zOf = (v: number, k = 6.5) => 1 + lift * u * (0.25 + k * v);
+    const zOf = (v: number) => 1 + p.lift * hmax * Math.min(1, v / 0.3);
+    const dimmed = (l: number, j: number) => (j === K ? l : EMPTY + (l - EMPTY) * dim);
+    // diffusion glow on the links along which the change travelled
+    const linkGlow = (i: number, j: number) => {
+      if (!e.edge[i * N + j] || p.front < -50) return 0;
+      const r = Math.max(e.round[i], e.round[j]);
+      return clamp(1 - Math.abs(p.front - (r - 0.45)) / 0.55);
+    };
 
     // matrix
-    for (let i = 0; i < SLOTS; i++) {
-      for (let j = 0; j < SLOTS; j++) {
-        const a = this.slotA[i] * this.slotA[j];
-        let v = lerp(e.A0[i * SLOTS + j], e.A1[i * SLOTS + j], vm);
-        // execution and plans produced inside add to what the firm supplies to itself
-        if (i === j) v += 0.5 * (e.L[j] * ease(this.insE[j]) + e.L[SLOTS + j] * ease(this.insP[j]));
-        let l = lum(v);
-        let acc = 0;
-        const inside = i === j && this.insE[j] > 0.97;
-        if (j !== K) l = BG + (l - BG) * dim;
-        if (hv && p.reorg === 0) {
-          const ri = e.pos0[i], cj = e.pos0[j];
-          if (ri === hv.r && cj === hv.c) l = 1;
-          else if (ri === hv.r || cj === hv.c) l = Math.min(1, l + 0.13);
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < N; j++) {
+        let v = lerp(e.A0[i * N + j], e.A1[i * N + j], vm);
+        if (i === j) v = this.diag[j];
+        let l = dimmed(lum(v), j);
+        if (hv && !lifted) {
+          if (i === hv.r && j === hv.c) l = 1;
+          else if (i === hv.r || j === hv.c) l = Math.min(1, l + 0.12);
         }
-        const f = this.flash[i * SLOTS + j];
-        let [r, g, b] = mixc(l, acc);
-        if (inside) { const k = 0.62 + 0.38 * ease(this.insP[j]); r = ACC[0] * k; g = ACC[1] * k; b = ACC[2] * k; }
-        if (f > 0.12) { const k = 0.35 + 0.65 * f; r = ACC[0] * k; g = ACC[1] * k; b = ACC[2] * k; }
-        const w = this.colW[j] * a * this.thinC, h = a * this.thinR;
-        put(this.colX[j] + (this.colW[j] - w) / 2, this.rowY[i] + (1 - h) / 2, w, h, zOf(v), r, g, b);
+        const f = this.flash[i * N + j];
+        if (f > l) l = f;
+        if (!lifted && v > 0) { const gl = linkGlow(i, j); if (gl > 0) l = Math.max(l, 0.45 + 0.55 * gl); }
+        let r = l, g = l, b = l * 0.97;
+        if (i === j && this.eIn[j]) { r = ACC[0]; g = ACC[1]; b = ACC[2]; }
+        put(this.colX[j] * u, this.rowTop(this.rowPos[i]), this.colW[j] * u, uy, zOf(v) + (this.moving[i] || this.moving[j] ? 2 + ((i * 7 + j) % 5) * 0.2 : 0), r, g, b);
       }
     }
-    // supplied tokens (E, P travel up their own column to the diagonal; O stays)
+    // supplied rows: E and P of K fly up their column to the diagonal; for other firms they go dark in place
+    const flat = 1 - p.lift;
     for (let k = 0; k < 3; k++) {
-      for (let j = 0; j < SLOTS; j++) {
-        const a = this.slotA[j];
-        const ins = k === 0 ? this.insE[j] : k === 1 ? this.insP[j] : 0;
-        const t = ease(ins);
-        const y = lerp(Y_SUP + k, this.rowY[j], t);
-        const v = e.L[k * SLOTS + j];
-        let l = lum(v * 0.8);
-        if (j !== K) l = BG + (l - BG) * dim;
-        if (hv && p.reorg === 0 && hv.r === N + k && e.pos0[j] === hv.c) l = 1;
-        else if (hv && p.reorg === 0 && (hv.r === N + k || e.pos0[j] === hv.c)) l = Math.min(1, l + 0.13);
-        const accA = ins > 0.02 && ins < 1 ? 1 : 0;
-        const [r, g, b] = mixc(l, accA);
-        const sz = ins >= 0.999 ? 0 : a;
-        const tw = this.colW[j] * sz * this.thinC;
-        put(this.colX[j] + (this.colW[j] - tw) / 2, y + (1 - sz) / 2, tw, sz, zOf(v, 4) + (ins > 0 && ins < 1 ? 2 : 0), r, g, b);
+      for (let j = 0; j < N; j++) {
+        const v = e.L[k * N + j];
+        const moved = k === 0 ? this.eIn[j] : k === 1 ? this.pIn[j] : 0;
+        const fly = j === K && k < 2 ? (k === 0 ? p.eK : p.pK) : 0;
+        const x = this.colX[j] * u, w = this.colW[j] * u * flat;
+        if (fly > 0 && fly < 0.98) {
+          // the hole it leaves, then the cell itself in flight (white: it is being moved)
+          put(x, this.supTop(k), w, 1.5 * u, 1, EMPTY, EMPTY, EMPTY);
+          const f = ease(fly);
+          const y = lerp(this.supTop(k), this.rowTop(this.rowPos[K]), f), h = lerp(1.5 * u, uy, f);
+          put(x, y, w, h, 3, 0.96, 0.96, 0.93);
+          continue;
+        }
+        let l = moved ? EMPTY : dimmed(lum(v), j);
+        if (hv && !lifted && !moved) {
+          if (hv.r === N + k && hv.c === j) l = 1;
+          else if (hv.r === N + k || hv.c === j) l = Math.min(1, l + 0.12);
+        }
+        put(x, this.supTop(k), w, 1.5 * u * flat, 1, l, l, l * 0.97);
       }
     }
-    // holes left in the supplied rows
-    for (let k = 0; k < 2; k++) {
-      for (let j = 0; j < SLOTS; j++) {
-        const ins = k === 0 ? this.insE[j] : this.insP[j];
-        const a = this.slotA[j] * clamp(ins * 3);
-        const l = 0.105;
-        put(this.colX[j] + (this.colW[j] * (1 - a)) / 2, Y_SUP + k + (1 - a) / 2, this.colW[j] * a, a, 1, l, l, l * 0.97);
-      }
+    // output row: every column is one unit of output
+    for (let j = 0; j < N; j++) {
+      const l = dimmed(0.58, j);
+      put(this.colX[j] * u, this.outTop(), this.colW[j] * u * flat, 1.5 * u * flat, 1, l, l, l * 0.97);
     }
-    // output row
-    for (let j = 0; j < SLOTS; j++) {
-      const a = this.slotA[j];
-      const v = lerp(e.out0[j], e.out1[j], vm);
-      let l = 0.2 + 0.78 * v;
-      if (j !== K) l = BG + (l - BG) * dim;
-      put(this.colX[j] + (this.colW[j] * (1 - a)) / 2, Y_OUT + (1 - a) / 2, this.colW[j] * a, a, zOf(v, 4), l, l, l * 0.97);
-    }
-    // lift: the table tilts into a height field around its centre, which drifts to the stage centre
-    const gx = cx - W / 2, gy = -(cy - H / 2);
-    const wide = W > 900;
-    const tx = wide ? W * 0.13 : 0, ty = wide ? -H * 0.04 : gy + 0.04 * H;
-    const le = ease(lift);
-    const sc = lerp(1, wide ? 1.02 : 0.9, le);
-    this.gl.draw(D, n, [lerp(gx, tx, le), lerp(gy, ty, le), 0], -1.02 * le, (0.62 + p.spin) * le, sc);
-  }
 
-  /** px position of the top-left of a unit coordinate in the flat table (used by DOM labels). */
-  px(x: number, y: number) { return [this.L.ox + x * this.L.u, this.L.oy + y * this.L.u]; }
+    // lift: tilt about the matrix centre and fit the lifted object to the layout's fit box
+    const le = ease(p.lift);
+    const rx = -0.98, rz = 0.55;
+    let pos: [number, number, number] = [cx - W / 2, -(cy - H / 2), 0], sc = 1;
+    if (le > 0) {
+      const cz = Math.cos(rz), sz = Math.sin(rz), ca = Math.cos(rx), sa = Math.sin(rx);
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      for (const X of [-tw / 2, tw / 2]) for (const Y of [-th / 2, th / 2]) for (const Z of [0, hmax]) {
+        const xa = X * cz - Y * sz, ya = X * sz + Y * cz;
+        const yb = ya * ca - Z * sa;
+        x0 = Math.min(x0, xa); x1 = Math.max(x1, xa); y0 = Math.min(y0, yb); y1 = Math.max(y1, yb);
+      }
+      const F = this.L.fit;
+      const s = Math.min(F.w / (x1 - x0), F.h / (y1 - y0));
+      const fx = F.x + F.w / 2 - W / 2 - s * (x0 + x1) / 2;
+      const fy = F.bottom ? -(F.y + F.h - H / 2) - s * y0 : -(F.y + F.h / 2 - H / 2) - s * (y0 + y1) / 2;
+      pos = [lerp(pos[0], fx, le), lerp(pos[1], fy, le), 0];
+      sc = lerp(1, s, le);
+    }
+    this.gl.draw(D, n, pos, rx * le, rz * le, sc);
+  }
 }
