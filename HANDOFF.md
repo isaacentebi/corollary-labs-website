@@ -72,7 +72,7 @@ The user wants the tone of **The Superdark Factory** (superdark.antikythera.org)
 
 ## User preferences, settled
 
-- **No top navbar anywhere.** Navigation lives only in the footer (Home, Essays, About, Back to top, [EMAIL]).
+- **No top navbar anywhere.** Navigation lives only in the footer (Home, Essays, About, Team, Back to top, [EMAIL]). The home page is: hero → statement beside the diagram → diffusion → coda (no essays list). Live at https://corollarylabs.vercel.app (deploy: `cd site && vercel deploy --prod`).
 - **No logo at the top.** The earlier wordmark with dots was disliked.
 - **Removed as slop:** "adoption 00.0%" and other readouts, hero slogans, "Write to us", the inline curve glyph in the footer, the thesis beat rows, the summary box, the About section.
 - **The hero is full-screen**, with just the field and the name. The name uses a denser point cloud, and on phones it stacks as Corollary / Labs.
