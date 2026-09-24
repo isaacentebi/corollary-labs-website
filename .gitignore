@@ -14,3 +14,4 @@ clone-workspace/*/02-extraction/fragments/*.dom.html
 clone-workspace/locomotive/
 clone-workspace/superdark/
 research/
+deploy/
