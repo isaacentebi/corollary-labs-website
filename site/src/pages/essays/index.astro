@@ -9,7 +9,7 @@ const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
-<Base page="index" title="Essays" description="Essays by Corollary Labs on how new technology spreads.">
+<Base page="index" title="Essays" description="[Meta description]">
   <section class="index o-container" aria-labelledby="index-title">
     <header class="index-band" aria-labelledby="index-title">
       <canvas class="field index-band__field" data-field="index" aria-hidden="true"></canvas>

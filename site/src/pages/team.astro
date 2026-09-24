@@ -6,7 +6,7 @@ import '../styles/about.css';
 
 const people = Array.from({ length: 4 }, (_, i) => ({ n: String(i + 1).padStart(2, '0'), name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]' }));
 ---
-<Base page="team" title="Team" description={`The team at ${site.name}.`}>
+<Base page="team" title="Team" description="[Meta description]">
   <article class="about o-container" aria-labelledby="team-title">
     <header class="about-band">
       <canvas class="field about-band__field" data-field="index" data-word="Team" aria-hidden="true"></canvas>

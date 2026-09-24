@@ -14,7 +14,7 @@ const colophon = [
 ];
 const ph = (s: string) => s.startsWith('[');
 ---
-<Base page="about" title="About" description={`About ${site.name}.`}>
+<Base page="about" title="About" description="[Meta description]">
   <article class="about o-container" aria-labelledby="about-title">
     <header class="about-band">
       <canvas class="field about-band__field" data-field="index" data-word="About" aria-hidden="true"></canvas>
@@ -45,7 +45,7 @@ const ph = (s: string) => s.startsWith('[');
         <g class="af-t af-tg af-small"><text x="278" y="169" text-anchor="middle">AGENT</text><text x="398" y="169" text-anchor="middle">AGENT</text><text x="518" y="169" text-anchor="middle">AGENT</text></g>
         <rect class="af-chip" x="186" y="16" width="70" height="26" /><text class="af-t af-b" x="221" y="34" text-anchor="middle">FIRM</text>
       </svg>
-      <figcaption class="about-fig__cap t-label">FIG. — THE FIRM, REORGANISED <span class="ph">[Placeholder caption.]</span></figcaption>
+      <figcaption class="about-fig__cap t-label">FIG. <span class="ph">[Caption]</span></figcaption>
     </figure>
 
     <section class="about-colophon" aria-label="Colophon">
