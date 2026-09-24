@@ -1,0 +1,42 @@
+/* Inner pages: Essays index, About, Team, Contact */
+.statement { font: 400 clamp(28px, 3.4vw, 48px)/1.18 var(--display); max-width: 22em; margin: 7vh 0 9vh; letter-spacing: -0.005em; }
+.statement .mail { text-decoration: none; border-bottom: 1px solid currentColor; }
+.fmblock { margin-top: 6vh; border-top: 1px solid var(--ink); }
+
+/* Essays: table of contents */
+.toc { list-style: none; margin: 0; padding: 0; }
+.toc__row { border-bottom: 1px solid var(--rule); }
+.toc__link { display: grid; grid-template-columns: 4rem minmax(0, 1fr) 12rem; gap: 24px; padding: 30px 0 32px; text-decoration: none; color: var(--ink); position: relative; }
+.toc__link::before { content: ''; position: absolute; left: 0; top: -1px; height: 1px; width: 100%; background: var(--blue); transform: scaleX(0); transform-origin: left; transition: transform 0.6s var(--ease); }
+.toc__link:hover::before { transform: scaleX(1); }
+.toc__link:hover { color: var(--ink); }
+.toc__link:hover .toc__title { color: var(--blue); }
+.toc__n { font: 400 clamp(36px, 4vw, 56px)/1 var(--display); color: var(--ink-3); font-feature-settings: 'lnum'; }
+.toc__title { display: block; font: 400 clamp(28px, 3.2vw, 44px)/1.08 var(--display); transition: color 0.3s; }
+.toc__dek { display: block; margin-top: 10px; font-style: italic; color: var(--ink-2); max-width: 38rem; }
+.toc__meta { display: flex; flex-direction: column; gap: 4px; font-family: var(--mono); font-size: 0.72rem; color: var(--ink-2); padding-top: 8px; text-align: right; }
+@media (max-width: 760px) {
+  .toc__link { grid-template-columns: 2.6rem 1fr; }
+  .toc__meta { grid-column: 2; text-align: left; flex-direction: row; flex-wrap: wrap; gap: 12px; padding-top: 0; }
+}
+
+/* About: the mark, drawn large */
+.markfig { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 5vw; align-items: center; margin: 4vh 0 10vh; }
+.markfig__art { background: var(--paper-3); border: 1px solid var(--rule); padding: 5vw 4vw; }
+.markfig__art svg { width: 100%; height: auto; overflow: visible; }
+.mk-w { fill: none; stroke: var(--ink); stroke-width: 2.2; vector-effect: non-scaling-stroke; }
+.mk-loop { stroke: var(--blue); }
+.mk-b { fill: var(--ink); }
+.mk-t { font: italic 26px var(--serif); fill: var(--ink); text-anchor: middle; }
+.mk-t.-b { fill: var(--blue); }
+.mk-in { fill: var(--paper); font-size: 34px; }
+.markfig__text .fm__k { margin: 0 0 12px; font-weight: 400; }
+.markfig__text a { color: var(--blue); }
+@media (max-width: 800px) { .markfig { grid-template-columns: 1fr; } }
+
+/* Team: author block */
+.authors { font: 400 clamp(30px, 4vw, 56px)/1.25 var(--display); margin: 7vh 0 3vh; display: flex; flex-wrap: wrap; gap: 0 0.5em; }
+.authors sup { font-size: 0.42em; color: var(--blue); margin-left: 0.08em; vertical-align: 0.95em; font-family: var(--serif); }
+.affil { list-style: none; padding: 0; margin: 0 0 8vh; font-size: 0.95rem; }
+.affil li { padding: 3px 0; }
+.affil sup { color: var(--blue); margin-right: 0.3em; }

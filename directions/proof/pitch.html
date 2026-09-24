@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Proof — pitch</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/libertinus-serif@5/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/libertinus-serif@5/400-italic.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/libertinus-serif@5/600.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/libertinus-serif-display@5/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/libertinus-mono@5/index.css" />
+<style>
+  :root { --paper:#F2EEE5; --paper-2:#E8E2D4; --ink:#14120F; --ink-2:#5B564C; --rule:#CBC3B1; --blue:#2438D6; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:18px/1.5 "Libertinus Serif", serif; }
+  .w { max-width: 1120px; margin: 0 auto; padding: 72px 24px 120px; }
+  h1 { font-family:"Libertinus Serif Display"; font-weight:400; font-size: clamp(56px, 10vw, 140px); line-height:.9; margin: 0 0 16px; letter-spacing:-.01em; }
+  h2 { font-family:"Libertinus Serif Display"; font-weight:400; font-size: 40px; margin: 88px 0 16px; border-top:1px solid var(--ink); padding-top: 12px; }
+  h3 { font-weight:600; font-size:18px; margin: 28px 0 6px; }
+  .sc { font-variant: small-caps; letter-spacing:.06em; }
+  .mono { font-family:"Libertinus Mono", monospace; font-size: 13px; color: var(--ink-2); letter-spacing:.02em; }
+  p { max-width: 68ch; }
+  .lead { font-size: 23px; line-height:1.45; max-width: 60ch; }
+  em { font-style: italic; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap: 24px; }
+  .card { border:1px solid var(--rule); padding: 20px; background: #F6F3EC; }
+  .card svg { width:100%; height:auto; display:block; }
+  .sw { display:flex; gap: 0; flex-wrap:wrap; }
+  .sw div { width: 160px; height: 120px; padding: 10px; font-family:"Libertinus Mono"; font-size:12px; display:flex; align-items:flex-end; }
+  ol.struct { padding-left: 0; list-style: none; counter-reset: s; }
+  ol.struct li { border-top: 1px solid var(--rule); padding: 12px 0 12px 64px; position: relative; }
+  ol.struct li::before { counter-increment: s; content: "§" counter(s, decimal-leading-zero); position:absolute; left:0; top:12px; font-family:"Libertinus Mono"; font-size:13px; color: var(--ink-2); }
+  .flag { color: var(--blue); font-family:"Libertinus Mono"; font-size: 12px; }
+  .stmt { border-left: 2px solid var(--ink); padding-left: 16px; margin: 16px 0; }
+  .frames { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+  .frame { background: #F6F3EC; border: 1px solid var(--rule); }
+  .frame.inv { background: var(--ink); color: var(--paper); }
+  .frame figcaption { padding: 10px 14px 14px; font-size: 15px; }
+  .frame.inv figcaption { color: #CFC9BC; }
+  .w-ln { fill:none; stroke: var(--ink); stroke-width: 1.4; }
+  .inv .w-ln { stroke: #EDE8DC; }
+  .b-ln { fill:none; stroke: var(--blue); stroke-width: 1.6; stroke-dasharray: 6 5; }
+  .bx { fill: var(--ink); }
+  .inv .bx { fill: #EDE8DC; }
+  .bx-o { fill: var(--paper); stroke: var(--ink); stroke-width:1.4; }
+  .lab { font: italic 15px "Libertinus Serif"; fill: var(--ink); }
+  .inv .lab { fill: #EDE8DC; }
+  .blue { stroke: var(--blue) !important; }
+  .fblue { fill: var(--blue) !important; }
+</style>
+</head>
+<body>
+<div class="w">
+  <p class="mono">DIRECTION · PROOF · PITCH · 2026-09-24</p>
+  <h1>Proof</h1>
+  <p class="lead">The site is typeset as a short mathematics paper whose figures are live. A firm is drawn the way category theorists draw a process: a box with typed wires going in and coming out (a <em>string diagram</em>). That picture is already the Superdark definition of a firm, and its grammar gives the rest of the story exact form. Automation is the boundary being redrawn around the process that makes one of the firm's inputs. Replacing a box with another box of the same type changes nothing about the firm's inputs and outputs; rewiring does. And the founder's isotopy becomes a theorem, not a metaphor: by Joyal and Street, any continuous deformation of a string diagram in the plane denotes the <em>same</em> morphism, so the page can show, literally, the difference between moving things around and reorganising.</p>
+
+  <h2>Why this and not Plotter</h2>
+  <p>Plotter tells the story as one sticky stage with captions. Proof is <em>read</em>: numbered statements in a paper, each owning its own figure, which the reader scrubs by scrolling or dragging. Every sentence on the home page is either a definition, a theorem with a citation, a corollary that follows from it, or a remark that is true by construction. The strangeness comes from the formalism, not from adjectives. It breaks three Plotter defaults, deliberately: (1) numbered statements (the founder rejected numbered <em>sections</em> on About; here the numbering is the content, because statements refer to each other); (2) a margin navigation (a dependency graph of the statements, not a navbar); (3) blue instead of green, cream instead of white, one inverted plate.</p>
+
+  <h2>Page structure</h2>
+  <ol class="struct">
+    <li><strong>Title plate.</strong> Full screen. A large string diagram fills the page: some forty wires crossing the screen, passing through small solid boxes. The pointer deforms it by an isotopy of the plane (wires are pushed, never cut). The name, set large in Libertinus Display. One margin note: <em>Fig. 0. Moving the pointer deforms this diagram by a planar isotopy; by Theorem 3.1 the morphism it denotes is unchanged.</em></li>
+    <li><strong>Front matter.</strong> How the company introduces itself: an <em>Abstract</em> (clean-room copy, flagged), <em>Keywords</em>, and two real classification lines: JEL O33, L23 and MSC2020 18M30, 18M35. Dense, true and specific without stating the business model.</li>
+    <li><strong>§1 Firms.</strong> Definition 1.1: a firm is a morphism <em>f : X → Y</em>. Fig. 1 is a single box; hovering a wire shows its type.</li>
+    <li><strong>§2 Automation.</strong> Definition 2.1: given <em>f : A ⊗ P → Y</em> and <em>g : O → P</em>, the automation of <em>P</em> is the passage to <em>f ∘ (1 ⊗ g) : A ⊗ O → Y</em>. Fig. 2: scroll moves the blue boundary over <em>g</em>; the type under the figure is recomputed from the wires that cross the boundary. Remark 2.2: plans and objectives (after Poliks et al.).</li>
+    <li><strong>§3 Replacement and reorganisation (centrepiece).</strong> Theorem 3.1 (Joyal–Street). Corollary 3.2: moving boxes and wires without cutting them does not change the morphism. Remark 3.3: replacing a box by one of the same type keeps the firm's type. Remark 3.4: cutting and rejoining wires is not an isotopy. Fig. 3 is pinned while the reader scrolls through four states: the firm; a box replaced (type unchanged); the diagram deformed (type unchanged); surgery (coordination removed, a feedback loop, new outputs; type changed). The only readout on the page is the type signature, because it is the invariant.</li>
+    <li><strong>§4 Propagation (the inverted plate).</strong> Remark 4.1: a composite <em>g ∘ f</em> is defined only when the outputs of <em>f</em> match the inputs of <em>g</em>. Fig. 4: an economy as one large diagram of firms; one firm changes type and the wires around it are rejoined, then the ones around those, at uneven times.</li>
+    <li><strong>End.</strong> A large ∎. Then <em>References</em>: the real citations (Joyal–Street 1991, Joyal–Street–Verity 1996, Selinger 2011, Poliks et al.), followed by the site itself as references: Essays, About, Team, Correspondence.</li>
+  </ol>
+  <p><strong>Other pages.</strong> <em>Essays</em> as a journal's table of contents (number, title, abstract, date, reading time); essay pages typeset like papers with sidenotes. <em>About</em> as front matter: statement, classification, the construction of the mark, colophon. <em>Team</em> as an author block with numbered affiliations. <em>Contact</em> as "Correspondence". Navigation: a small mark top-left (home), the dependency-graph rail on the home page, and the References section at the foot of every page. Bottom-right stays empty for the version switcher.</p>
+
+  <h2>Palette</h2>
+  <div class="sw">
+    <div style="background:#F2EEE5;border:1px solid var(--rule)">paper #F2EEE5</div>
+    <div style="background:#E8E2D4">paper-2 #E8E2D4</div>
+    <div style="background:#14120F;color:#F2EEE5">ink #14120F</div>
+    <div style="background:#5B564C;color:#F2EEE5">ink-2 #5B564C</div>
+    <div style="background:#CBC3B1">rule #CBC3B1</div>
+    <div style="background:#2438D6;color:#F2EEE5">blue #2438D6</div>
+  </div>
+  <p>Ink on cream, and one ultramarine used only for what changes: the redrawn boundary, a rewired wire, the current statement. Solid boxes are ink (the black box); outlined boxes are processes still supplied from outside. Byrne's discipline: solid vs dashed, two weights. Blue keeps the version apart from Plotter (green) and from Organic (warm natural palette).</p>
+
+  <h2>Type</h2>
+  <p><span style="font-family:'Libertinus Serif Display';font-size:48px;line-height:1">Libertinus Serif Display</span> — titles, the name, the ∎.<br/>
+  <span style="font-size:20px">Libertinus Serif</span> — text, with true <em>italic</em> for mathematics (<em>f</em> : <em>X</em> → <em>Y</em>) and <span class="sc">small caps</span> for statement heads (<span class="sc">Definition 2.1</span>).<br/>
+  <span class="mono" style="font-size:15px">Libertinus Mono</span> — figure labels, dates, classification codes.</p>
+  <p>One family, the family of printed papers (Libertinus descends from Linux Libertine, the face of ACM proceedings). It avoids the Computer Modern cliché while reading unmistakably as a journal.</p>
+
+  <h2>Logo options</h2>
+  <div class="grid">
+    <div class="card">
+      <svg viewBox="0 0 320 120" aria-label="Logo A: trace">
+        <g transform="translate(20,20)">
+          <path class="w-ln" d="M0 58 H34 M62 58 H96" stroke-width="2.2"/>
+          <path class="w-ln" d="M62 38 C84 38 84 6 48 6 C12 6 12 38 34 38" stroke-width="2.2"/>
+          <rect class="bx" x="34" y="30" width="28" height="36"/>
+        </g>
+        <text x="140" y="80" style="font:400 34px 'Libertinus Serif Display'">Corollary</text>
+      </svg>
+      <h3>A. Trace (proposed)</h3>
+      <p>The string diagram of a trace, Tr(<em>f</em>): a black box whose output is returned as its own input. By Definition 2.1 and the Superdark ontology, a firm producing its own input. Solid box = the black box and the Halmos end-of-proof ∎.</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 320 120" aria-label="Logo B: turnstile">
+        <g transform="translate(26,26)"><path d="M6 0 V64 M6 32 H62" stroke="#14120F" stroke-width="7" fill="none"/></g>
+        <text x="120" y="80" style="font:400 34px 'Libertinus Serif Display'">Corollary</text>
+      </svg>
+      <h3>B. Turnstile</h3>
+      <p>⊢, the sign for derivability: Γ ⊢ φ reads "φ follows from Γ". The literal meaning of the name as a glyph. Very quiet; strongest as a favicon.</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 320 120" aria-label="Logo C: Halmos">
+        <text x="20" y="80" style="font:400 40px 'Libertinus Serif Display'">Corollary Labs</text>
+        <rect x="270" y="52" width="22" height="28" fill="#14120F"/>
+      </svg>
+      <h3>C. Wordmark and ∎</h3>
+      <p>The name followed by the end-of-proof mark. A corollary is what comes right after the ∎. Pure typography; the mark can stand alone.</p>
+    </div>
+  </div>
+
+  <h2>Key frames</h2>
+  <div class="frames">
+    <figure class="frame" style="margin:0">
+      <svg viewBox="0 0 400 240">
+        <g class="w-ln" stroke-width="1">
+          <path d="M0 30 C120 30 140 44 200 44 S300 26 400 26"/><path d="M0 52 C90 52 110 60 170 66 H230 C280 66 320 58 400 58"/>
+          <path d="M0 82 C100 82 120 96 176 96 H228 C300 96 330 88 400 88"/><path d="M0 112 H400"/><path d="M0 140 C80 140 110 130 150 128 H250 C300 128 330 146 400 146"/>
+          <path d="M0 170 C130 170 150 160 200 160 S320 176 400 176"/><path d="M0 200 H120 C170 200 200 212 400 212"/>
+        </g>
+        <rect class="bx" x="170" y="56" width="12" height="46"/><rect class="bx" x="244" y="120" width="12" height="30"/><rect class="bx" x="96" y="104" width="12" height="44"/><rect class="bx" x="300" y="20" width="12" height="44"/><rect class="bx" x="330" y="170" width="12" height="46"/>
+        <text x="16" y="232" style="font:400 30px 'Libertinus Serif Display';fill:#14120F">Corollary Labs</text>
+      </svg>
+      <figcaption>Title plate: a field of wires and black boxes; the name; the pointer pushes wires apart without cutting them.</figcaption>
+    </figure>
+    <figure class="frame" style="margin:0">
+      <svg viewBox="0 0 400 240">
+        <path class="w-ln" d="M0 90 H200 M0 150 H70 M110 150 H200 M236 120 H400"/>
+        <rect class="bx-o" x="70" y="132" width="40" height="36"/><rect class="bx" x="200" y="76" width="36" height="92"/>
+        <rect class="b-ln" x="150" y="50" width="120" height="140" rx="6"/>
+        <path class="b-ln" d="M40 40 H280 V200 H40 Z" opacity=".35"/>
+        <text class="lab" x="8" y="82">A</text><text class="lab" x="8" y="142">O</text><text class="lab" x="118" y="142">P</text><text class="lab" x="84" y="155" style="font-size:13px">g</text><text class="lab" x="214" y="126" style="fill:#F2EEE5">f</text><text class="lab" x="380" y="112">Y</text>
+        <text x="200" y="228" text-anchor="middle" style="font:italic 16px 'Libertinus Serif';fill:#2438D6">A ⊗ P → Y  ⟶  A ⊗ O → Y</text>
+      </svg>
+      <figcaption>Fig. 2, automation: the blue boundary moves out over <em>g</em>; <em>P</em> becomes an internal wire; the type is recomputed.</figcaption>
+    </figure>
+    <figure class="frame" style="margin:0">
+      <svg viewBox="0 0 400 240">
+        <path class="w-ln" d="M0 130 H60 M88 130 H160 M188 130 H260 M288 130 H400"/>
+        <rect class="bx-o" x="160" y="30" width="80" height="30"/><text class="lab" x="200" y="50" text-anchor="middle" style="font-size:13px">c</text>
+        <path class="w-ln" d="M175 60 C175 90 74 90 74 116 M200 60 V116 M225 60 C225 90 274 90 274 116" stroke-dasharray="0"/>
+        <rect class="bx-o" x="60" y="116" width="28" height="28"/><rect class="bx" x="160" y="116" width="28" height="28"/><rect class="bx-o" x="260" y="116" width="28" height="28"/>
+        <text x="200" y="210" text-anchor="middle" style="font:italic 16px 'Libertinus Serif';fill:#14120F">F : A ⊗ O → Y   (unchanged)</text>
+      </svg>
+      <figcaption>Fig. 3a–c, replacement and isotopy: one box replaced by a solid (agent) box of the same type; then the diagram is deformed. The type under the figure does not change.</figcaption>
+    </figure>
+    <figure class="frame" style="margin:0">
+      <svg viewBox="0 0 400 240">
+        <path class="w-ln" d="M0 130 H60 M88 130 H160 M188 130 H260 M288 130 H400"/>
+        <path class="w-ln blue" d="M288 130 C320 130 320 180 360 180 H400"/>
+        <path class="w-ln blue" d="M288 122 C330 122 330 60 200 60 C70 60 40 100 60 124"/>
+        <rect class="bx" x="60" y="116" width="28" height="28"/><rect class="bx" x="160" y="116" width="28" height="28"/><rect class="bx" x="260" y="116" width="28" height="28"/>
+        <text class="lab" x="384" y="122">Y′</text><text class="lab" x="384" y="198">Z</text>
+        <text x="200" y="224" text-anchor="middle" style="font:italic 16px 'Libertinus Serif';fill:#2438D6">F′ : A ⊗ O → Y′ ⊗ Z</text>
+      </svg>
+      <figcaption>Fig. 3d, surgery: the coordination box is cut out, a feedback wire is closed, a new output appears. Only now does the type change.</figcaption>
+    </figure>
+    <figure class="frame inv" style="margin:0">
+      <svg viewBox="0 0 400 240">
+        <g class="w-ln" stroke-width=".9">
+          <path d="M20 40 C80 40 80 90 140 90 S200 50 260 50 S320 120 380 120"/><path d="M20 100 C80 100 80 60 140 60 S200 140 260 140 S320 70 380 70"/>
+          <path d="M20 160 C80 160 80 190 140 190 S200 110 260 110 S320 190 380 190"/><path d="M20 210 C90 210 90 150 140 150 S220 200 260 200 S330 150 380 150"/>
+        </g>
+        <path class="w-ln blue" d="M140 90 C170 90 170 110 200 110 S230 140 260 140" style="stroke:#6F80FF!important"/>
+        <rect class="bx" x="134" y="52" width="12" height="46"/><rect class="bx fblue" x="134" y="142" width="12" height="54" style="fill:#6F80FF!important"/><rect class="bx" x="254" y="42" width="12" height="36"/><rect class="bx" x="254" y="104" width="12" height="44"/><rect class="bx" x="254" y="186" width="12" height="22"/>
+      </svg>
+      <figcaption>Fig. 4, propagation (inverted plate): one firm changes type (blue); the composites around it are undefined until their wires are rejoined, which reaches neighbours at different times.</figcaption>
+    </figure>
+  </div>
+
+  <h2>Copy status</h2>
+  <p>Formal statements (definitions, the theorem, the corollary, remarks) are written by the creative lead and checked for mathematical correctness; they are flagged for founder review. The abstract and keywords come from one clean-room writer who read the Superdark essay; shown unedited, alternatives kept. Everything unsettled stays in [brackets].</p>
+  <p class="flag">All new copy on this direction is DRAFT, for founder review.</p>
+</div>
+</body>
+</html>

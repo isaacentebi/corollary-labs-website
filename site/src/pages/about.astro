@@ -1,62 +1,44 @@
 ---
-// About — abstract and deliberately provisional. Everything in [brackets] is a placeholder to be written with the
-// founder; the structure (statement → figure → colophon) is the part that is decided.
+// About — front matter: statement, the construction of the mark, colophon. Placeholders in [brackets].
 import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
-import '../styles/about.css';
-
-const P = (t: string) => `[${t}]`;
-const colophon = [
-  { k: 'Entity', v: `${site.name} is a company.` },
-  { k: 'Founded', v: P('Year') },
-  { k: 'Location', v: P('City') },
-  { k: 'Contact', v: site.email, href: `mailto:${site.email}` },
-];
-const ph = (s: string) => s.startsWith('[');
+import { site, u } from '../config/site';
+import '../styles/pages.css';
 ---
 <Base page="about" title="About" description={`About ${site.name}.`}>
-  <article class="about o-container" aria-labelledby="about-title">
-    <header class="about-band">
-      <canvas class="field about-band__field" data-field="index" data-word="About" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="about-title">About</h1>
-      <span class="about-band__note t-label" aria-hidden="true" data-reveal="scramble">Draft — placeholders in brackets</span>
-    </header>
-    <div class="rule" data-reveal="rule"></div>
+  <article class="page">
+    <p class="page__kicker">About</p>
+    <h1 class="page__title">About</h1>
+    <div class="rule"></div>
 
-    <p class="about-statement" data-reveal="lines">
-      {site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span>
+    <p class="statement">
+      {site.name} is a company. <span class="ph">[Placeholder: one sentence on what it studies.]</span> <span class="ph">[Placeholder: one sentence on what it builds.]</span>
     </p>
 
-    <figure class="about-fig">
-      <svg viewBox="0 0 800 330" role="img" aria-label="The firm, reorganised: inputs enter a firm whose steps are agents linked in a mesh; people sit on a loop at the edges; the boundary is open to new outputs B and C, while output A fades.">
-        <defs>
-          <pattern id="about-hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="9" class="af-hatch" /></pattern>
-        </defs>
-        <rect x="170" y="30" width="470" height="270" fill="url(#about-hatch)" />
-        <path class="af-ln af-wall" d="M640 100 L640 30 L170 30 L170 300 L640 300 L640 260" />
-        <path class="af-ln" d="M40 165 L253 165" />
-        <g class="af-ln af-g"><path d="M303 165 L373 165 M423 165 L493 165 M543 165 L640 110 L760 110 M543 165 L600 221" /><path d="M615 221 L760 221" /><path d="M279 107 L279 139 M518 139 L518 107" /><path d="M505 88 Q400 16 292 88" /></g>
-        <path class="af-ln af-d" d="M543 165 L760 165" />
-        <g class="af-ln af-g af-thin"><path d="M293 186 L316 214 M327 225 L355 243 M367 245 L394 227 M406 227 L433 245 M445 243 L472 225 M484 214 L504 186 M328 220 L394 223 M406 223 L472 220 M398 190 L398 217" /></g>
-        <g class="af-agent"><circle cx="278" cy="165" r="25" /><circle cx="398" cy="165" r="25" /><circle cx="518" cy="165" r="25" /></g>
-        <g class="af-mesh"><circle cx="322" cy="221" r="6" /><circle cx="361" cy="248" r="6" /><circle cx="400" cy="223" r="6" /><circle cx="439" cy="248" r="6" /><circle cx="478" cy="221" r="6" /></g>
-        <g class="af-person"><circle cx="279" cy="92" r="15" /><circle cx="520" cy="92" r="15" /><circle cx="600" cy="221" r="15" /></g>
-        <g class="af-t"><text x="40" y="151">INPUTS</text><text x="760" y="96" text-anchor="end">OUTPUT B</text><text x="760" y="207" text-anchor="end">OUTPUT C</text><text class="af-td" x="760" y="151" text-anchor="end">OUTPUT A</text></g>
-        <g class="af-t af-tg af-small"><text x="278" y="169" text-anchor="middle">AGENT</text><text x="398" y="169" text-anchor="middle">AGENT</text><text x="518" y="169" text-anchor="middle">AGENT</text></g>
-        <rect class="af-chip" x="186" y="16" width="70" height="26" /><text class="af-t af-b" x="221" y="34" text-anchor="middle">FIRM</text>
-      </svg>
-      <figcaption class="about-fig__cap t-label">FIG. — THE FIRM, REORGANISED <span class="ph">[Placeholder caption.]</span></figcaption>
-    </figure>
+    <section class="markfig" aria-labelledby="mark-h">
+      <div class="markfig__art">
+        <svg viewBox="0 0 440 250" role="img" aria-label="The mark drawn large: a solid box f with inputs X and U and outputs Y and U, the output U looping back over the top into the input U.">
+          <path class="mk-w" d="M20 172 H170 M270 172 H420" />
+          <path class="mk-w mk-loop" d="M270 112 C330 112 330 34 220 34 C110 34 110 112 170 112" />
+          <rect x="170" y="82" width="100" height="126" class="mk-b" />
+          <text x="220" y="154" class="mk-t mk-in">f</text>
+          <text x="60" y="160" class="mk-t">X</text><text x="380" y="160" class="mk-t">Y</text>
+          <text x="140" y="104" class="mk-t -b">U</text><text x="300" y="104" class="mk-t -b">U</text>
+        </svg>
+      </div>
+      <div class="markfig__text">
+        <h2 id="mark-h" class="fm__k">The mark</h2>
+        <p>The mark is the string diagram of a trace, in the sense of Joyal, Street and Verity (1996). A box <span class="m"><i>f</i> : <i>X</i> <span class="op">⊗</span> <i>U</i> <span class="op">→</span> <i>Y</i> <span class="op">⊗</span> <i>U</i></span> has its output <i>U</i> returned to its input <i>U</i>; the result is a morphism <span class="m">Tr<sup><i>U</i></sup>(<i>f</i>) : <i>X</i> <span class="op">→</span> <i>Y</i></span>. Read with <a href={u('#def-2-1')}>Definition 2.1</a>, it is a firm that produces one of its own inputs.</p>
+        <p class="ph">[Draft copy for review.]</p>
+      </div>
+    </section>
 
-    <section class="about-colophon" aria-label="Colophon">
-      <dl>
-        {colophon.map((c) => (
-          <div class="about-colophon__row">
-            <dt class="t-label">{c.k.toUpperCase()}</dt>
-            <dd class:list={{ ph: ph(c.v) }}>{c.href ? <a href={c.href}>{c.v}</a> : c.v}</dd>
-          </div>
-        ))}
-      </dl>
+    <section class="fmblock" aria-label="Colophon">
+      <div class="fm"><div class="fm__k">Entity</div><div class="fm__v">{site.name} is a company.</div></div>
+      <div class="fm"><div class="fm__k">Founded</div><div class="fm__v ph">[Year]</div></div>
+      <div class="fm"><div class="fm__k">Location</div><div class="fm__v ph">[City]</div></div>
+      <div class="fm"><div class="fm__k">Classification</div><div class="fm__v">JEL O33, L23 · MSC 2020 18M30, 18M35</div></div>
+      <div class="fm"><div class="fm__k">Type</div><div class="fm__v">Libertinus Serif, Libertinus Serif Display and Libertinus Mono (SIL Open Font License).</div></div>
+      <div class="fm"><div class="fm__k">Correspondence</div><div class="fm__v"><a href={`mailto:${site.email}`} class="ph">{site.email}</a></div></div>
     </section>
   </article>
 </Base>
