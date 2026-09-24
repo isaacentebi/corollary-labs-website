@@ -18,6 +18,7 @@ const VERSIONS = [
   { key: 'plotsoft', name: 'Plotter soft' },
   { key: 'soft', name: 'Soft' },
   { key: 'free', name: 'Free' },
+  { key: 'out', name: 'Out' },
 ];
 const sh = (cmd, cwd = ROOT) => execSync(cmd, { cwd, stdio: 'inherit' });
 const out = (cmd, cwd = ROOT) => execSync(cmd, { cwd, encoding: 'utf8' });
