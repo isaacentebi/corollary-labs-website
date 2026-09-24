@@ -50,13 +50,13 @@ export function initHome() {
     const L = homeLayout(innerWidth, innerHeight, 0);
     if (mobile()) home.style.setProperty('--ap-b', `${Math.round(L.cy + L.R + 10)}px`);
     else home.style.removeProperty('--ap-b');
-    // phones: each legend is pinned to the bottom of the screen (never higher than just under the aperture)
+    // phones: each legend sits just under the aperture (fig 5's, over the open tissue, is pinned to the bottom)
     const apB = L.cy + L.R + 10;
-    legends.forEach((lg) => { lg.style.top = mobile() ? `${Math.round(Math.max(apB + 12, innerHeight - lg.offsetHeight - 22))}px` : ''; });
+    legends.forEach((lg, i) => { lg.style.top = mobile() ? `${Math.round(i === legends.length - 1 ? Math.max(apB + 14, innerHeight - lg.offsetHeight - 22) : apB + 14)}px` : ''; });
   };
 
   const measure = () => {
-    const vh = innerHeight; const anchor = vh * (mobile() ? 0.97 : 0.82);
+    const vh = innerHeight; const anchor = vh * (mobile() ? 0.86 : 0.82);
     let s = -1;
     for (const b of blocks) {
       const k = +b.dataset.block!; const r = b.getBoundingClientRect();

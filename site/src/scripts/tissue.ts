@@ -146,7 +146,19 @@ export function drawTissue(ctx: CanvasRenderingContext2D, T: Tissue, S: TissueSt
     const conv = i === 0 && S.firstStained ? 1 : clamp((st - c.tau) / 0.32);
     const wob = (q: number): [number, number] => [Math.sin(t * 0.6 + q + c.ph) * r * 0.08, Math.cos(t * 0.5 + q * 1.7 + c.ph) * r * 0.08];
     const ringA = a * (1 - ss(0.1, 0.6, conv));
-    if (ringA > 0.02) { ctx.beginPath(); ctx.arc(cx, cy, r * (0.8 + 0.2 * ((c.ph * 3) % 1)), 0, TAU); ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.ink, ringA * 0.85); ctx.stroke(); }
+    if (ringA > 0.02) {
+      // an unreached firm is a tiny version of the fig 1 hierarchy: coordination (a ring) issuing three plans to three people
+      const top: [number, number] = [cx, cy - r * 1.3], rr = r * 0.62;
+      ctx.beginPath(); ctx.arc(top[0], top[1], rr, 0, TAU); ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.ink, ringA * 0.85); ctx.stroke();
+      ctx.beginPath();
+      for (const k of [-1, 0, 1]) {
+        const hx = cx + k * r * 1.5, hy = cy + r * 0.9;
+        ctx.moveTo(top[0] + k * rr * 0.5, top[1] + rr * 0.85); ctx.lineTo(hx, hy - r * 0.42);
+        ctx.moveTo(hx + r * 0.2, hy); ctx.arc(hx, hy, r * 0.2, 0, TAU);
+        ctx.moveTo(hx - r * 0.38, hy + r * 0.62); ctx.quadraticCurveTo(hx, hy + r * 0.02, hx + r * 0.38, hy + r * 0.62);
+      }
+      ctx.lineWidth = px * 0.9; ctx.strokeStyle = rgba(P.ink, ringA * 0.75); ctx.stroke();
+    }
     if (conv > 0.01) {
       const pt = (q: number): [number, number] => { const [ux, uy] = c.nuc[q]; const w = wob(q); return [cx + ux * r * 3.2 + w[0], cy + uy * r * 2.6 + w[1]]; };
       // the mesh deepens with conversion: all links present, their weight and ink rising together

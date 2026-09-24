@@ -100,7 +100,7 @@ export class Specimen {
     this.t += dt;
     this.s += (this.sTarget - this.s) * (1 - Math.exp(-dt * 7));
     if (Math.abs(this.sTarget - this.s) < 1e-4) this.s = this.sTarget;
-    this.phase += dt * lerp(1, 1.8, ss(3.62, 3.92, this.s));
+    this.phase += dt * lerp(1, 2.2, ss(3.62, 3.92, this.s));
     const p = this.pointer;
     p.x += (p.tx - p.x) * (1 - Math.exp(-dt * 10)); p.y += (p.ty - p.y) * (1 - Math.exp(-dt * 10));
   }
@@ -119,7 +119,7 @@ export class Specimen {
       aIn: ss(1.0, 1.24, s), tube: ss(1.1, 1.34, s), aside: ss(1.2, 1.42, s), ride: ss(1.3, 1.6, s),
       close: ss(1.6, 1.8, s), fuse: ss(1.8, 1.93, s), tether: 0,
       wither: ss(2.03, 2.3, s), obj: ss(2.12, 2.45, s), explore: ss(2.33, 2.68, s), select: ss(2.62, 2.95, s),
-      compose: ss(3.02, 3.13, s), dark: this.plate == null ? ss(3.03, 3.09, s) * (1 - ss(3.97, 4.04, s)) : 0,
+      compose: ss(3.02, 3.13, s), dark: this.plate == null ? ss(3.03, 3.09, s) * (1 - ss(3.985, 4.02, s)) : 0,
       dissolve: ss(3.04, 3.3, s), mesh: ss(3.1, 3.55, s), divide: ss(3.22, 3.56, s), out: ss(3.3, 3.62, s),
       lobe: ss(3.4, 3.8, s), newOut: ss(3.62, 3.9, s), loop: ss(3.5, 3.86, s),
       zoom: ss(4.0, 4.42, s), detail: 1 - ss(4.08, 4.3, s), tissueA: ss(4.02, 4.24, s),
@@ -499,7 +499,7 @@ export class Specimen {
     const pin = polar(TH_IN, this.memR(TH_IN, S));
     const pa = polar(TH_A, this.memR(TH_A, S)), pb = polar(TH_B, this.memR(TH_B, S)), pc = polar(TH_C, this.memR(TH_C, S));
     const L = S.newOut;
-    const N0 = 44, N = N0 + 70; const base = ctx.globalAlpha;
+    const N0 = 36, N = N0 + 100; const base = ctx.globalAlpha;
     for (let i = 0; i < N; i++) {
       const extra = i >= N0; const va = extra ? L : 1; // more passes through once reorganised
       if (va <= 0.01) continue;
@@ -591,7 +591,6 @@ export class Specimen {
       ['1c', 'coordination', 'c', true, [NUC[0] + RN * 0.8, NUC[1] - RN * 0.6], -35, win(1)],
       ['1d', 'plan', 'd', true, strandMid(STEP[2]), 0, win(1)],
       ['1e', 'output A', 'e', true, [0.86, 0.19], 90, win(1)],
-      ['2a', 'inputs', 'a', false, [-0.9, -0.02], -90, win(2) * (1 - S.ride)],
       ['2f', 'agent', 'f', true, occ.agent[0].p, -120, win(2)],
       ['2d', 'plan', 'd', false, strandMid(STEP[1]), 20, win(2)],
       ['3f', 'agent', 'f', false, occ.agent[0].p, -150, win(3)],
@@ -601,15 +600,15 @@ export class Specimen {
       ['4c', 'coordination', 'c', false, MESH_N[5], -150, win(4) * S.mesh],
       ['4f', 'agents', 'f', false, occ.agent[3]?.p ?? S4, -60, win(4) * S.divide],
       ['4b', 'people', 'b', false, add(occ.people[1], [0, 0.06]), 120, win(4) * S.out],
-      ['4j', 'feedback loop', 'j', true, loopP, -60, win(4) * S.loop],
-      ['4k', 'output B', 'k', true, exitB, -80, win(4) * S.newOut],
-      ['4l', 'output C', 'l', true, exitC, -10, win(4) * S.newOut],
+      ['4j', 'feedback loop', 'j', true, loopP, this.mobile ? -150 : -60, win(4) * S.loop],
+      ['4k', 'output B', 'k', true, exitB, this.mobile ? -40 : -80, win(4) * S.newOut],
+      ['4l', 'output C', 'l', true, exitC, this.mobile ? 75 : -10, win(4) * S.newOut],
     ];
     const m = this.mobile ? 0.8 : 1;
     for (const [id, word, letter, first, anchor, deg, a] of L) {
       const key = !first;
       const [ax, ay] = this.toScreen(anchor);
-      const d = (key ? 30 : 38) * m, r = (deg * Math.PI) / 180;
+      const d = (key ? 30 : id === '4l' && this.mobile ? 96 : 38) * m, r = (deg * Math.PI) / 180;
       let x = ax + Math.cos(r) * d, y = ay + Math.sin(r) * d;
       const dx = x - this.cx, dy = y - this.cy, dist = Math.hypot(dx, dy), lim = this.R - (key ? 18 : 24);
       if (dist > lim) { x = this.cx + (dx / dist) * lim; y = this.cy + (dy / dist) * lim; }
