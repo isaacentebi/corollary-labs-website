@@ -4,7 +4,7 @@ import Base from '../layouts/Base.astro';
 import { site } from '../config/site';
 import '../styles/pages.css';
 ---
-<Base page="contact" title="Contact" description={`Contact ${site.name}.`}>
+<Base page="contact" title="Contact" description="[Meta description]">
   <article class="page contact" aria-labelledby="contact-title">
     <div class="contact__grid">
       <div>
@@ -12,11 +12,11 @@ import '../styles/pages.css';
         <a class="contact__mail link-u" href={`mailto:${site.email}`} data-reveal style="--rd:0.1s">{site.email}</a>
         <dl class="label contact__label" data-reveal style="--rd:0.2s">
           <div><dt>Location</dt><dd class="ph">[City]</dd></div>
-          <div><dt>Press</dt><dd class="ph">[Placeholder — press contact]</dd></div>
+          <div><dt>Press</dt><dd class="ph">[Press contact]</dd></div>
         </dl>
       </div>
       <figure class="plate" data-reveal style="--rd:0.15s">
-        <canvas data-plate="-1" role="img" aria-label="A firm drawn as a cell: inputs enter on the left, three people carry out the steps, output leaves on the right."></canvas>
+        <canvas data-plate="-1" role="img" aria-label="Figure 1, The firm"></canvas>
       </figure>
     </div>
   </article>

@@ -38,7 +38,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
       <p class="t-label" data-reveal><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time> · {fm.minutesRead} min · {site.name}</p>
       <h1 class="essay__title t-display" data-reveal>{entry.data.title}</h1>
       <p class="essay__dek" data-reveal style="--rd:0.1s">{entry.data.dek}</p>
-      {entry.data.placeholder && <p class="essay__flag t-label" data-reveal style="--rd:0.2s">[Placeholder essay, written to prove the reading template]</p>}
+      {entry.data.placeholder && <p class="essay__flag t-label" data-reveal style="--rd:0.2s">[Placeholder essay]</p>}
     </header>
 
     <div class="essay__body" data-essay-body>

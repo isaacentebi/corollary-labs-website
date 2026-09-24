@@ -6,25 +6,24 @@ import { site, figs } from '../config/site';
 import '../styles/pages.css';
 
 const rows = [
-  { k: 'Entity', v: `${site.name} is a company.` },
+  { k: 'Entity', v: '[Entity]' },
   { k: 'Founded', v: '[Year]' },
   { k: 'Location', v: '[City]' },
   { k: 'Contact', v: site.email, href: `mailto:${site.email}` },
 ];
 ---
-<Base page="about" title="About" description={`About ${site.name}.`}>
+<Base page="about" title="About" description="[Meta description]">
   <article class="page about" aria-labelledby="about-title">
     <h1 class="page__title t-display" id="about-title" data-reveal>About</h1>
     <div class="about__grid">
       <p class="about__statement" data-reveal>
-        {site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span>
+        <span class="ph">[About — one paragraph]</span>
       </p>
       <figure class="plate" data-reveal style="--rd:0.15s">
-        <canvas data-plate="4" role="img" aria-label={`Figure 4, ${figs[3].title}. ${figs[3].legend}`}></canvas>
+        <canvas data-plate="4" role="img" aria-label={`Figure 4, ${figs[3].title}`}></canvas>
         <figcaption class="t-label">Fig. 4, {figs[3].title}</figcaption>
       </figure>
-      <section class="label" aria-label="Colophon" data-reveal>
-        <p class="label__no"><span>{site.name}</span><span>Colophon</span></p>
+      <section class="label" aria-label="Details" data-reveal>
         <dl>
           {rows.map((r) => (
             <div>

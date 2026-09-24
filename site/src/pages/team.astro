@@ -4,25 +4,25 @@ import Base from '../layouts/Base.astro';
 import { site } from '../config/site';
 import '../styles/pages.css';
 
-const people = Array.from({ length: 4 }, () => ({ name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]' }));
+const people = Array.from({ length: 4 }, () => ({ name: '[Name]', role: '[Role]', line: '[One line]' }));
 ---
-<Base page="team" title="Team" description={`The team at ${site.name}.`}>
+<Base page="team" title="Team" description="[Meta description]">
   <article class="page team" aria-labelledby="team-title">
     <h1 class="page__title t-display" id="team-title" data-reveal>Team</h1>
-    <p class="about__statement" data-reveal style="max-width: 22em; margin-top: 24px;"><span class="ph">[Placeholder — one sentence on who works at {site.name}.]</span></p>
+    <p class="about__statement" data-reveal style="max-width: 22em; margin-top: 24px;"><span class="ph">[Team — one sentence]</span></p>
     <ol class="people">
       {people.map((p, i) => (
         <li class="person" data-reveal style={`--rd:${i * 0.1}s`}>
-          <div class="person__frame" aria-hidden="true"><span>[portrait]</span></div>
+          <div class="person__frame" aria-hidden="true"><span>[Portrait]</span></div>
           <p class="person__name t-title ph">{p.name}</p>
           <span class="person__role t-label ph">{p.role}</span>
           <p class="person__line">{p.line}</p>
         </li>
       ))}
     </ol>
-    <section class="label" aria-label="Joining" data-reveal>
+    <section class="label" aria-label="Join" data-reveal>
       <dl>
-        <div><dt>Join</dt><dd class="ph">[Placeholder — how to get in touch about working here.]</dd></div>
+        <div><dt>Join</dt><dd class="ph">[How to apply]</dd></div>
         <div><dt>Contact</dt><dd><a class="link-u" href={`mailto:${site.email}`}>{site.email}</a></dd></div>
       </dl>
     </section>

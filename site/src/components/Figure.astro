@@ -57,7 +57,7 @@ if (kind === 'dissolve') {
       pts.forEach((p, k) => { body += k % 3 === 0 ? `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5" class="fig-junction"/><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="1.8" class="fig-node"/>` : `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.4" class="fig-junction"/>`; });
     }
   }
-  body += `<text x="${20}" y="${H - 8}" class="fig-label -muted">coordination issuing plans</text><text x="${W - 16}" y="${H - 8}" class="fig-label" text-anchor="end">coordination as a mesh</text>`;
+  body += `<text x="${20}" y="${H - 8}" class="fig-label -muted">[Label]</text><text x="${W - 16}" y="${H - 8}" class="fig-label" text-anchor="end">[Label]</text>`;
 }
 
 if (kind === 'org') {

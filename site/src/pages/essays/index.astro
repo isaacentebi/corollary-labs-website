@@ -10,7 +10,7 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
 const rows = await Promise.all(essays.map(async (e, i) => ({ e, i, fm: (await render(e)).remarkPluginFrontmatter, svg: slideSVG(e.id, i % 3) })));
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 ---
-<Base page="essays" title="Essays" description="Essays by Corollary Labs.">
+<Base page="essays" title="Essays" description="[Meta description]">
   <section class="page essays" aria-labelledby="essays-title">
     <p class="page__kicker t-label" data-reveal>{rows.length} essays</p>
     <h1 class="page__title t-display" id="essays-title" data-reveal>Essays</h1>
@@ -19,7 +19,6 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
         <li class="tray__item" data-reveal style={`--rd:${i * 0.12}s`}>
           <a class="slide" href={u(`essays/${e.id}/`)}>
             <svg class="slide__svg" viewBox="0 0 200 200" aria-hidden="true" set:html={svg} />
-            <span class="slide__n t-label">No. {rows.length - i}</span>
             <span class="slide__title t-title">{e.data.title}</span>
             <span class="slide__dek">{e.data.dek}</span>
             <span class="slide__meta t-label"><time datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time> · {fm.minutesRead} min{e.data.placeholder && ' · placeholder'}</span>
