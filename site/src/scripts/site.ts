@@ -22,6 +22,7 @@ function initMenu() {
     });
     nav.classList.toggle('is-open', open);
     btn.setAttribute('aria-expanded', String(open));
+    const sr = btn.querySelector('[data-nav-sr]'); if (sr) sr.textContent = open ? 'Close menu' : 'Open menu';
     cells.forEach((c) => (c.tabIndex = open ? 0 : -1));
     if (open) setTimeout(() => (menu.querySelector('.menu__cell') as HTMLElement)?.focus({ preventScroll: true }), 60);
   };
@@ -29,6 +30,17 @@ function initMenu() {
   btn.addEventListener('click', () => set(!nav.classList.contains('is-open')));
   menu.querySelector('[data-nav-close]')?.addEventListener('click', () => set(false));
   addEventListener('keydown', (e) => { if (e.key === 'Escape' && nav.classList.contains('is-open')) { set(false); btn.focus(); } });
+}
+
+// ── header: hide while reading down, return on the way up ──────────────
+function initHeaderAutoHide() {
+  let last = scrollY;
+  addEventListener('scroll', () => {
+    const y = scrollY;
+    if (y < 40 || y < last - 4) root.classList.remove('nav-hidden');
+    else if (y > last + 4) root.classList.add('nav-hidden');
+    last = y;
+  }, { passive: true });
 }
 
 // ── reveals ─────────────────────────────────────────────────────────────
@@ -85,5 +97,6 @@ function initFooter() {
 }
 
 initMenu();
+initHeaderAutoHide();
 initReveals();
 initFooter();

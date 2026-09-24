@@ -12,7 +12,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
 ---
 <Base page="essays" title="Essays" description="Essays by Corollary Labs.">
   <section class="page essays" aria-labelledby="essays-title">
-    <p class="page__kicker t-label" data-reveal>{String(rows.length).padStart(2, '0')} essays</p>
+    <p class="page__kicker t-label" data-reveal>{rows.length} essays</p>
     <h1 class="page__title t-display" id="essays-title" data-reveal>Essays</h1>
     <ol class="tray">
       {rows.map(({ e, i, fm, svg }) => (

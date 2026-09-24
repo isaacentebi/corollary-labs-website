@@ -1,4 +1,4 @@
-// The tissue: a Voronoi of cells, every cell a firm. The change (eosin) spreads from one cell outward at
+// The tissue: a Voronoi of cells, every cell a firm. The change (accent) spreads from one cell outward at
 // uneven rates; some reorganised cells divide and some neighbours shrink. Used by the home story and footer.
 import { Delaunay } from 'd3-delaunay';
 import { TAU, clamp, ss, lerp, spring, rng, rgba, mixc, roundPoly, type Palette } from './draw';
@@ -11,6 +11,7 @@ export interface TCell {
   shrink?: { to: number; t0: number };
   isChild?: boolean;
   x: number; y: number; alive: number;
+  dk?: number; sk?: number; // division / shrink progress (set by stepTissue)
 }
 export interface Tissue { cells: TCell[]; bounds: [number, number, number, number]; spacing: number }
 
@@ -87,6 +88,7 @@ export function stepTissue(T: Tissue, st: number, t: number, motion = 1) {
     const ch = cells[c.div.child];
     const dx = Math.cos(c.div.ang) * spacing * 0.32 * k, dy = Math.sin(c.div.ang) * spacing * 0.32 * k;
     ch.alive = k > 0.002 ? 1 : 0;
+    c.dk = k; ch.dk = k;
     ch.x = c.x + dx + 1e-3; ch.y = c.y + dy + 1e-3;
     c.x -= dx; c.y -= dy;
   }
@@ -96,6 +98,7 @@ export function stepTissue(T: Tissue, st: number, t: number, motion = 1) {
     const o = cells[c.shrink.to];
     c.x = lerp(c.x, o.x, k); c.y = lerp(c.y, o.y, k);
     c.alive = k < 0.97 ? 1 - ss(0.8, 0.97, k) * 0.6 : 0;
+    c.sk = k;
   }
 }
 
@@ -124,32 +127,37 @@ export function drawTissue(ctx: CanvasRenderingContext2D, T: Tissue, S: TissueSt
     const a = A * c.alive;
     if (a <= 0.01) continue;
     const inset = (f: number) => poly.map((p) => [cx + (p[0] - cx) * f, cy + (p[1] - cy) * f] as [number, number]);
+    const split = clamp((c.dk ?? 0) * 1.4), shrink = c.sk ?? 0;
     ctx.beginPath(); roundPoly(ctx, inset(0.9));
-    ctx.fillStyle = rgba(mixc(P.haem, P.eosin, stain), a * (0.05 + stain * 0.08 + hot * 0.1));
+    ctx.fillStyle = rgba(mixc(P.body, P.accent, stain), a * (0.05 + stain * 0.08 + hot * 0.1) * (1 - shrink * 0.6));
     ctx.fill();
-    ctx.lineWidth = px * (1 + stain * 0.3 + hot * 0.6);
-    ctx.strokeStyle = rgba(mixc(P.ink, P.eosin, Math.max(stain * 0.85, hot)), a * (0.6 + stain * 0.2));
-    ctx.stroke();
+    // wall: heavier once a firm has split; dashed while a firm is being absorbed
+    ctx.lineWidth = px * (1 + stain * 0.3 + hot * 0.6 + split * 1.1);
+    ctx.strokeStyle = rgba(mixc(P.ink, P.accent, Math.max(stain * 0.85, hot, split)), a * (0.6 + stain * 0.2));
+    if (shrink > 0.02) ctx.setLineDash([px * 4, px * 3]);
+    ctx.stroke(); ctx.setLineDash([]);
     ctx.beginPath(); roundPoly(ctx, inset(0.83));
-    ctx.lineWidth = px * 0.7; ctx.strokeStyle = rgba(mixc(P.ink3, P.eosin, stain * 0.6), a * 0.5); ctx.stroke();
-    // coordination: a stippled nucleus that opens into a small mesh once the cell has reorganised
-    const r = sp * 0.13 * (1 + stain * 0.9);
-    const pos = (q: number): [number, number] => { const [ux, uy] = c.nuc[q]; return [cx + ux * r + Math.sin(t * 0.6 + q + c.ph) * r * 0.06, cy + uy * r + Math.cos(t * 0.5 + q * 1.7) * r * 0.06]; };
+    ctx.lineWidth = px * 0.7; ctx.strokeStyle = rgba(mixc(P.ink3, P.accent, stain * 0.6), a * 0.5); ctx.stroke();
+    // inside each firm: coordination (a ring) above three steps (dots); once reorganised the ring opens
+    // into a mesh across the steps, with agents (solid seeds) at the nodes
+    const r = sp * 0.085;
+    const wob = (q: number) => [Math.sin(t * 0.6 + q + c.ph) * r * 0.08, Math.cos(t * 0.5 + q * 1.7 + c.ph) * r * 0.08];
+    const ringA = a * (1 - stain);
+    if (ringA > 0.02) { ctx.beginPath(); ctx.arc(cx, cy - r * 1.1, r, 0, TAU); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.ink2, ringA * 0.9); ctx.stroke(); }
+    const steps: [number, number][] = [-1, 0, 1].map((q) => { const w = wob(q); return [cx + q * r * 1.6 + w[0], cy + r * 1.1 + w[1]]; });
     if (stain > 0.02) {
+      // two junctions above the steps, each tied to the steps beneath and to each other: a small mesh
+      const hub: [number, number][] = [-0.8, 0.8].map((q, j) => { const w = wob(j + 4); return [cx + q * r * 1.1 + w[0], cy - r * 1.2 + w[1]]; });
       ctx.beginPath();
-      for (const [p, q] of c.links) { const a1 = pos(p), b1 = pos(q); ctx.moveTo(a1[0], a1[1]); ctx.lineTo(b1[0], b1[1]); }
-      ctx.lineWidth = px * 0.8; ctx.strokeStyle = rgba(P.eosin, a * stain * 0.7); ctx.stroke();
+      ctx.moveTo(hub[0][0], hub[0][1]); ctx.lineTo(hub[1][0], hub[1][1]);
+      for (const [j, q] of [[0, 0], [0, 1], [1, 1], [1, 2]] as const) { ctx.moveTo(hub[j][0], hub[j][1]); ctx.lineTo(steps[q][0], steps[q][1]); }
+      ctx.lineWidth = px * 0.9; ctx.strokeStyle = rgba(P.accent, a * stain * 0.8); ctx.stroke();
+      for (const h of hub) { ctx.beginPath(); ctx.arc(h[0], h[1], px * 2.2, 0, TAU); ctx.fillStyle = rgba(P.paper, a); ctx.fill(); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.accent, a * stain); ctx.stroke(); }
     }
-    ctx.fillStyle = rgba(mixc(P.ink, P.eosin, stain), a * 0.8);
-    for (let q = 0; q < c.nuc.length; q++) { const [x, y] = pos(q); ctx.fillRect(x - px, y - px, px * 2, px * 2); }
-    if (stain > 0.3) {
-      // agents at work inside the reorganised firm
-      for (let q = 0; q < 2; q++) {
-        const [x, y] = pos(q * 7 + 1);
-        ctx.beginPath(); ctx.ellipse(x, y, sp * 0.055, sp * 0.028, c.ph + q, 0, TAU);
-        ctx.fillStyle = rgba(P.paper, a * 0.9); ctx.fill();
-        ctx.lineWidth = px; ctx.strokeStyle = rgba(P.eosin, a * clamp((stain - 0.3) * 2)); ctx.stroke();
-      }
+    for (let q = 0; q < 3; q++) {
+      const [x, y] = steps[q];
+      ctx.beginPath(); ctx.arc(x, y, px * (1.6 + stain * 1.6), 0, TAU);
+      ctx.fillStyle = rgba(mixc(P.ink, P.accent, stain), a * 0.85); ctx.fill();
     }
   }
 }

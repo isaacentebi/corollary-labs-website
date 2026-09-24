@@ -1,63 +1,66 @@
 // The specimen: one firm drawn as a living cell, seen through a round aperture.
 // Everything is a function of the story position `s` (scroll) and time `t` (idle life), so it scrubs both ways.
-//   s < 0      hero: the firm, alive
-//   0 → 1      fig 1  the firm: inputs, three people in sequence, coordination issuing plans, output A
-//   1 → 2      fig 2  an agent arrives with the inputs; the boundary closes around it at the middle step
-//   2 → 3      fig 3  the plan is withdrawn; an objective; alternatives explored, one selected
-//   3 → 4      fig 4  coordination spreads as a mesh; agents at every step; people on the feedback loop;
-//                     the boundary deforms and grows a lobe; A closes, B and C open, throughput rises
-//   4 → 5      fig 5  pull back into the tissue; the change spreads cell to cell; the aperture opens
+//   s < 0      hero: the firm, alive (labelled inputs / firm / output A)
+//   0 → 1      fig 1  inputs, three people in sequence, coordination (a ring) issuing plans, output A
+//   1 → 2      fig 2  an agent arrives with the inputs; the boundary reaches in along the flow and closes
+//                     around it at the middle step; that step's person steps aside and stays attached to it;
+//                     the plan still reaches the middle step
+//   2 → 3      fig 3  the plan to the middle step is withdrawn; an objective; alternatives; one selected
+//   3 → 4      fig 4  coordination opens into a mesh; an agent at every step; people inside, on a loop that
+//                     runs out to the environment and back; the boundary deforms and grows a lobe;
+//                     A closes, B and C open, more passes through
+//   4 → 5      fig 5  pull back into the tissue; the change spreads firm to firm; the aperture opens
 import { TAU, clamp, ss, lerp, spring, gauss, angDiff, polar, rng, palette, rgba, mixc, smoothClosed, type Palette } from './draw';
 import { makeTissue, stepTissue, drawTissue, type Tissue } from './tissue';
 
 type V = [number, number];
 const R0 = 0.7;
 const TH_IN = Math.PI - 0.12;
-const TH_A = 0.1, TH_B = -0.78, TH_C = -0.3, TH_LOBE = -0.52, TH_O = 1.02;
-const STEP: V[] = [[-0.34, 0.1], [0, 0.15], [0.34, 0.1]];
-const S4: V = [0.56, -0.3];
-const NUC: V = [-0.03, -0.34];
-const RN = 0.13;
-const ASIDE: V = [0.1, 0.43];
-const PEOPLE_OUT = [-2.25, 1.95, 0.5]; // membrane angles the three people move to
+const TH_A = 0.22, TH_B = -0.9, TH_C = -0.42, TH_LOBE = -0.66, TH_O = 1.05;
+const STEP: V[] = [[-0.34, 0.1], [0, 0.13], [0.34, 0.1]];
+const S4: V = [0.5, -0.3];
+const NUC: V = [-0.02, -0.33];
+const RN = 0.12;
+const ASIDE: V = [0.1, 0.42];
+const PEOPLE_IN = [-2.2, 2.2, 0.5]; // angles at which the people sit inside the boundary in fig 4
 const MESH_N: V[] = [STEP[0], STEP[1], STEP[2], S4, NUC, [-0.2, -0.1], [0.22, -0.14], [-0.16, 0.36], [0.2, 0.33],
   [-0.46, -0.16], [0.3, -0.48], [-0.4, 0.33], [0.46, 0.18], [-0.02, -0.08]];
 const MESH_E: [number, number][] = [[4, 5], [4, 6], [5, 0], [5, 13], [13, 1], [6, 13], [6, 3], [2, 3], [0, 7], [7, 1], [1, 8], [8, 2],
   [6, 2], [4, 10], [10, 3], [5, 9], [9, 0], [0, 11], [11, 7], [2, 12], [12, 3], [8, 12], [4, 9]];
-const FIL = [-2.5, -1.75, -0.35, 0.3, 2.35, 3.0]; // explored directions (agent-relative), index 3 → toward the objective
+const FIL = [-2.5, -1.75, -0.35, 0.3, 2.35, 3.0]; // explored directions; index 3 is replaced by the direction to the objective
 const SEL = 3;
+// the channel the boundary makes from the input pore to the middle step (fig 2)
+const TUBE_C: V = [-0.36, 0.36], TUBE_B: V = STEP[1];
 
 const add = (a: V, b: V): V => [a[0] + b[0], a[1] + b[1]];
 const lerpV = (a: V, b: V, t: number): V => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 const quad = (a: V, c: V, b: V, t: number): V => { const u = 1 - t; return [u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]; };
+const quadD = (a: V, c: V, b: V, t: number): V => [2 * (1 - t) * (c[0] - a[0]) + 2 * t * (b[0] - c[0]), 2 * (1 - t) * (c[1] - a[1]) + 2 * t * (b[1] - c[1])];
 
-export interface SpecimenOpts { canvas: HTMLCanvasElement; plate?: number; reduced?: boolean; layout?: (w: number, h: number) => { cx: number; cy: number; R: number } }
+export interface Label { id: string; text: string; key: boolean; x: number; y: number; ax: number; ay: number; a: number }
+export type LayoutFn = (w: number, h: number, compose: number) => { cx: number; cy: number; R: number };
+export interface SpecimenOpts { canvas: HTMLCanvasElement; plate?: number; reduced?: boolean; layout?: LayoutFn; labels?: boolean }
+type St = ReturnType<Specimen['st']>;
 
 export class Specimen {
   c: HTMLCanvasElement; ctx: CanvasRenderingContext2D; P: Palette;
   w = 0; h = 0; dpr = 1; cx = 0; cy = 0; R = 1;
   s = -1; sTarget = -1; t = 0; phase = 0; born = 0;
-  running = false; raf = 0; last = 0; visible = true;
-  reduced: boolean; plate?: number;
+  running = false; raf = 0; last = 0;
+  reduced: boolean; plate?: number; withLabels: boolean;
   pointer = { x: 9, y: 9, on: 0, tx: 9, ty: 9 };
-  tissue: Tissue; nucDots: { a: V; e: number; u: number; d: number }[] = [];
-  granules: [number, number, number, number][] = [];
-  layoutFn?: SpecimenOpts['layout'];
-  mobile = false;
-  onFrame?: (s: number) => void;
+  tissue: Tissue; granules: [number, number, number][] = [];
+  layoutFn?: LayoutFn;
+  mobile = false; maskBottom = 0; heroA = -1;
+  onLabels?: (l: Label[]) => void;
 
   constructor(o: SpecimenOpts) {
     this.c = o.canvas; this.ctx = o.canvas.getContext('2d')!; this.P = palette();
-    this.reduced = !!o.reduced; this.plate = o.plate; this.layoutFn = o.layout;
+    this.reduced = !!o.reduced; this.plate = o.plate; this.layoutFn = o.layout; this.withLabels = !!o.labels;
     if (o.plate != null) { this.s = this.sTarget = o.plate; }
-    this.tissue = makeTissue(7, 38, 26, 1.9, { divide: 0.12, shrink: 0.1, reach: 9 });
+    this.tissue = makeTissue(7, 38, 26, 1.9, { divide: 0.16, shrink: 0.12, reach: 9 });
     const G = rng(23);
-    for (let i = 0; i < 170; i++) { const a = G() * TAU, d = Math.sqrt(G()); this.granules.push([a, d, G(), G()]); }
-    const R = rng(11);
-    for (let i = 0; i < 150; i++) {
-      const a = R() * TAU, d = Math.sqrt(R()) * RN * 0.86;
-      this.nucDots.push({ a: [NUC[0] + Math.cos(a) * d, NUC[1] + Math.sin(a) * d], e: Math.floor(R() * MESH_E.length), u: R(), d: R() });
-    }
+    for (let i = 0; i < 70; i++) this.granules.push([G() * TAU, Math.sqrt(G()), G()]);
     this.resize();
     this.born = performance.now();
   }
@@ -68,9 +71,12 @@ export class Specimen {
     this.dpr = Math.min(2, devicePixelRatio || 1);
     this.c.width = Math.round(this.w * this.dpr); this.c.height = Math.round(this.h * this.dpr);
     this.mobile = this.w < 760;
-    const L = this.layoutFn ? this.layoutFn(this.w, this.h) : { cx: this.w / 2, cy: this.h / 2, R: Math.min(this.w, this.h) * 0.46 };
-    this.cx = L.cx; this.cy = L.cy; this.R = L.R;
+    this.place(this.st(this.s).compose);
     if (!this.running) this.draw();
+  }
+  place(compose: number) {
+    const L = this.layoutFn ? this.layoutFn(this.w, this.h, compose) : { cx: this.w / 2, cy: this.h / 2, R: Math.min(this.w, this.h) * 0.46 };
+    this.cx = L.cx; this.cy = L.cy; this.R = L.R;
   }
 
   start() {
@@ -78,7 +84,7 @@ export class Specimen {
     const loop = (now: number) => {
       if (!this.running) return;
       const dt = Math.max(0, Math.min(0.05, (now - this.last) / 1000)); this.last = now;
-      this.tick(dt); this.draw(); this.onFrame?.(this.s);
+      this.tick(dt); this.draw();
       this.raf = requestAnimationFrame(loop);
     };
     this.raf = requestAnimationFrame(loop);
@@ -90,8 +96,7 @@ export class Specimen {
     this.t += dt;
     this.s += (this.sTarget - this.s) * (1 - Math.exp(-dt * 7));
     if (Math.abs(this.sTarget - this.s) < 1e-4) this.s = this.sTarget;
-    const speed = lerp(1, 1.9, ss(3.62, 3.92, this.s));
-    this.phase += dt * speed;
+    this.phase += dt * lerp(1, 1.8, ss(3.62, 3.92, this.s));
     const p = this.pointer;
     p.x += (p.tx - p.x) * (1 - Math.exp(-dt * 10)); p.y += (p.ty - p.y) * (1 - Math.exp(-dt * 10));
   }
@@ -106,22 +111,24 @@ export class Specimen {
   st(s: number) {
     const grow = this.reduced ? 1 : spring(clamp((performance.now() - this.born - 150) / 1500));
     return {
-      grow,
-      aIn: ss(1.0, 1.3, s), engulf: ss(1.25, 1.55, s), pinch: ss(1.52, 1.66, s), toStep: ss(1.6, 1.88, s),
-      aside: ss(1.55, 1.8, s), fuse: ss(1.82, 1.97, s), plan2: ss(1.84, 2.0, s),
+      grow, hero: this.heroA >= 0 ? this.heroA : 1 - ss(-0.45, -0.1, s),
+      aIn: ss(1.0, 1.24, s), tube: ss(1.1, 1.34, s), aside: ss(1.2, 1.42, s), ride: ss(1.3, 1.6, s),
+      close: ss(1.6, 1.8, s), fuse: ss(1.8, 1.93, s), tether: ss(1.36, 1.5, s) * (1 - ss(3.3, 3.5, s)),
       wither: ss(2.03, 2.3, s), obj: ss(2.12, 2.45, s), explore: ss(2.33, 2.68, s), select: ss(2.62, 2.95, s),
-      dissolve: ss(3.02, 3.3, s), mesh: ss(3.1, 3.55, s), divide: ss(3.25, 3.6, s), out: ss(3.3, 3.65, s),
-      lobe: ss(3.4, 3.8, s), newOut: ss(3.62, 3.92, s), loop: ss(3.55, 3.9, s),
-      zoom: ss(4.0, 4.42, s), detail: 1 - ss(4.08, 4.3, s), tissueA: ss(4.02, 4.24, s), stain: 0.85 * clamp((s - 4.25) / 0.75) + 0.12 * clamp(s - 5), open: ss(4.5, 4.92, s),
+      compose: ss(3.0, 3.2, s),
+      dissolve: ss(3.04, 3.3, s), mesh: ss(3.1, 3.55, s), divide: ss(3.22, 3.56, s), out: ss(3.3, 3.62, s),
+      lobe: ss(3.4, 3.8, s), newOut: ss(3.62, 3.9, s), loop: ss(3.5, 3.86, s),
+      zoom: ss(4.0, 4.42, s), detail: 1 - ss(4.08, 4.3, s), tissueA: ss(4.02, 4.24, s),
+      stain: 0.85 * clamp((s - 4.25) / 0.72) + 0.15 * clamp(s - 5), open: ss(4.5, 4.9, s),
     };
   }
 
-  memR(th: number, S: ReturnType<Specimen['st']>): number {
+  memR(th: number, S: St): number {
     const t = this.t;
     let r = R0 * (1 + 0.022 * Math.sin(3 * th + t * 0.45) + 0.015 * Math.sin(5 * th - t * 0.62 + 1.3) + 0.01 * Math.sin(2 * th + t * 0.31 + 2));
     r *= 0.25 + 0.75 * S.grow;
     r += S.lobe * 0.21 * gauss(angDiff(th, TH_LOBE), 0.5);
-    r -= S.lobe * 0.03 * gauss(angDiff(th, 2.2), 0.8); // the rest of the boundary gives a little
+    r -= S.lobe * 0.03 * gauss(angDiff(th, 2.2), 0.8);
     const p = this.pointer;
     if (p.on && this.s < 0.5) {
       const d = Math.hypot(p.x, p.y), phi = Math.atan2(p.y, p.x);
@@ -134,50 +141,53 @@ export class Specimen {
   // ── draw ───────────────────────────────────────────────────────────────
   draw() {
     const { ctx, P, dpr } = this; const s = this.s; const S = this.st(s);
+    if (this.layoutFn) this.place(S.compose);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.c.width, this.c.height);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // phones: the band the aperture sits in is solid paper, so text scrolling beneath never shows through it
+    this.maskBottom = 0;
+    if (this.mobile && this.plate == null && S.open < 0.02) {
+      const b = this.cy + this.R + 10; this.maskBottom = b;
+      ctx.fillStyle = rgba(P.paper, 1); ctx.fillRect(0, 0, this.w, b);
+      const g = ctx.createLinearGradient(0, b, 0, b + 26); g.addColorStop(0, rgba(P.paper, 1)); g.addColorStop(1, rgba(P.paper, 0));
+      ctx.fillStyle = g; ctx.fillRect(0, b, this.w, 26);
+    }
     const diag = Math.hypot(Math.max(this.cx, this.w - this.cx), Math.max(this.cy, this.h - this.cy));
     const clipR = lerp(this.R, diag + 4, spring(S.open));
-    // aperture
     ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.beginPath(); ctx.arc(this.cx * dpr, this.cy * dpr, clipR * dpr, 0, TAU); ctx.clip();
-    // camera
-    const zoomTo = this.mobile ? 0.34 : 0.24;
-    const cam = lerp(1, zoomTo, S.zoom);
+    if (this.maskBottom) { ctx.fillStyle = rgba(P.paper, 1); ctx.fill(); }
+    const cam = lerp(1, this.mobile ? 0.34 : 0.24, S.zoom);
     const k = this.R * cam;
-    const setT = () => ctx.setTransform(dpr * k, 0, 0, dpr * k, this.cx * dpr, this.cy * dpr);
-    setT();
-    const px = 1 / k; // one CSS pixel in unit space
+    ctx.setTransform(dpr * k, 0, 0, dpr * k, this.cx * dpr, this.cy * dpr);
+    const px = 1 / k;
     if (S.tissueA > 0) this.drawTissueLayer(S, px, cam);
+    const labels: Label[] = [];
     if (S.detail > 0.001) {
       ctx.globalAlpha = S.detail;
       this.drawCell(S, px);
       ctx.globalAlpha = 1;
     }
-    // eyepiece vignette
+    // a faint eyepiece edge
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const vg = ctx.createRadialGradient(this.cx, this.cy, clipR * 0.78, this.cx, this.cy, clipR);
-    vg.addColorStop(0, rgba(P.paper3, 0)); vg.addColorStop(1, rgba(P.paper3, 0.55 * (1 - S.open)));
+    const vg = ctx.createRadialGradient(this.cx, this.cy, clipR * 0.84, this.cx, this.cy, clipR);
+    vg.addColorStop(0, rgba(P.paper3, 0)); vg.addColorStop(1, rgba(P.paper3, 0.4 * (1 - S.open)));
     ctx.fillStyle = vg; ctx.fillRect(this.cx - clipR, this.cy - clipR, clipR * 2, clipR * 2);
     ctx.restore();
-    // aperture ring
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const ringA = 1 - S.open;
-    if (ringA > 0.01) {
-      ctx.beginPath(); ctx.arc(this.cx, this.cy, clipR - 0.5, 0, TAU); ctx.lineWidth = 1; ctx.strokeStyle = rgba(P.ink, 0.55 * ringA); ctx.stroke();
-      ctx.beginPath(); ctx.arc(this.cx, this.cy, clipR + 7, 0, TAU); ctx.lineWidth = 0.75; ctx.strokeStyle = rgba(P.ink3, 0.45 * ringA); ctx.stroke();
-    }
-    if (S.detail > 0.001 && this.plate == null) this.drawLabels(S, s);
-    else if (this.plate != null) this.drawLabels(S, s);
+    if (ringA > 0.01) { ctx.beginPath(); ctx.arc(this.cx, this.cy, clipR - 0.5, 0, TAU); ctx.lineWidth = 1; ctx.strokeStyle = rgba(P.ink, 0.5 * ringA); ctx.stroke(); }
+    if (this.withLabels) { this.labels(S, s, labels); this.drawLeaders(labels); this.onLabels?.(labels); }
   }
 
   toScreen(v: V, cam = 1): V { return [this.cx + v[0] * this.R * cam, this.cy + v[1] * this.R * cam]; }
 
-  drawTissueLayer(S: ReturnType<Specimen['st']>, px: number, cam: number) {
+  drawTissueLayer(S: St, px: number, cam: number) {
     const { ctx } = this;
-    const tk = R0 / 0.95; // tissue unit → cell unit
-    ctx.save();
-    ctx.scale(tk, tk);
+    const tk = R0 / 0.95;
+    ctx.save(); ctx.scale(tk, tk);
     stepTissue(this.tissue, S.stain, this.t, this.reduced ? 0 : 1);
     const k = this.R * cam * tk;
     const view: [number, number, number, number] = [-this.cx / k, -this.cy / k, (this.w - this.cx) / k, (this.h - this.cy) / k];
@@ -185,169 +195,140 @@ export class Specimen {
     ctx.restore();
   }
 
-  // the firm
-  drawCell(S: ReturnType<Specimen['st']>, px: number) {
+  // ── the firm ───────────────────────────────────────────────────────────
+  drawCell(S: St, px: number) {
     const { ctx, P } = this; const t = this.t;
     const N = 220;
     const mem: V[] = [];
     for (let i = 0; i < N; i++) { const th = (i / N) * TAU; mem.push(polar(th, this.memR(th, S))); }
-
-    // objective gradient (under everything inside)
     const O = polar(TH_O, this.memR(TH_O, S));
-    const objA = S.obj * (1 - 0.45 * S.loop);
-    // cytoplasm
+    const objA = S.obj * (1 - 0.5 * S.loop);
+    // interior wash + a few granules
     ctx.beginPath(); smoothClosed(ctx, mem);
     const g = ctx.createRadialGradient(0, 0, 0.1, 0, 0, R0 * 1.05);
-    g.addColorStop(0, rgba(mixc(P.haem, P.eosin, S.lobe * 0.35), 0.035));
-    g.addColorStop(1, rgba(mixc(P.haem, P.eosin, S.lobe * 0.35), 0.12));
+    g.addColorStop(0, rgba(mixc(P.body, P.accent, S.lobe * 0.3), 0.03));
+    g.addColorStop(1, rgba(mixc(P.body, P.accent, S.lobe * 0.3), 0.1));
     ctx.fillStyle = g; ctx.fill();
-    // cytoplasm granules (inside) and suspended particles in the surroundings (outside)
-    for (const [a, d, u, v] of this.granules) {
-      const th = a + Math.sin(t * 0.05 + u * 9) * 0.08;
-      const inside = v < 0.72;
-      const rr = inside ? d * 0.93 * this.memR(th, S) : this.memR(th, S) + 0.04 + d * 0.5;
-      const x = Math.cos(th) * rr + Math.sin(t * 0.3 + u * 20) * 0.006, y = Math.sin(th) * rr + Math.cos(t * 0.27 + v * 20) * 0.006;
-      const sz = px * (inside ? 1.1 + u * 1.3 : 1 + u);
-      ctx.fillStyle = rgba(inside ? P.haem : P.ink3, inside ? 0.28 + u * 0.2 : 0.35);
-      ctx.fillRect(x - sz / 2, y - sz / 2, sz, sz);
+    for (const [a, d, u] of this.granules) {
+      const th = a + Math.sin(t * 0.05 + u * 9) * 0.08; const rr = d * 0.9 * this.memR(th, S);
+      const sz = px * (1 + u);
+      ctx.fillStyle = rgba(P.body, 0.22 + u * 0.15); ctx.fillRect(Math.cos(th) * rr - sz / 2, Math.sin(th) * rr - sz / 2, sz, sz);
     }
     if (objA > 0.001) {
       ctx.save(); ctx.clip();
       const og = ctx.createRadialGradient(O[0], O[1], 0, O[0], O[1], 1.05 * objA + 0.01);
-      og.addColorStop(0, rgba(P.eosin, 0.22 * objA)); og.addColorStop(1, rgba(P.eosin, 0));
+      og.addColorStop(0, rgba(P.accent, 0.2 * objA)); og.addColorStop(1, rgba(P.accent, 0));
       ctx.fillStyle = og; ctx.fillRect(-1.2, -1.2, 2.4, 2.4);
-      // isolines of the gradient, drifting outward
       for (let q = 0; q < 4; q++) {
         const f = (t * 0.07 + q / 4) % 1;
         ctx.beginPath(); ctx.arc(O[0], O[1], (0.08 + f * 0.9) * objA, 0, TAU);
-        ctx.setLineDash([px * 2, px * 5]); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.eosin, 0.35 * objA * (1 - f)); ctx.stroke();
+        ctx.setLineDash([px * 2, px * 5]); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.accent, 0.4 * objA * (1 - f)); ctx.stroke();
       }
-      ctx.setLineDash([]);
-      ctx.restore();
+      ctx.setLineDash([]); ctx.restore();
     }
-
-    // pores: [angle, half-width, openness]
-    const gapIn = S.engulf * (1 - S.pinch);
+    // pores [angle, half-width (unit), openness]
+    const tubeOpen = S.tube * (1 - ss(0, 0.35, S.close));
     const pores: [number, number, number][] = [
-      [TH_IN, 0.05, 1], [TH_IN, 0.13, gapIn],
-      [TH_A, 0.05, 1 - S.newOut], [TH_B, 0.05, S.newOut], [TH_C, 0.05, S.newOut],
+      [TH_IN, 0.035, 1], [TH_IN, 0.05, tubeOpen],
+      [TH_A, 0.035, 1 - S.newOut], [TH_B, 0.035, S.newOut], [TH_C, 0.035, S.newOut],
     ];
     this.drawMembrane(mem, pores, px, S);
-
-    // coordination (nucleus) → dissolves into a mesh
-    this.drawNucleus(S, px);
-    // plans (strands) from coordination to each step
+    if (S.tube > 0 && S.fuse < 1) this.drawTube(S, px);
+    // a sealed port where output A used to leave
+    if (S.newOut > 0.3) {
+      const a = polar(TH_A, this.memR(TH_A, S) - 0.012), b = polar(TH_A, this.memR(TH_A, S) + 0.012);
+      ctx.beginPath(); ctx.arc(lerp(a[0], b[0], 0.5), lerp(a[1], b[1], 0.5), px * 4, 0, TAU); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.ink2, 0.7 * S.newOut); ctx.stroke();
+    }
+    this.drawCoordination(S, px);
     const occ = this.occupants(S);
     this.drawStrands(S, px, occ);
-    // mesh of coordination across every step
     if (S.mesh > 0) { this.drawMesh(S, px); this.drawJunctions(S, px); }
-    // alternatives
-    if (S.explore > 0 && S.dissolve < 1) this.drawFilaments(S, px, occ.agent[0]);
-    // objective source
+    if (S.explore > 0 && S.dissolve < 1) this.drawFilaments(S, px, occ.agent[0].p);
     if (objA > 0.01) {
-      ctx.beginPath(); ctx.arc(O[0], O[1], 0.02 + 0.006 * Math.sin(t * 2), 0, TAU); ctx.fillStyle = rgba(P.eosin, objA); ctx.fill();
-      ctx.beginPath(); ctx.arc(O[0], O[1], 0.034, 0, TAU); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.eosin, objA * 0.7); ctx.stroke();
+      ctx.beginPath(); ctx.arc(O[0], O[1], 0.02 + 0.005 * Math.sin(t * 2), 0, TAU); ctx.fillStyle = rgba(P.accent, objA); ctx.fill();
+      ctx.beginPath(); ctx.arc(O[0], O[1], 0.034, 0, TAU); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.accent, objA * 0.7); ctx.stroke();
     }
-    // feedback loop
     if (S.loop > 0) this.drawLoop(S, px, occ.people);
-    // flow of inputs → outputs
+    // the person who stepped aside stays attached to the agent at their old step
+    if (S.tether > 0.01) {
+      const a = occ.people[1], b = occ.agent[0].p;
+      ctx.beginPath(); ctx.moveTo(a[0], a[1] - 0.02); ctx.lineTo(b[0], b[1] + 0.03);
+      ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.ink, 0.75 * S.tether); ctx.stroke();
+    }
     this.drawFlow(S, px);
-    // people
-    occ.people.forEach((p, i) => this.drawPerson(p, 0.072, px, i));
-    // agents
+    occ.people.forEach((p) => this.drawPerson(p, px));
     this.drawAgents(S, px, occ);
   }
 
-  drawMembrane(mem: V[], pores: [number, number, number][], px: number, S: ReturnType<Specimen['st']>) {
+  drawMembrane(mem: V[], pores: [number, number, number][], px: number, S: St) {
     const { ctx, P } = this; const N = mem.length;
-    const open = (th: number) => pores.some(([a, w, o]) => o > 0.02 && Math.abs(angDiff(th, a)) < w * o);
-    const ink = rgba(P.ink, 0.9);
-    for (const [off, lw, col] of [[0, 1.35, ink], [-5.5, 0.9, rgba(P.ink2, 0.75)]] as const) {
-      ctx.beginPath();
-      let pen = false;
+    const open = (th: number) => pores.some(([a, w, o]) => o > 0.02 && Math.abs(angDiff(th, a)) < (w / R0) * o);
+    for (const [off, lw, col] of [[0, 1.35, rgba(P.ink, 0.9)], [-5.5, 0.85, rgba(P.ink2, 0.7)]] as const) {
+      ctx.beginPath(); let pen = false;
       for (let i = 0; i <= N; i++) {
         const th = (i / N) * TAU; const m = mem[i % N];
         const r = Math.hypot(m[0], m[1]); const f = (r + off * px) / r;
-        const x = m[0] * f, y = m[1] * f;
         if (open(th)) { pen = false; continue; }
-        if (!pen) { ctx.moveTo(x, y); pen = true; } else ctx.lineTo(x, y);
+        if (!pen) { ctx.moveTo(m[0] * f, m[1] * f); pen = true; } else ctx.lineTo(m[0] * f, m[1] * f);
       }
-      ctx.lineWidth = lw * px; ctx.strokeStyle = col as string; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke();
+      ctx.lineWidth = lw * px; ctx.strokeStyle = col; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke();
     }
-    // pore channels: short radial ticks at each open pore's edges
     ctx.beginPath();
     for (const [a, w, o] of pores) {
-      if (o < 0.05 || w > 0.1) continue;
+      if (o < 0.05 || w > 0.04) continue;
       for (const sgn of [-1, 1]) {
-        const th = a + sgn * w * o; const r = this.memR(th, S);
+        const th = a + sgn * (w / R0) * o; const r = this.memR(th, S);
         const p1 = polar(th, r + 3 * px), p2 = polar(th, r - 9 * px);
         ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]);
       }
     }
     ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.ink, 0.8); ctx.stroke();
-    // engulfment: the boundary folds around the agent and closes (neck → vesicle)
-    if (S.engulf > 0 && S.fuse < 1) this.drawEngulf(S, px);
   }
 
-  agentVesicle(S: ReturnType<Specimen['st']>): { c: V; r: number } {
-    const outer = polar(TH_IN, R0 + 0.07);
-    const inner = polar(TH_IN, R0 - 0.19);
-    let c = lerpV(outer, inner, S.engulf);
-    if (S.toStep > 0) c = quad(inner, [-0.3, 0.38], STEP[1], S.toStep);
-    return { c, r: 0.066 };
-  }
-
-  drawEngulf(S: ReturnType<Specimen['st']>, px: number) {
+  /** fig 2: the boundary reaches in from the input pore to the middle step (a channel), then closes behind the agent */
+  drawTube(S: St, px: number) {
     const { ctx, P } = this;
-    const { c, r } = this.agentVesicle(S);
-    const gap = 0.13 * S.engulf * (1 - S.pinch);
-    const aOut = Math.atan2(-c[1], -c[0]) + Math.PI; // direction from vesicle centre towards the cell edge (outward)
-    const toEdge = Math.atan2(polar(TH_IN, R0)[1] - c[1], polar(TH_IN, R0)[0] - c[0]);
-    const neck = gap > 0.002 ? clamp(gap * 5.5, 0, 1.2) : 0;
+    const a = polar(TH_IN, this.memR(TH_IN, S));
+    const u0 = S.close * 0.93, u1 = S.tube;
+    if (u1 - u0 < 0.01) return;
+    const w = 0.05 * (1 - S.close * 0.2);
     const alpha = 1 - S.fuse;
-    for (const [off, lw, col] of [[0, 1.35, rgba(P.ink, 0.9 * alpha)], [5.5, 0.9, rgba(P.ink2, 0.75 * alpha)]] as const) {
-      const rr = r + off * px;
+    const n = 40;
+    for (const [off, lw, col] of [[0, 1.35, rgba(P.ink, 0.9 * alpha)], [-5.5, 0.85, rgba(P.ink2, 0.7 * alpha)]] as const) {
+      const ww = w + off * px;
+      const side = (sg: number) => {
+        const pts: V[] = [];
+        for (let j = 0; j <= n; j++) {
+          const u = lerp(u0, u1, j / n); const p = quad(a, TUBE_C, TUBE_B, u); const d = quadD(a, TUBE_C, TUBE_B, u); const L = Math.hypot(d[0], d[1]) || 1;
+          pts.push([p[0] - (d[1] / L) * ww * sg, p[1] + (d[0] / L) * ww * sg]);
+        }
+        return pts;
+      };
+      const L1 = side(1), L2 = side(-1);
       ctx.beginPath();
-      ctx.arc(c[0], c[1], rr, toEdge + neck, toEdge - neck + TAU);
-      if (neck > 0) {
-        // neck walls: from the arc ends to the membrane gap edges
-        const e1 = polar(TH_IN - gap, this.memR(TH_IN - gap, S) + (off ? -5.5 * px : 0) * -1);
-        const e2 = polar(TH_IN + gap, this.memR(TH_IN + gap, S) + (off ? -5.5 * px : 0) * -1);
-        const a1: V = [c[0] + Math.cos(toEdge - neck) * rr, c[1] + Math.sin(toEdge - neck) * rr];
-        const a2: V = [c[0] + Math.cos(toEdge + neck) * rr, c[1] + Math.sin(toEdge + neck) * rr];
-        ctx.moveTo(a1[0], a1[1]); ctx.quadraticCurveTo(lerp(a1[0], e1[0], 0.6), lerp(a1[1], e1[1], 0.2), e1[0], e1[1]);
-        ctx.moveTo(a2[0], a2[1]); ctx.quadraticCurveTo(lerp(a2[0], e2[0], 0.6), lerp(a2[1], e2[1], 0.2), e2[0], e2[1]);
+      L1.forEach((p, j) => (j ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+      // rounded cap at the inner end
+      const e = quad(a, TUBE_C, TUBE_B, u1), ed = quadD(a, TUBE_C, TUBE_B, u1); const ang = Math.atan2(ed[1], ed[0]);
+      ctx.arc(e[0], e[1], ww, ang + Math.PI / 2, ang - Math.PI / 2, true);
+      for (let j = n; j >= 0; j--) ctx.lineTo(L2[j][0], L2[j][1]);
+      if (S.close > 0.001) {
+        const s0 = quad(a, TUBE_C, TUBE_B, u0), sd = quadD(a, TUBE_C, TUBE_B, u0); const a0 = Math.atan2(sd[1], sd[0]);
+        ctx.arc(s0[0], s0[1], ww, a0 - Math.PI / 2, a0 + Math.PI / 2, true);
       }
       ctx.lineWidth = lw * px; ctx.strokeStyle = col; ctx.stroke();
     }
-    void aOut;
   }
 
-  drawNucleus(S: ReturnType<Specimen['st']>, px: number) {
+  drawCoordination(S: St, px: number) {
     const { ctx, P } = this; const t = this.t;
     const env = 1 - S.dissolve;
-    if (env > 0.01) {
+    if (env <= 0.01) return;
+    for (const [rr, lw, col] of [[RN, 1.25, P.ink], [RN - 0.018, 0.8, P.ink2]] as const) {
       const pts: V[] = [];
-      for (let i = 0; i < 60; i++) { const th = (i / 60) * TAU; const r = RN * (1 + 0.04 * Math.sin(3 * th + t * 0.8) + 0.03 * Math.sin(4 * th - t * 0.5)); pts.push([NUC[0] + Math.cos(th) * r, NUC[1] + Math.sin(th) * r]); }
-      ctx.fillStyle = rgba(P.haem, 0.1 * env);
-      ctx.beginPath(); smoothClosed(ctx, pts); ctx.fill();
+      for (let i = 0; i < 60; i++) { const th = (i / 60) * TAU; const r = rr * (1 + 0.03 * Math.sin(3 * th + t * 0.8) + 0.02 * Math.sin(4 * th - t * 0.5)); pts.push([NUC[0] + Math.cos(th) * r, NUC[1] + Math.sin(th) * r]); }
+      ctx.beginPath(); smoothClosed(ctx, pts);
       ctx.setLineDash(S.dissolve > 0 ? [px * 10 * env, px * 14 * S.dissolve] : []);
-      ctx.lineWidth = px * 1.2; ctx.strokeStyle = rgba(P.ink, 0.85 * env); ctx.stroke();
-      const inner = pts.map(([x, y]) => [NUC[0] + (x - NUC[0]) * 0.9, NUC[1] + (y - NUC[1]) * 0.9] as V);
-      ctx.beginPath(); smoothClosed(ctx, inner); ctx.lineWidth = px * 0.8; ctx.strokeStyle = rgba(P.ink2, 0.6 * env); ctx.stroke();
-      ctx.setLineDash([]);
-      // nucleolus
-      ctx.beginPath(); ctx.arc(NUC[0] + 0.03, NUC[1] - 0.02, 0.026, 0, TAU); ctx.fillStyle = rgba(P.ink, 0.7 * env); ctx.fill();
-    }
-    // chromatin: stays in the nucleus, then flies out to become the mesh
-    for (const d of this.nucDots) {
-      const k = spring(clamp((S.mesh - d.d * 0.35) / 0.65));
-      let p: V = [d.a[0] + Math.sin(t * 0.9 + d.u * 20) * 0.004, d.a[1] + Math.cos(t * 0.7 + d.u * 17) * 0.004];
-      if (k > 0) { const e = MESH_E[d.e]; const q = this.meshPoint(e, d.u); p = lerpV(p, q, k); }
-      const col = mixc(P.ink, P.eosin, clamp(k * 1.3));
-      ctx.fillStyle = rgba(col, 0.8);
-      const sz = px * (1.6 + (1 - k) * 0.4);
-      ctx.fillRect(p[0] - sz / 2, p[1] - sz / 2, sz, sz);
+      ctx.lineWidth = px * lw; ctx.strokeStyle = rgba(col, 0.85 * env); ctx.stroke(); ctx.setLineDash([]);
     }
   }
 
@@ -356,110 +337,93 @@ export class Specimen {
     const m: V = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
     const dx = b[0] - a[0], dy = b[1] - a[1]; const L = Math.hypot(dx, dy) || 1;
     const bend = ((e[0] * 7 + e[1] * 3) % 5 - 2) * 0.03 + 0.01;
-    const c: V = [m[0] - (dy / L) * bend, m[1] + (dx / L) * bend];
-    const q = quad(a, c, b, u);
+    const q = quad(a, [m[0] - (dy / L) * bend, m[1] + (dx / L) * bend], b, u);
     const wig = Math.sin(u * Math.PI * 2 + e[0] + e[1] * 2) * 0.014 * Math.sin(u * Math.PI);
     return [q[0] - (dy / L) * wig, q[1] + (dx / L) * wig];
   }
 
-  drawMesh(S: ReturnType<Specimen['st']>, px: number) {
+  drawMesh(S: St, px: number) {
     const { ctx, P } = this; const t = this.t;
     MESH_E.forEach((e, i) => {
-      const a = MESH_N[e[0]];
-      const d0 = Math.hypot(a[0] - NUC[0], a[1] - NUC[1]);
+      const a = MESH_N[e[0]]; const d0 = Math.hypot(a[0] - NUC[0], a[1] - NUC[1]);
       const k = ss(d0 * 0.9, d0 * 0.9 + 0.55, S.mesh * 1.4);
       if (k <= 0) return;
-      ctx.beginPath();
-      const n = 18;
+      ctx.beginPath(); const n = 18;
       for (let j = 0; j <= Math.round(n * k); j++) { const p = this.meshPoint(e, j / n); j ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
-      ctx.lineWidth = px * (1.2 + ((i * 5) % 4) * 0.7); ctx.strokeStyle = rgba(P.eosin, 0.5 * k); ctx.lineCap = 'round'; ctx.stroke();
-      ctx.lineWidth = px * 0.6; ctx.strokeStyle = rgba(P.paper, 0.5 * k); ctx.stroke();
-      // pulses along the tube
+      ctx.lineWidth = px * (1.2 + ((i * 5) % 4) * 0.6); ctx.strokeStyle = rgba(P.accent, 0.55 * k); ctx.lineCap = 'round'; ctx.stroke();
       if (k > 0.95) {
         const u = (t * 0.28 + i * 0.37) % 1; const p = this.meshPoint(e, i % 2 ? u : 1 - u);
-        ctx.beginPath(); ctx.arc(p[0], p[1], px * 2.2, 0, TAU); ctx.fillStyle = rgba(P.eosin, 0.9); ctx.fill();
+        ctx.beginPath(); ctx.arc(p[0], p[1], px * 2.2, 0, TAU); ctx.fillStyle = rgba(P.accent, 0.95); ctx.fill();
       }
     });
   }
-
-  drawJunctions(S: ReturnType<Specimen['st']>, px: number) {
+  drawJunctions(S: St, px: number) {
     const { ctx, P } = this;
     for (let i = 4; i < MESH_N.length; i++) {
       const n = MESH_N[i]; const d0 = Math.hypot(n[0] - NUC[0], n[1] - NUC[1]);
       const k = ss(d0 * 0.9 + 0.2, d0 * 0.9 + 0.6, S.mesh * 1.4); if (k <= 0) continue;
       ctx.beginPath(); ctx.arc(n[0], n[1], px * 3.4 * k, 0, TAU); ctx.fillStyle = rgba(P.paper, 0.95); ctx.fill();
-      ctx.lineWidth = px * 1.2; ctx.strokeStyle = rgba(P.eosin, 0.9 * k); ctx.stroke();
+      ctx.lineWidth = px * 1.2; ctx.strokeStyle = rgba(P.accent, 0.9 * k); ctx.stroke();
     }
   }
 
-  /** who stands where: people positions and agent positions */
-  occupants(S: ReturnType<Specimen['st']>) {
+  inPos(i: number, S: St): V { const th = PEOPLE_IN[i]; return polar(th, this.memR(th, S) - 0.19); }
+
+  occupants(S: St) {
     const t = this.t;
-    const outPos = (i: number): V => { const th = PEOPLE_OUT[i]; return polar(th, this.memR(th, S) - 0.005); };
-    const w = (i: number): V => [Math.sin(t * 0.8 + i * 2) * 0.006, Math.cos(t * 0.6 + i) * 0.006];
+    const w = (i: number): V => [Math.sin(t * 0.8 + i * 2) * 0.005, Math.cos(t * 0.6 + i) * 0.005];
     const k = spring(S.out);
-    const p0 = lerpV(STEP[0], outPos(0), k);
-    const p1base = lerpV(STEP[1], ASIDE, spring(S.aside));
-    const p1 = lerpV(p1base, outPos(1), k);
-    const p2 = lerpV(STEP[2], outPos(2), k);
-    const people = [add(p0, w(0)), add(p1, w(1)), add(p2, w(2))];
-    // agents
-    const agent: { p: V; ang: number; tail: number; a: number }[] = [];
-    let a0: V, ang = 0, tail = 1;
-    if (S.aIn < 1) {
-      const from: V = [-1.2, -0.06], to = polar(TH_IN, R0 + 0.075);
-      const e = S.aIn;
-      a0 = [lerp(from[0], to[0], e), lerp(from[1], to[1], e) + Math.sin(e * 9 + t * 2) * 0.02 * (1 - e)];
-      ang = Math.sin(t * 3) * 0.15 * (1 - e);
-    } else if (S.fuse < 1 || S.toStep < 1) {
-      a0 = this.agentVesicle(S).c; tail = 1 - S.engulf; ang = S.toStep > 0 ? Math.atan2(STEP[1][1] - a0[1], STEP[1][0] - a0[0]) * (1 - S.toStep) : 0;
-    } else a0 = STEP[1];
-    const vis = S.aIn > 0 ? 1 : 0;
-    if (S.divide <= 0) agent.push({ p: add(a0, w(5)), ang, tail, a: vis });
+    const people = [
+      add(lerpV(STEP[0], this.inPos(0, S), k), w(0)),
+      add(lerpV(lerpV(STEP[1], ASIDE, spring(S.aside)), this.inPos(1, S), k), w(1)),
+      add(lerpV(STEP[2], this.inPos(2, S), k), w(2)),
+    ];
+    const agent: { p: V; a: number }[] = [];
+    let a0: V;
+    const pin = polar(TH_IN, this.memR(TH_IN, S));
+    if (S.ride <= 0) { const from: V = [-1.25, 0.075]; a0 = [lerp(from[0], pin[0] - 0.06, S.aIn), lerp(from[1], pin[1], S.aIn) + Math.sin(S.aIn * 8 + t * 2) * 0.012 * (1 - S.aIn)]; }
+    else a0 = quad(pin, TUBE_C, TUBE_B, S.ride);
+    if (S.divide <= 0) agent.push({ p: add(a0, w(5)), a: S.aIn > 0 ? 1 : 0 });
     else {
-      const targets = [STEP[0], STEP[1], STEP[2], S4];
-      targets.forEach((tg, i) => {
+      [STEP[0], STEP[1], STEP[2], S4].forEach((tg, i) => {
         const kk = i === 1 ? 1 : spring(clamp((S.divide - (i === 3 ? 0.25 : 0)) / 0.75));
-        agent.push({ p: add(lerpV(STEP[1], tg, kk), w(6 + i)), ang: 0, tail: 0, a: i === 1 ? 1 : clamp(kk * 3) });
+        agent.push({ p: add(lerpV(STEP[1], tg, kk), w(6 + i)), a: i === 1 ? 1 : clamp(kk * 3) });
       });
     }
     return { people, agent };
   }
 
-  drawStrands(S: ReturnType<Specimen['st']>, px: number, occ: ReturnType<Specimen['occupants']>) {
+  drawStrands(S: St, px: number, occ: ReturnType<Specimen['occupants']>) {
     const { ctx, P } = this; const t = this.t;
     const env = 1 - S.dissolve;
     if (env <= 0.01) return;
-    const from: V = [NUC[0], NUC[1] + RN * 0.95];
-    const strands: { to: V; frac: number; a: number }[] = [
-      { to: occ.people[0], frac: 1, a: 1 - S.out },
-      { to: occ.people[1], frac: 1 - S.aside, a: 1 - S.aside },
-      { to: occ.people[2], frac: 1, a: 1 - S.out },
+    const from: V = [NUC[0], NUC[1] + RN];
+    const strands: { to: V; a: number; mid: boolean }[] = [
+      { to: occ.people[0], a: 1 - S.out, mid: false },
+      { to: STEP[1], a: 1 - S.wither, mid: true }, // the plan reaches the middle step, whoever works it
+      { to: occ.people[2], a: 1 - S.out, mid: false },
     ];
-    if (S.plan2 > 0) strands.push({ to: occ.agent[0].p, frac: S.plan2 * (1 - S.wither), a: 1 - S.wither * 0.6 });
-    for (const [i, st] of strands.entries()) {
-      if (st.frac <= 0.01 || st.a <= 0.01) continue;
-      const to: V = [st.to[0], st.to[1] - 0.075];
-      const c: V = [(from[0] + to[0]) / 2 + (to[0] - from[0]) * 0.1, (from[1] + to[1]) / 2 + (i === 3 ? S.wither * 0.08 : 0)];
-      ctx.beginPath();
-      const n = 36; const m = Math.round(n * st.frac);
-      for (let j = 0; j <= m; j++) {
+    strands.forEach((st, i) => {
+      if (st.a <= 0.01) return;
+      const to: V = [st.to[0], st.to[1] - 0.07];
+      const c: V = [(from[0] + to[0]) / 2 + (to[0] - from[0]) * 0.1, (from[1] + to[1]) / 2 + (st.mid ? S.wither * 0.06 : 0)];
+      ctx.beginPath(); const n = 36;
+      for (let j = 0; j <= n; j++) {
         const u = j / n; const p = quad(from, c, to, u);
         const dx = to[0] - from[0], dy = to[1] - from[1]; const L = Math.hypot(dx, dy) || 1;
-        const wv = Math.sin(u * 16 + t * 2.2 + i) * 0.009 * Math.sin(u * Math.PI);
-        const x = p[0] - (dy / L) * wv, y = p[1] + (dx / L) * wv;
-        j ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        const wv = Math.sin(u * 16 + t * 2.2 + i) * 0.008 * Math.sin(u * Math.PI);
+        j ? ctx.lineTo(p[0] - (dy / L) * wv, p[1] + (dx / L) * wv) : ctx.moveTo(p[0], p[1]);
       }
-      ctx.lineWidth = px * 1.05; ctx.strokeStyle = rgba(P.ink2, 0.85 * st.a * env); ctx.lineCap = 'round'; ctx.stroke();
-      // transcripts travelling down the strand
-      if (st.frac > 0.98) for (let q = 0; q < 2; q++) {
+      if (st.mid && S.wither > 0) ctx.setLineDash([px * 4, px * 4 * (1 + S.wither * 3)]);
+      ctx.lineWidth = px * 1.05; ctx.strokeStyle = rgba(P.ink2, 0.85 * st.a * env); ctx.lineCap = 'round'; ctx.stroke(); ctx.setLineDash([]);
+      if (st.a > 0.9) for (let q = 0; q < 2; q++) {
         const u = (t * 0.32 + q * 0.5 + i * 0.21) % 1; const p = quad(from, c, to, u);
         ctx.fillStyle = rgba(P.ink, 0.85 * st.a * env); ctx.fillRect(p[0] - px * 1.8, p[1] - px * 1.8, px * 3.6, px * 3.6);
       }
-    }
+    });
   }
 
-  filamentPath(i: number, S: ReturnType<Specimen['st']>, from: V): V[] {
+  filamentPath(i: number, S: St, from: V): V[] {
     const t = this.t;
     const O = polar(TH_O, this.memR(TH_O, S));
     const isSel = i === SEL;
@@ -467,8 +431,7 @@ export class Specimen {
     const grow = S.explore * (isSel ? 1 : 1 - S.select);
     let L = (0.12 + ((i * 37) % 10) / 90) * grow;
     if (isSel) L = lerp(L, Math.hypot(O[0] - from[0], O[1] - from[1]) - 0.05, S.select);
-    const pts: V[] = [];
-    const n = 16;
+    const pts: V[] = []; const n = 16;
     for (let j = 0; j <= n; j++) {
       const u = j / n; const d = u * L;
       const wob = Math.sin(u * 7 + i * 2 + t * 1.4) * 0.018 * u * (1 - (isSel ? S.select * 0.7 : 0));
@@ -477,195 +440,163 @@ export class Specimen {
     }
     return pts;
   }
-
-  drawFilaments(S: ReturnType<Specimen['st']>, px: number, agent: { p: V }) {
-    const { ctx, P } = this;
-    const fade = 1 - S.mesh;
+  drawFilaments(S: St, px: number, from: V) {
+    const { ctx, P } = this; const fade = 1 - S.mesh;
     FIL.forEach((_, i) => {
-      const pts = this.filamentPath(i, S, agent.p);
-      const isSel = i === SEL;
+      const pts = this.filamentPath(i, S, from); const isSel = i === SEL;
       ctx.beginPath(); pts.forEach((p, j) => (j ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
       ctx.lineWidth = px * (isSel ? 1.2 + S.select * 2.2 : 1.1);
-      ctx.strokeStyle = rgba(P.eosin, (isSel ? 0.55 + S.select * 0.4 : 0.55) * fade);
+      ctx.strokeStyle = rgba(P.accent, (isSel ? 0.55 + S.select * 0.4 : 0.6) * fade);
       ctx.setLineDash(isSel && S.select > 0.5 ? [] : [px * 3, px * 3]);
       ctx.lineCap = 'round'; ctx.stroke(); ctx.setLineDash([]);
-      // branch tips
       const tip = pts[pts.length - 1];
-      ctx.beginPath(); ctx.arc(tip[0], tip[1], px * 2.2, 0, TAU); ctx.fillStyle = rgba(P.eosin, 0.8 * fade * (isSel ? 1 : 1 - S.select)); ctx.fill();
+      ctx.beginPath(); ctx.arc(tip[0], tip[1], px * 2.2, 0, TAU); ctx.fillStyle = rgba(P.accent, 0.85 * fade * (isSel ? 1 : 1 - S.select)); ctx.fill();
     });
   }
 
-  loopPath(S: ReturnType<Specimen['st']>): V[] {
-    const pts: V[] = [];
-    const n = 160;
+  /** the feedback loop: inside the boundary where the people sit, outside it between them */
+  loopPath(S: St): V[] {
+    const pts: V[] = []; const n = 180;
     for (let i = 0; i < n; i++) {
       const th = (i / n) * TAU;
-      let b = 1; for (const a of PEOPLE_OUT) b *= 1 - gauss(angDiff(th, a), 0.32);
-      pts.push(polar(th, this.memR(th, S) + 0.02 + 0.13 * b));
+      let m = 0; for (const a of PEOPLE_IN) m = Math.max(m, gauss(angDiff(th, a), 0.42));
+      pts.push(polar(th, this.memR(th, S) + 0.12 - 0.31 * m));
     }
     return pts;
   }
-
-  drawLoop(S: ReturnType<Specimen['st']>, px: number, people: V[]) {
+  drawLoop(S: St, px: number, people: V[]) {
     const { ctx, P } = this; const t = this.t;
     const pts = this.loopPath(S);
     const m = Math.round(pts.length * S.loop);
     ctx.beginPath();
-    for (let i = 0; i <= m; i++) { const p = pts[(i + 60) % pts.length]; i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+    for (let i = 0; i <= m; i++) { const p = pts[(i + 20) % pts.length]; i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
     ctx.setLineDash([px * 6, px * 5]); ctx.lineDashOffset = -t * 14 * px;
-    ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.ink, 0.75); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
-    // signals travelling round the loop
-    if (S.loop > 0.95) for (let q = 0; q < 3; q++) {
-      const p = pts[Math.floor(((t * 0.06 + q / 3) % 1) * pts.length)];
+    ctx.lineWidth = px * 1.15; ctx.strokeStyle = rgba(P.ink, 0.8); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    if (S.loop > 0.95) for (let q = 0; q < 4; q++) {
+      const p = pts[Math.floor(((t * 0.05 + q / 4) % 1) * pts.length)];
       ctx.beginPath(); ctx.arc(p[0], p[1], px * 2.6, 0, TAU); ctx.fillStyle = rgba(P.ink, 0.9); ctx.fill();
     }
-    // each person reaches in to the nearest step
+    // each person works into the mesh
     ctx.beginPath();
-    people.forEach((p, i) => {
-      const tg = MESH_N[[5, 7, 2][i]];
-      const q = lerpV(p, tg, 0.55 * S.loop);
-      ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]);
-    });
-    ctx.setLineDash([px * 2, px * 4]); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.ink2, 0.7 * S.loop); ctx.stroke(); ctx.setLineDash([]);
+    people.forEach((p, i) => { const tg = MESH_N[[9, 11, 12][i]]; const q = lerpV(p, tg, 0.8 * S.loop); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); });
+    ctx.setLineDash([px * 2, px * 4]); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.ink2, 0.75 * S.loop); ctx.stroke(); ctx.setLineDash([]);
   }
 
-  // inputs → steps → outputs
-  drawFlow(S: ReturnType<Specimen['st']>, px: number) {
+  drawFlow(S: St, px: number) {
     const { ctx, P } = this;
     const pin = polar(TH_IN, this.memR(TH_IN, S));
-    const pa = polar(TH_A, this.memR(TH_A, S));
-    const pb = polar(TH_B, this.memR(TH_B, S));
-    const pc = polar(TH_C, this.memR(TH_C, S));
+    const pa = polar(TH_A, this.memR(TH_A, S)), pb = polar(TH_B, this.memR(TH_B, S)), pc = polar(TH_C, this.memR(TH_C, S));
     const L = S.newOut;
-    const N = 54;
+    const N0 = 50, N = N0 + 34; const base = ctx.globalAlpha;
     for (let i = 0; i < N; i++) {
+      const extra = i >= N0; const va = extra ? L : 1; // more passes through once reorganised
+      if (va <= 0.01) continue;
       const toB = i % 2 === 0;
-      const exitP = L > 0 ? (toB ? pb : pc) : pa;
-      const exitTh = L > 0 ? (toB ? TH_B : TH_C) : TH_A;
+      const exitP = L > 0.5 ? (toB ? pb : pc) : pa, exitTh = L > 0.5 ? (toB ? TH_B : TH_C) : TH_A;
+      const via = L > 0.5 ? S4 : lerpV(STEP[2], pa, 0.55);
       const nodes: V[] = [
-        [-1.3, 0.02 + ((i * 53) % 17 - 8) / 34], [pin[0] - 0.12, pin[1] + ((i * 29) % 7 - 3) / 90], pin, STEP[0], STEP[1], STEP[2],
-        lerpV(lerpV(STEP[2], pa, 0.5), S4, L), lerpV(pa, exitP, L),
-        lerpV(polar(TH_A, 1.3), polar(exitTh, 1.3), L),
+        [-1.3, 0.075 + ((i * 53) % 17 - 8) / 34], [pin[0] - 0.12, pin[1] + ((i * 29) % 7 - 3) / 90], pin, STEP[0], STEP[1], STEP[2],
+        via, exitP, polar(exitTh, 1.3),
       ];
-      nodes[nodes.length - 1][1] += ((i * 31) % 13 - 6) / 40;
-      // path time weights (outside legs quick, steps linger)
-      const u = (((this.phase * 0.035 + i / N) % 1) + 1) % 1;
+      nodes[8][1] += ((i * 31) % 13 - 6) / 40;
+      const u = (((this.phase * 0.035 + i / (extra ? N - N0 : N0) + (extra ? 0.013 : 0)) % 1) + 1) % 1;
       const segs = nodes.length - 1;
       const f = u * segs; const k = Math.min(segs - 1, Math.floor(f)); let q = f - k;
-      q = q - Math.sin(q * TAU) / TAU * 0.85; // linger at nodes
+      q = q - Math.sin(q * TAU) / TAU * 0.85;
       const a = nodes[k], b = nodes[k + 1];
-      const jit = Math.sin(i * 12.9 + this.t * 1.3) * (k <= 1 || k >= 7 ? 0.05 : 0.02);
+      const jit = Math.sin(i * 12.9 + this.t * 1.3) * (k <= 1 || k >= 7 ? 0.05 : 0.018);
       const dx = b[0] - a[0], dy = b[1] - a[1]; const Ld = Math.hypot(dx, dy) || 1;
       const x = lerp(a[0], b[0], q) - (dy / Ld) * jit, y = lerp(a[1], b[1], q) + (dx / Ld) * jit;
-      // appearance by stage
-      if (k <= 2) {
-        ctx.beginPath(); ctx.arc(x, y, px * 3.6, 0, TAU); ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.ink, 0.8); ctx.stroke();
-      } else if (k <= 5) {
-        ctx.beginPath(); ctx.arc(x, y, px * (2.4 + (k - 3) * 0.7), 0, TAU); ctx.fillStyle = rgba(P.ink, 0.85); ctx.fill();
-      } else {
-        const isNew = L > 0.5;
-        const col = isNew ? P.eosin : P.ink;
-        if (isNew && !toB) {
-          // output C: a pair
-          ctx.beginPath(); ctx.arc(x - px * 3, y, px * 2.6, 0, TAU); ctx.arc(x + px * 3, y, px * 2.6, 0, TAU); ctx.fillStyle = rgba(col, 0.9); ctx.fill();
-        } else {
-          ctx.beginPath(); ctx.arc(x, y, px * 5.5, 0, TAU); ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(col, 0.9); ctx.stroke();
-          ctx.beginPath(); ctx.arc(x, y, px * 2.4, 0, TAU); ctx.fillStyle = rgba(col, 0.9); ctx.fill();
+      ctx.globalAlpha = va * base;
+      if (k <= 2) { ctx.beginPath(); ctx.arc(x, y, px * 3.4, 0, TAU); ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.ink, 0.8); ctx.stroke(); }
+      else if (k <= 5) { ctx.beginPath(); ctx.arc(x, y, px * (2.4 + (k - 3) * 0.7), 0, TAU); ctx.fillStyle = rgba(P.ink, 0.85); ctx.fill(); }
+      else {
+        const isNew = L > 0.5; const col = isNew ? P.accent : P.ink;
+        if (isNew && !toB) { ctx.beginPath(); ctx.arc(x - px * 3, y, px * 2.6, 0, TAU); ctx.arc(x + px * 3, y, px * 2.6, 0, TAU); ctx.fillStyle = rgba(col, 0.9); ctx.fill(); }
+        else {
+          ctx.beginPath(); ctx.arc(x, y, px * 5.2, 0, TAU); ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(col, 0.9); ctx.stroke();
+          ctx.beginPath(); ctx.arc(x, y, px * 2.3, 0, TAU); ctx.fillStyle = rgba(col, 0.9); ctx.fill();
         }
       }
     }
+    ctx.globalAlpha = base;
   }
 
-  drawPerson(p: V, r: number, px: number, i: number) {
-    const { ctx, P } = this; const t = this.t;
-    const pts: V[] = [];
-    for (let j = 0; j < 36; j++) { const th = (j / 36) * TAU; const rr = r * (1 + 0.06 * Math.sin(3 * th + t * 1.1 + i * 2) + 0.04 * Math.sin(2 * th - t * 0.7 + i)); pts.push([p[0] + Math.cos(th) * rr, p[1] + Math.sin(th) * rr]); }
-    ctx.beginPath(); smoothClosed(ctx, pts);
-    ctx.fillStyle = rgba(this.P.paper, 0.92); ctx.fill();
-    ctx.fillStyle = rgba(P.haem, 0.12); ctx.fill();
-    ctx.lineWidth = px * 1.2; ctx.strokeStyle = rgba(P.ink, 0.9); ctx.stroke();
-    // nucleus: a small stippled disc
-    const R = rng(90 + i);
-    ctx.fillStyle = rgba(P.haem, 0.95);
-    for (let q = 0; q < 22; q++) { const a = R() * TAU, d = Math.sqrt(R()) * r * 0.42; ctx.fillRect(p[0] + Math.cos(a) * d - px, p[1] - r * 0.08 + Math.sin(a) * d - px, px * 2, px * 2); }
+  /** a person: head and shoulders, in ink */
+  drawPerson(p: V, px: number) {
+    const { ctx, P } = this;
+    const hx = p[0], hy = p[1] - 0.03;
+    ctx.beginPath(); ctx.ellipse(p[0], p[1] + 0.045, 0.052, 0.042, 0, Math.PI, TAU); ctx.closePath();
+    ctx.fillStyle = rgba(P.paper, 0.95); ctx.fill(); ctx.lineWidth = px * 1.3; ctx.strokeStyle = rgba(P.ink, 0.95); ctx.stroke();
+    ctx.beginPath(); ctx.arc(hx, hy, 0.024, 0, TAU);
+    ctx.fillStyle = rgba(P.paper, 0.95); ctx.fill(); ctx.stroke();
   }
 
-  drawAgents(S: ReturnType<Specimen['st']>, px: number, occ: ReturnType<Specimen['occupants']>) {
+  /** agents: solid seeds */
+  drawAgents(S: St, px: number, occ: ReturnType<Specimen['occupants']>) {
     const { ctx, P } = this; const t = this.t;
     for (const [i, ag] of occ.agent.entries()) {
       if (ag.a <= 0.01) continue;
-      const [x, y] = ag.p;
-      ctx.save(); ctx.translate(x, y); ctx.rotate(ag.ang + Math.sin(t * 1.3 + i) * 0.06);
-      const rx = 0.066, ry = 0.034;
-      // tail (flagellum)
-      if (ag.tail > 0.02) {
-        ctx.beginPath();
-        for (let j = 0; j <= 20; j++) { const u = j / 20; const xx = -rx - u * 0.1 * ag.tail; const yy = Math.sin(u * 9 - t * 9) * 0.012 * u; j ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); }
-        ctx.lineWidth = px * 1.1; ctx.strokeStyle = rgba(P.eosin, 0.9 * ag.a); ctx.stroke();
-      }
-      // body: a capsule with folded inner membrane
-      ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, TAU);
-      ctx.fillStyle = rgba(P.paper, 0.9 * ag.a); ctx.fill();
-      ctx.fillStyle = rgba(P.eosin, 0.2 * ag.a); ctx.fill();
-      ctx.lineWidth = px * 1.4; ctx.strokeStyle = rgba(P.eosin, ag.a); ctx.stroke();
-      ctx.beginPath();
-      for (let j = 0; j <= 10; j++) { const xx = -rx * 0.72 + (j / 10) * rx * 1.44; const yy = (j % 2 ? 1 : -1) * ry * 0.55; j ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); }
-      ctx.lineWidth = px * 0.9; ctx.strokeStyle = rgba(P.eosin, 0.8 * ag.a); ctx.stroke();
-      ctx.restore();
+      const [x, y] = ag.p; const pulse = 1 + 0.08 * Math.sin(t * 2.4 + i);
+      ctx.beginPath(); ctx.arc(x, y, 0.05 * pulse, 0, TAU); ctx.lineWidth = px; ctx.strokeStyle = rgba(P.accent, 0.5 * ag.a); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, 0.03, 0, TAU); ctx.fillStyle = rgba(P.accent, ag.a); ctx.fill();
     }
   }
 
-  // ── labels (drawn in screen space, allowed outside the aperture like a plate's annotations) ──
-  drawLabels(S: ReturnType<Specimen['st']>, s: number) {
-    const { ctx, P, dpr } = this;
-    const win = (k: number) => ss(k - 1 + 0.06, k - 1 + 0.2, s) * (1 - ss(k - 0.03, k + 0.1, s));
+  // ── labels: letter keys (figures) and words (hero), laid out in screen space, kept inside the aperture ──
+  labels(S: St, s: number, out: Label[]) {
+    const win = (k: number) => ss(k - 1 + 0.04, k - 1 + 0.16, s) * (1 - ss(k - 0.02, k + 0.06, s));
     const occ = this.occupants(S);
     const O = polar(TH_O, this.memR(TH_O, S));
-    const strandMid = (to: V): V => [lerp(NUC[0], to[0], 0.55) + 0.02, lerp(NUC[1] + RN, to[1] - 0.075, 0.55)];
-    const exitB = polar(TH_B, this.memR(TH_B, S) + 0.16), exitC = polar(TH_C, this.memR(TH_C, S) + 0.16);
+    const strandMid = (to: V): V => [lerp(NUC[0], to[0], 0.55) + 0.01, lerp(NUC[1] + RN, to[1] - 0.07, 0.55)];
     const sel = S.explore > 0 ? this.filamentPath(SEL, S, occ.agent[0].p) : null;
     const alt = S.explore > 0 ? this.filamentPath(1, S, occ.agent[0].p) : null;
-    const loopP = this.loopPath(S)[Math.round(160 * ((TAU - 1.25) / TAU))];
-    const m = this.mobile ? 0.72 : 1;
-    const L: [string, V, number, number, number][] = [
-      ['inputs', [-0.93, 0.02], 26, -64, win(1) + win(2) * (1 - S.engulf)],
-      ['people', add(occ.people[0], [0, -0.07]), -26, -38, win(1)],
-      ['coordination', [NUC[0] + RN, NUC[1] - 0.02], 30, -12, win(1)],
-      ['plan', strandMid(STEP[2]), 34, 0, win(1)],
-      ['output A', [0.93, 0.18], 4, 34, win(1)],
-      ['agent', add(occ.agent[0].p, [0, -0.04]), -6, -34, win(2)],
-      ['plan', strandMid(STEP[1]), 30, 4, win(2) * S.plan2],
-      ['objective', O, 20, 30, win(3) * S.obj],
-      ['alternatives', alt ? alt[alt.length - 1] : [0, 0], -54, -26, win(3) * S.explore * (1 - S.select * 0.8)],
-      ['selected plan', sel ? sel[10] : [0, 0], 30, -4, win(3) * S.select],
-      ['coordination', MESH_N[5], -46, -30, win(4) * S.mesh],
-      ['agents', add(occ.agent[3]?.p ?? S4, [0.03, -0.03]), 26, -26, win(4) * S.divide],
-      ['people', add(occ.people[1], [0, 0.07]), -30, 30, win(4) * S.out],
-      ['feedback loop', loopP, 30, -26, win(4) * S.loop],
-      ['output B', exitB, 12, -20, win(4) * S.newOut],
-      ['output C', exitC, 26, 8, win(4) * S.newOut],
+    const loopP = this.loopPath(S)[Math.round(180 * ((TAU - 1.25) / TAU))];
+    const exitB = polar(TH_B, this.memR(TH_B, S) + 0.1), exitC = polar(TH_C, this.memR(TH_C, S) + 0.1);
+    const hero = S.hero * (this.plate == null ? 1 : 0);
+    // [id, text, key?, anchor, direction (deg), alpha]
+    const L: [string, string, boolean, V, number, number][] = [
+      ['h-in', 'inputs', false, [-0.88, 0.075], -90, hero],
+      ['h-firm', 'firm', false, polar(-2.35, this.memR(-2.35, S)), -135, hero],
+      ['h-out', 'output A', false, [0.86, 0.19], 90, hero],
+      ['1a', 'a', true, [-0.88, 0.075], -90, win(1)],
+      ['1b', 'b', true, add(occ.people[0], [-0.04, -0.06]), -135, win(1)],
+      ['1c', 'c', true, [NUC[0] + RN * 0.8, NUC[1] - RN * 0.6], -45, win(1)],
+      ['1d', 'd', true, strandMid(STEP[2]), 0, win(1)],
+      ['1e', 'e', true, [0.86, 0.19], 90, win(1)],
+      ['2a', 'a', true, [-0.9, -0.02], -90, win(2) * (1 - S.ride)],
+      ['2b', 'b', true, occ.agent[0].p, -120, win(2)],
+      ['2c', 'c', true, strandMid(STEP[1]), 20, win(2)],
+      ['3a', 'a', true, O, 60, win(3) * S.obj],
+      ['3b', 'b', true, alt ? alt[alt.length - 1] : [0, 0], -120, win(3) * S.explore * (1 - S.select * 0.8)],
+      ['3c', 'c', true, sel ? sel[9] : [0, 0], 20, win(3) * S.select],
+      ['4a', 'a', true, MESH_N[5], -150, win(4) * S.mesh],
+      ['4b', 'b', true, occ.agent[3]?.p ?? S4, -60, win(4) * S.divide],
+      ['4c', 'c', true, add(occ.people[1], [0, 0.05]), 120, win(4) * S.out],
+      ['4d', 'd', true, loopP, -60, win(4) * S.loop],
+      ['4e', 'e', true, exitB, -70, win(4) * S.newOut],
+      ['4f', 'f', true, exitC, -15, win(4) * S.newOut],
     ];
-    if (this.plate != null) L.forEach((l) => (l[4] = 0));
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.font = `italic 380 ${this.mobile ? 12.5 : 15}px "Fraunces Variable", Georgia, serif`;
-    ctx.textBaseline = 'middle';
-    for (const [text, anchor, dx0, dy0, a] of L) {
-      if (a <= 0.01) continue;
+    const m = this.mobile ? 0.8 : 1;
+    for (const [id, text, key, anchor, deg, a] of L) {
       const [ax, ay] = this.toScreen(anchor);
-      const dx = dx0 * m, dy = dy0 * m;
-      const tx = ax + dx, ty = ay + dy;
-      ctx.globalAlpha = a;
-      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(tx - Math.sign(dx) * 3, ty);
-      ctx.lineWidth = 0.75; ctx.strokeStyle = rgba(P.ink2, 0.9); ctx.stroke();
-      ctx.beginPath(); ctx.arc(ax, ay, 1.6, 0, TAU); ctx.fillStyle = rgba(P.ink, 1); ctx.fill();
-      const tw = ctx.measureText(text).width;
-      let left = dx < 0;
-      if (!left && tx + 3 + tw > this.w - 8) left = true; else if (left && tx - 3 - tw < 8) left = false;
-      ctx.textAlign = left ? 'right' : 'left';
-      let lx = tx + (left ? -3 : 3);
-      lx = left ? Math.max(tw + 8, Math.min(this.w - 8, lx)) : Math.min(this.w - 8 - tw, Math.max(8, lx));
-      ctx.lineWidth = 4; ctx.strokeStyle = rgba(P.paper, 0.9); ctx.lineJoin = 'round'; ctx.strokeText(text, lx, ty);
-      ctx.fillStyle = rgba(P.ink, 1); ctx.fillText(text, lx, ty);
+      const d = (key ? 30 : 36) * m, r = (deg * Math.PI) / 180;
+      let x = ax + Math.cos(r) * d, y = ay + Math.sin(r) * d;
+      // keep inside the aperture
+      const dx = x - this.cx, dy = y - this.cy, dist = Math.hypot(dx, dy), lim = this.R - (key ? 18 : 26);
+      if (dist > lim) { x = this.cx + (dx / dist) * lim; y = this.cy + (dy / dist) * lim; }
+      out.push({ id, text, key, x, y, ax, ay, a: clamp(a) });
+    }
+  }
+  drawLeaders(labels: Label[]) {
+    const { ctx, P } = this;
+    for (const l of labels) {
+      if (l.a <= 0.01) continue;
+      const dx = l.x - l.ax, dy = l.y - l.ay, d = Math.hypot(dx, dy) || 1, stop = l.key ? 11 : 6;
+      ctx.globalAlpha = l.a;
+      ctx.beginPath(); ctx.moveTo(l.ax, l.ay); ctx.lineTo(l.x - (dx / d) * stop, l.y - (dy / d) * stop);
+      ctx.lineWidth = 0.8; ctx.strokeStyle = rgba(P.ink2, 0.9); ctx.stroke();
+      ctx.beginPath(); ctx.arc(l.ax, l.ay, 1.8, 0, TAU); ctx.fillStyle = rgba(P.ink, 1); ctx.fill();
       ctx.globalAlpha = 1;
     }
   }

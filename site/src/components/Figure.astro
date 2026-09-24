@@ -37,28 +37,27 @@ if (kind === 'gap' || kind === 'curve') {
 }
 
 if (kind === 'dissolve') {
-  const cols = 14, rows = 7, cw = (W - 40) / cols, ch = (H - 60) / rows, ox = 20, oy = 20;
-  let grid = '', net = '';
-  for (let j = 0; j <= rows; j++) for (let i = 0; i < cols; i++) {
-    const t = Math.min(1, Math.max(0, i / cols + (rnd() - 0.5) * 0.25));
-    grid += `<path d="M${ox + i * cw} ${oy + j * ch} h${cw}" class="fig-lattice" data-t="${t.toFixed(3)}"/>`;
+  // a row of firms, left to right: each old firm (a ring issuing plans to three steps) gives way to a mesh
+  // with agents at its nodes. Walls are soft closed curves, not a grid.
+  const n = 7, cw = (W - 40) / n;
+  const wall = (cx: number, cy: number, rx: number, ry: number, sd: number) => {
+    let d = ''; const m = 48;
+    for (let i = 0; i <= m; i++) { const t = (i / m) * Math.PI * 2; const w = 1 + 0.05 * Math.sin(3 * t + sd) + 0.03 * Math.sin(5 * t - sd); d += `${i ? 'L' : 'M'}${(cx + Math.cos(t) * rx * w).toFixed(1)} ${(cy + Math.sin(t) * ry * w).toFixed(1)}`; }
+    return d + 'Z';
+  };
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1); const cx = 20 + cw * (i + 0.5), cy = 128 + (rnd() - 0.5) * 16;
+    const rx = cw * 0.46, ry = 86 + (rnd() - 0.5) * 12;
+    body += `<path d="${wall(cx, cy, rx, ry, i)}" class="fig-wall${t > 0.45 ? ' -on' : ''}"/>`;
+    if (t <= 0.45) {
+      body += `<circle cx="${cx}" cy="${cy - 30}" r="11" class="fig-ring"/>` + [-1, 0, 1].map((k) => `<path d="M${cx} ${cy - 19} Q${cx + k * 10} ${cy} ${cx + k * 22} ${cy + 18}" class="fig-strand"/><circle cx="${cx + k * 22}" cy="${cy + 24}" r="4" class="fig-dot"/>`).join('');
+    } else {
+      const pts: [number, number][] = Array.from({ length: 7 }, () => [cx + (rnd() - 0.5) * rx * 1.3, cy + (rnd() - 0.5) * ry * 1.3]);
+      pts.forEach((p, k) => { const q = pts[(k + 1) % pts.length], r2 = pts[(k + 3) % pts.length]; body += `<path d="M${p[0].toFixed(1)} ${p[1].toFixed(1)} Q${cx} ${cy} ${q[0].toFixed(1)} ${q[1].toFixed(1)} M${p[0].toFixed(1)} ${p[1].toFixed(1)} L${r2[0].toFixed(1)} ${r2[1].toFixed(1)}" class="fig-net"/>`; });
+      pts.forEach((p, k) => { body += k % 3 === 0 ? `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" class="fig-node"/>` : `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" class="fig-junction"/>`; });
+    }
   }
-  for (let j = 0; j < rows; j++) for (let i = 0; i <= cols; i++) {
-    const t = Math.min(1, Math.max(0, i / cols + (rnd() - 0.5) * 0.25));
-    grid += `<path d="M${ox + i * cw} ${oy + j * ch} v${ch}" class="fig-lattice" data-t="${t.toFixed(3)}"/>`;
-  }
-  // new network: a branching walk from the left edge
-  const pts: Array<[number, number, number]> = [];
-  for (let k = 0; k < 70; k++) { const x = ox + rnd() * (W - 40), y = oy + rnd() * (H - 60); pts.push([x, y, (x - ox) / (W - 40)]); }
-  pts.sort((a, b) => a[0] - b[0]);
-  pts.forEach((p, i) => {
-    if (!i) return;
-    let best = 0, bd = 1e9;
-    for (let m = 0; m < i; m++) { const d = Math.hypot(pts[m][0] - p[0], pts[m][1] - p[1]); if (d < bd) { bd = d; best = m; } }
-    net += `<path d="M${pts[best][0].toFixed(1)} ${pts[best][1].toFixed(1)} L${p[0].toFixed(1)} ${p[1].toFixed(1)}" class="fig-net" pathLength="1" data-t="${p[2].toFixed(3)}"/>`;
-    net += `<rect x="${(p[0] - 2).toFixed(1)}" y="${(p[1] - 2).toFixed(1)}" width="4" height="4" class="fig-node" data-t="${p[2].toFixed(3)}"/>`;
-  });
-  body = grid + net + `<text x="${ox}" y="${H - 14}" class="fig-label -muted">old structure</text><text x="${W - 150}" y="${H - 14}" class="fig-label">new structure</text>`;
+  body += `<text x="${20}" y="${H - 8}" class="fig-label -muted">coordination issuing plans</text><text x="${W - 16}" y="${H - 8}" class="fig-label" text-anchor="end">coordination as a mesh</text>`;
 }
 
 if (kind === 'org') {
@@ -70,7 +69,7 @@ if (kind === 'org') {
     for (let i = 0; i < months; i++) {
       const t = i / months; const p = logistic(t, lag[j] + 0.18, 7 + j) * (0.85 + rnd() * 0.3);
       const on = p > 0.5, part = p > 0.18;
-      row += `<rect x="${(80 + i * cw).toFixed(1)}" y="${(20 + j * ch).toFixed(1)}" width="${(cw - 2).toFixed(1)}" height="${(ch - 3).toFixed(1)}" class="fig-cell ${on ? '-on' : part ? '-part' : ''}" data-t="${t.toFixed(3)}"/>`;
+      row += `<circle cx="${(80 + i * cw + cw / 2).toFixed(1)}" cy="${(20 + j * ch + ch / 2).toFixed(1)}" r="${(Math.min(cw, ch) * (on ? 0.4 : part ? 0.3 : 0.22)).toFixed(1)}" class="fig-cell ${on ? '-on' : part ? '-part' : ''}" data-t="${t.toFixed(3)}"/>`;
     }
     return row;
   }).join('') + `<text x="80" y="${H - 12}" class="fig-label -muted">month 1</text><text x="${W - 70}" y="${H - 12}" class="fig-label -muted">month 24</text>`;

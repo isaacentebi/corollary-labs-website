@@ -1,38 +1,29 @@
 ---
-// Team: one cell per person. Placeholders until names, roles and portraits are chosen.
+// Team: a plain portrait frame per person. Placeholders until names, roles and portraits are chosen.
 import Base from '../layouts/Base.astro';
 import { site } from '../config/site';
-import { blob, stipple } from '../lib/blob';
 import '../styles/pages.css';
 
-const people = Array.from({ length: 4 }, (_, i) => ({
-  name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]',
-  wall: blob(101 + i * 17, 50, 50, 45, 0.08), wall2: blob(101 + i * 17, 50, 50, 41.5, 0.08),
-  nuc: stipple(300 + i, 50 + (i % 2 ? 4 : -5), 46 + (i % 3) * 3, 11, 60, 0.75),
-}));
+const people = Array.from({ length: 4 }, () => ({ name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]' }));
 ---
 <Base page="team" title="Team" description={`The team at ${site.name}.`}>
   <article class="page team" aria-labelledby="team-title">
-    <p class="page__kicker t-label" data-reveal>Draft, placeholders in brackets</p>
     <h1 class="page__title t-display" id="team-title" data-reveal>Team</h1>
     <p class="about__statement" data-reveal style="max-width: 22em; margin-top: 24px;"><span class="ph">[Placeholder — one sentence on who works at {site.name}.]</span></p>
     <ol class="people">
       {people.map((p, i) => (
         <li class="person" data-reveal style={`--rd:${i * 0.1}s`}>
-          <svg class="person__cell" viewBox="0 0 100 100" aria-hidden="true">
-            <g class="s-spin"><path class="wall" d={p.wall} /><path class="wall2" d={p.wall2} /><g class="nuc" set:html={p.nuc} /></g>
-            <text x="50" y="80" text-anchor="middle">[portrait]</text>
-          </svg>
+          <div class="person__frame" aria-hidden="true"><span>[portrait]</span></div>
           <p class="person__name t-title ph">{p.name}</p>
           <span class="person__role t-label ph">{p.role}</span>
           <p class="person__line">{p.line}</p>
         </li>
       ))}
     </ol>
-    <section class="label-card" aria-label="Joining" data-reveal>
+    <section class="label" aria-label="Joining" data-reveal>
       <dl>
-        <div><dt class="t-label">Join</dt><dd class="ph">[Placeholder — how to get in touch about working here.]</dd></div>
-        <div><dt class="t-label">Contact</dt><dd><a class="link-u" href={`mailto:${site.email}`}>{site.email}</a></dd></div>
+        <div><dt>Join</dt><dd class="ph">[Placeholder — how to get in touch about working here.]</dd></div>
+        <div><dt>Contact</dt><dd><a class="link-u" href={`mailto:${site.email}`}>{site.email}</a></dd></div>
       </dl>
     </section>
   </article>

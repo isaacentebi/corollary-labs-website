@@ -2,19 +2,19 @@
 // Navigation: the mark (a limaçon) in the corner. Pressed, it divides into one cell per page.
 import { nav, site, u } from '../config/site';
 import { limacon } from '../lib/mark';
-import { blob, stipple, hash } from '../lib/blob';
+import { blob, hash } from '../lib/blob';
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isCur = (h: string) => { const hh = h.replace(/\/$/, '') || '/'; return hh === path || (hh !== u('').replace(/\/$/, '') && path.startsWith(hh)); };
 const cells = nav.map((n, i) => {
   const s = hash(n.label);
-  return { ...n, i, wall: blob(s, 50, 50, 46, 0.07), wall2: blob(s, 50, 50, 42.5, 0.07), nuc: stipple(s + 1, 50 + ((s % 7) - 3), 36, 7, 26, 1.05) };
+  return { ...n, i, wall: blob(s, 50, 50, 46, 0.07), wall2: blob(s, 50, 50, 42.5, 0.07), rx: 50 + ((s % 7) - 3), ry: 34 };
 });
 ---
 <div class="nav" data-nav>
   <button class="nav__btn" type="button" aria-expanded="false" aria-controls="menu" data-nav-btn>
-    <svg class="nav__mark" viewBox="0 0 32 32" aria-hidden="true"><path d={limacon(1.6, 1, 220, 32, 3)} data-mark /></svg>
-    <span class="nav__name">{site.name}</span>
-    <span class="u-sr">Menu</span>
+    <svg class="nav__mark" viewBox="0 0 32 32" aria-hidden="true"><path d={limacon(2, 1, 240, 32, 2.5)} data-mark /></svg>
+    <span class="nav__name"><span class="-name">{site.name}</span><span class="-close" aria-hidden="true">Close</span></span>
+    <span class="u-sr" data-nav-sr>Open menu</span>
   </button>
 </div>
 <nav class="menu" id="menu" aria-label="Site" data-menu>
@@ -23,7 +23,7 @@ const cells = nav.map((n, i) => {
     {cells.map((c) => (
       <li>
         <a class="menu__cell" href={c.href} style={`--i:${c.i}`} aria-current={isCur(c.href) ? 'page' : undefined} tabindex="-1">
-          <svg viewBox="0 0 100 100" aria-hidden="true"><path class="wall" d={c.wall} /><path class="wall2" d={c.wall2} /><g class="nuc" set:html={c.nuc} /></svg>
+          <svg viewBox="0 0 100 100" aria-hidden="true"><path class="wall" d={c.wall} /><path class="wall2" d={c.wall2} /><circle class="ring" cx={c.rx} cy={c.ry} r="6.5" /><circle class="seed" cx={c.rx} cy={c.ry} r="3" /></svg>
           <span>{c.label}</span>
         </a>
       </li>

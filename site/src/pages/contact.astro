@@ -6,14 +6,13 @@ import '../styles/pages.css';
 ---
 <Base page="contact" title="Contact" description={`Contact ${site.name}.`}>
   <article class="page contact" aria-labelledby="contact-title">
-    <p class="page__kicker t-label" data-reveal>Draft, placeholders in brackets</p>
     <div class="contact__grid">
       <div>
         <h1 class="page__title t-display" id="contact-title" data-reveal>Contact</h1>
         <a class="contact__mail link-u" href={`mailto:${site.email}`} data-reveal style="--rd:0.1s">{site.email}</a>
-        <dl class="contact__rows" data-reveal style="--rd:0.2s">
-          <div><dt class="t-label">Location</dt><dd class="ph">[City]</dd></div>
-          <div><dt class="t-label">Press</dt><dd class="ph">[Placeholder — press contact]</dd></div>
+        <dl class="label contact__label" data-reveal style="--rd:0.2s">
+          <div><dt>Location</dt><dd class="ph">[City]</dd></div>
+          <div><dt>Press</dt><dd class="ph">[Placeholder — press contact]</dd></div>
         </dl>
       </div>
       <figure class="plate" data-reveal style="--rd:0.15s">

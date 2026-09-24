@@ -23,12 +23,12 @@ export function rng(seed: number) {
 }
 
 export type RGB = [number, number, number];
-export interface Palette { paper: RGB; paper3: RGB; ink: RGB; ink2: RGB; ink3: RGB; eosin: RGB; eosin2: RGB; haem: RGB }
+export interface Palette { paper: RGB; paper3: RGB; ink: RGB; ink2: RGB; ink3: RGB; accent: RGB; accent2: RGB; body: RGB }
 const hex = (h: string): RGB => { const s = h.trim().replace('#', ''); const n = parseInt(s.length === 3 ? s.split('').map((c) => c + c).join('') : s, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 export function palette(): Palette {
   const cs = getComputedStyle(document.documentElement);
   const g = (v: string, f: string) => hex(cs.getPropertyValue(v) || f);
-  return { paper: g('--paper', '#f4eee7'), paper3: g('--paper-3', '#e2d5ca'), ink: g('--ink', '#221b33'), ink2: g('--ink-2', '#554c68'), ink3: g('--ink-3', '#978ca4'), eosin: g('--eosin', '#c33d68'), eosin2: g('--eosin-2', '#e6a2b5'), haem: [74, 63, 134] };
+  return { paper: g('--paper', '#f2ede3'), paper3: g('--paper-3', '#ddd4c2'), ink: g('--ink', '#25221c'), ink2: g('--ink-2', '#585246'), ink3: g('--ink-3', '#9a9384'), accent: g('--accent', '#a66d1a'), accent2: g('--accent-2', '#e2c48e'), body: [118, 104, 82] };
 }
 export const rgba = (c: RGB, a: number) => `rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(3)})`;
 export const mixc = (a: RGB, b: RGB, t: number): RGB => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];

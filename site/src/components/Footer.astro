@@ -15,6 +15,7 @@ const cur = (h: string) => ((h.replace(/\/$/, '') || '/') === path ? 'page' : un
     <p class="foot__big t-display" aria-hidden="true">{site.name}</p>
     <div class="foot__meta">
       <a class="link-u" href={`mailto:${site.email}`}>{site.email}</a>
+      <span class="ph">Draft, placeholders in brackets</span>
       <span>©{site.year} {site.name}</span>
       <a class="link-u" href="#top" data-to-top>Back to top</a>
     </div>

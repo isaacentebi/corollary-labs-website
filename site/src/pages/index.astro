@@ -1,20 +1,23 @@
 ---
-// Home: one firm under the aperture, read like a sequence of figure legends.
-// Left: the name, then five legends that scroll. Right (top on phones): the specimen, sticky, driven by scroll.
+// Home: one firm under the aperture, read as a plate with five legends.
+// The specimen is sticky; the legends scroll beside it (left for figs 1–3, right for 4–5, below it on phones).
+// Letters on the drawing (a, b, c…) are the keys listed under each legend.
 import Base from '../layouts/Base.astro';
 import { site, figs } from '../config/site';
 import '../styles/home.css';
+const L = 'abcdefghij'; // key letters
 ---
 <Base page="home">
   <section class="home" data-home aria-labelledby="home-title">
     <div class="stage" data-stage>
       <canvas class="stage__canvas" data-specimen role="img"
         aria-label={`Five drawings of a firm as a living cell. ${figs.map((f, i) => `Figure ${i + 1}, ${f.title}: ${f.legend}`).join(' ')}`}></canvas>
+      <div class="keys" data-keys aria-hidden="true"></div>
     </div>
 
     <div class="flow">
       <header class="block hero" data-block="0">
-        <h1 class="hero__name t-display" id="home-title" data-hero-name>
+        <h1 class="hero__name t-display" id="home-title">
           <span>Corollary</span> <span>Labs</span>
         </h1>
         <p class="hero__statement">
@@ -24,14 +27,16 @@ import '../styles/home.css';
       </header>
 
       {figs.map((f, i) => (
-        <article class:list={['block', 'fig', { '-last': i === figs.length - 1 }]} data-block={i + 1} aria-labelledby={`fig-${i + 1}`}>
-          <div class="fig__card">
-            <p class="fig__n t-label">Figure {i + 1} <span aria-hidden="true">of {figs.length}</span></p>
-            <h2 class="fig__title t-title" id={`fig-${i + 1}`}>{f.title}</h2>
-            <p class="fig__legend">{f.legend}</p>
-            <ol class="fig__dots" aria-hidden="true">
-              {figs.map((_, j) => <li class:list={{ on: j === i, done: j < i }}></li>)}
-            </ol>
+        <article class:list={['block', 'fig', { '-right': f.side === 'right', '-last': i === figs.length - 1 }]} data-block={i + 1} aria-labelledby={`fig-${i + 1}`}>
+          <div class="legend" data-legend={i + 1}>
+            <p class="legend__n">Fig. {i + 1}</p>
+            <h2 class="legend__title t-title" id={`fig-${i + 1}`}>{f.title}</h2>
+            <p class="legend__text">{f.legend}</p>
+            {f.keys.length > 0 && (
+              <ul class="legend__keys">
+                {f.keys.map((k, j) => <li><i>{L[j]}</i> {k}</li>)}
+              </ul>
+            )}
           </div>
         </article>
       ))}

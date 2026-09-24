@@ -1,21 +1,22 @@
-/* Home: sticky specimen stage + a column of figure legends.
-   The aperture geometry is mirrored in scripts/home.ts (layout()). Keep them in sync. */
+/* Home: sticky specimen stage + legends set directly on the paper, like the legend of a plate.
+   Aperture geometry mirrors homeLayout() in scripts/home.ts. Keep them in sync. */
 .home {
-  --ap-r: min(42svh, 29vw);           /* aperture radius (desktop) */
+  --ap-r: min(42svh, 29vw);
   --ap-cx: 66.5vw;
-  --col: calc(var(--ap-cx) - var(--ap-r) - var(--gutter) - 28px);
+  --col: calc(var(--ap-cx) - var(--ap-r) - var(--gutter) - 56px);
+  --right-x: calc(36vw + min(45svh, 31vw) + 56px);
   position: relative;
 }
 .stage { position: sticky; top: 0; height: 100svh; width: 100%; z-index: 1; }
 .stage__canvas { width: 100%; height: 100%; touch-action: pan-y; }
 .flow { position: relative; z-index: 2; margin-top: -100svh; pointer-events: none; }
-.flow a, .flow button, .fig__card { pointer-events: auto; }
 
 .block { position: relative; padding-left: var(--gutter); width: calc(var(--col) + var(--gutter)); }
+.block.-right { margin-left: var(--right-x); padding-left: 0; width: calc(100vw - var(--right-x) - var(--gutter)); }
 
 /* hero */
 .hero { min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 11svh; }
-.hero__name { font-size: clamp(60px, 8.4vw, 168px); margin-left: -0.04em; width: max-content; pointer-events: none; }
+.hero__name { font-size: clamp(60px, 8.4vw, 168px); margin-left: -0.04em; width: max-content; }
 .hero__name span { display: block; }
 .hero__name span + span { padding-left: 0.62em; }
 html.js:not(.rm) .hero__name span { animation: rise 1.6s var(--spring) both; }
@@ -26,44 +27,52 @@ html.js:not(.rm) .hero__statement, html.js:not(.rm) .hero__cue { animation: fade
 .hero__statement { margin-top: clamp(22px, 3vw, 40px); max-width: 25em; font-size: var(--fs-body); line-height: 1.42; }
 .hero__cue { margin-top: clamp(28px, 5svh, 56px); display: flex; align-items: center; gap: 10px; }
 .hero__cue-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--ink); animation: cue 2.4s var(--soft) infinite; }
-@keyframes cue { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(6px) scale(0.8); background: var(--eosin); border-color: var(--eosin); } }
+@keyframes cue { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(6px) scale(0.8); background: var(--accent); border-color: var(--accent); } }
 
-/* figure legends */
-.fig { min-height: 165svh; }
-.fig.-last { min-height: 150svh; }
-.fig__card {
-  position: sticky; top: 26svh; max-width: 30em;
-  padding: 26px 28px 24px; border-radius: 30px; border: 1px solid var(--rule);
-  background: color-mix(in srgb, var(--paper) 84%, transparent);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-}
-.fig__n { display: block; margin-bottom: 14px; }
-.fig__n span { color: var(--ink-3); }
-.fig__title { font-size: clamp(34px, 3.3vw, 54px); }
-.fig__legend { margin-top: 16px; font-size: var(--fs-body); line-height: 1.45; color: var(--ink); }
-.fig__dots { display: flex; gap: 8px; margin-top: 22px; }
-.fig__dots li { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--ink-3); }
-.fig__dots li.done { background: var(--ink-3); border-color: var(--ink-3); }
-.fig__dots li.on { background: var(--eosin); border-color: var(--eosin); transform: scale(1.25); }
-.tail { min-height: 70svh; }
+/* legends: set on the paper, fading with the story (opacity is driven by scripts/home.ts) */
+.fig { min-height: 170svh; }
+.fig.-last { min-height: 160svh; }
+.legend { position: sticky; top: 50svh; transform: translateY(-50%); max-width: 30em; }
+html.js .legend { opacity: 0; }
+.legend__n { font-family: var(--f-display); font-style: italic; font-variation-settings: 'SOFT' 100, 'WONK' 1; font-size: 17px; color: var(--ink-2); }
+.legend__title { font-size: clamp(40px, 4.2vw, 68px); margin-top: 6px; }
+.legend__text { margin-top: 18px; font-size: clamp(18px, 1.35vw, 21px); line-height: 1.46; }
+.legend__keys { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--f-display); font-style: italic; font-variation-settings: 'SOFT' 100, 'WONK' 1; font-size: 16px; color: var(--ink-2); }
+.legend__keys i { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 4px; border-radius: 50%; border: 1px solid var(--ink-2); color: var(--ink); font-size: 14px; line-height: 1; }
+.fig.-last .legend { padding: 30px 34px; margin-left: -34px; border-radius: 48px; background: var(--paper); box-shadow: 0 0 48px 36px var(--paper); }
+.tail { min-height: 90svh; }
 
-/* the legend cards drift up softly as they arrive */
-html.js:not(.rm) .fig__card { opacity: 0.001; transform: translateY(24px); transition: opacity 0.8s var(--soft), transform 1s var(--spring); }
-html.js:not(.rm) .fig.is-active .fig__card { opacity: 1; transform: none; }
+/* keys drawn on the specimen (positions set per frame) */
+.keys { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.keys span { position: absolute; left: 0; top: 0; will-change: transform, opacity; font-family: var(--f-display); font-style: italic; font-variation-settings: 'SOFT' 100, 'WONK' 1; color: var(--ink); white-space: nowrap; }
+.keys .-key { width: 22px; height: 22px; margin: -11px 0 0 -11px; display: grid; place-items: center; border-radius: 50%; background: var(--paper); border: 1px solid var(--ink-2); font-size: 14px; line-height: 1; }
+.keys .-word { font-size: 16px; padding: 1px 6px; margin-top: -0.7em; border-radius: 999px; background: color-mix(in srgb, var(--paper) 88%, transparent); }
+.keys .-word.-l { translate: -100% 0; }
+.keys .-word.-c { translate: -50% 0; }
 
-html[data-page='home'] .foot { border-top: 0; }
+html[data-page='home'] .foot { margin-top: -1px; }
+/* the open tissue fades into the paper at the bottom, where the footer's tissue fades in: no seam */
+.home.is-open .stage__canvas { -webkit-mask-image: linear-gradient(#000 72%, transparent 100%); mask-image: linear-gradient(#000 72%, transparent 100%); }
 
-/* phones: aperture on top, legends below it */
+/* phones: aperture on top (bleeding past the edges), legends pinned just beneath it.
+   The stage sits above the text, and paints the aperture band solid, so text never shows through the specimen. */
 @media (max-width: 759px) {
-  .home { --ap-r: min(43vw, 25svh); --col: 100vw; }
-  .block { width: 100%; padding-right: var(--gutter); }
-  .hero { justify-content: flex-start; padding-top: calc(86px + 2 * var(--ap-r)); padding-bottom: 10svh; }
-  .hero__name { font-size: clamp(52px, 16.5vw, 96px); }
+  .home { --col: 100vw; --ap-b: 470px; }
+  .stage { z-index: 3; }
+  .home.is-open .stage { z-index: 1; }
+  .block, .block.-right { width: 100%; margin-left: 0; padding: 0 var(--gutter); }
+  .hero { justify-content: flex-start; padding-top: calc(var(--ap-b) + 18px); padding-bottom: 12svh; }
+  .hero__name { font-size: clamp(50px, 15.5vw, 92px); }
   .hero__name span + span { padding-left: 0; }
+  .hero__statement { margin-top: 16px; font-size: 16.5px; }
+  .hero__cue { margin-top: 18px; }
   .fig { min-height: 150svh; }
-  .fig__card { top: calc(82px + 2 * var(--ap-r)); padding: 18px 18px 18px; border-radius: 22px; }
-  .fig__title { font-size: 30px; }
-  .fig__legend { font-size: 16.5px; margin-top: 10px; }
-  .fig__n { margin-bottom: 8px; }
-  .fig__dots { margin-top: 14px; }
+  .legend { top: calc(var(--ap-b) + 16px); transform: none; }
+  .legend__title { font-size: 30px; margin-top: 2px; }
+  .legend__text { margin-top: 10px; font-size: 16.5px; line-height: 1.42; }
+  .legend__keys { margin-top: 12px; font-size: 14.5px; gap: 4px 12px; }
+  .legend__keys i { width: 19px; height: 19px; font-size: 12.5px; }
+  .fig.-last .legend { top: var(--last-top, 60svh); margin: 0 calc(-1 * var(--gutter)); padding: 20px var(--gutter) 30px; border-radius: 28px 28px 0 0; box-shadow: 0 -18px 36px 8px var(--paper); }
+  .keys .-key { width: 20px; height: 20px; margin: -10px 0 0 -10px; font-size: 13px; }
+  .keys .-word { font-size: 14px; }
 }
