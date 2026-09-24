@@ -15,6 +15,9 @@ const VERSIONS = [
   { key: 'organic', name: 'Organic' },
   { key: 'proof', name: 'Proof' },
   { key: 'wild', name: 'Wild' },
+  { key: 'plotsoft', name: 'Plotter soft' },
+  { key: 'soft', name: 'Soft' },
+  { key: 'free', name: 'Free' },
 ];
 const sh = (cmd, cwd = ROOT) => execSync(cmd, { cwd, stdio: 'inherit' });
 const out = (cmd, cwd = ROOT) => execSync(cmd, { cwd, encoding: 'utf8' });
