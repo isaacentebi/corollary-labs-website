@@ -1,40 +1,41 @@
 ---
-// Team: placeholders until names, roles and portraits are chosen.
+// Team: each person is a column of the table, as each firm is on the home page. Placeholders until names are chosen.
 import Base from '../layouts/Base.astro';
 import { site, url } from '../config/site';
 import '../styles/pages.css';
 
 const people = Array.from({ length: 4 }, (_, i) => ({ n: String(i + 1).padStart(2, '0'), name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]' }));
+const rows: { k: string; f: (p: (typeof people)[number]) => string; cls?: string }[] = [
+  { k: 'Name', f: (p) => p.name, cls: '-name' },
+  { k: 'Role', f: (p) => p.role, cls: 'mono' },
+  { k: 'Work', f: (p) => p.line },
+];
 ---
 <Base page="team" title="Team" description={`The team at ${site.name}.`}>
   <section class="page">
     <header class="ph-row reveal">
       <p class="ph-row__n mono">03</p>
       <h1 class="ph-row__t">Team</h1>
-      <p class="ph-row__m mono"><span><b>Table 3.</b> People</span><span>{String(people.length).padStart(2, '0')} rows</span></p>
+      <p class="ph-row__m mono"><span><b>Table 3.</b> People</span><span>{String(people.length).padStart(2, '0')} columns</span></p>
     </header>
     <p class="page__lede reveal"><span class="ph">[Placeholder — one sentence on who works at {site.name}.]</span></p>
 
-    <table class="tb tm">
-      <thead class="mono"><tr><th>No.</th><th>Name</th><th>Role</th><th class="-hide-s">Work</th></tr></thead>
-      <tbody>
-        {people.map((p) => (
-          <tr class="reveal">
-            <td class="mono">{p.n}</td>
-            <td class="tm__name ph">{p.name}</td>
-            <td class="mono ph">{p.role}</td>
-            <td class="ph -hide-s">{p.line}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div class="tg reveal" role="table" aria-label="Team, one column per person" style={`--n:${people.length}`}>
+      <div class="tg__row -head mono" role="row">
+        <span class="tg__k" role="columnheader"></span>
+        {people.map((p) => <span class="tg__c" role="columnheader">{p.n}</span>)}
+      </div>
+      {rows.map((r) => (
+        <div class="tg__row" role="row">
+          <span class="tg__k mono" role="rowheader">{r.k}</span>
+          {people.map((p) => <span class:list={['tg__c ph', r.cls]} role="cell" data-k={r.k}>{r.f(p)}</span>)}
+        </div>
+      ))}
+    </div>
 
-    <table class="tb colo reveal">
-      <caption class="mono"><b>Joining</b></caption>
-      <tbody>
-        <tr><td class="mono" style="width:30%;color:var(--i3)">Work here</td><td class="ph">[Placeholder — how to get in touch about working here.]</td></tr>
-        <tr><td class="mono" style="color:var(--i3)">Contact</td><td><a class="link" href={url('contact/')}>Contact page</a></td></tr>
-      </tbody>
-    </table>
+    <div class="cc cc--short reveal" role="table" aria-label="Joining">
+      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Work here</span><span class="cc__cell -ph" role="cell">[Placeholder — how to get in touch about working here.]</span></div>
+      <div class="cc__row" role="row"><span class="cc__k mono" role="rowheader">Contact</span><span class="cc__cell -fact" role="cell"><a href={url('contact/')}>Contact page</a></span></div>
+    </div>
   </section>
 </Base>

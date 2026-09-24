@@ -28,7 +28,8 @@ const fit = () => document.querySelectorAll<HTMLElement>('[data-fit]').forEach((
   const span = el.firstElementChild as HTMLElement | null;
   if (!span) return;
   el.style.fontSize = '100px';
-  const w = span.getBoundingClientRect().width, target = el.clientWidth - 8;
+  const cs = getComputedStyle(el);
+  const w = span.getBoundingClientRect().width, target = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   if (w > 0) el.style.fontSize = `${(100 * target) / w}px`;
 });
 fit();

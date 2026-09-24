@@ -13,29 +13,41 @@
 .ix__cells i { width: 9px; height: 9px; background: var(--i2); }
 @media (max-width: 640px) { .-hide-s { display: none; } .ix__n { width: 28px; padding-right: 10px !important; } }
 
-/* About: the company as one column of a table */
-.ab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 96px); margin-top: clamp(56px, 8vw, 120px); align-items: start; }
-.ab__fig { position: sticky; top: calc(var(--head) + 32px); }
-.ab__fig svg { width: 100%; height: auto; max-width: 520px; }
-.ab__fig figcaption { color: var(--i3); margin-top: 14px; max-width: 520px; }
-.ab .tb { margin-top: 0; }
-.ab .tb th[scope='rowgroup'] { color: var(--i); padding-top: 28px; border-top: 1px solid var(--ln2); }
-.ab .tb td:first-child { color: var(--i2); width: 44%; }
-.ab .tb td { font-size: 17px; }
-.ab .tb td a { color: var(--i); }
-.ab .tb td a:hover { color: var(--i2); }
-@media (max-width: 900px) { .ab { grid-template-columns: 1fr; } .ab__fig { position: static; } }
+/* Cell columns (About, Team, Contact): the home table's cells, at reading size.
+   A row header on the left, then the cell; placeholders are dashed, known facts are filled, the lit cell is bone. */
+.cc { display: grid; gap: 4px; margin-top: clamp(48px, 7vw, 104px); max-width: 880px; }
+.cc--short { margin-top: clamp(40px, 6vw, 80px); }
+.cc__head, .cc__gname, .cc__row { display: grid; grid-template-columns: minmax(96px, 200px) minmax(0, 1fr); gap: 4px 16px; align-items: stretch; }
+.cc__head { color: var(--i); padding-bottom: 8px; }
+.cc__group { display: grid; gap: 4px; }
+.cc__group + .cc__group { margin-top: 28px; }
+.cc__gname { color: var(--i); padding: 12px 0 8px; border-top: 1px solid var(--ln2); }
+.cc__note { color: var(--i3); }
+.cc__k { color: var(--i2); align-self: center; text-align: right; }
+.cc__cell { display: flex; align-items: center; min-height: 54px; padding: 12px 16px; background: #121211; font-size: 17px; transition: background-color 0.15s, color 0.15s; }
+.cc__cell.-ph { background: transparent; outline: 1px dashed var(--ln2); outline-offset: -1px; color: var(--i3); }
+.cc__cell.-fact { background: #181817; color: var(--i); }
+.cc__cell.-on { background: var(--i); color: var(--g); }
+.cc__cell.-big { font-stretch: 125%; font-weight: 300; font-size: clamp(28px, 4.4vw, 64px); letter-spacing: -0.03em; min-height: 120px; }
+.cc__cell a { color: inherit; }
+.cc__row:hover .cc__k { color: var(--i); }
+.cc__row:hover .cc__cell:not(.-on) { background: #222220; color: var(--i); }
+.cc__row:hover .cc__cell.-on { background: #fff; }
+@media (max-width: 640px) {
+  .cc__head, .cc__gname, .cc__row { grid-template-columns: 76px minmax(0, 1fr); gap: 4px 10px; }
+  .cc__k { font-size: 9.5px; }
+  .cc__cell { font-size: 15.5px; min-height: 48px; padding: 10px 12px; }
+  .cc__cell.-big { min-height: 88px; }
+}
 
-.colo { margin-top: clamp(64px, 9vw, 128px); }
-
-/* Team */
-.tm td { font-size: 18px; }
-.tm td:first-child { width: 56px; color: var(--i3); }
-.tm__name { font-stretch: 112%; font-size: clamp(20px, 1.8vw, 28px) !important; letter-spacing: -0.01em; }
-.tm__cell { width: 24px; }
-.tm__cell i { display: block; width: 14px; height: 14px; background: var(--ln2); margin-top: 6px; }
-@media (max-width: 640px) { .tm .-hide-s { display: none; } }
-
-/* Contact */
-.ct__mail { display: inline-block; font-stretch: 125%; font-weight: 300; font-size: clamp(36px, 7vw, 120px); line-height: 1; letter-spacing: -0.035em; margin-top: clamp(40px, 6vw, 88px); transition: color 0.2s; word-break: break-all; }
-.ct__mail:hover { color: var(--i2); }
+/* Team: one column per person */
+.tg { margin-top: clamp(48px, 7vw, 104px); display: grid; gap: 4px; overflow-x: auto; }
+.tg__row { display: grid; grid-template-columns: 212px repeat(var(--n), minmax(150px, 1fr)); gap: 4px 4px; min-width: 760px; }
+@media (max-width: 640px) { .tg__row { grid-template-columns: 80px repeat(var(--n), minmax(150px, 1fr)); } }
+.tg__row.-head { color: var(--i3); padding-bottom: 6px; }
+.tg__k { color: var(--i2); align-self: center; text-align: right; padding-right: 12px; }
+@media (min-width: 641px) { .tg__k { padding-right: 12px; } }
+.tg__c { padding: 14px 16px; min-height: 56px; outline: 1px dashed var(--ln2); outline-offset: -1px; font-size: 16px; transition: background-color 0.15s; }
+.tg__row.-head .tg__c { outline: 0; padding: 0 16px; min-height: 0; }
+.tg__c.-name { font-stretch: 112%; font-size: clamp(20px, 1.8vw, 28px); letter-spacing: -0.01em; min-height: 120px; display: flex; align-items: flex-end; }
+.tg__c:hover { background: #1c1c1a; }

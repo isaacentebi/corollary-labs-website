@@ -4,8 +4,8 @@ import { Table, ease, type Params } from './table';
 import { N, SUPPLIED } from './economy';
 
 const TMAX = 7.0;
-const START = [0.3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-const HOLD = [0.65, 1.6, 2.7, 3.6, 4.9, 5.82, 6.95];   // a resting T inside each state (rail jumps, reduced motion)
+const START = [0.3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.13];
+const HOLD = [0.65, 1.6, 2.7, 3.55, 4.9, 5.82, 6.9];   // a resting T inside each state (rail jumps, reduced motion)
 
 const clamp = (x: number, a = 0, b = 1) => (x < a ? a : x > b ? b : x);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -29,7 +29,7 @@ export function initStory() {
   const title = $('[data-title]'), buyer = $('[data-buyer]'), supplier = $('[data-supplier]'), rule = $('[data-rule]');
   const colIds = $$('[data-cl]'), rowIds = $$('[data-rl]'), rowLab = $$('[data-row]');
   const trange = $<HTMLInputElement>('[data-trange]'), tout = $('[data-tout]');
-  const numsHost = $('[data-nums]'), chip = $('[data-chip]'), agent = $('[data-agent]'), rounds = $('[data-rounds]');
+  const numsHost = $('[data-nums]'), chip = $('[data-chip]'), sum = $('[data-sum]'), rounds = $('[data-rounds]');
 
   // on phones, number only a few firms: ones that stay well apart both before and after the reorganisation
   const pick: number[] = [];
@@ -46,9 +46,9 @@ export function initStory() {
   rounds.innerHTML = '<span>Round</span>' + Array.from({ length: e.R }, (_, r) => `<b data-r="${r + 1}">${r + 1}</b>`).join('');
   const roundEls = Array.from(rounds.querySelectorAll<HTMLElement>('[data-r]'));
 
-  // numbers for the focus column: 32 firm rows + 3 supplied + output
+  // numbers for the focus column: 32 firm rows + 3 supplied
   const nums: HTMLSpanElement[] = [];
-  for (let k = 0; k < N + 4; k++) { const s = document.createElement('span'); numsHost.appendChild(s); nums.push(s); }
+  for (let k = 0; k < N + 3; k++) { const s = document.createElement('span'); numsHost.appendChild(s); nums.push(s); }
 
   let W = 0, H = 0, mobile = false, head = 52, capTop = 0, u = 10, G = 40;
   const layout = () => {
@@ -77,16 +77,18 @@ export function initStory() {
     L.W = W; L.H = H; L.u = u;
     if (mobile) {
       const oy0 = head + 58, oyF = head + 18;
-      const uyF = Math.min(15, (capTop - 16 - oyF - 7.4 * u) / N);
+      const uyF = Math.min(15, (capTop - 34 - oyF - 7.05 * u) / N);
       L.uy = lerp(u, Math.max(u, uyF), focus);
       L.ox = 16 + G;
       L.oy = Math.round(lerp(oy0, oyF, focus));
-      L.fit = { x: 16, y: head + 30, w: W - 32, h: capTop - 64 - (head + 30), bottom: true };
+      L.fit = { x: 16, y: head + 16, w: W - 32, h: capTop - 60 - (head + 16), bottom: true };
+      L.rx = -0.6; L.rz = 0.12;
     } else {
       L.uy = u;
       L.ox = Math.round(W - Math.max(16, Math.min(32, W * 0.022)) - N * u);
       L.oy = head + 80;
       L.fit = { x: W * 0.36, y: head + 40, w: W * 0.64 - 40, h: H - head - 40 - 90 };
+      L.rx = -0.98; L.rz = 0.55;
     }
   };
 
@@ -147,7 +149,7 @@ export function initStory() {
 
   // ── frame ──
   let dirty = true, visible = true, lastState = -2;
-  const P: Params = { focus: 0, eK: 0, pK: 0, vals: 0, rows: 0, cols: 0, front: -99, lift: 0, t: 1 };
+  const P: Params = { focus: 0, eK: 0, pK: 0, vals: 0, rows: 0, cols: 0, front: -99, agent: 0, fold: 0, lift: 0, t: 1 };
 
   const frame = (now: number) => {
     const dt = Math.min(0.05, (now - lastNow) / 1000); lastNow = now;
@@ -165,57 +167,65 @@ export function initStory() {
 
   const draw = () => {
     const t = T;
-    P.focus = ease((t - 0.75) / 0.5) - ease((t - 3.65) / 0.3);
-    const agentIn = clamp((t - 1.72) / 0.3);
+    P.focus = ease((t - 0.75) / 0.5) - ease((t - 3.66) / 0.3);
+    // the enlarged column's labels leave before the column starts to shrink
+    const labA = 1 - clamp((t - 3.58) / 0.07);
+    P.agent = clamp((t - 1.72) / 0.3);
     P.eK = clamp((t - 2.0) / 0.55);
     P.pK = clamp((t - 2.8) / 0.55);
     P.vals = clamp((t - 3.85) / 0.2);
     P.rows = clamp((t - 4.05) / 0.4);
     P.cols = clamp((t - 4.45) / 0.4);
     P.front = t < 4.95 ? -99 : -0.6 + clamp((t - 4.95) / 0.85) * (e.R + 1.2);
-    P.lift = clamp((t - 5.88) / 0.35);
+    P.fold = clamp((t - 5.86) / 0.1);
+    P.lift = clamp((t - 5.96) / 0.34);
+    // the lift starts from the end of diffusion (t = 1); the reader can take t back to 0 with the slider
     let tH = 1;
     if (P.lift > 0) {
-      tH = t < 6.23 ? 1 - ease(P.lift) : clamp((t - 6.28) / 0.6);
       if (tUser !== null) tH = tUser;
       P.t = tH;
       P.front = tH < 0.01 ? -99 : -0.6 + tH * (e.R + 1.2);
-      P.eK = 0; P.pK = 0;
+      P.eK = 0; P.pK = 0; P.agent = 0;
     }
     geom(P.focus);
+    if (P.lift > 0) table.L.rz += Math.max(0, t - 6.3) * (mobile ? 0.1 : 0.25);
     table.render(P);
 
     const { ox, oy, uy } = table.L;
     if (P.focus === 0) { stage.dataset.ox = String(ox); stage.dataset.oy = String(oy); stage.dataset.u = String(u); }
-    const tw = N * u, flat = clamp(1 - P.lift * 3);
-    const axA = (1 - P.focus) * flat;
+    const tw = N * u, flat = 1 - ease(P.fold);
+    const axA = (1 - P.focus) * (P.lift > 0 ? 0 : flat);
     const set = (el: HTMLElement, x: number, y: number, tr: string, o: number) => {
       el.style.transform = `translate(${x}px, ${y}px) ${tr}`; el.style.opacity = String(o);
     };
-    // title, axes, numbers attached to every row and column (they travel with their firm)
-    const roundsA = P.front > -50 ? clamp((t - 4.95) / 0.12) * flat : 0;
+    // title, axes, and a number attached to every row and column (it travels with its firm, hidden while in motion)
+    const roundsA = P.front > -50 && P.lift === 0 ? clamp((t - 4.95) / 0.12) * flat : 0;
     set(title, mobile ? 16 : ox, oy - 40, 'translateY(-50%)', axA);
     set(buyer, ox + tw, oy - 40, 'translate(-100%, -50%)', axA * clamp((4.95 - t) / 0.04));
-    set(supplier, ox - (mobile ? 30 : 34), oy + (N * uy) / 2, 'translate(-50%, -50%) rotate(-90deg)', axA);
+    set(supplier, ox - (mobile ? 30 : 34), oy + (N * uy) / 2, 'translate(-50%, -50%)', axA);
     set(rounds, ox + tw, oy - 40, 'translate(-100%, -50%)', roundsA);
     for (let s = 0; s < N; s++) {
-      set(colIds[s], ox + (table.colX[s] + table.colW[s] / 2) * u, oy - 10, 'translate(-50%, -100%)', axA);
-      set(rowIds[s], ox - 6, oy + table.rowTop(table.rowPos[s]) + uy / 2, 'translate(-100%, -50%)', axA);
+      set(colIds[s], ox + (table.colX[s] + table.colW[s] / 2) * u, oy - 10, 'translate(-50%, -100%)', axA * (table.movingC[s] ? 0 : 1));
+      set(rowIds[s], ox - 6, oy + table.rowTop(table.rowPos[s]) + uy / 2, 'translate(-100%, -50%)', axA * (table.movingR[s] ? 0 : 1));
     }
     rowLab.forEach((el) => {
-      const k = +el.dataset.row!;
-      const y = k < 3 ? table.supTop(k) : table.outTop();
-      set(el, ox - 6, oy + y + 0.75 * u, 'translate(-100%, -50%)', flat);
+      const k = el.dataset.row!;
+      const y = k === 'a' ? table.agentTop() : table.supTop(+k);
+      set(el, ox - 6, oy + y + 0.75 * u, 'translate(-100%, -50%)', P.lift > 0 ? 0 : flat);
     });
-    set(rule, ox, oy + N * uy + 0.35 * u, '', flat);
+    set(rule, ox, oy + table.ruleY(), '', P.lift > 0 ? 0 : flat);
     rule.style.width = `${tw}px`;
     roundEls.forEach((el) => el.classList.toggle('-on', P.front >= +el.dataset.r! - 0.45));
 
     // the enlarged column's coefficients (they add up to 1.000; the diagonal is the literal sum of what moved in)
-    const nA = P.focus * flat;
+    const nA = P.focus * labA;
     numsHost.style.opacity = String(nA);
+    sum.style.opacity = String(nA);
+    const xr = ox + (table.colX[K] + table.colW[K]) * u - 5;
     if (nA > 0.001) {
-      const xr = ox + (table.colX[K] + table.colW[K]) * u - 5;
+      // where the cell in flight is, so the numbers it passes over are hidden while it passes
+      const flyK = P.eK > 0 && P.eK < 0.98 ? 0 : P.pK > 0 && P.pK < 0.98 ? 1 : -1;
+      const flyY = flyK < 0 ? -1e9 : lerp(table.supTop(flyK) + 0.75 * u, table.rowTop(K) + uy / 2, ease(flyK === 0 ? P.eK : P.pK));
       nums.forEach((sp, k) => {
         let y: number, v: number, o = 1, dark = false;
         if (k < N) {
@@ -223,14 +233,15 @@ export function initStory() {
           v = k === K ? table.diag[K] : e.A0[k * N + K];
           dark = k === K ? table.eIn[K] > 0 || v > 0.09 : v > 0.09;
           if (v <= 0 && mobile) o = 0;
-        } else if (k < N + 3) {
+          if (k !== K && Math.abs(flyY - y) < uy * 1.1) o = 0;
+        } else {
           const kk = k - N;
           v = e.L[kk * N + K];
           const fly = kk === 0 ? P.eK : kk === 1 ? P.pK : 0;
           y = lerp(table.supTop(kk) + 0.75 * u, table.rowTop(K) + uy / 2, ease(fly));
           o = fly >= 0.98 ? 0 : 1;
           dark = true;
-        } else { y = table.outTop() + 0.75 * u; v = 1; dark = true; }
+        }
         const txt = v.toFixed(3);
         if (sp.textContent !== txt) sp.textContent = txt;
         sp.classList.toggle('-dark', dark);
@@ -238,14 +249,8 @@ export function initStory() {
         sp.style.transform = `translate(${xr}px, ${oy + y}px) translate(-100%, -50%)`;
         sp.style.opacity = String(o);
       });
+      sum.style.transform = `translate(${xr}px, ${oy + table.supTop(3) + 6}px) translateX(-100%)`;
     }
-
-    // the agent: an outlined cell that enters from outside the table and settles on the firm's diagonal
-    const cellX = ox + table.colX[K] * u, cellY = oy + table.rowTop(K);
-    const agA = agentIn > 0 ? nA : 0;
-    agent.style.width = `${table.colW[K] * u}px`;
-    agent.style.height = `${uy}px`;
-    set(agent, lerp(mobile ? -table.colW[K] * u - 4 : ox - table.colW[K] * u - 40, cellX, ease(agentIn)), cellY, '', agA);
 
     // the diagonal's label
     const cA = nA * clamp((t - 1.2) / 0.3);
@@ -258,6 +263,7 @@ export function initStory() {
       if (chip.innerHTML !== txt) chip.innerHTML = txt;
       chip.classList.toggle('-in', eIn);
       const cw = chip.offsetWidth;
+      const cellX = ox + table.colX[K] * u, cellY = oy + table.rowTop(K);
       const x = Math.min(cellX + table.colW[K] * u + 8, W - 16 - cw);
       chip.style.transform = `translate(${x}px, ${cellY + uy / 2}px) translateY(-50%)`;
     }
@@ -271,8 +277,10 @@ export function initStory() {
       cue.classList.toggle('-off', si >= 0);
       if (si > 0) { table.hover = null; tip.classList.remove('-on'); }
     }
-    coda.classList.toggle('-on', t >= 6.0);
-    if (t >= 6.0) {
+    // the slider appears once the table has finished lifting
+    const on = P.lift >= 1;
+    coda.classList.toggle('-on', on);
+    if (on) {
       coda.style.setProperty('--codaY', `${capTop - 44}px`);
       if (document.activeElement !== trange) trange.value = String(tH);
       tout.textContent = `t = ${tH.toFixed(2)}`;

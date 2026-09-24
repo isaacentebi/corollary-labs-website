@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { site, states, url } from '../config/site';
 import { getCollection, render } from 'astro:content';
-import { SUPPLIED } from '../scripts/economy';
+import { SUPPLIED, makeEconomy } from '../scripts/economy';
 import '../styles/home.css';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
@@ -11,6 +11,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
 const pad = (n: number) => String(n).padStart(2, '0');
 const ids = Array.from({ length: 32 }, (_, i) => i);
 const short = ['Exec.', 'Plans', 'Obj.'];
+const rounds = makeEconomy().R;
 ---
 <Base page="home">
   <section class="st" data-story aria-label="The table, in seven states">
@@ -20,16 +21,16 @@ const short = ['Exec.', 'Plans', 'Obj.'];
       <div class="st__labels mono" data-labels aria-hidden="true">
         <span class="st__title" data-title>Table 1 · 32 firms<span class="-full"> · input coefficients</span></span>
         <span class="st__axis -buyer" data-buyer>Buyer →</span>
-        <span class="st__axis -supplier" data-supplier>Supplier ↓</span>
+        <span class="st__axis -supplier" data-supplier><span class="-w">Supplier</span><span>↓</span></span>
         {ids.map((s) => <span class="st__id -c" data-cl={s}>{pad(s + 1)}</span>)}
         {ids.map((s) => <span class="st__id -r" data-rl={s}>{pad(s + 1)}</span>)}
         {SUPPLIED.map((s, k) => <span class="st__row" data-row={k}><span class="-full">{s}</span><span class="-short">{short[k]}</span></span>)}
-        <span class="st__row -out" data-row="3"><span class="-full">Output</span><span class="-short">Out</span></span>
+        <span class="st__row -agent" data-row="a">Agent</span>
         <span class="st__rule" data-rule></span>
         <span class="st__rounds" data-rounds></span>
       </div>
       <div class="st__nums mono" data-nums aria-hidden="true"></div>
-      <span class="st__agent" data-agent aria-hidden="true"><i class="mono">Agent</i></span>
+      <span class="st__sum mono" data-sum aria-hidden="true">Sum 1.000</span>
       <span class="st__chip mono" data-chip aria-hidden="true"></span>
       <div class="st__tip mono" data-tip aria-hidden="true"></div>
 
@@ -56,9 +57,9 @@ const short = ['Exec.', 'Plans', 'Obj.'];
       </div>
 
       <div class="st__t mono" data-coda>
-        <span class="st__t-end">A<sub>0</sub></span>
-        <input type="range" min="0" max="1" step="0.001" value="0" data-trange aria-label="t, from the first table to the second" />
-        <span class="st__t-end">A<sub>1</sub></span>
+        <span class="st__t-end"><b>A<sub>0</sub></b><em>before agents</em></span>
+        <input type="range" min="0" max="1" step="0.001" value="1" data-trange aria-label="t, from the first table to the second" />
+        <span class="st__t-end"><b>A<sub>1</sub></b><em>after round {rounds}</em></span>
         <output data-tout>t = 0.00</output>
         <span class="st__t-f">H(t) = (1 − t)·A<sub>0</sub> + t·A<sub>1</sub></span>
       </div>

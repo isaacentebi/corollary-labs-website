@@ -1,26 +1,32 @@
 ---
-// About: the company described the way the site describes every firm, as one column of inputs and outputs.
-// Everything in [brackets] is a placeholder to be written with the founder. FOR FOUNDER REVIEW.
+// About: the company described the way the home page describes every firm, as one annotated column of cells:
+// its inputs, its outputs, and the facts about it. Everything in [brackets] is a placeholder. FOR FOUNDER REVIEW.
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 import { site, url } from '../config/site';
 import '../styles/pages.css';
 
 const essays = await getCollection('essays', ({ data }) => !data.draft);
-const inputs = ['[Input]', '[Input]', '[Input]', '[Input]'];
-const outputs: { k: string; v: string; href?: string; real?: boolean }[] = [
-  { k: 'Essays', v: `${essays.length} published`, href: url('essays/'), real: true },
-  { k: '[Output]', v: '[Placeholder]' },
-  { k: '[Output]', v: '[Placeholder]' },
+const pad = (n: number) => String(n).padStart(2, '0');
+type Cell = { k: string; v: string; href?: string; kind?: 'ph' | 'on' | 'fact' };
+const groups: { name: string; note: string; cells: Cell[] }[] = [
+  { name: 'Inputs', note: 'Not yet written', cells: Array.from({ length: 4 }, () => ({ k: '[Input]', v: '[Placeholder]', kind: 'ph' as const })) },
+  {
+    name: 'Outputs', note: `${pad(essays.length)} essays published`, cells: [
+      { k: 'Essays', v: `${pad(essays.length)} published`, href: url('essays/'), kind: 'on' },
+      { k: '[Output]', v: '[Placeholder]', kind: 'ph' },
+      { k: '[Output]', v: '[Placeholder]', kind: 'ph' },
+    ],
+  },
+  {
+    name: 'Colophon', note: '', cells: [
+      { k: 'Entity', v: `${site.name} is a company.`, kind: 'fact' },
+      { k: 'Founded', v: '[Year]', kind: 'ph' },
+      { k: 'Location', v: '[City]', kind: 'ph' },
+      { k: 'Contact', v: site.email, href: `mailto:${site.email}`, kind: 'fact' },
+    ],
+  },
 ];
-// the column drawing: one cell per row of the table below
-const cellH = 34, gap = 8, x = 140, w = 150;
-const rows = [
-  ...inputs.map(() => ({ kind: 'in' as const })),
-  ...outputs.map((o) => ({ kind: o.real ? ('real' as const) : ('out' as const) })),
-];
-const yOf = (i: number) => 30 + i * (cellH + gap) + (i >= inputs.length ? 34 : 0);
-const H = yOf(rows.length - 1) + cellH + 30;
 ---
 <Base page="about" title="About" description={`About ${site.name}.`}>
   <section class="page">
@@ -31,43 +37,19 @@ const H = yOf(rows.length - 1) + cellH + 30;
     </header>
     <p class="page__lede reveal">{site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span></p>
 
-    <div class="ab">
-      <figure class="ab__fig reveal">
-        <svg viewBox={`0 0 420 ${H}`} role="img" aria-label={`${site.name} drawn as one column of a table: ${inputs.length} input cells (placeholders) and ${outputs.length} output cells, one of which, Essays, is filled.`}>
-          <text x={x - 16} y="20" fill="var(--i3)" font-family="var(--f-m)" font-size="10" text-anchor="end" letter-spacing=".4">COL.</text>
-          <text x={x} y="20" fill="var(--i)" font-family="var(--f-m)" font-size="10" letter-spacing=".4">CL</text>
-          {rows.map((r, i) => (
-            r.kind === 'real'
-              ? <rect x={x} y={yOf(i)} width={w} height={cellH} fill="var(--i)" />
-              : <rect x={x + 0.5} y={yOf(i) + 0.5} width={w - 1} height={cellH - 1} fill="none" stroke="var(--ln2)" stroke-dasharray="3 3" />
+    <div class="cc reveal" role="table" aria-label={`${site.name} as one column: inputs, outputs and colophon`}>
+      <p class="cc__head mono" role="row"><span role="columnheader"></span><span role="columnheader">Col. CL · {site.name}</span></p>
+      {groups.map((g) => (
+        <div class="cc__group" role="rowgroup">
+          <p class="cc__gname mono" role="row"><span role="rowheader">{g.name}</span><span class="cc__note">{g.note}</span></p>
+          {g.cells.map((c) => (
+            <div class="cc__row" role="row">
+              <span class:list={['cc__k mono', { ph: c.kind === 'ph' }]} role="rowheader">{c.k}</span>
+              <span class:list={['cc__cell', `-${c.kind}`]} role="cell">{c.href ? <a href={c.href}>{c.v}</a> : c.v}</span>
+            </div>
           ))}
-          <line x1={x} x2={x + w} y1={yOf(inputs.length) - 17} y2={yOf(inputs.length) - 17} stroke="var(--ln2)" />
-          <text x={x - 16} y={yOf(0) + 22} fill="var(--i2)" font-family="var(--f-m)" font-size="10" text-anchor="end" letter-spacing=".4">INPUTS</text>
-          <text x={x - 16} y={yOf(inputs.length) + 22} fill="var(--i2)" font-family="var(--f-m)" font-size="10" text-anchor="end" letter-spacing=".4">OUTPUTS</text>
-          <text x={x + w + 16} y={yOf(inputs.length) + 22} fill="var(--i)" font-family="var(--f-m)" font-size="10" letter-spacing=".4">ESSAYS · {String(essays.length).padStart(2, '0')}</text>
-        </svg>
-        <figcaption class="mono">{site.name} as one column. Dashed cells are not yet written.</figcaption>
-      </figure>
-
-      <table class="tb reveal">
-        <caption class="mono"><b>Table 0.</b> {site.name}, inputs and outputs</caption>
-        <tbody>
-          <tr><th scope="rowgroup" colspan="2" class="mono">Inputs</th></tr>
-          {inputs.map((k) => <tr><td class="ph">{k}</td><td class="ph">[Placeholder]</td></tr>)}
-          <tr><th scope="rowgroup" colspan="2" class="mono">Outputs</th></tr>
-          {outputs.map((o) => <tr><td class:list={{ ph: !o.real }}>{o.k}</td><td class:list={{ ph: !o.real }}>{o.href ? <a class="link" href={o.href}>{o.v}</a> : o.v}</td></tr>)}
-        </tbody>
-      </table>
+        </div>
+      ))}
     </div>
-
-    <table class="tb colo reveal">
-      <caption class="mono"><b>Colophon</b></caption>
-      <tbody>
-        <tr><td class="mono" style="width:30%;color:var(--i3)">Entity</td><td>{site.name} is a company.</td></tr>
-        <tr><td class="mono" style="color:var(--i3)">Founded</td><td class="ph">[Year]</td></tr>
-        <tr><td class="mono" style="color:var(--i3)">Location</td><td class="ph">[City]</td></tr>
-        <tr><td class="mono" style="color:var(--i3)">Contact</td><td><a class="link" href={`mailto:${site.email}`}>{site.email}</a></td></tr>
-      </tbody>
-    </table>
   </section>
 </Base>

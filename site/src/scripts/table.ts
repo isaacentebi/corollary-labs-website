@@ -13,11 +13,13 @@ export interface Params {
   rows: number;    // 0..1 rows travel to the new order
   cols: number;    // 0..1 columns travel to the new order
   front: number;   // diffusion front, in rounds (< -50: nothing has moved inside, except K's own flight)
+  agent: number;   // 0..1 K's agent entering its cell in the agent row, from outside the table
+  fold: number;    // 0..1 the agent row and the supplied rows fold away (before the lift)
   lift: number;    // 0..1 flat → height field
   t: number;       // 0..1 homotopy parameter for the heights, used while lifted
 }
 
-export interface Layout { W: number; H: number; u: number; uy: number; ox: number; oy: number; fit: { x: number; y: number; w: number; h: number; bottom?: boolean } }
+export interface Layout { W: number; H: number; u: number; uy: number; ox: number; oy: number; rx: number; rz: number; fit: { x: number; y: number; w: number; h: number; bottom?: boolean } }
 
 const WIDE = 7;
 const EMPTY = 0.078;
@@ -32,18 +34,19 @@ export class Table {
   e: Economy = makeEconomy();
   gl: GL;
   data: Float32Array;
-  L: Layout = { W: 1, H: 1, u: 10, uy: 10, ox: 0, oy: 0, fit: { x: 0, y: 0, w: 1, h: 1 } };
+  L: Layout = { W: 1, H: 1, u: 10, uy: 10, ox: 0, oy: 0, rx: -0.98, rz: 0.55, fit: { x: 0, y: 0, w: 1, h: 1 } };
   hover: { r: number; c: number } | null = null;
   flash = new Float32Array(N * N);
   // derived per frame (read by the DOM layer)
   rowPos = new Float32Array(N); colPos = new Float32Array(N);
   colX = new Float32Array(N); colW = new Float32Array(N);   // in u
   eIn = new Float32Array(N); pIn = new Float32Array(N);       // 0/1: moved inside
+  aIn = new Float32Array(N);                                   // 0/1: the firm has an agent
   diag = new Float32Array(N);                                  // current diagonal coefficient
-  moving = new Uint8Array(N);
+  movingR = new Uint8Array(N); movingC = new Uint8Array(N);
 
   constructor(public canvas: HTMLCanvasElement) {
-    const count = N * N + N * 3 + N + 4;   // + room for the two cells in flight and the holes they leave
+    const count = N * N + N * 3 + N * 3 + 8;   // matrix, agent row (ring, inset, core), supplied rows, cells in flight
     this.data = new Float32Array(count * 9);
     this.gl = new GL(canvas, count);
     this.buildSwaps();
@@ -51,11 +54,13 @@ export class Table {
 
   resize(W: number, H: number) { this.gl.resize(W, H, Math.min(devicePixelRatio || 1, 2)); }
 
-  // vertical geometry in px, relative to the table's top edge
+  // vertical geometry in px, relative to the table's top edge:
+  // 32 firm rows, the agent row, a rule, then the three rows supplied by people
   rowTop(pos: number) { return pos * this.L.uy; }
-  supTop(k: number) { const { u, uy } = this.L; return N * uy + 0.7 * u + k * 1.5 * u; }
-  outTop() { const { u, uy } = this.L; return N * uy + 1.4 * u + 4.5 * u; }
-  static height(u: number, uy: number) { return N * uy + 1.4 * u + 6 * u; }
+  agentTop() { const { u, uy } = this.L; return N * uy + 0.35 * u; }
+  ruleY() { const { u, uy } = this.L; return N * uy + 2.2 * u; }
+  supTop(k: number) { const { u, uy } = this.L; return N * uy + 2.55 * u + k * 1.5 * u; }
+  static height(u: number, uy: number) { return N * uy + 7.05 * u; }
 
   swaps: [number, number][] = [];
   private buildSwaps() {
@@ -69,7 +74,7 @@ export class Table {
       [cur[k], cur[j]] = [cur[j], cur[k]];
     }
   }
-  private permute(x: number, out: Float32Array) {
+  private permute(x: number, out: Float32Array, moving: Uint8Array) {
     const pos = Array.from({ length: N }, (_, i) => i);       // firm → position
     const at = Array.from({ length: N }, (_, i) => i);        // position → firm
     const M = this.swaps.length;
@@ -82,7 +87,7 @@ export class Table {
     if (done < M && f > done) {
       const [a, b] = this.swaps[done], sa = at[a], sb = at[b], k = ease(f - done);
       out[sa] = lerp(a, b, k); out[sb] = lerp(b, a, k);
-      this.moving[sa] = 1; this.moving[sb] = 1;
+      moving[sa] = 1; moving[sb] = 1;
     }
   }
 
@@ -123,9 +128,9 @@ export class Table {
     const wo = 1 - (p.focus * (WIDE - 1)) / (N - 1), wk = 1 + p.focus * (WIDE - 1);
     // the permutation is carried out as a sequence of swaps, like reordering a physical matrix by hand:
     // rows first, then columns; only two rows (or columns) are ever in motion, each whole and full size
-    this.moving.fill(0);
-    this.permute(p.rows, this.rowPos);
-    this.permute(p.cols, this.colPos);
+    this.movingR.fill(0); this.movingC.fill(0);
+    this.permute(p.rows, this.rowPos, this.movingR);
+    this.permute(p.cols, this.colPos, this.movingC);
     const pk = this.colPos[K];
     for (let s = 0; s < N; s++) {
       const pos = this.colPos[s];
@@ -134,6 +139,7 @@ export class Table {
       const inE = p.front >= e.tE[s] ? 1 : 0, inP = p.front >= e.tP[s] ? 1 : 0;
       this.eIn[s] = s === K ? Math.max(inE, p.eK >= 0.98 ? 1 : 0) : inE;
       this.pIn[s] = s === K ? Math.max(inP, p.pK >= 0.98 ? 1 : 0) : inP;
+      this.aIn[s] = s === K ? (p.agent >= 0.98 || p.front >= -50 ? 1 : 0) : p.front >= e.tE[s] - 0.3 ? 1 : 0;
       this.diag[s] = lerp(e.A0[s * N + s], e.A1[s * N + s], vm) + e.L[s] * this.eIn[s] + e.L[N + s] * this.pIn[s];
     }
 
@@ -175,11 +181,28 @@ export class Table {
         if (!lifted && v > 0) { const gl = linkGlow(i, j); if (gl > 0) l = Math.max(l, 0.45 + 0.55 * gl); }
         let r = l, g = l, b = l * 0.97;
         if (i === j && this.eIn[j]) { r = ACC[0]; g = ACC[1]; b = ACC[2]; }
-        put(this.colX[j] * u, this.rowTop(this.rowPos[i]), this.colW[j] * u, uy, zOf(v) + (this.moving[i] || this.moving[j] ? 2 + ((i * 7 + j) % 5) * 0.2 : 0), r, g, b);
+        const mv = this.movingR[i] || this.movingC[j];
+        if (mv && v <= 0) continue;   // a row in motion carries only its entries, so it never hides the cells it passes
+        put(this.colX[j] * u, this.rowTop(this.rowPos[i]), this.colW[j] * u, uy, zOf(v) + (mv ? 2 + ((i * 7 + j) % 5) * 0.2 : 0), r, g, b);
       }
     }
     // supplied rows: E and P of K fly up their column to the diagonal; for other firms they go dark in place
-    const flat = 1 - p.lift;
+    const flat = 1 - ease(p.fold);
+    // agent row: a ringed cell with a core (the agent) in each column whose firm has one. It is drawn in bone:
+    // orange stays reserved for the diagonal, which is what the agent produces.
+    for (let j = 0; j < N; j++) {
+      const x = this.colX[j] * u, w = this.colW[j] * u, y = this.agentTop(), h = 1.5 * u * flat;
+      const on = this.aIn[j] > 0 || (j === K && p.agent > 0);
+      if (!on || flat <= 0) { put(x, y, w * flat, h, 1, EMPTY, EMPTY, EMPTY); continue; }
+      let ax = x;
+      if (j === K && p.agent < 0.98 && p.front < -50) ax = lerp(-3 * u - w, x, ease(p.agent));   // enters from outside the table
+      const ring = Math.max(1.5, Math.round(0.14 * u));
+      const ink = 0.93;
+      put(ax, y, w, h, 2, ink, ink, ink * 0.97);
+      put(ax + ring, y + ring, Math.max(0, w - 2 * ring), Math.max(0, h - 2 * ring), 2.5, EMPTY, EMPTY, EMPTY);
+      const c = Math.min(w, h) * 0.34;
+      put(ax + (w - c - gx) / 2, y + (h - c - gy) / 2, c + gx, c + gy, 3, ink, ink, ink * 0.97);
+    }
     for (let k = 0; k < 3; k++) {
       for (let j = 0; j < N; j++) {
         const v = e.L[k * N + j];
@@ -202,15 +225,10 @@ export class Table {
         put(x, this.supTop(k), w, 1.5 * u * flat, 1, l, l, l * 0.97);
       }
     }
-    // output row: every column is one unit of output
-    for (let j = 0; j < N; j++) {
-      const l = dimmed(0.58, j);
-      put(this.colX[j] * u, this.outTop(), this.colW[j] * u * flat, 1.5 * u * flat, 1, l, l, l * 0.97);
-    }
 
     // lift: tilt about the matrix centre and fit the lifted object to the layout's fit box
     const le = ease(p.lift);
-    const rx = -0.98, rz = 0.55;
+    const rx = this.L.rx, rz = this.L.rz;
     let pos: [number, number, number] = [cx - W / 2, -(cy - H / 2), 0], sc = 1;
     if (le > 0) {
       const cz = Math.cos(rz), sz = Math.sin(rz), ca = Math.cos(rx), sa = Math.sin(rx);

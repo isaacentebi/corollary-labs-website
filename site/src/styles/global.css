@@ -58,24 +58,20 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .hd__word span { color: var(--i2); font-weight: 350; }
 .hd__nav { display: flex; align-items: stretch; }
 .hd__nav a {
-  display: flex; align-items: center; gap: 10px; padding: 0 clamp(10px, 1.6vw, 22px);
+  display: flex; align-items: center; justify-content: center; gap: 10px; width: 118px; padding: 0;
   border-left: 1px solid var(--ln); color: var(--i2); transition: color 0.2s, background-color 0.2s;
 }
-.hd__nav a:last-child { padding-right: 0; }
 .hd__nav a:hover { color: var(--i); background: #111110; }
 .hd__nav a[aria-current='page'] { color: var(--g); background: var(--i); }
 .hd__nav a[aria-current='page'] .hd__n { color: var(--g); }
-.hd__nav a:last-child[aria-current='page'] { padding-right: clamp(10px, 1.6vw, 22px); }
 .hd__n { color: var(--i3); }
 @media (max-width: 640px) {
   :root { --head: 80px; }
   .hd { flex-direction: column; padding: 0; }
   .hd__brand { height: 45px; padding: 0 16px; border-bottom: 1px solid var(--ln); }
   .hd__nav { height: 34px; }
-  .hd__nav a { flex: 1; justify-content: center; padding: 0 4px; gap: 6px; }
+  .hd__nav a { flex: 1; width: auto; padding: 0 4px; gap: 6px; }
   .hd__nav a:first-child { border-left: 0; }
-  .hd__nav a:last-child { padding-right: 4px; }
-  .hd__nav a:last-child[aria-current='page'] { padding-right: 4px; }
   .hd__n { display: none; }
 }
 
@@ -89,7 +85,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .ft__col li { font-size: 15px; line-height: 1.7; }
 .ft__col a { color: var(--i2); transition: color 0.2s; }
 .ft__col a:hover { color: var(--i); }
-.ft__big { font-stretch: 125%; font-weight: 300; font-size: 16vw; line-height: 0.8; letter-spacing: -0.04em; padding: 0.06em 0 0; border-top: 1px solid var(--ln); white-space: nowrap; text-align: center; }
+.ft__big { font-stretch: 125%; font-weight: 300; font-size: 15vw; line-height: 0.8; letter-spacing: -0.04em; padding: 0.08em var(--gut) 0; border-top: 1px solid var(--ln); white-space: nowrap; }
 .ft__base { display: flex; gap: 24px; padding: 14px var(--gut) 20px; color: var(--i3); max-width: calc(100% - 240px); }
 @media (max-width: 760px) {
   .ft__grid { grid-template-columns: 1fr 1fr; }
