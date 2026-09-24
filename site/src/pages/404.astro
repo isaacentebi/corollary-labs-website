@@ -1,0 +1,10 @@
+---
+import Base from '../layouts/Base.astro';
+import { href } from '../config/site';
+---
+<Base page="notfound" title="Not found">
+  <header class="phead">
+    <h1 class="phead__t cut">Not found</h1>
+    <p class="phead__d cut"><a class="more" href={href()}>Home</a></p>
+  </header>
+</Base>

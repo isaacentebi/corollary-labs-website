@@ -1,8 +1,47 @@
 ---
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import '../styles/landing.css';
+import Emblem from '../components/Emblem.astro';
+import { getCollection } from 'astro:content';
+import { href } from '../config/site';
+
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
 ---
 <Base page="home">
-  <Story />
+  <section class="story" data-story aria-label="Corollary Labs">
+    <div class="story__stage">
+      <h1 class="story__name" data-beat="0"><span>Corollary</span> <span>Labs</span></h1>
+      <p class="story__line story__line--0 ph" data-beat="0">[Statement]</p>
+      <p class="story__line story__line--1 ph" data-beat="1">[Sentence]</p>
+      <p class="story__line story__line--2 ph" data-beat="2">[Sentence]</p>
+      <div class="story__meter" aria-hidden="true"><i data-meter></i></div>
+    </div>
+  </section>
+
+  <section class="home-about cut" aria-labelledby="h-about">
+    <h2 id="h-about" class="label">About</h2>
+    <p class="lead ph">[About — one paragraph]</p>
+    <a class="more" href={href('about/')}>About</a>
+  </section>
+
+  <section class="home-essays" aria-labelledby="h-essays">
+    <div class="home-essays__head cut"><h2 id="h-essays" class="label">Essays</h2><a class="more" href={href('essays/')}>All essays</a></div>
+    <ol class="elist">
+      {essays.map((e) => (
+        <li>
+          <a class="erow cut" href={href(`essays/${e.id}/`)}>
+            <Emblem seed={e.id} class="erow__mark" />
+            <span class="erow__title">{e.data.title}</span>
+            <time class="erow__date mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <nav class="bigl" aria-label="Pages">
+    <a class="bigl__a cut" href={href('about/')}><Emblem seed="about" n={2} class="bigl__mark" /><span>About</span></a>
+    <a class="bigl__a cut" href={href('team/')}><Emblem seed="team" n={2} class="bigl__mark" /><span>Team</span></a>
+    <a class="bigl__a cut" href={href('contact/')}><Emblem seed="contact" n={2} class="bigl__mark" /><span>Contact</span></a>
+  </nav>
 </Base>

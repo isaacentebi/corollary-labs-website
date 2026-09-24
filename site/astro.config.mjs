@@ -5,7 +5,8 @@ import { remarkReadingTime } from './src/lib/remark-reading-time.mjs';
 import { rehypeSidenotes } from './src/lib/rehype-sidenotes.mjs';
 
 export default defineConfig({
-  site: 'https://corollarylabs.example',
+  site: 'https://corollarylabs.vercel.app',
+  base: '/free',
   output: 'static',
   devToolbar: { enabled: false },
   trailingSlash: 'ignore',

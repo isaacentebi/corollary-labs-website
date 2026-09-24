@@ -1,0 +1,7 @@
+---
+// A generated n×n loop patch, seeded by a string. The longest loop carries the accent.
+import { emblem } from '../lib/truchet';
+interface Props { seed: string; n?: number; class?: string; stroke?: number }
+const { seed, n = 3, class: cls = '', stroke = 0.16 } = Astro.props;
+---
+<span class={`emblem-wrap ${cls}`} set:html={emblem(seed, n, { stroke })} />

@@ -1,40 +1,21 @@
 ---
-// Team — placeholders until names, roles and portraits are chosen. Same band + hairline system as About and Essays.
 import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
-import '../styles/about.css';
-
-const people = Array.from({ length: 4 }, (_, i) => ({ n: String(i + 1).padStart(2, '0'), name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]' }));
+import Emblem from '../components/Emblem.astro';
+const people = [1, 2, 3, 4];
 ---
-<Base page="team" title="Team" description="[Meta description]">
-  <article class="about o-container" aria-labelledby="team-title">
-    <header class="about-band">
-      <canvas class="field about-band__field" data-field="index" data-word="Team" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="team-title">Team</h1>
-      <span class="about-band__note t-label" aria-hidden="true" data-reveal="scramble">Draft — placeholders in brackets</span>
-    </header>
-    <div class="rule" data-reveal="rule"></div>
-
-    <p class="about-statement" data-reveal="lines">
-      <span class="ph">[Placeholder — one sentence on who works at {site.name}.]</span>
-    </p>
-
-    <ol class="team-list" data-reveal="rows">
-      {people.map((p) => (
-        <li class="team-row">
-          <span class="team-row__n t-label">{p.n}</span>
-          <span class="team-row__name ph">{p.name}</span>
-          <span class="team-row__role t-label ph">{p.role}</span>
-          <span class="team-row__line ph">{p.line}</span>
-        </li>
-      ))}
-    </ol>
-
-    <section class="about-colophon" aria-label="Contact">
-      <dl>
-        <div class="about-colophon__row"><dt class="t-label">JOIN</dt><dd class="ph">[Placeholder — how to get in touch about working here.]</dd></div>
-        <div class="about-colophon__row"><dt class="t-label">CONTACT</dt><dd><a href={`mailto:${site.email}`}>{site.email}</a></dd></div>
-      </dl>
-    </section>
-  </article>
+<Base page="team" title="Team">
+  <header class="phead">
+    <h1 class="phead__t cut">Team</h1>
+    <p class="phead__d cut ph">[Team — one sentence]</p>
+  </header>
+  <ul class="people">
+    {people.map((n) => (
+      <li class="person cut">
+        <Emblem seed={`person-${n}`} n={3} class="person__mark" />
+        <p class="person__name ph">[Name]</p>
+        <p class="person__role mono ph">[Role]</p>
+        <p class="person__bio ph">[Bio — two sentences]</p>
+      </li>
+    ))}
+  </ul>
 </Base>
