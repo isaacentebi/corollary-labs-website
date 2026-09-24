@@ -1,0 +1,10 @@
+---
+// Logo A, "Diagonal": a 4×4 table whose diagonal is lit (what each firm supplies to itself); the last diagonal cell in signal.
+interface Props { class?: string; size?: number }
+const { class: cls, size = 18 } = Astro.props;
+const cells = [] as { x: number; y: number; k: 'o' | 'd' | 'a' }[];
+for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) cells.push({ x: j * 9, y: i * 9, k: i === j ? (i === 3 ? 'a' : 'd') : 'o' });
+---
+<svg class={cls} width={size} height={size} viewBox="0 0 34 34" aria-hidden="true">
+  {cells.map((c) => <rect x={c.x} y={c.y} width="7" height="7" fill={c.k === 'a' ? 'var(--a)' : c.k === 'd' ? 'var(--i)' : 'var(--ln2)'} />)}
+</svg>

@@ -1,62 +1,70 @@
 ---
-// About — abstract and deliberately provisional. Everything in [brackets] is a placeholder to be written with the
-// founder; the structure (statement → figure → colophon) is the part that is decided.
+// About: the company described the way the site describes every firm, as one column of inputs and outputs.
+// Everything in [brackets] is a placeholder to be written with the founder. FOR FOUNDER REVIEW.
 import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
-import '../styles/about.css';
+import { getCollection } from 'astro:content';
+import { site, url } from '../config/site';
+import '../styles/pages.css';
 
-const P = (t: string) => `[${t}]`;
-const colophon = [
-  { k: 'Entity', v: `${site.name} is a company.` },
-  { k: 'Founded', v: P('Year') },
-  { k: 'Location', v: P('City') },
-  { k: 'Contact', v: site.email, href: `mailto:${site.email}` },
+const essays = await getCollection('essays', ({ data }) => !data.draft);
+const inputs = ['[Input]', '[Input]', '[Input]', '[Input]'];
+const outputs: { k: string; v: string; href?: string; real?: boolean }[] = [
+  { k: 'Essays', v: `${essays.length} published`, href: url('essays/'), real: true },
+  { k: '[Output]', v: '[Placeholder]' },
+  { k: '[Output]', v: '[Placeholder]' },
 ];
-const ph = (s: string) => s.startsWith('[');
+// the column drawing: one cell per row of the table below
+const cellH = 34, gap = 8, x = 140, w = 150;
+const rows = [
+  ...inputs.map(() => ({ kind: 'in' as const })),
+  ...outputs.map((o) => ({ kind: o.real ? ('real' as const) : ('out' as const) })),
+];
+const yOf = (i: number) => 30 + i * (cellH + gap) + (i >= inputs.length ? 34 : 0);
+const H = yOf(rows.length - 1) + cellH + 30;
 ---
 <Base page="about" title="About" description={`About ${site.name}.`}>
-  <article class="about o-container" aria-labelledby="about-title">
-    <header class="about-band">
-      <canvas class="field about-band__field" data-field="index" data-word="About" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="about-title">About</h1>
-      <span class="about-band__note t-label" aria-hidden="true" data-reveal="scramble">Draft — placeholders in brackets</span>
-    </header>
-    <div class="rule" data-reveal="rule"></div>
+  <section class="page">
+    <p class="page__kick mono reveal"><b>02</b><span>About</span></p>
+    <h1 class="page__title reveal">About</h1>
+    <p class="page__lede reveal">{site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span></p>
 
-    <p class="about-statement" data-reveal="lines">
-      {site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span>
-    </p>
+    <div class="ab">
+      <figure class="ab__fig reveal">
+        <svg viewBox={`0 0 420 ${H}`} role="img" aria-label={`${site.name} drawn as one column of a table: ${inputs.length} input cells (placeholders) and ${outputs.length} output cells, one of which, Essays, is filled.`}>
+          <text x={x - 16} y="20" fill="var(--i3)" font-family="var(--f-m)" font-size="10" text-anchor="end" letter-spacing=".4">COL.</text>
+          <text x={x} y="20" fill="var(--i)" font-family="var(--f-m)" font-size="10" letter-spacing=".4">CL</text>
+          {rows.map((r, i) => (
+            r.kind === 'real'
+              ? <rect x={x} y={yOf(i)} width={w} height={cellH} fill="var(--i)" />
+              : <rect x={x + 0.5} y={yOf(i) + 0.5} width={w - 1} height={cellH - 1} fill="none" stroke="var(--ln2)" stroke-dasharray="3 3" />
+          ))}
+          <line x1={x} x2={x + w} y1={yOf(inputs.length) - 17} y2={yOf(inputs.length) - 17} stroke="var(--ln2)" />
+          <text x={x - 16} y={yOf(0) + 22} fill="var(--i2)" font-family="var(--f-m)" font-size="10" text-anchor="end" letter-spacing=".4">INPUTS</text>
+          <text x={x - 16} y={yOf(inputs.length) + 22} fill="var(--i2)" font-family="var(--f-m)" font-size="10" text-anchor="end" letter-spacing=".4">OUTPUTS</text>
+          <text x={x + w + 16} y={yOf(inputs.length) + 22} fill="var(--i)" font-family="var(--f-m)" font-size="10" letter-spacing=".4">ESSAYS · {String(essays.length).padStart(2, '0')}</text>
+        </svg>
+        <figcaption class="mono">{site.name} as one column. Dashed cells are not yet written.</figcaption>
+      </figure>
 
-    <figure class="about-fig">
-      <svg viewBox="0 0 800 330" role="img" aria-label="The firm, reorganised: inputs enter a firm whose steps are agents linked in a mesh; people sit on a loop at the edges; the boundary is open to new outputs B and C, while output A fades.">
-        <defs>
-          <pattern id="about-hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="9" class="af-hatch" /></pattern>
-        </defs>
-        <rect x="170" y="30" width="470" height="270" fill="url(#about-hatch)" />
-        <path class="af-ln af-wall" d="M640 100 L640 30 L170 30 L170 300 L640 300 L640 260" />
-        <path class="af-ln" d="M40 165 L253 165" />
-        <g class="af-ln af-g"><path d="M303 165 L373 165 M423 165 L493 165 M543 165 L640 110 L760 110 M543 165 L600 221" /><path d="M615 221 L760 221" /><path d="M279 107 L279 139 M518 139 L518 107" /><path d="M505 88 Q400 16 292 88" /></g>
-        <path class="af-ln af-d" d="M543 165 L760 165" />
-        <g class="af-ln af-g af-thin"><path d="M293 186 L316 214 M327 225 L355 243 M367 245 L394 227 M406 227 L433 245 M445 243 L472 225 M484 214 L504 186 M328 220 L394 223 M406 223 L472 220 M398 190 L398 217" /></g>
-        <g class="af-agent"><circle cx="278" cy="165" r="25" /><circle cx="398" cy="165" r="25" /><circle cx="518" cy="165" r="25" /></g>
-        <g class="af-mesh"><circle cx="322" cy="221" r="6" /><circle cx="361" cy="248" r="6" /><circle cx="400" cy="223" r="6" /><circle cx="439" cy="248" r="6" /><circle cx="478" cy="221" r="6" /></g>
-        <g class="af-person"><circle cx="279" cy="92" r="15" /><circle cx="520" cy="92" r="15" /><circle cx="600" cy="221" r="15" /></g>
-        <g class="af-t"><text x="40" y="151">INPUTS</text><text x="760" y="96" text-anchor="end">OUTPUT B</text><text x="760" y="207" text-anchor="end">OUTPUT C</text><text class="af-td" x="760" y="151" text-anchor="end">OUTPUT A</text></g>
-        <g class="af-t af-tg af-small"><text x="278" y="169" text-anchor="middle">AGENT</text><text x="398" y="169" text-anchor="middle">AGENT</text><text x="518" y="169" text-anchor="middle">AGENT</text></g>
-        <rect class="af-chip" x="186" y="16" width="70" height="26" /><text class="af-t af-b" x="221" y="34" text-anchor="middle">FIRM</text>
-      </svg>
-      <figcaption class="about-fig__cap t-label">FIG. — THE FIRM, REORGANISED <span class="ph">[Placeholder caption.]</span></figcaption>
-    </figure>
+      <table class="tb reveal">
+        <caption class="mono"><b>Table 0.</b> {site.name}, inputs and outputs</caption>
+        <tbody>
+          <tr><th scope="rowgroup" colspan="2" class="mono">Inputs</th></tr>
+          {inputs.map((k) => <tr><td class="ph">{k}</td><td class="ph">[Placeholder]</td></tr>)}
+          <tr><th scope="rowgroup" colspan="2" class="mono">Outputs</th></tr>
+          {outputs.map((o) => <tr><td class:list={{ ph: !o.real }}>{o.k}</td><td class:list={{ ph: !o.real }}>{o.href ? <a class="link" href={o.href}>{o.v}</a> : o.v}</td></tr>)}
+        </tbody>
+      </table>
+    </div>
 
-    <section class="about-colophon" aria-label="Colophon">
-      <dl>
-        {colophon.map((c) => (
-          <div class="about-colophon__row">
-            <dt class="t-label">{c.k.toUpperCase()}</dt>
-            <dd class:list={{ ph: ph(c.v) }}>{c.href ? <a href={c.href}>{c.v}</a> : c.v}</dd>
-          </div>
-        ))}
-      </dl>
-    </section>
-  </article>
+    <table class="tb colo reveal">
+      <caption class="mono"><b>Colophon</b></caption>
+      <tbody>
+        <tr><td class="mono" style="width:30%;color:var(--i3)">Entity</td><td>{site.name} is a company.</td></tr>
+        <tr><td class="mono" style="color:var(--i3)">Founded</td><td class="ph">[Year]</td></tr>
+        <tr><td class="mono" style="color:var(--i3)">Location</td><td class="ph">[City]</td></tr>
+        <tr><td class="mono" style="color:var(--i3)">Contact</td><td><a class="link" href={`mailto:${site.email}`}>{site.email}</a></td></tr>
+      </tbody>
+    </table>
+  </section>
 </Base>

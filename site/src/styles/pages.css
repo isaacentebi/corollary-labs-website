@@ -1,0 +1,40 @@
+/* Essays index, About, Team, Contact. */
+.ix th button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; display: inline-flex; gap: 6px; }
+.ix th button:hover { color: var(--i); }
+.ix th button[aria-sort]::after { content: '↓'; color: var(--a); }
+.ix th button[aria-sort='ascending']::after { content: '↑'; }
+.ix td.mono { color: var(--i2); padding-top: 24px; }
+.ix__n { color: var(--i3) !important; width: 56px; padding-right: 28px !important; }
+.ix__a { display: grid; gap: 8px; }
+.ix__t { font-stretch: 112%; font-size: clamp(22px, 2.1vw, 34px); line-height: 1.08; letter-spacing: -0.015em; transition: color 0.2s; }
+.ix__d { font-family: var(--f-s); color: var(--i2); font-size: 18px; line-height: 1.35; max-width: 36em; }
+.ix__ph { color: var(--i3); }
+.ix__a:hover .ix__t { color: var(--a); }
+@media (max-width: 640px) { .-hide-s { display: none; } .ix__n { width: 28px; padding-right: 10px !important; } }
+
+/* About: the company as one column of a table */
+.ab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 96px); margin-top: clamp(56px, 8vw, 120px); align-items: start; }
+.ab__fig { position: sticky; top: calc(var(--head) + 32px); }
+.ab__fig svg { width: 100%; height: auto; max-width: 520px; }
+.ab__fig figcaption { color: var(--i3); margin-top: 14px; max-width: 520px; }
+.ab .tb { margin-top: 0; }
+.ab .tb th[scope='rowgroup'] { color: var(--i); padding-top: 28px; border-top: 1px solid var(--ln2); }
+.ab .tb td:first-child { color: var(--i2); width: 44%; }
+.ab .tb td { font-size: 17px; }
+.ab .tb td a { color: var(--i); }
+.ab .tb td a:hover { color: var(--a); }
+@media (max-width: 900px) { .ab { grid-template-columns: 1fr; } .ab__fig { position: static; } }
+
+.colo { margin-top: clamp(64px, 9vw, 128px); }
+
+/* Team */
+.tm td { font-size: 18px; }
+.tm td:first-child { width: 56px; color: var(--i3); }
+.tm__name { font-stretch: 112%; font-size: clamp(20px, 1.8vw, 28px) !important; letter-spacing: -0.01em; }
+.tm__cell { width: 24px; }
+.tm__cell i { display: block; width: 14px; height: 14px; background: var(--ln2); margin-top: 6px; }
+@media (max-width: 640px) { .tm .-hide-s { display: none; } }
+
+/* Contact */
+.ct__mail { display: inline-block; font-stretch: 125%; font-weight: 300; font-size: clamp(36px, 7vw, 120px); line-height: 1; letter-spacing: -0.035em; margin-top: clamp(40px, 6vw, 88px); transition: color 0.2s; word-break: break-all; }
+.ct__mail:hover { color: var(--a); }

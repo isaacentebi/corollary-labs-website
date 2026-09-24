@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import { site, url } from '../config/site';
+import '../styles/pages.css';
+---
+<Base page="contact" title="Contact" description={`Contact ${site.name}.`}>
+  <section class="page">
+    <p class="page__kick mono reveal"><b>04</b><span>Contact</span></p>
+    <h1 class="page__title reveal">Contact</h1>
+    <a class="ct__mail reveal" href={`mailto:${site.email}`}>{site.email}</a>
+
+    <table class="tb colo reveal">
+      <caption class="mono"><b>Details</b></caption>
+      <tbody>
+        <tr><td class="mono" style="width:30%;color:var(--i3)">Email</td><td><a class="link" href={`mailto:${site.email}`}>{site.email}</a></td></tr>
+        <tr><td class="mono" style="color:var(--i3)">Location</td><td class="ph">[City]</td></tr>
+        <tr><td class="mono" style="color:var(--i3)">Writing to us</td><td class="ph">[Placeholder — what to write about.]</td></tr>
+        <tr><td class="mono" style="color:var(--i3)">Reading</td><td><a class="link" href={url('essays/')}>Essays</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+</Base>

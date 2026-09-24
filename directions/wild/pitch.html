@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tableau — pitch (wild)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wdth,wght@75..112.5,300..600&family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..500&display=swap" rel="stylesheet" />
+<style>
+  :root { --g:#0a0a09; --g2:#121211; --i:#ecebe6; --i2:#a3a19b; --i3:#5d5c57; --ln:#2a2a27; --a:#ff5b1f; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--g); color: var(--i); font: 16px/1.5 'Archivo', sans-serif; font-variation-settings: 'wdth' 100; padding: 0 24px 120px; }
+  .mono { font-family: 'Martian Mono', monospace; font-size: 11px; letter-spacing: .02em; text-transform: uppercase; color: var(--i2); font-variation-settings: 'wdth' 87.5; }
+  header { display: flex; justify-content: space-between; align-items: baseline; padding: 20px 0; border-bottom: 1px solid var(--ln); }
+  h1 { font-weight: 300; font-variation-settings: 'wdth' 125; font-size: clamp(56px, 11vw, 176px); line-height: .9; letter-spacing: -.02em; margin: 72px 0 24px; }
+  h2 { font-weight: 400; font-variation-settings: 'wdth' 125; font-size: 28px; margin: 96px 0 20px; letter-spacing: -.01em; }
+  h2 small { display: block; margin-bottom: 8px; }
+  p.lede { font-family: 'Newsreader', serif; font-size: clamp(20px, 2.1vw, 28px); line-height: 1.35; max-width: 32em; font-weight: 300; }
+  p, li { max-width: 44em; }
+  section { border-top: 1px solid var(--ln); }
+  .grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .frame { border: 1px solid var(--ln); background: var(--g2); }
+  .frame canvas { display: block; width: 100%; aspect-ratio: 4/3; }
+  .frame figcaption { padding: 12px 14px 16px; border-top: 1px solid var(--ln); }
+  .frame figcaption b { display: block; font-weight: 500; margin-bottom: 4px; font-variation-settings: 'wdth' 112; }
+  .frame figcaption span { color: var(--i2); font-size: 14px; }
+  table { border-collapse: collapse; width: 100%; max-width: 900px; }
+  td, th { border-top: 1px solid var(--ln); padding: 10px 12px 10px 0; text-align: left; vertical-align: top; }
+  th { width: 180px; }
+  .sw { display: flex; gap: 0; flex-wrap: wrap; }
+  .sw div { width: 150px; height: 120px; padding: 10px; display: flex; flex-direction: column; justify-content: flex-end; border: 1px solid var(--ln); }
+  .logos { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+  .logo { border: 1px solid var(--ln); padding: 32px 24px 16px; min-height: 240px; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; }
+  .wm { font-variation-settings: 'wdth' 125; font-weight: 400; font-size: 30px; letter-spacing: -.01em; display: flex; align-items: center; gap: 14px; }
+  .ph { color: var(--i3); }
+  .accent { color: var(--a); }
+  ol.struct li { margin: 6px 0; }
+  .type-spec { display: grid; gap: 20px; }
+  .type-spec div { border-top: 1px solid var(--ln); padding-top: 12px; }
+</style>
+</head>
+<body>
+<header><span class="mono">Corollary Labs · direction <span class="accent">wild</span></span><span class="mono">Pitch · 2026-09-24</span></header>
+
+<h1>Tableau</h1>
+<p class="lede">The site is one input–output table of an economy, drawn as a live grid of cells on a black ground. Each column is a firm and each cell is an input it takes from another firm; three extra rows at the foot are what people supply: execution, plans, objectives. The story is told as successive states of that one table. An agent enters a firm and its execution and plans move out of the supplied rows into the firm's own diagonal cell. Then the whole table permutes into a new order (the same entries, a new structure: reorganisation, not replacement), the change passes through the table in rounds from trading partner to trading partner, and at the end the table lifts into a height field and deforms continuously from the old economy to the new one: a homotopy you can watch.</p>
+
+<section>
+<h2><small class="mono">01</small>Why this and not the others</h2>
+<p>Plotter draws the firm as a machine on paper; Organic grows it; Proof proves it. Tableau <em>measures</em> it. It takes the company's ontology literally at the level of economics rather than illustration: "a firm is defined by its inputs and outputs" is exactly what a column of an input–output table is, and "automation is a firm producing its own input" is exactly mass moving onto the diagonal. Reorganisation is a permutation of rows and columns (Bertin's reorderable matrix). Diffusion is the power series I + A + A² + …, each power one more round through suppliers. The homotopy is H(t) = (1 − t)A₀ + tA₁, drawn, not named. None of this is decoration; every frame is a real operation on a real kind of object.</p>
+</section>
+
+<section>
+<h2><small class="mono">02</small>Key frames of the home story</h2>
+<div class="grid" id="frames"></div>
+</section>
+
+<section>
+<h2><small class="mono">03</small>Page structure</h2>
+<ol class="struct">
+  <li><b>Home</b>: one sticky WebGL stage (instanced cells, one scroll progress). States 0–6 above. Hover any cell to read row, column and value; click a column to send a change through the table in rounds. Ends at the index of pages.</li>
+  <li><b>Essays</b>: the index is a table (number, title, date, sections, notes, minutes), sortable by column headers. Essay pages keep the long-reading template, set in Newsreader on the dark ground, with a thin table of contents in mono.</li>
+  <li><b>About</b>: the company described in its own ontology, as one column of a table: its inputs and its outputs (Essays: 3, true today; the rest in [brackets]), then a colophon.</li>
+  <li><b>Team</b>: a table of people, rows with [Name] [Role] [one line].</li>
+  <li><b>Contact</b>: one row: email, location, and [placeholder] for how to write.</li>
+</ol>
+<p>Navigation: a thin header row that reads like the column headings of a table (00 Index · 01 Essays · 02 About · 03 Team · 04 Contact). This breaks Plotter's "no navbar" rule on purpose: in a table the headings are part of the object, and the pages are its columns. The bottom-right corner is kept free for the version switcher.</p>
+</section>
+
+<section>
+<h2><small class="mono">04</small>How the company introduces itself</h2>
+<p>Not with a statement about itself. The name is set large under the table, like the title of a statistical table, and the first thing the visitor can do is read a cell. The About page then describes Corollary Labs the way the site describes every firm: a column of inputs and outputs, with placeholders where the facts are not settled. The only sentence in its own voice is the existing "Corollary Labs is a company." followed by bracketed placeholders.</p>
+</section>
+
+<section>
+<h2><small class="mono">05</small>Palette</h2>
+<div class="sw">
+  <div style="background:#0a0a09"><span class="mono">Carbon #0A0A09</span></div>
+  <div style="background:#121211"><span class="mono">Carbon 2 #121211</span></div>
+  <div style="background:#ecebe6;color:#0a0a09"><span class="mono" style="color:#0a0a09">Bone #ECEBE6</span></div>
+  <div style="background:#a3a19b"><span class="mono" style="color:#0a0a09">Ink 2 #A3A19B</span></div>
+  <div style="background:#5d5c57"><span class="mono" style="color:#ecebe6">Ink 3 #5D5C57</span></div>
+  <div style="background:#ff5b1f"><span class="mono" style="color:#0a0a09">Signal #FF5B1F</span></div>
+</div>
+<p style="margin-top:16px">Values are greys (cell brightness = amount). Signal orange marks only what is produced inside a firm after the change, so the colour itself carries the thesis: at the start there is almost none, at the end it has spread through the table.</p>
+</section>
+
+<section>
+<h2><small class="mono">06</small>Type</h2>
+<div class="type-spec">
+  <div><span class="mono">Display and interface — Archivo (variable width 62–125)</span><p style="font-variation-settings:'wdth' 125;font-size:44px;font-weight:300;line-height:1">Corollary Labs</p><p style="font-variation-settings:'wdth' 70;font-size:20px;font-weight:500">Width is an axis: extended for titles, condensed for dense headers.</p></div>
+  <div><span class="mono">Long reading — Newsreader</span><p style="font-family:Newsreader;font-size:22px;font-weight:300">A factory is best understood in terms of its inputs and outputs.</p></div>
+  <div><span class="mono">Figures and labels — Martian Mono (tabular)</span><p style="font-family:'Martian Mono';font-size:14px">ROW 07 → COL 19 · 0.042 · EXECUTION · PLANS · OBJECTIVES</p></div>
+</div>
+</section>
+
+<section>
+<h2><small class="mono">07</small>Logo options</h2>
+<div class="logos">
+  <div class="logo"><div class="wm"><svg width="34" height="34" viewBox="0 0 34 34"><g fill="#3a3a36"><rect x="0" y="0" width="7" height="7"/><rect x="9" y="0" width="7" height="7"/><rect x="18" y="0" width="7" height="7"/><rect x="27" y="0" width="7" height="7"/><rect x="0" y="9" width="7" height="7"/><rect x="18" y="9" width="7" height="7"/><rect x="27" y="9" width="7" height="7"/><rect x="0" y="18" width="7" height="7"/><rect x="9" y="18" width="7" height="7"/><rect x="27" y="18" width="7" height="7"/><rect x="0" y="27" width="7" height="7"/><rect x="9" y="27" width="7" height="7"/><rect x="18" y="27" width="7" height="7"/></g><g fill="#ecebe6"><rect x="0" y="0" width="7" height="7"/><rect x="9" y="9" width="7" height="7"/><rect x="18" y="18" width="7" height="7"/></g><rect x="27" y="27" width="7" height="7" fill="#ff5b1f"/></svg>Corollary Labs</div><p><b>A. Diagonal (chosen for the build).</b> A 4×4 table with its diagonal lit: what each firm supplies to itself. The last diagonal cell is signal orange. Works at 16px as a favicon.</p></div>
+  <div class="logo"><div class="wm" style="font-size:34px"><span style="font-weight:200;font-variation-settings:'wdth' 62;font-size:52px;line-height:1">[</span>Corollary<span style="color:#5d5c57">Labs</span><span style="font-weight:200;font-variation-settings:'wdth' 62;font-size:52px;line-height:1">]</span></div><p><b>B. Bracket.</b> The name inside matrix brackets, set in extended Archivo; "Labs" in ink 3. A mathematical mark that stays a wordmark.</p></div>
+  <div class="logo"><div class="wm" style="gap:0;flex-direction:column;align-items:flex-start;font-family:'Martian Mono';font-size:14px;line-height:1"><div style="display:grid;grid-template-columns:repeat(9,22px);gap:2px">
+    <span style="border:1px solid #3a3a36;height:22px;display:grid;place-items:center">C</span><span style="border:1px solid #3a3a36;height:22px;display:grid;place-items:center">O</span><span style="border:1px solid #3a3a36;height:22px;display:grid;place-items:center">R</span><span style="border:1px solid #3a3a36;height:22px;display:grid;place-items:center">O</span><span style="border:1px solid #3a3a36;height:22px;display:grid;place-items:center">L</span><span style="border:1px solid #3a3a36;height:22px;display:grid;place-items:center">L</span><span style="border:1px solid #3a3a36;height:22px;display:grid;place-items:center">A</span><span style="border:1px solid #3a3a36;height:22px;display:grid;place-items:center">R</span><span style="background:#ff5b1f;color:#0a0a09;height:22px;display:grid;place-items:center">Y</span></div></div><p><b>C. Row.</b> The name as one row of a table, a letter per cell, the last cell lit. Separable: the same cells can hold numbers elsewhere.</p></div>
+</div>
+</section>
+
+<section>
+<h2><small class="mono">08</small>Motion and craft</h2>
+<ul>
+  <li>WebGL2 instanced cells via three.js (one draw call, ~1,100 cells). Rows and columns travel as whole rows and columns, never as scattered particles. Easing is mechanical (expo in-out), like a rod mechanism.</li>
+  <li>Reduced motion: every state is rendered as a still, scroll switches between them without tweening, no flicker.</li>
+  <li>375px: the table stays square and fills the width; captions sit under it; hover becomes tap.</li>
+  <li>New copy (captions) comes from a clean-room writer and is flagged for founder review.</li>
+</ul>
+</section>
+
+<script>
+// Key frames, drawn from the same deterministic table the site uses.
+const N = 20, S = 3;
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const r = rng(7); const A = [];
+for (let i=0;i<N;i++){A[i]=[];for(let j=0;j<N;j++){const bi=Math.floor(i/5)===Math.floor(j/5);let v=r();v=bi?Math.pow(v,1.6)*0.9:Math.pow(v,5)*0.7;if(i===j)v=0.12;A[i][j]=v}}
+const L = []; for (let k=0;k<S;k++){L[k]=[];for(let j=0;j<N;j++)L[k][j]=0.35+r()*0.5}
+const perm = Array.from({length:N},(_,i)=>i).sort((a,b)=>((a*7)%N)-((b*7)%N));
+const K = 8;
+const frames = [
+  ['0 · The table','Each column is a firm; each cell an input from the firm in that row. Three supplied rows at the foot.', {}],
+  ['1 · One firm','One column isolated: the inputs of a single firm, and its output.', {focus:true}],
+  ['2 · Execution inside','The execution cell leaves the supplied rows and moves onto the firm\'s own diagonal.', {focus:true,moved:1}],
+  ['3 · Plans inside','Plans follow. Objectives stay supplied from outside.', {focus:true,moved:2}],
+  ['4 · Reorganisation','Rows and columns permute: same entries, new blocks. Some columns end, new ones begin.', {moved:2,perm:true}],
+  ['5 · Diffusion','The change passes to trading partners, then theirs, in rounds, unevenly.', {moved:2,perm:true,spread:true}],
+  ['6 · Homotopy','The table lifts into a height field and deforms from A₀ to A₁.', {lift:true}],
+];
+const host = document.getElementById('frames');
+for (const [t, d, o] of frames) {
+  const f = document.createElement('figure'); f.className='frame';
+  const c = document.createElement('canvas'); c.width=800; c.height=600; f.appendChild(c);
+  const cap = document.createElement('figcaption'); cap.innerHTML=`<b>${t}</b><span>${d}</span>`; f.appendChild(cap); host.appendChild(f);
+  draw(c.getContext('2d'), o);
+}
+function draw(g, o){
+  g.fillStyle='#121211';g.fillRect(0,0,800,600);
+  if(o.lift){return lift(g)}
+  const cs=22, ox=180, oy=40;
+  const spread = (j)=>{ if(!o.spread) return j===K; const d=Math.abs(perm.indexOf(j)-perm.indexOf(K)); return A[K][j]>0.25||A[j][K]>0.25||d<2; };
+  for(let ii=0;ii<N;ii++)for(let jj=0;jj<N;jj++){
+    const i=o.perm?perm[ii]:ii, j=o.perm?perm[jj]:jj;
+    let v=A[i][j]; let col=null;
+    const inside = o.moved && i===j && spread(j);
+    if(o.focus && j!==K) v*=0.18;
+    if(o.perm && (j===3||j===11)) v*=0.15;
+    const x=ox+jj*cs, y=oy+ii*cs;
+    if(inside){g.fillStyle='#ff5b1f'} else {const c=Math.round(30+v*220);g.fillStyle=`rgb(${c},${c},${c-4})`}
+    g.fillRect(x,y,cs-3,cs-3);
+  }
+  g.fillStyle='#2a2a27';g.fillRect(ox,oy+N*cs+4,N*cs-3,1);
+  const lab=['EXECUTION','PLANS','OBJECTIVES'];
+  for(let k=0;k<S;k++){for(let jj=0;jj<N;jj++){const j=o.perm?perm[jj]:jj;let v=L[k][j];
+      const gone = o.moved && k<o.moved && (o.perm?spread(j):j===K);
+      if(o.focus && j!==K) v*=0.18;
+      const x=ox+jj*cs,y=oy+N*cs+12+k*cs;
+      if(gone){g.strokeStyle='#3a3a36';g.strokeRect(x+.5,y+.5,cs-4,cs-4)} else {const c=Math.round(30+v*200);g.fillStyle=`rgb(${c},${c},${c-4})`;g.fillRect(x,y,cs-3,cs-3)}
+    }
+    g.fillStyle='#a3a19b';g.font='11px Martian Mono, monospace';g.textAlign='right';g.fillText(lab[k],ox-10,oy+N*cs+12+k*cs+14);
+  }
+  if(o.perm){g.fillStyle='#ff5b1f';g.globalAlpha=.9; g.fillRect(ox+N*cs+6,oy,3,6*cs); g.globalAlpha=1;}
+}
+function lift(g){
+  const cx=400, cy=330;
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+    const t=(i+j)/(2*N); const v=A[i][j]*(1-t)+A[perm[i]][perm[j]]*t;
+    const x=cx+(j-i)*16, y=cy+(i+j)*8-230, h=v*120;
+    const inside = i===j && t>0.4;
+    g.fillStyle=inside?'#ff5b1f':`rgb(${40+v*190|0},${40+v*190|0},${36+v*190|0})`;
+    g.beginPath();g.moveTo(x,y-h);g.lineTo(x+16,y+8-h);g.lineTo(x,y+16-h);g.lineTo(x-16,y+8-h);g.closePath();g.fill();
+    g.fillStyle=inside?'#b33d12':'#1c1c1a';g.beginPath();g.moveTo(x-16,y+8-h);g.lineTo(x,y+16-h);g.lineTo(x,y+16);g.lineTo(x-16,y+8);g.closePath();g.fill();
+  }
+  g.fillStyle='#a3a19b';g.font='13px Martian Mono, monospace';g.fillText('H(t) = (1 − t)·A₀ + t·A₁',40,560);
+}
+</script>
+</body>
+</html>

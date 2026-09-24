@@ -1,53 +1,55 @@
 ---
-import '@fontsource/instrument-serif/400.css';
-import '@fontsource/instrument-serif/400-italic.css';
-import '@fontsource-variable/inter-tight/wght.css';
-import '@fontsource-variable/inter-tight/wght-italic.css';
-import '@fontsource/space-mono/400.css';
-import '@fontsource/space-mono/700.css';
-import '../styles/tokens.css';
+import '@fontsource-variable/archivo/wdth.css';
+import '@fontsource-variable/martian-mono/wdth.css';
+import '@fontsource-variable/newsreader/wght.css';
+import '@fontsource-variable/newsreader/wght-italic.css';
 import '../styles/global.css';
-import { ClientRouter } from 'astro:transitions';
+import Mark from '../components/Mark.astro';
 import Footer from '../components/Footer.astro';
-import Preloader from '../components/Preloader.astro';
-import { site } from '../config/site';
+import { site, nav, url } from '../config/site';
 
-interface Props { title?: string; description?: string; page: 'home' | 'index' | 'essay' | 'about' | 'team' }
+interface Props { title?: string; description?: string; page: 'home' | 'essays' | 'essay' | 'about' | 'team' | 'contact' }
 const { title, description = site.description, page } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
+const path = Astro.url.pathname;
 ---
 <!doctype html>
-<html lang="en" data-page={page} transition:animate="none">
+<html lang="en" data-page={page}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta name="theme-color" content="#fafaf8" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <ClientRouter fallback="swap" />
+    <meta name="theme-color" content="#0a0a09" />
+    <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
     <script is:inline>
-      (function () {
-        var d = document.documentElement;
-        d.classList.add('js');
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('rm');
-        try { if (sessionStorage.getItem('corollary.intro')) d.classList.add('intro-seen'); } catch (e) {}
-        // failsafe: never leave content hidden if the motion layer fails to boot
-        window.__motionFailsafe = setTimeout(function () { d.classList.add('motion-fail'); }, 5000);
-      })();
+      document.documentElement.classList.add('js');
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('rm');
     </script>
   </head>
-  <body id="top">
-    <Preloader />
-    <a class="skip-link" href="#main">Skip to content</a>
-    <main id="main" data-page-root data-page={page}>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="hd">
+      <a class="hd__brand" href={url()} aria-label={`${site.name}, home`}>
+        <Mark class="hd__mark" />
+        <span class="hd__word">{site.name}</span>
+      </a>
+      <nav class="hd__nav mono" aria-label="Site">
+        {nav.map((n) => (
+          <a href={n.href} aria-current={path.startsWith(n.href.replace(/\/$/, '')) ? 'page' : undefined}>
+            <span class="hd__n">{n.n}</span>{n.label}
+          </a>
+        ))}
+      </nav>
+    </header>
+    <main id="main">
       <slot />
     </main>
     <Footer />
     <script>
-      import '../scripts/app';
+      import '../scripts/reveal';
     </script>
   </body>
 </html>

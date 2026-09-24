@@ -1,8 +1,85 @@
 ---
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import '../styles/landing.css';
+import { site, states, url } from '../config/site';
+import { getCollection, render } from 'astro:content';
+import { SUPPLIED } from '../scripts/economy';
+import '../styles/home.css';
+
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
+const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
+const pad = (n: number) => String(n).padStart(2, '0');
+const axis = [1, 8, 16, 24, 32];
 ---
 <Base page="home">
-  <Story />
+  <section class="st" data-story aria-label="The table, in seven states">
+    <div class="st__stage" data-stage>
+      <canvas class="st__gl" data-gl aria-hidden="true"></canvas>
+
+      <div class="st__labels mono" data-labels aria-hidden="true">
+        {axis.map((a) => <span class="st__ax -top" data-ax-top={a - 1}>{pad(a)}</span>)}
+        {axis.map((a) => <span class="st__ax -left" data-ax-left={a - 1}>{pad(a)}</span>)}
+        {SUPPLIED.map((s, k) => <span class="st__row" data-row={k}>{s}</span>)}
+        <span class="st__row -out" data-row="3">Output</span>
+        <span class="st__rule" data-rule></span>
+      </div>
+      <div class="st__nums mono" data-nums aria-hidden="true"></div>
+      <span class="st__chip mono" data-chip aria-hidden="true"></span>
+      <div class="st__tip mono" data-tip aria-hidden="true"></div>
+
+      <div class="st__hero" data-hero>
+        <h1 class="st__name">Corollary<br />Labs</h1>
+        <p class="st__intro">{site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span></p>
+        <p class="st__hint mono"><span class="-fine">Hover to read a cell. Click a column to trace its suppliers, round by round.</span><span class="-coarse">Tap a column to trace its suppliers, round by round.</span></p>
+      </div>
+
+      <ol class="st__rail mono" data-rail aria-label="States of the table">
+        {states.map((s, i) => (
+          <li><button type="button" data-goto={i}><span class="st__rail-n">{i}</span>{s.title}</button></li>
+        ))}
+      </ol>
+
+      <div class="st__caps" data-caps>
+        {states.map((s, i) => (
+          <div class="st__cap" data-cap={i}>
+            <p class="st__cap-n mono">State {i} <span>/ 6</span></p>
+            <h2 class="st__cap-t">{s.title}</h2>
+            {s.lines.map((l) => <p class="st__cap-l">{l}</p>)}
+          </div>
+        ))}
+      </div>
+
+      <div class="st__t mono" data-coda>
+        <label for="t-range">t</label>
+        <input id="t-range" type="range" min="0" max="1" step="0.001" value="1" data-trange />
+        <output data-tout>1.00</output>
+      </div>
+      <span class="st__cue mono" data-cue aria-hidden="true">Scroll ↓</span>
+    </div>
+  </section>
+
+  <section class="he" aria-labelledby="he-title">
+    <div class="he__head">
+      <h2 id="he-title" class="he__title">Essays</h2>
+      <a class="mono link" href={url('essays/')}>All essays →</a>
+    </div>
+    <table class="tb he__tb">
+      <thead class="mono"><tr><th class="num">No.</th><th>Title</th><th class="-hide-s">Date</th><th class="num">Min.</th></tr></thead>
+      <tbody>
+        {rows.map(({ e, fm }, i) => (
+          <tr class="reveal">
+            <td class="num mono">{pad(rows.length - i)}</td>
+            <td><a class="he__a" href={url(`essays/${e.id}/`)}><span class="he__t">{e.data.title}</span><span class="he__d">{e.data.dek}</span></a></td>
+            <td class="mono -hide-s">{fmt(e.data.date)}</td>
+            <td class="num mono">{fm.minutesRead}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <script>
+    import { initStory } from '../scripts/story';
+    initStory();
+  </script>
 </Base>
