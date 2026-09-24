@@ -274,7 +274,9 @@ function makeDiagram(root: SVGGElement, small = false) {
     .to(S, { goalL: 1, revL: 1, duration: 0.15 }, 4.22).to(S, { fb: 1, duration: 0.25 }, 4.32)
     .to(S, { m: 0.85, fast: 1, duration: 0.2 }, 4.3);
   tl.to({}, { duration: 0.01 }, 4.6);
-  return { S, tl, render, home, boundaryCenter: () => { const bb = box(wall()); return { x: bb.x + bb.w / 2, y: bb.y + bb.h / 2, r: Math.max(bb.w, bb.h) / 2 }; } };
+  // when each figure's first visible change begins on the timeline: the caption switches exactly there
+  const figStarts = [0, 1.08, 2.1, 3.05];
+  return { S, tl, render, home, figStarts, boundaryCenter: () => { const bb = box(wall()); return { x: bb.x + bb.w / 2, y: bb.y + bb.h / 2, r: Math.max(bb.w, bb.h) / 2 }; } };
 }
 
 export function initStory(introDone: Promise<void>, arrived: boolean) {
@@ -368,7 +370,7 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
     if (p >= P.lift[0]) { if (!surf.running) surf.start(); } else if (surf.running) surf.stop();
     // captions
     let k = -1;
-    if (p >= P.figs[0] - 0.01 && p < P.figs[1]) k = Math.min(3, Math.floor(D.tl.time())); // follows the diagram's clock: one timeline unit per figure
+    if (p >= P.figs[0] - 0.01 && p < P.figs[1]) { const t = D.tl.time(); k = D.figStarts.filter((s0) => t >= s0).length - 1; } // switches on the figure's first change
     else if (p >= P.back[1] - 0.01 && p < P.lift[0]) k = 4;
     if (k !== curFig) { curFig = k; setFig(k); }
   };
