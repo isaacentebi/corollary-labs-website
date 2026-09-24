@@ -1,21 +1,21 @@
 ---
-// About — front matter: statement, the construction of the mark, colophon. Placeholders in [brackets].
+// About — statement, the logo drawn large, company details. Placeholders in [brackets].
 import Base from '../layouts/Base.astro';
-import { site, u } from '../config/site';
+import { site } from '../config/site';
 import '../styles/pages.css';
 ---
-<Base page="about" title="About" description={`About ${site.name}.`}>
+<Base page="about" title="About" description={`About — ${site.name}`}>
   <article class="page">
     <h1 class="page__title">About</h1>
     <div class="rule"></div>
 
     <p class="statement">
-      <span class="ph">[Statement: two sentences on what {site.name} studies and what it builds.]</span>
+      <span class="ph">[Statement]</span>
     </p>
 
     <section class="markfig" aria-labelledby="mark-h">
       <div class="markfig__art">
-        <svg viewBox="0 0 440 250" role="img" aria-label="The mark drawn large: a solid box f with inputs X and U and outputs Y and U, the output U looping back over the top into the input U.">
+        <svg viewBox="0 0 440 250" role="img" aria-label="Logo, drawn large">
           <path class="mk-w" d="M20 172 H170 M270 172 H420" />
           <path class="mk-w mk-loop" d="M270 112 H304 Q324 112 324 92 V54 Q324 34 304 34 H136 Q116 34 116 54 V92 Q116 112 136 112 H170" />
           <rect x="170" y="82" width="100" height="126" class="mk-b" />
@@ -25,19 +25,16 @@ import '../styles/pages.css';
         </svg>
       </div>
       <div class="markfig__text">
-        <h2 id="mark-h" class="fm__k">The mark</h2>
-        <p>The mark is the string diagram of a trace, in the sense of Joyal, Street and Verity (1996). A box <span class="m"><i>f</i> : <i>X</i> <span class="op">⊗</span> <i>U</i> <span class="op">→</span> <i>Y</i> <span class="op">⊗</span> <i>U</i></span> has its output <i>U</i> returned to its input <i>U</i>; the result is a morphism <span class="m"><span class="up">Tr</span><sup><i>U</i></sup>(<i>f</i>) : <i>X</i> <span class="op">→</span> <i>Y</i></span>. Read with <a href={u('#def-2-1')}>Definition 2.1</a>, it is a firm that produces one of its own inputs.</p>
-        <p class="ph">[Draft copy for review.]</p>
+        <h2 id="mark-h" class="fm__k">Logo</h2>
+        <p class="ph">[Paragraph — the logo]</p>
       </div>
     </section>
 
-    <section class="fmblock" aria-label="Colophon">
-      <div class="fm"><div class="fm__k">Entity</div><div class="fm__v ph">[Legal entity]</div></div>
+    <section class="fmblock" aria-label="Company details">
+      <div class="fm"><div class="fm__k">Company</div><div class="fm__v ph">[Legal entity]</div></div>
       <div class="fm"><div class="fm__k">Founded</div><div class="fm__v ph">[Year]</div></div>
       <div class="fm"><div class="fm__k">Location</div><div class="fm__v ph">[City]</div></div>
-      <div class="fm"><div class="fm__k">Classification</div><div class="fm__v">JEL O33, L23 · MSC 2020 18M30, 18M35</div></div>
-      <div class="fm"><div class="fm__k">Type</div><div class="fm__v">Libertinus Serif, Libertinus Serif Display and Libertinus Mono (SIL Open Font License).</div></div>
-      <div class="fm"><div class="fm__k">Correspondence</div><div class="fm__v">{site.email.startsWith('[') ? <span class="ph">{site.email}</span> : <a href={`mailto:${site.email}`}>{site.email}</a>}</div></div>
+      <div class="fm"><div class="fm__k">Contact</div><div class="fm__v">{site.email.startsWith('[') ? <span class="ph">{site.email}</span> : <a href={`mailto:${site.email}`}>{site.email}</a>}</div></div>
     </section>
   </article>
 </Base>

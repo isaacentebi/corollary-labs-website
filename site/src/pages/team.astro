@@ -1,32 +1,23 @@
 ---
-// Team — an author block with numbered affiliations, as at the head of a paper. Placeholders until names are chosen.
+// Team — a list of people. Placeholders until names are chosen.
 import Base from '../layouts/Base.astro';
 import { site, u } from '../config/site';
 import '../styles/pages.css';
 
-const people = [1, 2, 3, 4].map((n) => ({ n, name: '[Name]', role: '[Role]', line: '[Placeholder: one line on their work.]' }));
+const people = [1, 2, 3, 4].map((n) => ({ n, name: '[Name]', role: '[Role]' }));
 ---
-<Base page="team" title="Team" description={`The team at ${site.name}.`}>
+<Base page="team" title="Team" description={`Team — ${site.name}`}>
   <article class="page">
-    <p class="page__kicker">Team</p>
-    <h1 class="page__title">Authors</h1>
+    <h1 class="page__title">Team</h1>
     <div class="rule"></div>
-
-    <p class="authors">
-      {people.map((p, i) => (
-        <span class="authors__a"><span class="ph">{p.name}</span><sup>{p.n}</sup>{i < people.length - 1 ? ',' : ''}</span>
-      ))}
-    </p>
-    <ol class="affil">
+    <section class="fmblock -first" aria-label="People">
       {people.map((p) => (
-        <li><sup>{p.n}</sup> <span class="ph">{p.role}.</span> <span class="ph">{p.line}</span></li>
+        <div class="fm"><div class="fm__k ph">{p.role}</div><div class="fm__v ph">{p.name}</div></div>
       ))}
-    </ol>
-
-    <section class="fmblock" aria-label="Joining">
-      <div class="fm"><div class="fm__k">About the team</div><div class="fm__v ph">[Placeholder: one sentence on who works at {site.name}.]</div></div>
-      <div class="fm"><div class="fm__k">Joining</div><div class="fm__v ph">[Placeholder: how to get in touch about working here.]</div></div>
-      <div class="fm"><div class="fm__k">Correspondence</div><div class="fm__v"><a href={u('contact/')}>Contact</a></div></div>
+    </section>
+    <section class="fmblock" aria-label="Jobs">
+      <div class="fm"><div class="fm__k">Jobs</div><div class="fm__v ph">[Jobs]</div></div>
+      <div class="fm"><div class="fm__k">Contact</div><div class="fm__v"><a href={u('contact/')}>Contact</a></div></div>
     </section>
   </article>
 </Base>

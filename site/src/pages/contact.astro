@@ -1,19 +1,17 @@
 ---
-// Contact — "Correspondence", as in a paper. Placeholders in [brackets].
+// Contact. Placeholders in [brackets].
 import Base from '../layouts/Base.astro';
 import { site } from '../config/site';
 import '../styles/pages.css';
 ---
-<Base page="contact" title="Contact" description={`Contact ${site.name}.`}>
+<Base page="contact" title="Contact" description={`Contact — ${site.name}`}>
   <article class="page">
-    <p class="page__kicker">Contact</p>
-    <h1 class="page__title">Correspondence</h1>
+    <h1 class="page__title">Contact</h1>
     <div class="rule"></div>
     <p class="statement">{site.email.startsWith('[') ? <span class="ph">{site.email}</span> : <a class="mail" href={`mailto:${site.email}`}>{site.email}</a>}</p>
     <section class="fmblock" aria-label="Details">
-      <div class="fm"><div class="fm__k">Write about</div><div class="fm__v ph">[Placeholder: one line on what to write to us about.]</div></div>
       <div class="fm"><div class="fm__k">Location</div><div class="fm__v ph">[City]</div></div>
-      <div class="fm"><div class="fm__k">Post</div><div class="fm__v ph">[Postal address]</div></div>
+      <div class="fm"><div class="fm__k">Address</div><div class="fm__v ph">[Postal address]</div></div>
     </section>
   </article>
 </Base>

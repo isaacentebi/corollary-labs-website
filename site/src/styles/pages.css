@@ -33,10 +33,4 @@
 .markfig__text .fm__k { margin: 0 0 12px; font-weight: 400; }
 .markfig__text a { color: var(--blue); }
 @media (max-width: 800px) { .markfig { grid-template-columns: 1fr; } }
-
-/* Team: author block */
-.authors { font: 400 clamp(30px, 4vw, 56px)/1.25 var(--display); margin: 7vh 0 3vh; display: flex; flex-wrap: wrap; gap: 0 0.5em; }
-.authors sup { font-size: 0.42em; color: var(--blue); margin-left: 0.08em; vertical-align: 0.95em; font-family: var(--serif); }
-.affil { list-style: none; padding: 0; margin: 0 0 8vh; font-size: 0.95rem; }
-.affil li { padding: 3px 0; }
-.affil sup { color: var(--blue); margin-right: 0.3em; }
+.fmblock.-first { border-top: 0; margin-top: 2vh; }

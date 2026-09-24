@@ -21,7 +21,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
       <p class="essay__kicker"><a href={u('essays/')}>Essays</a> · {fmt(entry.data.date)} · {fm.minutesRead} min</p>
       <h1 class="essay__title">{entry.data.title}</h1>
       <p class="essay__by">{site.name}</p>
-      {entry.data.placeholder && <p class="essay__flag ph">[Placeholder essay: the text below is lorem ipsum, set to test the template.]</p>}
+      {entry.data.placeholder && <p class="essay__flag ph">[Placeholder essay]</p>}
       <div class="essay__abs">
         <h2>Abstract</h2>
         <p>{entry.data.dek}</p>

@@ -1,5 +1,5 @@
 ---
-// Footer: the site's "References". Pages are listed as references; correspondence as in a paper.
+// Footer: site name, pages, contact.
 // Leaves the bottom-right corner free (≈220×48) for the version switcher.
 import { site, u } from '../config/site';
 const path = Astro.url.pathname.replace(/\/$/, '');
@@ -14,8 +14,7 @@ const cur = (h: string) => (h.replace(/\/$/, '') === path ? 'page' : undefined);
 ---
 <footer class="refs" id="references">
   <div class="refs__end">
-    <p class="refs__h">Index</p>
-    <span class="refs__qed" role="img" aria-label="End of proof"></span>
+    <p class="refs__h">{site.name}</p>
   </div>
   <div class="refs__grid">
     <nav class="refs__col" aria-label="Site">
@@ -27,7 +26,7 @@ const cur = (h: string) => (h.replace(/\/$/, '') === path ? 'page' : undefined);
       </ol>
     </nav>
     <div class="refs__col">
-      <h2>Correspondence</h2>
+      <h2>Contact</h2>
       <ol class="refs__list">
         <li>{site.email.startsWith('[') ? <span class="ph">{site.email}</span> : <a href={`mailto:${site.email}`}>{site.email}</a>}</li>
         <li><span class="ph">[City]</span></li>
@@ -35,5 +34,5 @@ const cur = (h: string) => (h.replace(/\/$/, '') === path ? 'page' : undefined);
     </div>
     <slot />
   </div>
-  <p class="refs__copy">© {site.year} {site.name}. Set in Libertinus. Draft: new copy and bracketed text await review.</p>
+  <p class="refs__copy">© {site.year} {site.name}</p>
 </footer>

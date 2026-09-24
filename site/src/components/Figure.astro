@@ -87,8 +87,8 @@ if (kind === 'layers') {
 ---
 <figure class:list={['fig', { '-wide': wide }]} data-figure data-kind={kind}>
   <div class="fig__plate">
-    <p class="fig__ph">[Placeholder figure: invented data, not a result]</p>
+    <p class="fig__ph">[Placeholder data]</p>
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Figure ${n}. ${caption}`} set:html={body} />
   </div>
-  <figcaption class="fig__cap"><span class="fig__n">Fig. {String(n).padStart(2, '0')}</span> <span class="ph">[Placeholder figure and data.]</span> {caption}</figcaption>
+  <figcaption class="fig__cap"><span class="fig__n">Fig. {String(n).padStart(2, '0')}</span> {caption}</figcaption>
 </figure>

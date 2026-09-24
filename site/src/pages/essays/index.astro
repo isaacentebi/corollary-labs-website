@@ -9,9 +9,9 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 ---
-<Base page="essays" title="Essays" description="Essays by Corollary Labs.">
+<Base page="essays" title="Essays" description="Essays — Corollary Labs">
   <article class="page">
-    <p class="page__kicker">Contents · {essays.length} essays</p>
+    <p class="page__kicker">{essays.length} essays</p>
     <h1 class="page__title">Essays</h1>
     <div class="rule"></div>
     <ol class="toc">
@@ -26,7 +26,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
             <span class="toc__meta">
               <time datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
               <span>{fm.minutesRead} min</span>
-              {e.data.placeholder && <span class="ph">[placeholder text]</span>}
+              {e.data.placeholder && <span class="ph">[Placeholder]</span>}
             </span>
           </a>
         </li>

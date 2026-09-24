@@ -59,7 +59,7 @@ const f2 = (inside: boolean): State => ({
   },
 });
 export const fig2: State[] = [f2(false), f2(true), f2(true)];
-const T2b = { t: `<i>f</i> ${CO} (1<sub><i>A</i></sub> ${OT} <i>g</i>) : <i>A</i> ${OT} <i>O</i> ${TO} <i>Y</i>`, g: 'in: materials, plan → materials, objective' };
+const T2b = { t: `<i>f</i> ${CO} (1<sub><i>A</i></sub> ${OT} <i>g</i>) : <i>A</i> ${OT} <i>O</i> ${TO} <i>Y</i>`, g: '' };
 export const fig2Types: TypeLine[] = [
   { t: `<i>f</i> : <i>A</i> ${OT} <i>P</i> ${TO} <i>Y</i>`, g: '' },
   T2b, T2b,
@@ -131,4 +131,4 @@ const f3d: State = {
 };
 export const fig3: State[] = [f3a(0), f3a(1), f3c, f3d];
 const T3 = { t: `<i>F</i> : <i>A</i> ${OT} <i>O</i> ${TO} <i>Y</i>`, g: '' };
-export const fig3Types: TypeLine[] = [T3, T3, T3, { t: `<i>F</i>′ : <i>A</i> ${OT} <i>O</i> ${TO} <i>Y</i> ${OT} <i>Z</i>`, g: 'out: product → product, new product' }];
+export const fig3Types: TypeLine[] = [T3, T3, T3, { t: `<i>F</i>′ : <i>A</i> ${OT} <i>O</i> ${TO} <i>Y</i> ${OT} <i>Z</i>`, g: '' }];

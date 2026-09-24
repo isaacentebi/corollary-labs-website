@@ -1,32 +1,21 @@
 ---
-// Home — typeset as a short paper. Every statement is a definition, a theorem with its citation, a corollary proved on
-// the page, or a remark true by construction. COPY STATUS (all for founder review): statements, captions, glosses and
-// the subtitle drafted by the creative lead and checked for mathematical correctness; abstract + keywords from one
-// clean-room writer, edited only where the critic found an over-claim (marked in the report).
+// Home — laid out as a short paper: numbered sections, numbered statements, one live figure per section.
+// All written copy is a bracketed placeholder until the founder supplies it.
 import Base from '../layouts/Base.astro';
 import { site } from '../config/site';
 import '../styles/home.css';
 
-const O = (c: string) => `<span class="op">${c}</span>`;
-const TO = O('→'), OT = O('⊗'), CO = O('∘');
-
-const abstract =
-  "Corollary Labs studies how AI agents enter firms and how firms are reorganised after they enter. We model a firm as a morphism from its inputs to its outputs and draw its internal organisation as a string diagram: boxes are processes, and wires are the goods, plans and objectives passed between them. We treat automation as a redrawing of the firm’s boundary around a process that produces one of its own inputs, so that an input that used to be supplied from outside is produced inside. We distinguish this from replacing a single box, which leaves the wiring intact, and describe how an agent able to derive plans from objectives changes the type of the firm’s inputs, so that the diagram has to be rewired. Because one firm’s outputs are another firm’s inputs, the change spreads to neighbouring firms.";
-const abstractClaim =
-  '[For founder review: We describe the resulting rewiring as reorganisation and creative destruction, in which the replacement of labour appears as a second-order effect.]';
-const keywords = 'theory of the firm, string diagrams, AI agents, automation, boundary of the firm, feedback, creative destruction';
-
-// dependency graph of the statements (rail). x = column, uses = what the statement depends on.
+// dependency graph of the statements (rail). x = column, uses = which statements a statement depends on.
 const nodes = [
-  { id: 'def-1-1', t: 'Def. 1.1', n: 'Firm', x: 0, uses: [] as string[] },
-  { id: 'rem-1-2', t: 'Rem. 1.2', n: 'Inside a firm', x: 1, uses: ['def-1-1'] },
-  { id: 'def-2-1', t: 'Def. 2.1', n: 'Automation', x: 0, uses: ['def-1-1'] },
-  { id: 'rem-2-2', t: 'Rem. 2.2', n: 'Plans, objectives', x: 1, uses: ['def-2-1'] },
-  { id: 'rem-3-1', t: 'Rem. 3.1', n: 'Replacement', x: 1, uses: ['def-1-1'] },
-  { id: 'thm-3-2', t: 'Thm. 3.2', n: 'Joyal–Street', x: 2, uses: [], ext: true },
-  { id: 'cor-3-3', t: 'Cor. 3.3', n: 'Type', x: 1, uses: ['thm-3-2', 'rem-3-1', 'rem-1-2'] },
-  { id: 'rem-3-4', t: 'Rem. 3.4', n: 'Reorganisation', x: 0, uses: ['cor-3-3', 'def-2-1'] },
-  { id: 'rem-4-1', t: 'Rem. 4.1', n: 'Propagation', x: 0, uses: ['rem-3-4'] },
+  { id: 'def-1-1', t: 'Def. 1.1', x: 0, uses: [] as string[] },
+  { id: 'rem-1-2', t: 'Rem. 1.2', x: 1, uses: ['def-1-1'] },
+  { id: 'def-2-1', t: 'Def. 2.1', x: 0, uses: ['def-1-1'] },
+  { id: 'rem-2-2', t: 'Rem. 2.2', x: 1, uses: ['def-2-1'] },
+  { id: 'rem-3-1', t: 'Rem. 3.1', x: 1, uses: ['def-1-1'] },
+  { id: 'thm-3-2', t: 'Thm. 3.2', x: 2, uses: [], ext: true },
+  { id: 'cor-3-3', t: 'Cor. 3.3', x: 1, uses: ['thm-3-2', 'rem-3-1', 'rem-1-2'] },
+  { id: 'rem-3-4', t: 'Rem. 3.4', x: 0, uses: ['cor-3-3', 'def-2-1'] },
+  { id: 'rem-4-1', t: 'Rem. 4.1', x: 0, uses: ['rem-3-4'] },
 ];
 const RY = 36, RX = 14;
 const pos = Object.fromEntries(nodes.map((n, i) => [n.id, { x: 7 + n.x * RX, y: 10 + i * RY }]));
@@ -49,20 +38,20 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
     </a>
     <div class="plate0__text">
       <h1 class="plate0__title"><span>Corollary</span> <span>Labs</span></h1>
-      <p class="plate0__sub">Corollary Labs studies how AI agents enter firms and how firms are reorganised after they enter.</p>
+      <p class="plate0__sub ph">[Subtitle — one line]</p>
     </div>
-    <p class="plate0__cap"><span class="sc">Fig. 0.</span> A string diagram. <span class="-wide">At rest it is bent around the text by a planar isotopy; <span class="-fine">moving the pointer</span><span class="-coarse">dragging sideways across it</span> deforms it further.</span><span class="-narrow">Dragging sideways across it deforms it by a planar isotopy.</span> By <a href="#thm-3-2">Theorem 3.2</a> the morphism it denotes is the same in every frame.</p>
+    <p class="plate0__cap ph"><span class="sc">Fig. 0.</span> [Caption]</p>
   </header>
 
   <div class="paper">
     <!-- Rail: dependency graph ──────────────────────────────────── -->
     <nav class="rail" data-rail aria-label="Statements">
-      <svg viewBox={`0 0 200 ${20 + (nodes.length - 1) * RY}`} width="200" height={20 + (nodes.length - 1) * RY}>
+      <svg viewBox={`0 0 120 ${20 + (nodes.length - 1) * RY}`} width="120" height={20 + (nodes.length - 1) * RY}>
         {railEdges.map((d) => <path d={d} class="rail__e" />)}
         {nodes.map((n) => (
           <a href={`#${n.id}`} data-node={n.id} class:list={['rail__n', { '-ext': n.ext }]}>
             <rect x={pos[n.id].x - 4.5} y={pos[n.id].y - 4.5} width="9" height="9" />
-            <text x={48} y={pos[n.id].y + 4}><tspan class="rail__k">{n.t}</tspan> {n.n}</text>
+            <text x={48} y={pos[n.id].y + 4}><tspan class="rail__k">{n.t}</tspan></text>
           </a>
         ))}
       </svg>
@@ -70,41 +59,40 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
 
     <!-- Front matter ────────────────────────────────────────────── -->
     <section class="front" id="abstract" aria-label="Abstract">
-      <p class="front__by"><span>{site.name}</span> <span class="ph">[City]</span> <span>2026</span></p>
+      <p class="front__by"><span>{site.name}</span> <span class="ph">[City]</span> <span class="ph">[Year]</span></p>
       <h2 class="front__h">Abstract</h2>
-      <p class="front__abs">{abstract} <span class="ph">{abstractClaim}</span></p>
+      <p class="front__abs ph">[Abstract — 3–4 sentences]</p>
       <dl class="front__meta">
-        <div><dt>Keywords</dt><dd>{keywords}</dd></div>
-        <div><dt>JEL</dt><dd>O33 <span class="gl">Technological Change: Choices and Consequences; Diffusion Processes</span> · L23 <span class="gl">Organization of Production</span></dd></div>
-        <div><dt>MSC 2020</dt><dd>18M30 <span class="gl">String diagrams and graphical calculi</span> · 18M35 <span class="gl">Categories of networks and processes, compositionality</span></dd></div>
+        <div><dt>Keywords</dt><dd class="ph">[Keywords]</dd></div>
+        <div><dt>Classification</dt><dd class="ph">[Classification codes]</dd></div>
       </dl>
     </section>
 
     <!-- §1 ───────────────────────────────────────────────────────── -->
     <section class="sec" data-sec="1" aria-labelledby="s1">
-      <h2 class="sec__h" id="s1"><span class="sec__n">1</span> Firms</h2>
+      <h2 class="sec__h" id="s1"><span class="sec__n">1</span> <span class="ph">[Section title]</span></h2>
       <div class="sec__grid">
         <div class="sec__text">
           <div class="stmt" id="def-1-1" data-stmt data-state="0">
-            <p><span class="stmt__h">Definition 1.1</span> <span class="stmt__t">(Firm).</span> A <em>firm</em> is a morphism <span class="m" set:html={`<i>f</i> : <i>X</i> ${TO} <i>Y</i>`} /> in a traced symmetric monoidal category in which objectives can be copied: the object <i>O</i> of objectives has a coassociative copy map <span class="m" set:html={`<i>O</i> ${TO} <i>O</i> ${OT} <i>O</i>`} />, so copying <i>O</i> to any number <i>n</i> ≥ 2 of places is well defined. The objects of the category are the kinds of thing firms take in and give out, and its morphisms are processes. <i>X</i> is the firm’s input and <i>Y</i> its output.</p>
-            <p class="note" set:html={`Diagrams are read from left to right. A box is a morphism and a wire is an object. Boxes stacked vertically are combined by the tensor product ${OT}, and boxes joined along a wire by composition ${CO}. The trace returns an output of a box to one of its inputs, drawn as a feedback wire.`} />
+            <p><span class="stmt__h">Definition 1.1</span> <span class="ph">[Definition — what a firm is]</span></p>
+            <p class="note ph">[Note — how to read the diagrams]</p>
           </div>
           <div class="stmt" id="rem-1-2" data-stmt data-state="1">
-            <p><span class="stmt__h">Remark 1.2</span> <span class="stmt__t">(Inside a firm).</span> A firm can be drawn as one box or as a diagram of the processes inside it. Both drawings have the same type, which is read from the wires that cross the boundary.</p>
+            <p><span class="stmt__h">Remark 1.2</span> <span class="ph">[Remark — the firm as one box and as a diagram]</span></p>
           </div>
         </div>
         <figure class="fig" aria-label="Figure 1">
           <div class="fig__stick">
-            <svg class="dg" data-dg viewBox="0 56 640 290" role="img" aria-label="Figure 1: a firm f from inputs X to outputs Y, drawn first as one box with a thick outline and then opened to show three processes inside a dashed boundary."></svg>
+            <svg class="dg" data-dg viewBox="0 56 640 290" role="img" aria-label="Figure 1"></svg>
             <figcaption>
-              <span class="sc">Fig. 1.</span> The firm <i>f</i>, closed and opened.
+              <span class="sc">Fig. 1.</span> <span class="ph">[Caption]</span>
               <span class="fig__type" data-type></span>
-              <span class="legend" aria-label="Legend">
-                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-firm" /></svg>a firm drawn as one box</span>
-                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-open" /></svg>a process carried out by people</span>
-                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-solid" /></svg>a process carried out by an agent</span>
-                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-bnd" /></svg>the boundary of a firm</span>
-                <span><svg viewBox="0 0 22 16" aria-hidden="true"><path d="M1 8 H21" class="lg-blue" /></svg>what changes</span>
+              <span class="legend" aria-label="Key">
+                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-firm" /></svg>firm</span>
+                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-open" /></svg>people</span>
+                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-solid" /></svg>agent</span>
+                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-bnd" /></svg>boundary</span>
+                <span><svg viewBox="0 0 22 16" aria-hidden="true"><path d="M1 8 H21" class="lg-blue" /></svg>changed</span>
               </span>
             </figcaption>
           </div>
@@ -114,24 +102,23 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
 
     <!-- §2 ───────────────────────────────────────────────────────── -->
     <section class="sec -wide -flip" data-sec="2" aria-labelledby="s2">
-      <h2 class="sec__h" id="s2"><span class="sec__n">2</span> Automation</h2>
+      <h2 class="sec__h" id="s2"><span class="sec__n">2</span> <span class="ph">[Section title]</span></h2>
       <div class="sec__grid">
         <div class="sec__text">
           <div class="stmt" id="def-2-1" data-stmt data-state="0">
-            <p><span class="stmt__h">Definition 2.1</span> <span class="stmt__t">(Automation).</span> Let <span class="m" set:html={`<i>f</i> : <i>A</i> ${OT} <i>P</i> ${TO} <i>Y</i>`} /> be a firm to which <i>P</i> is supplied, and let <span class="m" set:html={`<i>g</i> : <i>O</i> ${TO} <i>P</i>`} /> be a process that produces <i>P</i>. The <em>automation</em> of <i>P</i> is the passage from <i>f</i> to the firm</p>
-            <p class="disp" set:html={`<i>f</i> ${CO} (1<sub><i>A</i></sub> ${OT} <i>g</i>) : <i>A</i> ${OT} <i>O</i> ${TO} <i>Y</i>.`} />
+            <p><span class="stmt__h">Definition 2.1</span> <span class="ph">[Definition — automation]</span></p>
           </div>
           <div class="stmt -cont" data-state="1">
-            <p>In the diagram the boundary is redrawn to enclose <i>g</i>, and <i>P</i> becomes an internal wire. The firm’s input changes from <span class="m" set:html={`<i>A</i> ${OT} <i>P</i>`} /> to <span class="m" set:html={`<i>A</i> ${OT} <i>O</i>`} />; its output does not change.</p>
+            <p class="ph">[Paragraph — what changes in Figure 2]</p>
           </div>
           <div class="stmt" id="rem-2-2" data-stmt data-state="2">
-            <p><span class="stmt__h">Remark 2.2</span> <span class="stmt__t">(Plans and objectives).</span> Following Poliks et al. [4], a firm that executes takes a plan among its inputs, and a firm that makes its own plans takes an objective instead. When <i>P</i> is a plan and <i>O</i> an objective, Definition 2.1 takes a firm of the first kind to a firm of the second.</p>
+            <p><span class="stmt__h">Remark 2.2</span> <span class="ph">[Remark — plans and objectives]</span></p>
           </div>
         </div>
         <figure class="fig" aria-label="Figure 2">
           <div class="fig__stick">
-            <svg class="dg" data-dg viewBox="0 70 640 270" role="img" aria-label="Figure 2: the boundary of the firm, drawn in blue, moves outward to enclose the process g that turns an objective O into a plan P."></svg>
-            <figcaption><span class="sc">Fig. 2.</span> The boundary (blue) is redrawn around <i>g</i>, here carried out by an agent. <span class="fig__type" data-type></span></figcaption>
+            <svg class="dg" data-dg viewBox="0 70 640 270" role="img" aria-label="Figure 2"></svg>
+            <figcaption><span class="sc">Fig. 2.</span> <span class="ph">[Caption]</span> <span class="fig__type" data-type></span></figcaption>
           </div>
         </figure>
       </div>
@@ -139,31 +126,30 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
 
     <!-- §3 — full-bleed band ───────────────────────────────────── -->
     <section class="sec -wide" data-sec="3" aria-labelledby="s3">
-      <h2 class="sec__h" id="s3"><span class="sec__n">3</span> Replacement and reorganisation</h2>
+      <h2 class="sec__h" id="s3"><span class="sec__n">3</span> <span class="ph">[Section title]</span></h2>
       <div class="sec__grid">
         <div class="sec__text">
           <div class="stmt -cont" data-state="0">
-            <p>Figure 3 shows a firm <span class="m" set:html={`<i>F</i> : <i>A</i> ${OT} <i>O</i> ${TO} <i>Y</i>`} />. A process <i>c</i> turns the objective <i>O</i> into three plans, and three steps <i>e</i><sub>1</sub>, <i>e</i><sub>2</sub>, <i>e</i><sub>3</sub> execute them in sequence on the input <i>A</i>.</p>
+            <p class="ph">[Paragraph — what Figure 3 shows]</p>
           </div>
           <div class="stmt" id="rem-3-1" data-stmt data-state="1">
-            <p><span class="stmt__h">Remark 3.1</span> <span class="stmt__t">(Replacement).</span> Replacing a box <span class="m" set:html={`<i>h</i> : <i>U</i> ${TO} <i>V</i>`} /> in a diagram by another box <span class="m" set:html={`<i>h</i>′ : <i>U</i> ${TO} <i>V</i>`} /> leaves the type of the whole diagram unchanged. In Figure 3 the step <i>e</i><sub>2</sub> is now carried out by an agent, and <i>F</i> still has type <span class="m" set:html={`<i>A</i> ${OT} <i>O</i> ${TO} <i>Y</i>`} />.</p>
+            <p><span class="stmt__h">Remark 3.1</span> <span class="ph">[Remark — replacement]</span></p>
           </div>
           <div class="stmt -thm" id="thm-3-2" data-stmt data-state="2">
-            <p><span class="stmt__h">Theorem 3.2</span> <span class="stmt__t">(Joyal and Street [1]; see also [3]).</span> <em>A well-formed equation between morphism terms built by composition and tensor product follows from the axioms of monoidal categories if and only if the string diagrams of its two sides are related by a planar isotopy.</em></p>
-            <p class="note">In Figure 3 the boxes are now moving without any wire being cut, joined or crossed: a planar isotopy.</p>
+            <p><span class="stmt__h">Theorem 3.2</span> <span class="ph">[Theorem 3.2]</span></p>
           </div>
           <div class="stmt -thm" id="cor-3-3" data-stmt data-state="2">
-            <p><span class="stmt__h">Corollary 3.3.</span> <em>Replacing boxes by boxes of the same type, and deforming a diagram by a planar isotopy, both leave the type of the firm unchanged. The type changes only if boxes or wires are added or removed, or wires are cut and rejoined.</em></p>
-            <p class="proof"><em>Proof.</em> The type of a diagram is read from the wires that cross its boundary (Remark 1.2). Replacing a box by one of the same type leaves those wires as they are (Remark 3.1). A planar isotopy moves boxes and wires without cutting, joining or crossing them, so it leaves them as they are too; by Theorem 3.2 it does not change even the morphism. Any other change adds or removes a box or a wire, or changes how wires are joined. <span class="qed" aria-label="End of proof"></span></p>
+            <p><span class="stmt__h">Corollary 3.3</span> <span class="ph">[Corollary 3.3 — the thesis]</span></p>
+            <p class="proof ph">[Proof]</p>
           </div>
           <div class="stmt" id="rem-3-4" data-stmt data-state="3">
-            <p><span class="stmt__h">Remark 3.4</span> <span class="stmt__t">(Reorganisation).</span> Removing a box, or cutting and rejoining wires, is not a planar isotopy, so Corollary 3.3 does not apply and the type can change. In Figure 3, <i>c</i> is removed; the objective is copied to the three agents by the copy map of Definition 1.1 (the dot); a feedback wire, a trace in the sense of [2], returns part of the output of <i>e</i><sub>3</sub> through a person <i>r</i> to <i>e</i><sub>1</sub>; and a person <i>h</i> makes a new output <i>Z</i>. The type becomes <span class="m" set:html={`<i>A</i> ${OT} <i>O</i> ${TO} <i>Y</i> ${OT} <i>Z</i>`} />.</p>
+            <p><span class="stmt__h">Remark 3.4</span> <span class="ph">[Remark — reorganisation]</span></p>
           </div>
         </div>
         <figure class="fig" aria-label="Figure 3">
           <div class="fig__stick">
-            <svg class="dg" data-dg viewBox="-50 0 850 460" role="img" aria-label="Figure 3: a firm F with a coordinating process c and three steps. One step is replaced by an agent; the diagram is deformed; then c is removed, the objective goes to three agents, a feedback loop passes through a person r, and a person h makes a new output Z."></svg>
-            <figcaption><span class="sc">Fig. 3.</span> Replacement, deformation, surgery. Open: people. Solid: agents. Blue: what changes. Dashed: the&nbsp;boundary&nbsp;of&nbsp;<i>F</i>. <span class="fig__type" data-type></span></figcaption>
+            <svg class="dg" data-dg viewBox="-50 0 850 460" role="img" aria-label="Figure 3"></svg>
+            <figcaption><span class="sc">Fig. 3.</span> <span class="ph">[Caption]</span> <span class="fig__type" data-type></span></figcaption>
           </div>
         </figure>
       </div>
@@ -171,36 +157,35 @@ const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 1
 
     <!-- §4 — inverted plate ─────────────────────────────────────── -->
     <section class="sec -plate" data-sec="4" data-plate aria-labelledby="s4">
-      <h2 class="sec__h" id="s4"><span class="sec__n">4</span> Propagation</h2>
+      <h2 class="sec__h" id="s4"><span class="sec__n">4</span> <span class="ph">[Section title]</span></h2>
       <div class="sec__grid">
         <div class="sec__text">
           <div class="stmt -cont" data-state="0">
-            <p>Figure 4 draws an economy as a single diagram. Its boxes are firms and its wires are the goods passed between them.</p>
+            <p class="ph">[Paragraph — what Figure 4 shows]</p>
           </div>
           <div class="stmt" id="rem-4-1" data-stmt data-state="0.12">
-            <p><span class="stmt__h">Remark 4.1</span> <span class="stmt__t">(Propagation).</span> A composite <span class="m" set:html={`<i>g</i> ${CO} <i>f</i>`} /> is defined only when the output of <i>f</i> is the input of <i>g</i>. When the type of a firm changes, a composite that joins it to another firm along a changed wire is undefined until that wire is rejoined, and rejoining it can change the type of the firm at the other end.</p>
+            <p><span class="stmt__h">Remark 4.1</span> <span class="ph">[Remark — how a change spreads between firms]</span></p>
           </div>
           <div class="stmt -cont" data-state="0.55">
-            <p>In the figure, one firm changes type first. Dashed wires are undefined; blue wires have been rejoined or are new. The change reaches firms at different times, some firms do not change, and by the last frame every wire has been rejoined.</p>
+            <p class="ph">[Paragraph]</p>
           </div>
         </div>
         <figure class="fig -eco" aria-label="Figure 4">
           <div class="fig__stick">
-            <svg class="eco" data-eco viewBox="0 0 1000 560" role="img" aria-label="Figure 4: a network of firms. A change of type starts at one firm and spreads along the wires to others at uneven times."></svg>
-            <figcaption><span class="sc">Fig. 4.</span> Boxes: firms. Wires: goods. Firms that have changed type: <span class="fig__count" data-count></span></figcaption>
+            <svg class="eco" data-eco viewBox="0 0 1000 560" role="img" aria-label="Figure 4"></svg>
+            <figcaption><span class="sc">Fig. 4.</span> <span class="ph">[Caption]</span></figcaption>
           </div>
         </figure>
       </div>
     </section>
 
-    <!-- Bibliography ─────────────────────────────────────────── -->
+    <!-- References ─────────────────────────────────────────────── -->
     <section class="biblio" aria-labelledby="bib">
-      <h2 class="sec__h" id="bib">Bibliography</h2>
+      <h2 class="sec__h" id="bib">References</h2>
       <ol class="biblio__list">
-        <li id="ref-1"><span class="n">[1]</span><span>A. Joyal and R. Street, <em>The geometry of tensor calculus I</em>, Advances in Mathematics 88 (1991), 55–112.</span></li>
-        <li id="ref-2"><span class="n">[2]</span><span>A. Joyal, R. Street and D. Verity, <em>Traced monoidal categories</em>, Mathematical Proceedings of the Cambridge Philosophical Society 119 (1996), 447–468.</span></li>
-        <li id="ref-3"><span class="n">[3]</span><span>P. Selinger, <em>A survey of graphical languages for monoidal categories</em>, in New Structures for Physics, Lecture Notes in Physics 813, Springer (2011), 289–355.</span></li>
-        <li id="ref-4"><span class="n">[4]</span><span>M. Poliks, R. Alonso Trillo, T. Dunn, H. Scott-Douglas and J. Springett, <em>The Superdark Factory: Toward the Full Automation of Software</em>, Antikythera (2026), <a href="https://superdark.antikythera.org/">superdark.antikythera.org</a>.</span></li>
+        {[1, 2, 3].map((n) => (
+          <li id={`ref-${n}`}><span class="n">[{n}]</span><span class="ph">[Reference]</span></li>
+        ))}
       </ol>
     </section>
   </div>

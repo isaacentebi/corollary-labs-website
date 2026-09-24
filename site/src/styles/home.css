@@ -27,7 +27,7 @@
 .paper { position: relative; }
 .rail { position: fixed; z-index: 10; left: calc(var(--gut) - 4px); top: 50%; transform: translateY(-50%); transition: opacity 0.4s var(--ease); display: none; }
 .rail.-hide { opacity: 0; pointer-events: none; }
-@media (min-width: 1360px) { .rail { display: block; } .paper > .sec:not(.-wide):not(.-plate), .paper > .front, .paper > .biblio { padding-left: calc(var(--gut) + 200px); } .paper > .sec.-wide .sec__h, .paper > .sec.-wide .sec__text { margin-left: 200px; } }
+@media (min-width: 1360px) { .rail { display: block; } .paper > .sec:not(.-wide):not(.-plate), .paper > .front, .paper > .biblio { padding-left: calc(var(--gut) + 130px); } .paper > .sec.-wide .sec__h, .paper > .sec.-wide .sec__text { margin-left: 130px; } }
 .rail__e { fill: none; stroke: var(--ink-2); stroke-width: 1; opacity: 0.55; }
 .rail__n rect { fill: var(--paper); stroke: var(--ink-2); stroke-width: 1; transition: fill 0.25s, stroke 0.25s; }
 .rail__n.-ext rect { stroke-dasharray: 2 2; }
@@ -177,3 +177,6 @@
 /* §4 runs on after its last statement, so the figure can finish (t → 1) while that statement stays in view */
 .sec.-plate .stmt:last-child { margin-bottom: 14vh; }
 @media (min-width: 900px) { .sec.-plate .stmt:last-child { margin-bottom: 34vh; } }
+
+/* placeholders keep one quiet colour everywhere, including the hero */
+.plate0__sub.ph, .plate0__cap.ph, .front__abs.ph { color: var(--ink-3); }

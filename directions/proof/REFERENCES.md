@@ -38,7 +38,7 @@ https://taubaauerbach.com/ (capture: `auerbach.png`)
 - A. Joyal, R. Street, D. Verity, *Traced monoidal categories*, Math. Proc. Cambridge Philos. Soc. 119 (1996) 447–468.
 - P. Selinger, *A survey of graphical languages for monoidal categories*, in New Structures for Physics, Lecture Notes in Physics 813, Springer (2011) 289–355.
 
-String diagrams are the standard picture of a process with typed inputs and outputs, which is exactly the Superdark definition of a firm. Their fundamental theorem (diagrams related by planar isotopy denote the same morphism) gives the founder's isotopy/homotopy interest a precise, literally true role in the story.
+String diagrams are the standard picture of a process with typed inputs and outputs. Their fundamental theorem (diagrams related by planar isotopy denote the same morphism) gives the founder's isotopy/homotopy interest a precise, literally true role in the story.
 
 ## Classification codes used on the page (verified)
 
