@@ -18,12 +18,12 @@ export const nav = [
 
 // Home story captions. FOR FOUNDER REVIEW. Lines may contain <sub> markup.
 // Set A from one clean-room writer (read Chapter I of the Superdark essay + the founder's words), used verbatim,
-// except state 4 line 2 and state 6 (both lines), rewritten by the creative lead after the first critique
+// except state 1 line 2, state 4 line 2 and state 6 (both lines), rewritten by the creative lead after critique
 // (the old lines described firms leaving the table, which is no longer drawn, and narrated the animation).
 // Set B (same writer, essay's own terms) is kept below, unused, so the founder can choose.
 export const states: { title: string; lines: [string, string] }[] = [
   { title: 'The Table', lines: ['Thirty-two firms. Each column lists what one firm takes from each firm, itself included.', 'Below the rule: execution, plans and objectives, supplied to each firm by people.'] },
-  { title: 'One Firm', lines: ['One column, enlarged: the inputs of a single firm, read top to bottom.', 'Inputs from other firms, then execution, plans, objectives. The output sits at the foot.'] },
+  { title: 'One Firm', lines: ['One column, enlarged: the inputs of a single firm, read top to bottom.', 'Inputs from other firms, then execution, plans, objectives. They sum to one unit of output.'] },
   { title: 'Execution', lines: ['The execution entry leaves the supplied rows and enters the diagonal cell.', "Agents produce the firm's execution inside it. Orange marks self-supplied input."] },
   { title: 'Plans', lines: ['The plans entry follows the same path into the diagonal.', 'Of the three rows supplied by people, objectives alone remain outside the firm.'] },
   { title: 'Reorganisation', lines: ['Rows and columns are reordered, and the table resolves into new blocks.', 'The entries change first; each firm keeps its number as its row and column move.'] },
