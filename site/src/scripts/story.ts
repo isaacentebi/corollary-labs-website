@@ -81,7 +81,7 @@ export function initStory() {
       L.uy = lerp(u, Math.max(u, uyF), focus);
       L.ox = 16 + G;
       L.oy = Math.round(lerp(oy0, oyF, focus));
-      L.fit = { x: 16, y: head + 16, w: W - 32, h: capTop - 60 - (head + 16), bottom: true };
+      L.fit = { x: 16, y: head + 16, w: W - 32, h: capTop - 78 - (head + 16), bottom: true };
       L.rx = -0.6; L.rz = 0.12;
     } else {
       L.uy = u;
@@ -281,7 +281,7 @@ export function initStory() {
     const on = P.lift >= 1;
     coda.classList.toggle('-on', on);
     if (on) {
-      coda.style.setProperty('--codaY', `${capTop - 44}px`);
+      coda.style.setProperty('--codaY', `${capTop - 62}px`);
       if (document.activeElement !== trange) trange.value = String(tH);
       tout.textContent = `t = ${tH.toFixed(2)}`;
     }

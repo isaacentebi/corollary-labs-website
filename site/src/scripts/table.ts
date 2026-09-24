@@ -195,7 +195,7 @@ export class Table {
       const on = this.aIn[j] > 0 || (j === K && p.agent > 0);
       if (!on || flat <= 0) { put(x, y, w * flat, h, 1, EMPTY, EMPTY, EMPTY); continue; }
       let ax = x;
-      if (j === K && p.agent < 0.98 && p.front < -50) ax = lerp(-3 * u - w, x, ease(p.agent));   // enters from outside the table
+      if (j === K && p.agent < 0.98 && p.front < -50) ax = lerp(0, x, ease(p.agent));   // enters from the table's left edge
       const ring = Math.max(1.5, Math.round(0.14 * u));
       const ink = 0.93;
       put(ax, y, w, h, 2, ink, ink, ink * 0.97);

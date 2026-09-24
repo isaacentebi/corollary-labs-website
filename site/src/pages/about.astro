@@ -10,10 +10,11 @@ const essays = await getCollection('essays', ({ data }) => !data.draft);
 const pad = (n: number) => String(n).padStart(2, '0');
 type Cell = { k: string; v: string; href?: string; kind?: 'ph' | 'on' | 'fact' };
 const groups: { name: string; note: string; cells: Cell[] }[] = [
-  { name: 'Inputs', note: 'Not yet written', cells: Array.from({ length: 4 }, () => ({ k: '[Input]', v: '[Placeholder]', kind: 'ph' as const })) },
+  { name: 'Inputs', note: '', cells: Array.from({ length: 4 }, () => ({ k: '[Input]', v: '[Placeholder]', kind: 'ph' as const })) },
   {
-    name: 'Outputs', note: `${pad(essays.length)} essays published`, cells: [
-      { k: 'Essays', v: `${pad(essays.length)} published`, href: url('essays/'), kind: 'on' },
+    name: 'Outputs', note: '', cells: [
+      // FOR FOUNDER REVIEW: the essays are placeholder drafts, so the cell says so
+      { k: 'Essays', v: `${pad(essays.length)} essays (drafts)`, href: url('essays/'), kind: 'on' },
       { k: '[Output]', v: '[Placeholder]', kind: 'ph' },
       { k: '[Output]', v: '[Placeholder]', kind: 'ph' },
     ],
@@ -45,7 +46,9 @@ const groups: { name: string; note: string; cells: Cell[] }[] = [
           {g.cells.map((c) => (
             <div class="cc__row" role="row">
               <span class:list={['cc__k mono', { ph: c.kind === 'ph' }]} role="rowheader">{c.k}</span>
-              <span class:list={['cc__cell', `-${c.kind}`]} role="cell">{c.href ? <a href={c.href}>{c.v}</a> : c.v}</span>
+              {c.kind === 'ph'
+                ? <span class="cc__cell -ph" role="cell" title={c.v}><span class="nyw mono">Not yet written</span></span>
+                : <span class:list={['cc__cell', `-${c.kind}`]} role="cell">{c.href ? <a href={c.href}>{c.v}</a> : c.v}</span>}
             </div>
           ))}
         </div>
