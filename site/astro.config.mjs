@@ -6,6 +6,7 @@ import { rehypeSidenotes } from './src/lib/rehype-sidenotes.mjs';
 
 export default defineConfig({
   site: 'https://corollarylabs.example',
+  base: '/plotsoft',
   output: 'static',
   devToolbar: { enabled: false },
   trailingSlash: 'ignore',

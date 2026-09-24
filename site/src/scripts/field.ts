@@ -47,7 +47,7 @@ export class DiffusionField {
   t = 0.05; target = 0.05; clock = 0;
   px = -1e4; py = -1e4; pEnergy = 0; pBoost: Float32Array = new Float32Array();
   running = false; visible = false; raf = 0; last = 0;
-  colors = { ink: '#0d0d0c', ink3: '#8e8e86', rule: '#d9d9d3', signal: '#00a15c', paper: '#fafaf8', ink2: '#56564f' };
+  colors = { ink: '#2a2a2e', ink3: '#a09c96', rule: '#dcd7ce', signal: '#2f9474', paper: '#f2efe9', ink2: '#605e64', glow: '#8fd3b6' };
   io?: IntersectionObserver; ro?: ResizeObserver;
   onFrame?: (f: DiffusionField) => void;
   static reduced = false;
@@ -70,7 +70,7 @@ export class DiffusionField {
       mode: 'auto', spacing: 26, seeds: [[0.18, 0.62], [0.52, 0.3], [0.8, 0.72]], autoSpeed: 0.012, autoMax: 0.24,
       staticT: 0.35, curve: false, lattice: 4, seed: 7, pointer: true, label: false, curveRect: null, word: false, wordLayout: {}, wordBase: 0.2, global: false, ...opts,
     } as Required<FieldOptions>;
-    this.colors = { ink: css('--ink'), ink3: css('--ink-3'), rule: css('--rule'), signal: css('--signal'), paper: css('--paper'), ink2: css('--ink-2') };
+    this.colors = { ink: css('--ink'), ink3: css('--ink-3'), rule: css('--rule'), signal: css('--signal'), paper: css('--paper'), ink2: css('--ink-2'), glow: css('--glow') };
     this.build();
     this.ro = new ResizeObserver(() => { const r = canvas.getBoundingClientRect(); if (Math.abs(r.width - this.w) > 2 || Math.abs(r.height - this.h) > 2) { this.build(); this.draw(); } });
     this.ro.observe(canvas);
@@ -255,34 +255,59 @@ export class DiffusionField {
     for (let i = 0; i < n; i++) {
       const x = P[i * 2], y = P[i * 2 + 1], k = Math.min(this.heat.length - 1, Math.round(y / HC) * hc + Math.round(x / HC));
       let a = Math.max(this.heat[k] * 1.3, this.base);
-      if (this.reveal > 0) { const sw = this.sweep < 0 ? 1 : Math.min(1, Math.max(0, (x - this.sweep) / 220)); a = Math.max(a, this.reveal * sw); }
+      if (this.reveal > 0) { const sw = this.sweep < 0 ? 1 : Math.min(1, Math.max(0, (x - this.sweep) / 260)); a = Math.max(a, this.reveal * sw); }
       a = Math.min(1, a) * this.wordMul;
       alpha[i] = a; if (a > 0.03) any = true;
       if (this.dheat[k] > 0.02 && a > 0.15 && a < 0.8) hot[i] = 1;
-      if (this.sweep >= 0 && this.reveal > 0 && x > this.sweep - 30 && x < this.sweep + 40) hot[i] = 1;
+      if (this.sweep >= 0 && this.reveal > 0 && x > this.sweep - 40 && x < this.sweep + 50) hot[i] = 1;
     }
     if (!any) return;
-    // links
+    // positions: unrevealed points drift further and float, revealed ones settle (a soft, liquid gathering)
+    const s = Math.max(1.5, this.wstep * 0.46);
+    const X = new Float32Array(n), Y = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const a = alpha[i], j = (1 - a) * 7, ph = this.wph[i];
+      X[i] = P[i * 2] + (Math.cos(clk * 0.9 + ph) + 0.6 * Math.sin(clk * 0.37 + ph * 2.1)) * j;
+      Y[i] = P[i * 2 + 1] + (Math.sin(clk * 0.8 + ph) + 0.6 * Math.cos(clk * 0.41 + ph * 1.7)) * j - (1 - a) * 3;
+    }
+    // links (faint threads)
     const lb = [new Path2D(), new Path2D(), new Path2D()];
     for (let q = 0; q < this.wl.length; q += 2) {
       const a = this.wl[q], b = this.wl[q + 1], al = Math.min(alpha[a], alpha[b]); if (al < 0.08) continue;
       const bi = Math.min(2, (al * 3) | 0);
-      lb[bi].moveTo(P[a * 2], P[a * 2 + 1]); lb[bi].lineTo(P[b * 2], P[b * 2 + 1]);
+      lb[bi].moveTo(X[a], Y[a]); lb[bi].lineTo(X[b], Y[b]);
     }
-    ctx.strokeStyle = colors.ink; ctx.lineWidth = 0.8;
-    lb.forEach((p, i) => { ctx.globalAlpha = 0.18 + i * 0.16; ctx.stroke(p); });
-    // points (drift a little; unrevealed ones are simply absent)
-    const s = Math.max(1.6, this.wstep * 0.5);
-    for (let pass = 0; pass < 2; pass++) {
-      ctx.fillStyle = pass ? colors.signal : colors.ink;
-      for (let i = 0; i < n; i++) {
-        const a = alpha[i]; if (a < 0.03 || (pass === 1) !== !!hot[i]) continue;
-        ctx.globalAlpha = pass ? 1 : a;
-        const j = (1 - a) * 5, ph = this.wph[i];
-        ctx.fillRect(P[i * 2] + Math.cos(clk * 1.4 + ph) * j - s / 2, P[i * 2 + 1] + Math.sin(clk * 1.2 + ph) * j - s / 2, s, s);
-      }
+    ctx.strokeStyle = colors.ink; ctx.lineWidth = 0.7; ctx.lineCap = 'round';
+    lb.forEach((p, i) => { ctx.globalAlpha = 0.1 + i * 0.1; ctx.stroke(p); });
+    // round points, bucketed by alpha so each bucket is one fill
+    const B = 5, buckets = Array.from({ length: B }, () => new Path2D());
+    for (let i = 0; i < n; i++) {
+      const a = alpha[i]; if (a < 0.03 || hot[i]) continue;
+      const bi = Math.min(B - 1, (a * B) | 0), r = s * (0.55 + 0.45 * a);
+      buckets[bi].moveTo(X[i] + r, Y[i]); buckets[bi].arc(X[i], Y[i], r, 0, Math.PI * 2);
     }
+    ctx.fillStyle = colors.ink;
+    buckets.forEach((p, i) => { ctx.globalAlpha = (i + 0.7) / B; ctx.fill(p); });
+    // hot points glow in the accent
+    const g = this.sprite(), gs = s * 7;
+    ctx.globalAlpha = 0.5;
+    for (let i = 0; i < n; i++) if (hot[i] && alpha[i] >= 0.03) ctx.drawImage(g, X[i] - gs / 2, Y[i] - gs / 2, gs, gs);
+    const core = new Path2D();
+    for (let i = 0; i < n; i++) if (hot[i] && alpha[i] >= 0.03) { core.moveTo(X[i] + s * 0.62, Y[i]); core.arc(X[i], Y[i], s * 0.62, 0, Math.PI * 2); }
+    ctx.globalAlpha = 1; ctx.fillStyle = colors.signal; ctx.fill(core);
     ctx.globalAlpha = 1;
+  }
+
+  /** a soft radial glow in the accent colour, pre-rendered once */
+  _sprite?: HTMLCanvasElement;
+  sprite() {
+    if (this._sprite) return this._sprite;
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d')!, gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    const glow = css('--glow') || '#8fd3b6';
+    gr.addColorStop(0, glow); gr.addColorStop(0.35, glow + 'aa'); gr.addColorStop(1, glow + '00');
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    return (this._sprite = c);
   }
 
   /** the node nearest to (x, y) in canvas space */
@@ -309,12 +334,12 @@ export class DiffusionField {
       const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now;
       this.clock += dt;
       if (this.o.mode === 'auto') this.target = Math.min(this.o.autoMax, this.target + this.o.autoSpeed * dt);
-      this.t += (this.target - this.t) * (1 - Math.exp(-dt * 6));
+      this.t += (this.target - this.t) * (1 - Math.exp(-dt * 3.5));
       this.pEnergy *= Math.exp(-dt * 1.6);
       this.kick *= Math.exp(-dt * 2.5);
       for (let k = 0; k < this.n; k++) this.pulseB[k] *= Math.exp(-dt * 0.35);
-      this.pulses = this.pulses.filter((p) => (this.clock - p.t0) * 620 < Math.hypot(this.w, this.h) + 200);
-      this.draw();
+      this.pulses = this.pulses.filter((p) => (this.clock - p.t0) * 520 < Math.hypot(this.w, this.h) + 200);
+      this.dt = dt; this.draw(); this.dt = 0;
       if (this.o.word) {
         this.base += ((this.reveal > 0 ? 0 : this.o.wordBase * this.wordMul) - this.base) * (1 - Math.exp(-dt * 0.8));
         this.idle += dt;
@@ -338,11 +363,16 @@ export class DiffusionField {
     removeEventListener('pointerdown', this.onDown); document.removeEventListener('mouseleave', this.onLeave);
   }
 
+  // every node sits on a spring: the pointer, drift and shockwaves set a target, the node follows with a little give
+  sx: Float32Array = new Float32Array(); sy: Float32Array = new Float32Array(); vx: Float32Array = new Float32Array(); vy: Float32Array = new Float32Array();
+  dt = 0; sprung = false;
+
   draw() {
     const { ctx, dpr, n, nx, ny, T, parent, phase, colors } = this;
     const t = this.t, clk = this.clock;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, this.w, this.h);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     // camera: zoom about a focus point, carrying it toward camTo (used for the dive into a single node)
     if (this.camScale !== 1 || this.camRot !== 0 || this.camFocus) {
       const fx = this.camFocus?.[0] ?? this.w / 2, fy = this.camFocus?.[1] ?? this.h / 2;
@@ -350,74 +380,91 @@ export class DiffusionField {
       const c = Math.cos(this.camRot) * this.camScale, sn = Math.sin(this.camRot) * this.camScale;
       ctx.setTransform(dpr * c, dpr * sn, -dpr * sn, dpr * c, dpr * (tx - c * fx + sn * fy), dpr * (ty - sn * fx - c * fy));
     }
-    const R = 150, R2 = R * R, px = this.px, py = this.py, pe = 0.25 + this.pEnergy;
+    const R = 170, R2 = R * R, px = this.px, py = this.py, pe = 0.25 + this.pEnergy;
     const ptr = px > -1e3;
-    const FRONT = 0.035;
+    const FRONT = 0.045;
+    // when the camera is close (the dive and the pull-back) lines and points stay fine instead of scaling up with it
+    const zk = 1 / Math.sqrt(Math.max(1, this.camScale)), zr = 1 / Math.pow(Math.max(1, this.camScale), 0.62);
 
     // local time with pointer acceleration + drift
     const teff = (k: number) => {
-      let tt = t;
       if (ptr) {
         const dx = nx[k] - px, dy = ny[k] - py, d2 = dx * dx + dy * dy;
         if (d2 < R2) { const f = 1 - d2 / R2; this.pBoost[k] = Math.min(0.45, this.pBoost[k] + f * f * 0.012 * pe); }
       }
       this.pBoost[k] *= 0.992;
-      return tt + this.pBoost[k] + this.pulseB[k];
+      return t + this.pBoost[k] + this.pulseB[k];
     };
-    const off = (k: number) => {
-      let ox = Math.sin(clk * 0.6 + phase[k]) * 1.2, oy = Math.cos(clk * 0.5 + phase[k] * 1.3) * 1.2;
+    // where each node wants to be: a slow flowing drift (sum of travelling waves), pushed by the pointer and shockwaves
+    const target = (k: number, out: number[]) => {
+      const x0 = nx[k], y0 = ny[k], ph = phase[k];
+      let ox = Math.sin(clk * 0.34 + ph + y0 * 0.006) * 2.2 + Math.sin(clk * 0.19 + x0 * 0.009) * 1.6;
+      let oy = Math.cos(clk * 0.29 + ph * 1.3 + x0 * 0.005) * 2.2 + Math.cos(clk * 0.23 + y0 * 0.008) * 1.6;
       if (ptr) {
-        const dx = nx[k] - px, dy = ny[k] - py, d2 = dx * dx + dy * dy;
-        if (d2 < R2 && d2 > 1) { const f = (1 - d2 / R2) * 10 / Math.sqrt(d2); ox += dx * f; oy += dy * f; }
+        const dx = x0 - px, dy = y0 - py, d2 = dx * dx + dy * dy;
+        if (d2 < R2 && d2 > 1) { const f = (1 - d2 / R2) ** 2 * 22 / Math.sqrt(d2); ox += dx * f; oy += dy * f; }
       }
-      let x = nx[k] + ox, y = ny[k] + oy;
-      // rupture: a flowing turbulence tears the network apart
+      let x = x0 + ox, y = y0 + oy;
       const st = this.storm + this.kick * 0.12;
       if (st > 0.001) {
-        const S = 115 * st, ph = phase[k];
+        const S = 115 * st;
         x += (Math.sin(y * 0.0065 + clk * 0.9 + ph * 0.5) + Math.sin(x * 0.011 - clk * 0.6)) * S;
         y += (Math.cos(x * 0.0072 - clk * 0.8 + ph * 0.5) + Math.cos(y * 0.013 + clk * 0.5)) * S * 0.8;
       }
-      // re-knit into the new lattice
       const se = this.settle;
-      if (se > 0.001) { const e = se * se * (3 - 2 * se); x += (this.tx[k] + Math.sin(clk * 0.7 + phase[k]) * 0.8 - x) * e; y += (this.ty[k] + Math.cos(clk * 0.6 + phase[k]) * 0.8 - y) * e; }
-      // click shockwaves
+      if (se > 0.001) { const e = se * se * (3 - 2 * se); x += (this.tx[k] - x) * e; y += (this.ty[k] - y) * e; }
       for (const p of this.pulses) {
-        const r = (clk - p.t0) * 620, dx = x - p.x, dy = y - p.y, d = Math.hypot(dx, dy) || 1, band = d - r;
+        const r = (clk - p.t0) * 520, dx = x0 - p.x, dy = y0 - p.y, d = Math.hypot(dx, dy) || 1, band = d - r;
         if (band < 0 && this.pulseB[k] < 0.6 && band > -40) this.pulseB[k] = 0.6;
-        if (Math.abs(band) < 60) { const a = Math.cos((band / 60) * Math.PI / 2) * 18 * Math.max(0, 1 - r / 1400); x += (dx / d) * a; y += (dy / d) * a; }
+        if (Math.abs(band) < 80) { const a = Math.cos((band / 80) * Math.PI / 2) * 22 * Math.max(0, 1 - r / 1500); x += (dx / d) * a; y += (dy / d) * a; }
       }
-      return [x, y];
+      out[0] = x; out[1] = y;
     };
 
-    // 1) lattice — the old structure, dissolving under the front
-    ctx.beginPath();
+    // springs (semi-implicit Euler; slightly under-damped so moves settle with a soft overshoot)
+    if (this.sx.length !== n) { this.sx = new Float32Array(n); this.sy = new Float32Array(n); this.vx = new Float32Array(n); this.vy = new Float32Array(n); this.sprung = false; }
+    const pos = new Float32Array(n * 2), te = new Float32Array(n), tmp = [0, 0];
+    const dt = Math.min(0.033, this.dt), K = 70, C = 2 * Math.sqrt(K) * 0.62;
+    for (let k = 0; k < n; k++) {
+      target(k, tmp);
+      if (!this.sprung || dt <= 0) { this.sx[k] = tmp[0]; this.sy[k] = tmp[1]; this.vx[k] = this.vy[k] = 0; }
+      else {
+        this.vx[k] += ((tmp[0] - this.sx[k]) * K - this.vx[k] * C) * dt; this.vy[k] += ((tmp[1] - this.sy[k]) * K - this.vy[k] * C) * dt;
+        this.sx[k] += this.vx[k] * dt; this.sy[k] += this.vy[k] * dt;
+      }
+      pos[k * 2] = this.sx[k]; pos[k * 2 + 1] = this.sy[k]; te[k] = teff(k);
+    }
+    this.sprung = true;
+
+    // 1) lattice — the old structure, drawn as softly bowed threads that shrink away under the front
+    const lat = new Path2D();
+    const L = this.sp * this.o.lattice;
     for (let i = 0; i < this.nseg; i++) {
       const d = Math.min(1, Math.max(0, (t - this.segT[i] - 0.02) / 0.16));
       if (d >= 1) continue;
       const x1 = this.segs[i * 4], y1 = this.segs[i * 4 + 1], x2 = this.segs[i * 4 + 2], y2 = this.segs[i * 4 + 3];
       const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, k = (1 - d) * 0.5;
       let bx = 0, by = 0;
-      if (ptr) { const dx = mx - px, dy = my - py, dd = Math.hypot(dx, dy); if (dd < R && dd > 1) { const f = (1 - dd / R) * 12 / dd; bx = dx * f; by = dy * f; } }
-      ctx.moveTo(mx + (x1 - mx) * k * 2 + bx, my + (y1 - my) * k * 2 + by);
-      ctx.lineTo(mx + (x2 - mx) * k * 2 + bx, my + (y2 - my) * k * 2 + by);
+      if (ptr) { const dx = mx - px, dy = my - py, dd = Math.hypot(dx, dy); if (dd < R && dd > 1) { const f = (1 - dd / R) ** 2 * 18 / dd; bx = dx * f; by = dy * f; } }
+      const horiz = y1 === y2, bow = Math.sin(clk * 0.3 + mx * 0.004 + my * 0.006) * L * 0.09;
+      const ax = mx + (x1 - mx) * k * 2 + bx * 0.5, ay = my + (y1 - my) * k * 2 + by * 0.5;
+      const cx = mx + bx + (horiz ? 0 : bow), cy = my + by + (horiz ? bow : 0);
+      lat.moveTo(ax, ay); lat.quadraticCurveTo(cx, cy, mx + (x2 - mx) * k * 2 + bx * 0.5, my + (y2 - my) * k * 2 + by * 0.5);
     }
-    ctx.strokeStyle = colors.rule; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = colors.rule; ctx.lineWidth = 1 * zk; ctx.globalAlpha = 0.62; ctx.stroke(lat); ctx.globalAlpha = 1;
 
-    // 2) new network: links grow from parent to child after adoption
-    ctx.beginPath();
-    const pos = new Float32Array(n * 2), te = new Float32Array(n);
-    for (let k = 0; k < n; k++) { const [x, y] = off(k); pos[k * 2] = x; pos[k * 2 + 1] = y; te[k] = teff(k); }
+    // 2) new network: curved links grow from parent to child after adoption
+    const net = new Path2D();
     for (let k = 0; k < n; k++) {
       const p = parent[k]; if (p < 0) continue;
-      const g = (te[k] - T[k]) / 0.04; if (g <= 0) continue;
+      const g = (te[k] - T[k]) / 0.05; if (g <= 0) continue;
       const f = Math.min(1, g);
-      const x0 = pos[p * 2], y0 = pos[p * 2 + 1];
-      ctx.moveTo(x0, y0); ctx.lineTo(x0 + (pos[k * 2] - x0) * f, y0 + (pos[k * 2 + 1] - y0) * f);
+      const x0 = pos[p * 2], y0 = pos[p * 2 + 1], x1 = x0 + (pos[k * 2] - x0) * f, y1 = y0 + (pos[k * 2 + 1] - y0) * f;
+      const bw = (phase[k] > Math.PI ? 0.13 : -0.13);
+      net.moveTo(x0, y0); net.quadraticCurveTo((x0 + x1) / 2 - (y1 - y0) * bw, (y0 + y1) / 2 + (x1 - x0) * bw, x1, y1);
     }
     const se = this.settle, sE = se * se * (3 - 2 * se);
-    ctx.globalAlpha = 0.38 * (1 - sE) * (1 - this.storm * 0.35); ctx.strokeStyle = colors.ink; ctx.lineWidth = 0.8; ctx.stroke(); ctx.globalAlpha = 1;
-    // 2b) the re-knit: new lattice links form as nodes lock into place; some flash on a sweeping front
+    ctx.globalAlpha = 0.21 * (1 - sE) * (1 - this.storm * 0.35); ctx.strokeStyle = colors.ink; ctx.lineWidth = 0.8 * zk; ctx.stroke(net); ctx.globalAlpha = 1;
     if (se > 0.02) {
       const main = new Path2D(), flash = new Path2D(), front = se * 1.3 - 0.15;
       for (let q = 0; q < this.hex.length; q += 2) {
@@ -425,33 +472,42 @@ export class DiffusionField {
         const fx = (this.tx[a] / this.w + this.ty[a] / this.h * 0.35) / 1.35;
         const lk = Math.min(1, Math.max(0, (front - fx) / 0.12)); if (lk <= 0) continue;
         const x1 = pos[a * 2], y1 = pos[a * 2 + 1], x2 = pos[b * 2], y2 = pos[b * 2 + 1];
-        const f = lk;
         const path = this.hexFresh[q / 2] && lk < 1 ? flash : main;
-        path.moveTo(x1, y1); path.lineTo(x1 + (x2 - x1) * f, y1 + (y2 - y1) * f);
+        path.moveTo(x1, y1); path.lineTo(x1 + (x2 - x1) * lk, y1 + (y2 - y1) * lk);
       }
-      ctx.strokeStyle = colors.ink; ctx.globalAlpha = 0.34 * Math.min(1, se * 1.6); ctx.lineWidth = 0.8; ctx.stroke(main);
-      ctx.strokeStyle = colors.signal; ctx.globalAlpha = 0.95; ctx.lineWidth = 1.2; ctx.stroke(flash); ctx.globalAlpha = 1;
+      ctx.strokeStyle = colors.ink; ctx.globalAlpha = 0.3 * Math.min(1, se * 1.6); ctx.lineWidth = 0.8; ctx.stroke(main);
+      ctx.strokeStyle = colors.signal; ctx.globalAlpha = 0.9; ctx.lineWidth = 1.2; ctx.stroke(flash); ctx.globalAlpha = 1;
     }
 
-    // 3) nodes: waiting (grey), front (signal), adopted (ink)
-    ctx.fillStyle = colors.ink3; ctx.globalAlpha = 0.55;
-    for (let k = 0; k < n; k++) if (te[k] < T[k]) ctx.fillRect(pos[k * 2] - 0.75, pos[k * 2 + 1] - 0.75, 1.5, 1.5);
-    ctx.globalAlpha = 1; ctx.fillStyle = colors.ink;
-    for (let k = 0; k < n; k++) { const a = te[k] - T[k]; if (a >= FRONT) ctx.fillRect(pos[k * 2] - 1.25, pos[k * 2 + 1] - 1.25, 2.5, 2.5); }
-    ctx.fillStyle = colors.signal;
+    // 3) nodes: waiting (small, pale), adopted (graphite), the front (a jade glow that swells and fades)
+    const wait = new Path2D(), done = new Path2D(), core = new Path2D();
+    const glow = this.sprite();
+    ctx.globalAlpha = 0.5;
     for (let k = 0; k < n; k++) {
-      const a = te[k] - T[k];
-      if (a >= 0 && a < FRONT) { const s = 2 + 3 * (1 - a / FRONT); ctx.fillRect(pos[k * 2] - s / 2, pos[k * 2 + 1] - s / 2, s, s); }
+      const a = te[k] - T[k], x = pos[k * 2], y = pos[k * 2 + 1];
+      if (a < 0) { const r = zr; wait.moveTo(x + r, y); wait.arc(x, y, r, 0, 6.2832); }
+      else if (a >= FRONT) { const r = (1.5 + 0.3 * Math.sin(clk * 1.2 + phase[k])) * zr; done.moveTo(x + r, y); done.arc(x, y, r, 0, 6.2832); }
+      else {
+        const f = 1 - a / FRONT, gs = (10 + 26 * f) * zr;
+        ctx.drawImage(glow, x - gs / 2, y - gs / 2, gs, gs);
+        const r = (1.6 + 2.2 * f) * zr; core.moveTo(x + r, y); core.arc(x, y, r, 0, 6.2832);
+      }
     }
+    ctx.globalAlpha = 0.5; ctx.fillStyle = colors.ink3; ctx.fill(wait);
+    ctx.globalAlpha = 0.92; ctx.fillStyle = colors.ink; ctx.fill(done);
+    ctx.globalAlpha = 1; ctx.fillStyle = colors.signal; ctx.fill(core);
 
-    // 3b) click shockwave fronts: nodes on the ring flash
+    // 3b) click shockwaves: a soft ring travels out; nodes it passes glow
     if (this.pulses.length) {
-      ctx.fillStyle = colors.signal;
       for (const p of this.pulses) {
-        const r = (clk - p.t0) * 620, fade = Math.max(0, 1 - r / 1400); if (fade <= 0) continue;
-        ctx.globalAlpha = fade;
-        for (let k = 0; k < n; k++) { const d = Math.hypot(pos[k * 2] - p.x, pos[k * 2 + 1] - p.y); if (Math.abs(d - r) < 14) ctx.fillRect(pos[k * 2] - 2.5, pos[k * 2 + 1] - 2.5, 5, 5); }
-        if (r < 30) { ctx.globalAlpha = 1; ctx.fillRect(p.x - 4, p.y - 4, 8, 8); }
+        const r = (clk - p.t0) * 520, fade = Math.max(0, 1 - r / 1500); if (fade <= 0) continue;
+        ctx.strokeStyle = colors.glow ?? colors.signal; ctx.globalAlpha = 0.28 * fade; ctx.lineWidth = 14;
+        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.stroke();
+        ctx.strokeStyle = colors.signal; ctx.globalAlpha = 0.55 * fade; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.stroke();
+        ctx.globalAlpha = 0.6 * fade;
+        for (let k = 0; k < n; k++) { const d = Math.hypot(pos[k * 2] - p.x, pos[k * 2 + 1] - p.y); if (Math.abs(d - r) < 18) ctx.drawImage(glow, pos[k * 2] - 12, pos[k * 2 + 1] - 12, 24, 24); }
+        if (r < 40) { ctx.globalAlpha = 1 - r / 40; ctx.drawImage(glow, p.x - 30, p.y - 30, 60, 60); }
       }
       ctx.globalAlpha = 1;
     }

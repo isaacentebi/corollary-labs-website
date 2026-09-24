@@ -10,7 +10,8 @@ import { sampleWord, loadWordFonts } from './wordmask';
 import type { DiffusionField } from './field';
 
 const css = (n: string) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+// quintic in-out with a whisper of overshoot at the end: points glide in and settle
+const ease = (x: number) => { const e = x < 0.5 ? 16 * x ** 5 : 1 - Math.pow(-2 * x + 2, 5) / 2; return e + Math.sin(Math.PI * x) * Math.sin(Math.PI * x * 2) * -0.02; };
 
 export function runPreloader(): Promise<void> {
   const el = document.querySelector<HTMLElement>('[data-preloader]');
@@ -56,7 +57,7 @@ export function runPreloader(): Promise<void> {
       ctx.clearRect(0, 0, w, h);
       const front = ((t - 0.35) / 0.95) * w; // the sweep, in px
       // old lattice: appears, then dissolves behind the front
-      ctx.strokeStyle = C.rule; ctx.lineWidth = 1;
+      ctx.strokeStyle = C.rule; ctx.lineWidth = 1; ctx.lineCap = 'round';
       const la = Math.min(1, t / 0.35);
       ctx.beginPath();
       for (let j = 0; j <= rows; j++) { const y = j * g; for (let i = 0; i < cols; i++) { const x = i * g; const f = Math.min(1, Math.max(0, (x - front + 120) / 240)); if (f <= 0) continue; const hl = (g / 2) * f * la; ctx.moveTo(x + g / 2 - hl, y); ctx.lineTo(x + g / 2 + hl, y); } }
@@ -73,7 +74,9 @@ export function runPreloader(): Promise<void> {
       }
       const pass = (s: number, color: string, alpha: number, sz: number) => {
         ctx.fillStyle = color; ctx.globalAlpha = alpha * la;
-        for (let i = 0; i < P.length; i++) if (st[i] === s) ctx.fillRect(xs[i] - sz / 2, ys[i] - sz / 2, sz, sz);
+        const path = new Path2D(), r = sz / 2;
+        for (let i = 0; i < P.length; i++) if (st[i] === s) { path.moveTo(xs[i] + r, ys[i]); path.arc(xs[i], ys[i], r, 0, 6.2832); }
+        ctx.fill(path);
       };
       pass(0, C.ink3, 0.6, 1.6); pass(1, C.ink3, 0.9, size); pass(3, C.ink, 1, size); pass(2, C.signal, 1, size + 1);
       ctx.globalAlpha = 1;
@@ -85,7 +88,7 @@ export function runPreloader(): Promise<void> {
       removeEventListener('keydown', skip); el.removeEventListener('click', skip);
       if (field && home) {
         field.reveal = 1; field.sweep = -1;
-        gsap.to(el, { opacity: 0, duration: 0.45, ease: 'power3.out', onComplete: finish });
+        gsap.to(el, { opacity: 0, duration: 0.8, ease: 'sine.inOut', onComplete: finish });
         const box = { x: -260 };
         gsap.to(box, { x: w + 260, duration: 1.9 / Math.sqrt(speed), delay: 0.5, ease: 'power2.inOut', onUpdate: () => { field.sweep = box.x; }, onComplete: () => { field.reveal = 0; field.sweep = -1; } });
         gsap.delayedCall(0.25, resolveOnce);
@@ -94,7 +97,9 @@ export function runPreloader(): Promise<void> {
         const t = { k: 0 };
         gsap.to(t, { k: 1, duration: 0.6, ease: 'power2.in', onUpdate: () => {
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h); ctx.fillStyle = C.ink; ctx.globalAlpha = 1 - t.k;
-          for (const p of P) { const dx = p.tx - w / 2, dy = p.ty - h / 2; ctx.fillRect(p.tx + dx * t.k * 0.6, p.ty + dy * t.k * 0.6, size, size); }
+          const path = new Path2D(), r = size / 2;
+          for (const p of P) { const dx = p.tx - w / 2, dy = p.ty - h / 2, x = p.tx + dx * t.k * 0.6, y = p.ty + dy * t.k * 0.6; path.moveTo(x + r, y); path.arc(x, y, r, 0, 6.2832); }
+          ctx.fill(path);
         } });
         gsap.to(el, { opacity: 0, duration: 0.45, delay: 0.3, onComplete: finish });
         gsap.delayedCall(0.35, resolveOnce);

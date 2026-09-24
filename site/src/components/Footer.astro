@@ -1,30 +1,34 @@
 ---
-import { site } from '../config/site';
-const path = Astro.url.pathname;
-const cur = (h: string) => (h === '/' ? path === '/' : path.startsWith(h)) ? 'page' : undefined;
+import { site, url } from '../config/site';
+import Mark from './Mark.astro';
+const base = url('/');
+const path = Astro.url.pathname.replace(/\/?$/, '/');
+const cur = (h: string) => { const u = url(h); return (h === '/' ? path === base : path.startsWith(u)) ? 'page' : undefined; };
 ---
 <footer class="c-footer" id="contact" data-footer>
   <nav class="c-footer__menus" aria-label="Site">
     <div class="c-footer__menu -main">
-      <ul class="c-footer__list" data-reveal="lines">
-        <li><a href="/" aria-current={cur('/')}>Home</a></li>
-        <li><a href="/essays/" aria-current={cur('/essays')}>Essays</a></li>
-        <li><a href="/about/" aria-current={cur('/about')}>About</a></li>
-        <li><a href="/team/" aria-current={cur('/team')}>Team</a></li>
+      <p class="c-footer__title" data-reveal="scramble">Index</p>
+      <ul class="c-footer__list" data-reveal="rows">
+        <li><a href={url('/')} aria-current={cur('/')}>Home</a></li>
+        <li><a href={url('/essays/')} aria-current={cur('/essays/')}>Essays</a></li>
+        <li><a href={url('/about/')} aria-current={cur('/about/')}>About</a></li>
+        <li><a href={url('/team/')} aria-current={cur('/team/')}>Team</a></li>
       </ul>
-      <ul class="c-footer__list -b" data-reveal="lines">
+      <ul class="c-footer__list -b" data-reveal="rows">
         <li><a href="#top" data-to-top>Back to top ↑</a></li>
       </ul>
     </div>
     <div class="c-footer__menu -contact">
       <p class="c-footer__title" data-reveal="scramble">Contact</p>
-      <ul class="c-footer__list" data-reveal="lines">
+      <ul class="c-footer__list" data-reveal="rows">
         <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
       </ul>
     </div>
   </nav>
-  <p class="c-footer__big" data-reveal="lines">
-    {site.name}
-  </p>
+  <div class="c-footer__sign">
+    <Mark class="c-footer__mark" />
+    <p class="c-footer__big" data-reveal="lines">{site.name}</p>
+  </div>
   <p class="c-footer__copy">©{site.year} {site.name}</p>
 </footer>

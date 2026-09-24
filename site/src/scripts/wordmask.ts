@@ -2,7 +2,7 @@
 // hero field so the intro's assembled name lands exactly where the field's name lives.
 import { site } from '../config/site';
 
-export const loadWordFonts = () => Promise.all([document.fonts.load('400 100px "Instrument Serif"'), Promise.resolve()]).catch(() => {});
+export const loadWordFonts = () => Promise.all([document.fonts.load('360 100px "Fraunces Soft"'), Promise.resolve()]).catch(() => {});
 
 export interface WordLayout { text?: string; wFrac?: number; hFrac?: number; baseFrac?: number }
 export function sampleWord(w: number, h: number, L: WordLayout = {}) {
@@ -12,11 +12,11 @@ export function sampleWord(w: number, h: number, L: WordLayout = {}) {
   // phones: stack the name so it can be large
   const lines = (L.text ?? (mobile ? site.name.replace(' ', '\n') : site.name)).split('\n');
   let S = 100;
-  g.font = `400 ${S}px "Instrument Serif"`;
+  g.font = `360 ${S}px "Fraunces Soft"`;
   const ratio = Math.max(...lines.map((t) => g.measureText(t).width)) / S;
   const lh = 0.92;
   S = Math.min((w * (L.wFrac ?? (mobile ? 0.86 : 0.8))) / ratio, (h * (L.hFrac ?? (mobile ? 0.5 : 0.36))) / (1 + (lines.length - 1) * lh));
-  g.font = `400 ${S}px "Instrument Serif"`;
+  g.font = `360 ${S}px "Fraunces Soft"`;
   const ww = Math.max(...lines.map((t) => g.measureText(t).width));
   const x0 = (w - ww) / 2;
   const base = h * (L.baseFrac ?? (mobile ? 0.5 : 0.58)) - ((lines.length - 1) * lh * S) / 2;

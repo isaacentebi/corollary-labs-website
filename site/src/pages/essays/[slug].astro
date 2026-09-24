@@ -3,7 +3,8 @@ import Base from '../../layouts/Base.astro';
 import Figure from '../../components/Figure.astro';
 import Term from '../../components/Term.astro';
 import { getCollection, render } from 'astro:content';
-import { site } from '../../config/site';
+import { site, url } from '../../config/site';
+import Mark from '../../components/Mark.astro';
 import '../../styles/essay.css';
 
 export async function getStaticPaths() {
@@ -21,8 +22,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
     <aside class="essay-rail" data-rail aria-label="Essay information">
       <div class="rail-card" data-reveal="rise" data-start="top 100%">
         <div class="rail-card__top">
-          <a class="rail-card__home" href="/" data-shuffle-hover>{site.name}</a>
-          <a class="rail-card__back link" href="/essays/" data-shuffle-hover>Index</a>
+          <a class="rail-card__home" href={url('/')}><Mark class="rail-card__mark" />{site.name}</a>
+          <a class="rail-card__back link" href={url('/essays/')}>Essays</a>
         </div>
         <p class="rail-card__title">{entry.data.title}</p>
         <p class="rail-card__by">by {site.author}</p>
@@ -57,7 +58,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     <footer class="essay-end">
       <p class="essay-end__sign t-mono" data-reveal="scramble">— {site.author}, {fmt(entry.data.date)}</p>
       {next && next.id !== entry.id && (
-        <a class="next-essay" href={`/essays/${next.id}/`} data-shuffle-hover data-reveal="rise">
+        <a class="next-essay" href={url(`/essays/${next.id}/`)} data-shuffle-hover data-reveal="rise">
           <span class="next-essay__label t-mono">Next essay</span>
           <span class="next-essay__title" data-shuffle-target>{next.data.title}</span>
           <span class="next-essay__dek">{next.data.dek}</span>

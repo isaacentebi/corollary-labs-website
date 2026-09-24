@@ -65,9 +65,9 @@ function leaveAnimation(): Promise<void> {
       const r = el.getBoundingClientRect();
       if (r.bottom > 0 && r.top < vh && r.width > 0) leaves.push(el);
     });
-    leaves.slice(0, 400).forEach((el) => shuffle(el, { steps: 4, duration: DUR.d250 }));
+    void leaves; // Plotsoft: no letter shuffle; the page blurs out softly (CSS: html.is-navigating)
     root.classList.add('is-navigating');
-    gsap.delayedCall(DUR.d250, resolve);
+    gsap.delayedCall(DUR.d450, resolve);
   });
 }
 
@@ -75,11 +75,7 @@ function enterAnimation() {
   root.classList.remove('is-navigating');
   if (reduced()) return;
   const vh = innerHeight;
-  document.querySelectorAll<HTMLElement>('.c-header a, .c-header span').forEach((el) => {
-    if (el.children.length || !el.textContent?.trim()) return;
-    const r = el.getBoundingClientRect();
-    if (r.bottom > 0 && r.top < vh) shuffle(el, { steps: 4, duration: DUR.d250 });
-  });
+  void vh;
 }
 
 function boot() {

@@ -19,14 +19,14 @@ export class HomotopySurface {
   tilt = 1; // 0 = seen straight from above (reads as the flat field), 1 = free 3D view
   clock = 0; raf = 0; running = false; visible = false; last = 0;
   ripples: Array<{ u: number; v: number; t0: number }> = [];
-  c = { ink: '#0d0d0c', ink3: '#8e8e86', rule: '#d9d9d3', signal: '#00a15c' };
+  c = { ink: '#2a2a2e', ink3: '#a09c96', rule: '#dcd7ce', signal: '#2f9474', glow: '#8fd3b6' };
   io?: IntersectionObserver; ro?: ResizeObserver;
   proj = new Float32Array(); depth = new Float32Array();
   static reduced = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d')!;
-    this.c = { ink: css('--ink'), ink3: css('--ink-3'), rule: css('--rule'), signal: css('--signal') };
+    this.c = { ink: css('--ink'), ink3: css('--ink-3'), rule: css('--rule'), signal: css('--signal'), glow: css('--glow') };
     this.proj = new Float32Array(this.NU * this.NV * 2); this.depth = new Float32Array(this.NU * this.NV);
     this.resize();
     this.ro = new ResizeObserver(() => { this.resize(); this.draw(); }); this.ro.observe(canvas);
@@ -63,7 +63,7 @@ export class HomotopySurface {
     const loop = (now: number) => {
       if (!this.running) return;
       const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now; this.clock += dt;
-      this.hp += (this.target - this.hp) * (1 - Math.exp(-dt * 5));
+      this.hp += (this.target - this.hp) * (1 - Math.exp(-dt * 3));
       this.spin += dt * 0.08;
       this.yaw += ((this.yawT + this.spin) * this.tilt - this.yaw) * (1 - Math.exp(-dt * 3));
       const pt = 1.52 + (this.pitchT - 1.52) * this.tilt, yt = (this.yawT + this.spin) * this.tilt;
@@ -105,10 +105,12 @@ export class HomotopySurface {
       const tx = (R + r * Math.cos(ph)) * Math.cos(th), ty = r * Math.sin(ph), tz = (R + r * Math.cos(ph)) * Math.sin(th);
       x += (tx - x) * tor; y += (ty - y) * tor; z += (tz - z) * tor;
     }
+    // organic breathing: a slow, low swell runs through the surface at every stage
+    y += 0.035 * Math.sin(u * TAU * 2 + t * 0.7) * Math.cos(v * TAU + t * 0.5);
     // ripples travel across the parameter domain
     for (const q of this.ripples) {
       const d = Math.hypot(u - q.u, (v - q.v) * 0.6), rr = (this.clock - q.t0) * 0.45, band = d - rr;
-      if (Math.abs(band) < 0.08) y += Math.cos((band / 0.08) * Math.PI / 2) * 0.12 * Math.max(0, 1 - rr / 1.4);
+      if (Math.abs(band) < 0.12) y += Math.cos((band / 0.12) * Math.PI / 2) * 0.14 * Math.max(0, 1 - rr / 1.4);
     }
     out[0] = x; out[1] = y; out[2] = z;
   }
@@ -135,7 +137,7 @@ export class HomotopySurface {
     ctx.clearRect(0, 0, this.w, this.h);
     const cy = Math.cos(this.yaw), sy = Math.sin(this.yaw), cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
     // seen from above at tilt 0 the sheet fills the screen like the field it replaces, then pulls back as it tilts
-    const scale = Math.min(this.w, this.h) * 0.32 * (this.w < 700 ? 1.15 : 1) * (1 + (1 - this.tilt) * ((this.w / this.h) * 1.25)), cam = 4.2;
+    const scale = Math.min(this.w, this.h) * 0.32 * (this.w < 700 ? 0.96 : 1) * (1 + (1 - this.tilt) * ((this.w / this.h) * 1.25)), cam = 4.2;
     const P = this.proj, D = this.depth, tmp = [0, 0, 0], J = this.jit;
     const du = 1 / (NU - 1), dv = 1 / (NV - 1);
     for (let j = 0; j < NV; j++) for (let i = 0; i < NU; i++) {
@@ -163,7 +165,10 @@ export class HomotopySurface {
     const add = (a: number, b: number, green = false, into?: Path2D) => {
       const bi = Math.min(3, Math.max(0, Math.floor((1.6 - (D[a] + D[b]) / 2) / 0.8)));
       const path = green ? flash : into ?? (reformed(a) && reformed(b) ? gBuckets[bi] : buckets[bi]);
-      path.moveTo(P[a * 2], P[a * 2 + 1]); path.lineTo(P[b * 2], P[b * 2 + 1]);
+      const x1 = P[a * 2], y1 = P[a * 2 + 1], x2 = P[b * 2], y2 = P[b * 2 + 1];
+      // links are drawn as soft arcs (like the field's network), bowing to one side or the other per vertex
+      const bw = into ? 0 : (a % 3 === 0 ? 0.2 : a % 3 === 1 ? -0.16 : 0.08);
+      path.moveTo(x1, y1); path.quadraticCurveTo((x1 + x2) / 2 - (y2 - y1) * bw, (y1 + y2) / 2 + (x2 - x1) * bw, x2, y2);
     };
     // the old lattice as a faint underlay — it fades as the new structure takes over
     const lat = 1 - sm(seg(hp, 0.25, 0.6));
@@ -182,19 +187,32 @@ export class HomotopySurface {
       for (let j = 0; j < NV; j++) { const a = j * NU + NU - 1, b = j * NU; if (near(a, b)) add(a, b, glue < 0.85); }
       for (let i = 0; i < NU; i++) { const a = (NV - 1) * NU + i, b = i; if (near(a, b)) add(a, b, glue < 0.85); }
     }
+    // a soft contact shadow under the form (it lifts off the ground as it tilts into 3D)
+    {
+      const sy2 = this.h / 2 + scale * 0.95, rx = scale * 1.25, g = ctx.createRadialGradient(this.w / 2, sy2, 0, this.w / 2, sy2, rx);
+      g.addColorStop(0, 'rgba(42,42,46,0.10)'); g.addColorStop(1, 'rgba(42,42,46,0)');
+      ctx.save(); ctx.globalAlpha = this.tilt; ctx.translate(this.w / 2, sy2); ctx.scale(1, 0.16); ctx.translate(-this.w / 2, -sy2);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(this.w / 2, sy2, rx, 0, TAU); ctx.fill(); ctx.restore();
+    }
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.lineWidth = 1; ctx.strokeStyle = c.rule; ctx.globalAlpha = lat; ctx.stroke(faint);
     ctx.lineWidth = 0.8; ctx.strokeStyle = c.ink;
-    [0.42, 0.3, 0.18, 0.09].forEach((a, i) => { ctx.globalAlpha = a; ctx.stroke(buckets[i]); });
-    ctx.strokeStyle = c.signal; [0.7, 0.5, 0.3, 0.14].forEach((a, i) => { ctx.globalAlpha = a; ctx.stroke(gBuckets[i]); });
+    [0.34, 0.24, 0.14, 0.07].forEach((a, i) => { ctx.globalAlpha = a; ctx.stroke(buckets[i]); });
+    // the re-formed surface glows: a blurred jade pass under a crisp one
+    ctx.strokeStyle = c.glow; ctx.lineWidth = 3.2; [0.3, 0.2, 0.1, 0.05].forEach((a, i) => { ctx.globalAlpha = a; ctx.stroke(gBuckets[i]); });
+    ctx.lineWidth = 0.9; ctx.strokeStyle = c.signal; [0.75, 0.5, 0.3, 0.14].forEach((a, i) => { ctx.globalAlpha = a; ctx.stroke(gBuckets[i]); });
+    ctx.globalAlpha = 0.35; ctx.strokeStyle = c.glow; ctx.lineWidth = 5; ctx.stroke(flash);
     ctx.globalAlpha = 1; ctx.strokeStyle = c.signal; ctx.lineWidth = 1.2; ctx.stroke(flash);
-    // vertices: ink squares like the field's nodes; the torn seam's vertices flash green
+    // vertices: round points, near ones stronger; the torn seam and the re-formed part in jade
+    const vp = [new Path2D(), new Path2D(), new Path2D(), new Path2D()]; // ink far, ink near, jade far, jade near
     for (let k = 0; k < NU * NV; k++) {
       const j = (k / NU) | 0, onSeam = (j === seamJ || j === seamJ + 1) && seamFlash;
-      ctx.globalAlpha = D[k] < 0 ? 0.95 : 0.4;
-      ctx.fillStyle = onSeam || reformed(k) ? c.signal : c.ink;
-      const sz = onSeam ? 3.5 : 2.2;
-      ctx.fillRect(P[k * 2] - sz / 2, P[k * 2 + 1] - sz / 2, sz, sz);
+      const green = onSeam || reformed(k), near = D[k] < 0, r = onSeam ? 2 : near ? 1.35 : 1.05;
+      const path = vp[(green ? 2 : 0) + (near ? 1 : 0)];
+      path.moveTo(P[k * 2] + r, P[k * 2 + 1]); path.arc(P[k * 2], P[k * 2 + 1], r, 0, TAU);
     }
+    ctx.fillStyle = c.ink; ctx.globalAlpha = 0.35; ctx.fill(vp[0]); ctx.globalAlpha = 0.9; ctx.fill(vp[1]);
+    ctx.fillStyle = c.signal; ctx.globalAlpha = 0.45; ctx.fill(vp[2]); ctx.globalAlpha = 1; ctx.fill(vp[3]);
     ctx.globalAlpha = 1;
   }
 }

@@ -1,8 +1,46 @@
 ---
 import Base from '../layouts/Base.astro';
 import Story from '../components/Story.astro';
+import { getCollection, render } from 'astro:content';
+import { site, url } from '../config/site';
 import '../styles/landing.css';
+
+// the business, reached quickly after the story: About, the latest essays, and the index
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 ---
 <Base page="home">
   <Story />
+
+  <section class="home-block home-about" aria-labelledby="home-about-k">
+    <p class="home-block__k" id="home-about-k" style="grid-column: 1 / -1">About</p>
+    <p class="home-about__p" data-reveal="lines">[About — one paragraph]</p>
+    <a class="home-about__more pill" href={url('/about/')}>About <i aria-hidden="true">→</i></a>
+  </section>
+
+  <section class="home-block home-essays" aria-labelledby="home-essays-k">
+    <p class="home-block__k" id="home-essays-k">Essays</p>
+    <ol class="home-essays__list" data-reveal="rows">
+      {rows.map(({ e, fm }) => (
+        <li>
+          <a class="home-essay" href={url(`/essays/${e.id}/`)}>
+            <time class="home-essay__date" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+            <span class="home-essay__title">{e.data.title}</span>
+            <span class="home-essay__dek">{e.data.dek}</span>
+            <span class="home-essay__time">{fm.minutesRead} min</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+    <p class="home-essays__more"><a class="pill" href={url('/essays/')}>Essays <i aria-hidden="true">→</i></a></p>
+  </section>
+
+  <section class="home-block home-index" aria-label="Index">
+    <ul class="home-index__list" data-reveal="rows">
+      <li><a class="home-link" href={url('/about/')}><span class="home-link__label">About</span><span class="home-link__dot" aria-hidden="true"></span></a></li>
+      <li><a class="home-link" href={url('/team/')}><span class="home-link__label">Team</span><span class="home-link__dot" aria-hidden="true"></span></a></li>
+      <li><a class="home-link" href={`mailto:${site.email}`}><span class="home-link__label">Contact</span><span class="home-link__dot" aria-hidden="true"></span></a></li>
+    </ul>
+  </section>
 </Base>

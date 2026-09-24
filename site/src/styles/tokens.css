@@ -4,18 +4,24 @@
 
 :root {
   /* ── colour (identity) ─────────────────────────────── */
-  --paper: #fafaf8;
-  --paper-2: #f2f2ef;
-  --ink: #0d0d0c;
-  --ink-2: #56564f;
-  --ink-3: #8e8e86;
-  --rule: #d9d9d3;
-  --signal: #00a15c;
+  /* Plotsoft: warm mist + graphite, one jade accent that glows rather than stamps */
+  --paper: #f2efe9;
+  --paper-2: #e9e5dd;
+  --haze-warm: #f8f1e7;
+  --haze-cool: #e4eae6;
+  --ink: #2a2a2e;
+  --ink-2: #605e64;
+  --ink-3: #a09c96;
+  --rule: #dcd7ce;
+  --signal: #2f9474;
+  --glow: #8fd3b6;
+  --wash: #dcefe6;
 
   /* ── type families (identity; open-source matches) ─── */
-  --font-serif: 'Instrument Serif', 'Times New Roman', serif;
+  --font-serif: 'Fraunces Soft', Georgia, 'Times New Roman', serif;
   --font-sans: 'Inter Tight Variable', 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-mono: 'DM Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --serif-wght: 340;
 
   /* ── Ref A grid (kept) ─────────────────────────────── */
   --grid-columns: 12;
@@ -23,7 +29,7 @@
   --grid-margin: 2.6666666667rem;
   --header-height: 4rem;
   --border-size: 1px; /* delta: ref 2px ≥1025 */
-  --border: var(--border-size) solid var(--ink);
+  --border: var(--border-size) solid #cbc5bb;
 
   /* ── Ref A type scale (kept) ───────────────────────── */
   --fs-huge: 7.6388888889vw;
@@ -58,13 +64,14 @@
   --e-half-gap: calc(var(--e-fs) * 1.125);
   --e-pad: calc(var(--e-fs) * 1.5);
   --heading-gap: calc(var(--e-med) * 1.28);
-  --radius-panel: 0.375rem;
-  --radius-chip: 0.125rem;
+  --radius-panel: 1.25rem;
+  --radius-chip: 999px;
 
   /* ── motion (kept) ─────────────────────────────────── */
-  --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
-  --ease-expo: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: linear(0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1.004 83.8%, 1);
   --d-100: 0.1s;
   --d-150: 0.15s;
   --d-180: 0.18s;

@@ -30,20 +30,22 @@ const ph = (s: string) => s.startsWith('[');
     <figure class="about-fig">
       <svg viewBox="0 0 800 330" role="img" aria-label="The firm, reorganised: inputs enter a firm whose steps are agents linked in a mesh; people sit on a loop at the edges; the boundary is open to new outputs B and C, while output A fades.">
         <defs>
-          <pattern id="about-hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="9" class="af-hatch" /></pattern>
+          <radialGradient id="about-wash" cx="42%" cy="40%" r="75%"><stop offset="0" stop-color="#f4faf7" /><stop offset="1" stop-color="var(--wash)" /></radialGradient>
+          <filter id="about-blur" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="8" /></filter>
         </defs>
-        <rect x="170" y="30" width="470" height="270" fill="url(#about-hatch)" />
-        <path class="af-ln af-wall" d="M640 100 L640 30 L170 30 L170 300 L640 300 L640 260" />
-        <path class="af-ln" d="M40 165 L253 165" />
-        <g class="af-ln af-g"><path d="M303 165 L373 165 M423 165 L493 165 M543 165 L640 110 L760 110 M543 165 L600 221" /><path d="M615 221 L760 221" /><path d="M279 107 L279 139 M518 139 L518 107" /><path d="M505 88 Q400 16 292 88" /></g>
-        <path class="af-ln af-d" d="M543 165 L760 165" />
-        <g class="af-ln af-g af-thin"><path d="M293 186 L316 214 M327 225 L355 243 M367 245 L394 227 M406 227 L433 245 M445 243 L472 225 M484 214 L504 186 M328 220 L394 223 M406 223 L472 220 M398 190 L398 217" /></g>
+        <path class="af-fill" d="M640 100 L640 76 Q640 30 594 30 L216 30 Q170 30 170 76 L170 254 Q170 300 216 300 L600 300 Q640 300 640 260 Z" fill="url(#about-wash)" />
+        <path class="af-ln af-wall" d="M640 100 L640 76 Q640 30 594 30 L216 30 Q170 30 170 76 L170 254 Q170 300 216 300 L600 300 Q640 300 640 260" />
+        <g class="af-glow"><circle cx="278" cy="165" r="34" /><circle cx="398" cy="165" r="34" /><circle cx="518" cy="165" r="34" /></g>
+        <path class="af-ln" d="M40 165 C120 158 200 172 253 165" />
+        <g class="af-ln af-g"><path d="M303 165 C328 158 348 172 373 165 M423 165 C448 158 468 172 493 165" /><path d="M541 156 C580 128 610 110 660 110 L760 110" /><path d="M538 180 C556 198 572 210 587 215" /><path d="M615 221 C670 219 710 223 760 221" /><path d="M279 107 C283 118 283 128 279 140 M518 140 C514 128 514 118 518 107" /><path d="M505 86 Q400 14 292 86" /></g>
+        <path class="af-ln af-d" d="M543 165 C620 158 690 172 760 165" />
+        <g class="af-ln af-g af-thin"><path d="M293 186 Q298 206 316 214 M327 225 Q336 242 355 243 M367 245 Q384 240 394 227 M406 227 Q416 240 433 245 M445 243 Q464 242 472 225 M484 214 Q502 206 504 186 M328 220 Q360 214 394 223 M406 223 Q440 214 472 220 M398 190 Q394 204 398 217" /></g>
         <g class="af-agent"><circle cx="278" cy="165" r="25" /><circle cx="398" cy="165" r="25" /><circle cx="518" cy="165" r="25" /></g>
         <g class="af-mesh"><circle cx="322" cy="221" r="6" /><circle cx="361" cy="248" r="6" /><circle cx="400" cy="223" r="6" /><circle cx="439" cy="248" r="6" /><circle cx="478" cy="221" r="6" /></g>
         <g class="af-person"><circle cx="279" cy="92" r="15" /><circle cx="520" cy="92" r="15" /><circle cx="600" cy="221" r="15" /></g>
-        <g class="af-t"><text x="40" y="151">INPUTS</text><text x="760" y="96" text-anchor="end">OUTPUT B</text><text x="760" y="207" text-anchor="end">OUTPUT C</text><text class="af-td" x="760" y="151" text-anchor="end">OUTPUT A</text></g>
-        <g class="af-t af-tg af-small"><text x="278" y="169" text-anchor="middle">AGENT</text><text x="398" y="169" text-anchor="middle">AGENT</text><text x="518" y="169" text-anchor="middle">AGENT</text></g>
-        <rect class="af-chip" x="186" y="16" width="70" height="26" /><text class="af-t af-b" x="221" y="34" text-anchor="middle">FIRM</text>
+        <g class="af-t"><text x="40" y="149">INPUTS</text><text x="760" y="96" text-anchor="end">OUTPUT B</text><text x="760" y="207" text-anchor="end">OUTPUT C</text><text class="af-td" x="760" y="151" text-anchor="end">OUTPUT A</text></g>
+        <g class="af-t af-tg af-small"><text x="278" y="168.5" text-anchor="middle">AGENT</text><text x="398" y="168.5" text-anchor="middle">AGENT</text><text x="518" y="168.5" text-anchor="middle">AGENT</text></g>
+        <rect class="af-chip" x="220" y="17" width="70" height="26" rx="13" /><text class="af-t af-b" x="255" y="34.5" text-anchor="middle">FIRM</text>
       </svg>
       <figcaption class="about-fig__cap t-label">FIG. <span class="ph">[Caption]</span></figcaption>
     </figure>

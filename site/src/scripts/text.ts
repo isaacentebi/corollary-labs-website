@@ -30,7 +30,8 @@ const RUNNING = new WeakMap<Element, gsap.core.Timeline>();
 
 /** Shuffle letters within words for `steps` steps spread over `duration`, then restore. */
 export function shuffle(el: Element, { steps = 4, duration = DUR.d250 } = {}) {
-  if (reduced()) return;
+  // Plotsoft: letters never scramble; text arrives softly instead (see scrambleIn / scrambleText below)
+  if (reduced() || !(window as any).__allowShuffle) return;
   RUNNING.get(el)?.progress(1).kill();
   const nodes = textNodes(el);
   nodes.forEach((n) => { if (!ORIG.has(n)) ORIG.set(n, n.nodeValue!); });
@@ -63,6 +64,11 @@ export function bindHoverShuffle(root: ParentNode = document) {
 export function scrambleIn(el: HTMLElement, { stagger = STAGGER.char2, delay = 0, lineGap = 0.25 } = {}) {
   el.classList.add('is-revealed');
   if (reduced()) return null;
+  // Plotsoft: words rise out of a blur, one after another
+  if (!(window as any).__allowShuffle) {
+    const sp = SplitText.create(el, { type: 'words', aria: 'auto' });
+    return gsap.fromTo(sp.words, { opacity: 0, yPercent: 40, filter: 'blur(8px)' }, { opacity: 1, yPercent: 0, filter: 'blur(0px)', duration: 1.3, ease: 'expo.out', stagger: 0.045, delay, onComplete: () => sp.revert() });
+  }
   const split = SplitText.create(el, { type: 'lines,words,chars', linesClass: 'split-line', aria: 'auto' });
   const tl = gsap.timeline({ delay, onComplete: () => split.revert() });
   let t = 0;
@@ -90,7 +96,7 @@ export function revealLines(el: HTMLElement, { delay = 0, stagger = STAGGER.line
   if (reduced()) return null;
   const split = SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'split-line', aria: 'auto' });
   return gsap.from(split.lines, {
-    yPercent: 105, duration, ease: G.power4, stagger, delay,
+    yPercent: 105, duration: duration * 1.35, ease: 'expo.out', stagger, delay,
     onComplete: () => split.revert(),
   });
 }
@@ -99,6 +105,7 @@ export function revealLines(el: HTMLElement, { delay = 0, stagger = STAGGER.line
 export function scrambleText(el: HTMLElement, { delay = 0 } = {}) {
   el.classList.add('is-revealed');
   if (reduced()) return null;
+  if (!(window as any).__allowShuffle) return gsap.fromTo(el, { opacity: 0, filter: 'blur(6px)', letterSpacing: '0.2em' }, { opacity: 1, filter: 'blur(0px)', letterSpacing: '', duration: 1.2, ease: 'expo.out', delay, clearProps: 'filter,letterSpacing' });
   const text = el.textContent || '';
   return gsap.fromTo(el, { scrambleText: { text: ' ', chars: 'lowerCase' } }, {
     scrambleText: { text, chars: 'lowerCase', revealDelay: 0.05, speed: 1 },
@@ -131,14 +138,14 @@ export function play(el: HTMLElement, kind: Kind, delay = 0) {
       return gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: DUR.d600, ease: G.out, delay });
     case 'rise':
       el.classList.add('is-revealed');
-      return gsap.fromTo(el, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: DUR.d900, ease: G.power4, delay, clearProps: 'transform' });
+      return gsap.fromTo(el, { opacity: 0, y: 28, filter: 'blur(6px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.2, ease: 'expo.out', delay, clearProps: 'transform,filter' });
     case 'rule':
       el.classList.add('is-revealed');
       return gsap.fromTo(el, { scaleX: 0 }, { scaleX: 1, duration: DUR.d900, ease: G.out, delay, transformOrigin: '0 50%' });
     case 'rows': {
       el.classList.add('is-revealed');
       const kids = [...el.children] as HTMLElement[];
-      return gsap.fromTo(kids, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: DUR.d600, ease: G.out, stagger: STAGGER.row, delay, clearProps: 'transform' });
+      return gsap.fromTo(kids, { opacity: 0, y: 18, filter: 'blur(5px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.1, ease: 'expo.out', stagger: 0.07, delay, clearProps: 'transform,filter' });
     }
   }
 }

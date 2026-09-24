@@ -1,0 +1,6 @@
+/* Fraunces with the SOFT axis pinned at 100 (rounded terminals, still a precise serif) + DM Mono. Self-hosted, latin subset. */
+@font-face { font-family: 'Fraunces Soft'; src: url('../assets/fonts/fraunces-soft.woff2') format('woff2'); font-weight: 300 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Fraunces Soft'; src: url('../assets/fonts/fraunces-soft-italic.woff2') format('woff2'); font-weight: 300 600; font-style: italic; font-display: swap; }
+@font-face { font-family: 'DM Mono'; src: url('../assets/fonts/dmmono-300.woff2') format('woff2'); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: 'DM Mono'; src: url('../assets/fonts/dmmono-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'DM Mono'; src: url('../assets/fonts/dmmono-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
