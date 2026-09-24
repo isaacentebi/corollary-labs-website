@@ -1,0 +1,72 @@
+/* Essays tray, About, Team, Contact. */
+
+/* slides (shared SVG classes) */
+.s-ground { fill: var(--paper-2); }
+.s-ring { fill: none; stroke: var(--ink); stroke-width: 1; }
+.s-ring2 { fill: none; stroke: var(--ink-3); stroke-width: 0.6; }
+.s-wash { fill: rgba(74, 63, 134, 0.08); }
+.s-wall { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+.s-wall2 { fill: none; stroke: var(--ink-2); stroke-width: 0.6; opacity: 0.7; }
+.s-cell { fill: rgba(74, 63, 134, 0.06); stroke: var(--ink); stroke-width: 0.9; }
+.s-cell.s-on { fill: rgba(195, 61, 104, 0.14); stroke: var(--eosin); }
+.s-dot { fill: var(--ink); }
+.s-dot.s-on { fill: var(--eosin); }
+.s-agent ellipse { fill: rgba(195, 61, 104, 0.22); stroke: var(--eosin); stroke-width: 1.2; }
+.s-agent path { fill: none; stroke: var(--eosin); stroke-width: 0.8; }
+.s-in { fill: none; stroke: var(--ink-2); stroke-width: 0.8; }
+.s-out { fill: none; stroke: var(--ink); stroke-width: 1; }
+.s-tube { fill: none; stroke: var(--eosin); stroke-linecap: round; opacity: 0.65; }
+.s-node { fill: var(--ink); }
+.s-spin { transform-origin: 100px 100px; transition: transform 1.4s var(--spring); }
+
+/* essays tray */
+.tray { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(24px, 3.5vw, 64px); margin-top: clamp(40px, 7vw, 96px); }
+.slide { display: grid; gap: 10px; }
+.slide__svg { width: 100%; aspect-ratio: 1; margin-bottom: 14px; transition: transform 0.9s var(--spring); }
+.slide:hover .slide__svg, .slide:focus-visible .slide__svg { transform: scale(1.03); }
+.slide:hover .s-spin, .slide:focus-visible .s-spin { transform: rotate(-14deg) scale(1.08); }
+.slide__title { font-size: clamp(26px, 2.4vw, 38px); }
+.slide__dek { color: var(--ink-2); max-width: 26em; }
+.slide:focus-visible { outline: none; }
+.slide:focus-visible .slide__title { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.12em; }
+@media (max-width: 860px) { .tray { grid-template-columns: 1fr; } .slide__svg { width: min(78vw, 360px); } }
+
+/* about */
+.about__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 110px); align-items: start; margin-top: clamp(24px, 4vw, 56px); }
+.about .plate { max-width: 560px; justify-self: end; width: 100%; margin-top: calc(-1 * clamp(40px, 9vw, 170px)); }
+@media (max-width: 860px) { .about .plate { margin-top: 0; justify-self: center; } }
+.about__statement { font-family: var(--f-display); font-variation-settings: 'SOFT' 100; font-weight: 320; font-size: clamp(28px, 3.1vw, 50px); line-height: 1.12; letter-spacing: -0.015em; }
+.plate { position: relative; }
+.plate canvas { width: 100%; aspect-ratio: 1; }
+.plate figcaption { margin-top: 8px; text-align: center; }
+.label-card { margin-top: clamp(48px, 7vw, 110px); border: 1px solid var(--ink); border-radius: 28px; padding: clamp(18px, 2.4vw, 32px) clamp(20px, 3vw, 40px); max-width: 760px; position: relative; }
+.label-card::before { content: ''; position: absolute; inset: 5px; border: 1px solid var(--rule); border-radius: 23px; pointer-events: none; }
+.label-card dl { display: grid; }
+.label-card div { display: grid; grid-template-columns: 9em 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+.label-card div:last-child { border-bottom: 0; }
+.label-card dd { font-size: var(--fs-body); }
+@media (max-width: 860px) {
+  .about__grid { grid-template-columns: 1fr; }
+  .label-card div { grid-template-columns: 1fr; gap: 2px; }
+}
+
+/* team */
+.people { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(20px, 3vw, 48px); margin-top: clamp(40px, 6vw, 88px); }
+.person__cell { width: 100%; aspect-ratio: 1; overflow: visible; }
+.person__cell .wall { fill: rgba(74, 63, 134, 0.05); stroke: var(--ink); stroke-width: 1.1; vector-effect: non-scaling-stroke; }
+.person__cell .wall2 { fill: none; stroke: var(--ink-2); stroke-width: 0.7; opacity: 0.6; vector-effect: non-scaling-stroke; }
+.person__cell .nuc { fill: var(--ink); }
+.person__cell text { font-family: var(--f-display); font-style: italic; font-size: 7px; fill: var(--ink-3); }
+.person__name { margin-top: 14px; font-size: clamp(22px, 1.8vw, 28px); }
+.person__role { margin-top: 4px; display: block; }
+.person__line { margin-top: 8px; color: var(--ink-3); font-size: 16px; }
+.person .s-spin { transition: transform 1.2s var(--spring); transform-origin: 50px 50px; }
+.person:hover .s-spin { transform: rotate(10deg) scale(1.04); }
+@media (max-width: 860px) { .people { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* contact */
+.contact__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 96px); align-items: center; }
+.contact__mail { display: inline-block; margin-top: clamp(28px, 4vw, 56px); font-family: var(--f-display); font-variation-settings: 'SOFT' 100; font-weight: 320; font-size: clamp(40px, 6vw, 96px); letter-spacing: -0.02em; line-height: 1; }
+.contact__rows { margin-top: clamp(32px, 4vw, 56px); display: grid; gap: 10px; max-width: 30em; }
+.contact__rows div { display: grid; grid-template-columns: 8em 1fr; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); align-items: baseline; }
+@media (max-width: 860px) { .contact__grid { grid-template-columns: 1fr; } }

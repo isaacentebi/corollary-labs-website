@@ -1,30 +1,22 @@
 ---
-import { site } from '../config/site';
-const path = Astro.url.pathname;
-const cur = (h: string) => (h === '/' ? path === '/' : path.startsWith(h)) ? 'page' : undefined;
+// Footer: a tissue of cells (every cell a firm) behind the site's links. Drawn by scripts/tissue.ts.
+import { nav, site, u } from '../config/site';
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const cur = (h: string) => ((h.replace(/\/$/, '') || '/') === path ? 'page' : undefined);
 ---
-<footer class="c-footer" id="contact" data-footer>
-  <nav class="c-footer__menus" aria-label="Site">
-    <div class="c-footer__menu -main">
-      <ul class="c-footer__list" data-reveal="lines">
-        <li><a href="/" aria-current={cur('/')}>Home</a></li>
-        <li><a href="/essays/" aria-current={cur('/essays')}>Essays</a></li>
-        <li><a href="/about/" aria-current={cur('/about')}>About</a></li>
-        <li><a href="/team/" aria-current={cur('/team')}>Team</a></li>
+<footer class="foot" id="contact-footer">
+  <canvas class="foot__tissue" data-tissue aria-hidden="true"></canvas>
+  <div class="foot__inner">
+    <nav class="foot__nav" aria-label="Footer">
+      <ul>
+        {nav.map((n) => <li><a href={n.href} aria-current={cur(n.href)}>{n.label}</a></li>)}
       </ul>
-      <ul class="c-footer__list -b" data-reveal="lines">
-        <li><a href="#top" data-to-top>Back to top ↑</a></li>
-      </ul>
+    </nav>
+    <p class="foot__big t-display" aria-hidden="true">{site.name}</p>
+    <div class="foot__meta">
+      <a class="link-u" href={`mailto:${site.email}`}>{site.email}</a>
+      <span>©{site.year} {site.name}</span>
+      <a class="link-u" href="#top" data-to-top>Back to top</a>
     </div>
-    <div class="c-footer__menu -contact">
-      <p class="c-footer__title" data-reveal="scramble">Contact</p>
-      <ul class="c-footer__list" data-reveal="lines">
-        <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
-      </ul>
-    </div>
-  </nav>
-  <p class="c-footer__big" data-reveal="lines">
-    {site.name}
-  </p>
-  <p class="c-footer__copy">©{site.year} {site.name}</p>
+  </div>
 </footer>

@@ -3,67 +3,61 @@ import Base from '../../layouts/Base.astro';
 import Figure from '../../components/Figure.astro';
 import Term from '../../components/Term.astro';
 import { getCollection, render } from 'astro:content';
-import { site } from '../../config/site';
+import { site, u } from '../../config/site';
+import { slideSVG } from '../../lib/slides';
+import '../../styles/pages.css';
 import '../../styles/essay.css';
 
 export async function getStaticPaths() {
   const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
-  return essays.map((entry, i) => ({ params: { slug: entry.id }, props: { entry, next: essays[(i + 1) % essays.length] } }));
+  return essays.map((entry, i) => ({ params: { slug: entry.id }, props: { entry, i, next: essays[(i + 1) % essays.length], ni: (i + 1) % essays.length } }));
 }
-const { entry, next } = Astro.props;
+const { entry, i, next, ni } = Astro.props;
 const { Content, headings, remarkPluginFrontmatter: fm } = await render(entry);
 const sections = headings.filter((h) => h.depth === 2);
-const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
-const pad = (n: number) => String(n).padStart(2, '0');
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 ---
 <Base page="essay" title={entry.data.title} description={entry.data.dek}>
   <article class="essay" data-essay>
-    <aside class="essay-rail" data-rail aria-label="Essay information">
-      <div class="rail-card" data-reveal="rise" data-start="top 100%">
-        <div class="rail-card__top">
-          <a class="rail-card__home" href="/" data-shuffle-hover>{site.name}</a>
-          <a class="rail-card__back link" href="/essays/" data-shuffle-hover>Index</a>
-        </div>
-        <p class="rail-card__title">{entry.data.title}</p>
-        <p class="rail-card__by">by {site.author}</p>
-        <div class="rail-card__meta"><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time><span>{fm.minutesRead} min read</span></div>
-        {entry.data.placeholder && <p class="rail-card__flag">Placeholder essay</p>}
-        <div class="rail-card__progress" aria-hidden="true"><i data-read-progress></i></div>
+    <aside class="rail" aria-label="Essay information">
+      <div class="rail__in">
+        <a class="rail__back t-label link-u" href={u('essays/')}>← Essays</a>
+        <svg class="rail__slide" viewBox="0 0 200 200" aria-hidden="true" set:html={slideSVG(entry.id, i % 3)} />
+        {sections.length > 0 && (
+          <nav class="toc" aria-label="Contents">
+            <p class="t-label">Contents</p>
+            <ol>
+              {sections.map((h) => <li><a href={`#${h.slug}`} data-toc={h.slug}><i aria-hidden="true"></i><span>{h.text}</span></a></li>)}
+            </ol>
+          </nav>
+        )}
       </div>
-      {sections.length > 0 && (
-        <nav class="rail-toc" data-toc aria-label="Contents" data-reveal="rise" data-delay="0.1" data-start="top 100%">
-          <button class="rail-toc__head" type="button" data-toc-toggle aria-expanded="true"><span>Contents</span><span class="rail-toc__chev" aria-hidden="true">↕</span></button>
-          <ol class="rail-toc__list" data-toc-list>
-            {sections.map((h, i) => (
-              <li><a href={`#${h.slug}`} data-toc-link={h.slug}><span class="rail-toc__n">{pad(i + 1)}</span><span class="rail-toc__label">{h.text}</span><span class="rail-toc__bar"><i></i></span></a></li>
-            ))}
-          </ol>
-        </nav>
-      )}
     </aside>
 
-    <header class="essay-head">
-      <p class="essay-head__kicker t-mono" data-reveal="scramble">Essay — {fmt(entry.data.date)} — {fm.minutesRead} min</p>
-      <h1 class="essay-head__title" data-reveal="chars">{entry.data.title}</h1>
-      <p class="essay-head__dek" data-reveal="lines" data-delay="0.2">{entry.data.dek}</p>
-      {entry.data.placeholder && <p class="essay-head__flag t-mono" data-reveal="scramble" data-delay="0.3">[PLACEHOLDER ESSAY — written to prove the reading template]</p>}
-      <div class="rule essay-head__rule" data-reveal="rule" data-delay="0.1"></div>
+    <header class="essay__head">
+      <p class="t-label" data-reveal><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time> · {fm.minutesRead} min · {site.name}</p>
+      <h1 class="essay__title t-display" data-reveal>{entry.data.title}</h1>
+      <p class="essay__dek" data-reveal style="--rd:0.1s">{entry.data.dek}</p>
+      {entry.data.placeholder && <p class="essay__flag t-label" data-reveal style="--rd:0.2s">[Placeholder essay, written to prove the reading template]</p>}
     </header>
 
-    <div class="essay-body" data-essay-body>
+    <div class="essay__body" data-essay-body>
       <Content components={{ Figure, Term }} />
     </div>
 
-    <footer class="essay-end">
-      <p class="essay-end__sign t-mono" data-reveal="scramble">— {site.author}, {fmt(entry.data.date)}</p>
+    <footer class="essay__end">
       {next && next.id !== entry.id && (
-        <a class="next-essay" href={`/essays/${next.id}/`} data-shuffle-hover data-reveal="rise">
-          <span class="next-essay__label t-mono">Next essay</span>
-          <span class="next-essay__title" data-shuffle-target>{next.data.title}</span>
-          <span class="next-essay__dek">{next.data.dek}</span>
-          <span class="next-essay__arrow" aria-hidden="true">→</span>
+        <a class="next" href={u(`essays/${next.id}/`)}>
+          <svg class="next__slide" viewBox="0 0 200 200" aria-hidden="true" set:html={slideSVG(next.id, ni % 3)} />
+          <span class="t-label">Next essay</span>
+          <span class="next__title t-title">{next.data.title}</span>
+          <span class="next__dek">{next.data.dek}</span>
         </a>
       )}
     </footer>
   </article>
+  <script>
+    import { initEssay } from '../../scripts/essay';
+    initEssay();
+  </script>
 </Base>

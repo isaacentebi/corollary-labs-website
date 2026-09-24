@@ -1,62 +1,43 @@
 ---
-// About — abstract and deliberately provisional. Everything in [brackets] is a placeholder to be written with the
-// founder; the structure (statement → figure → colophon) is the part that is decided.
+// About: statement, a plate of the reorganised firm (figure 4 of the home page), and a specimen label.
+// Everything in [brackets] is a placeholder, to be written with the founder.
 import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
-import '../styles/about.css';
+import { site, figs } from '../config/site';
+import '../styles/pages.css';
 
-const P = (t: string) => `[${t}]`;
-const colophon = [
+const rows = [
   { k: 'Entity', v: `${site.name} is a company.` },
-  { k: 'Founded', v: P('Year') },
-  { k: 'Location', v: P('City') },
+  { k: 'Founded', v: '[Year]' },
+  { k: 'Location', v: '[City]' },
   { k: 'Contact', v: site.email, href: `mailto:${site.email}` },
 ];
-const ph = (s: string) => s.startsWith('[');
 ---
 <Base page="about" title="About" description={`About ${site.name}.`}>
-  <article class="about o-container" aria-labelledby="about-title">
-    <header class="about-band">
-      <canvas class="field about-band__field" data-field="index" data-word="About" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="about-title">About</h1>
-      <span class="about-band__note t-label" aria-hidden="true" data-reveal="scramble">Draft — placeholders in brackets</span>
-    </header>
-    <div class="rule" data-reveal="rule"></div>
-
-    <p class="about-statement" data-reveal="lines">
-      {site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span>
-    </p>
-
-    <figure class="about-fig">
-      <svg viewBox="0 0 800 330" role="img" aria-label="The firm, reorganised: inputs enter a firm whose steps are agents linked in a mesh; people sit on a loop at the edges; the boundary is open to new outputs B and C, while output A fades.">
-        <defs>
-          <pattern id="about-hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="9" class="af-hatch" /></pattern>
-        </defs>
-        <rect x="170" y="30" width="470" height="270" fill="url(#about-hatch)" />
-        <path class="af-ln af-wall" d="M640 100 L640 30 L170 30 L170 300 L640 300 L640 260" />
-        <path class="af-ln" d="M40 165 L253 165" />
-        <g class="af-ln af-g"><path d="M303 165 L373 165 M423 165 L493 165 M543 165 L640 110 L760 110 M543 165 L600 221" /><path d="M615 221 L760 221" /><path d="M279 107 L279 139 M518 139 L518 107" /><path d="M505 88 Q400 16 292 88" /></g>
-        <path class="af-ln af-d" d="M543 165 L760 165" />
-        <g class="af-ln af-g af-thin"><path d="M293 186 L316 214 M327 225 L355 243 M367 245 L394 227 M406 227 L433 245 M445 243 L472 225 M484 214 L504 186 M328 220 L394 223 M406 223 L472 220 M398 190 L398 217" /></g>
-        <g class="af-agent"><circle cx="278" cy="165" r="25" /><circle cx="398" cy="165" r="25" /><circle cx="518" cy="165" r="25" /></g>
-        <g class="af-mesh"><circle cx="322" cy="221" r="6" /><circle cx="361" cy="248" r="6" /><circle cx="400" cy="223" r="6" /><circle cx="439" cy="248" r="6" /><circle cx="478" cy="221" r="6" /></g>
-        <g class="af-person"><circle cx="279" cy="92" r="15" /><circle cx="520" cy="92" r="15" /><circle cx="600" cy="221" r="15" /></g>
-        <g class="af-t"><text x="40" y="151">INPUTS</text><text x="760" y="96" text-anchor="end">OUTPUT B</text><text x="760" y="207" text-anchor="end">OUTPUT C</text><text class="af-td" x="760" y="151" text-anchor="end">OUTPUT A</text></g>
-        <g class="af-t af-tg af-small"><text x="278" y="169" text-anchor="middle">AGENT</text><text x="398" y="169" text-anchor="middle">AGENT</text><text x="518" y="169" text-anchor="middle">AGENT</text></g>
-        <rect class="af-chip" x="186" y="16" width="70" height="26" /><text class="af-t af-b" x="221" y="34" text-anchor="middle">FIRM</text>
-      </svg>
-      <figcaption class="about-fig__cap t-label">FIG. — THE FIRM, REORGANISED <span class="ph">[Placeholder caption.]</span></figcaption>
-    </figure>
-
-    <section class="about-colophon" aria-label="Colophon">
+  <article class="page about" aria-labelledby="about-title">
+    <p class="page__kicker t-label" data-reveal>Draft, placeholders in brackets</p>
+    <h1 class="page__title t-display" id="about-title" data-reveal>About</h1>
+    <div class="about__grid">
+      <p class="about__statement" data-reveal>
+        {site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span>
+      </p>
+      <figure class="plate" data-reveal style="--rd:0.15s">
+        <canvas data-plate="4" role="img" aria-label={`Figure 4, ${figs[3].title}. ${figs[3].legend}`}></canvas>
+        <figcaption class="t-label">Figure 4, {figs[3].title}</figcaption>
+      </figure>
+    </div>
+    <section class="label-card" aria-label="Colophon" data-reveal>
       <dl>
-        {colophon.map((c) => (
-          <div class="about-colophon__row">
-            <dt class="t-label">{c.k.toUpperCase()}</dt>
-            <dd class:list={{ ph: ph(c.v) }}>{c.href ? <a href={c.href}>{c.v}</a> : c.v}</dd>
+        {rows.map((r) => (
+          <div>
+            <dt class="t-label">{r.k}</dt>
+            <dd class:list={{ ph: r.v.startsWith('[') }}>{r.href ? <a class="link-u" href={r.href}>{r.v}</a> : r.v}</dd>
           </div>
         ))}
       </dl>
     </section>
   </article>
+  <script>
+    import { initPlates } from '../scripts/plate';
+    initPlates();
+  </script>
 </Base>

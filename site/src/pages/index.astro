@@ -1,8 +1,45 @@
 ---
+// Home: one firm under the aperture, read like a sequence of figure legends.
+// Left: the name, then five legends that scroll. Right (top on phones): the specimen, sticky, driven by scroll.
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import '../styles/landing.css';
+import { site, figs } from '../config/site';
+import '../styles/home.css';
 ---
 <Base page="home">
-  <Story />
+  <section class="home" data-home aria-labelledby="home-title">
+    <div class="stage" data-stage>
+      <canvas class="stage__canvas" data-specimen role="img"
+        aria-label={`Five drawings of a firm as a living cell. ${figs.map((f, i) => `Figure ${i + 1}, ${f.title}: ${f.legend}`).join(' ')}`}></canvas>
+    </div>
+
+    <div class="flow">
+      <header class="block hero" data-block="0">
+        <h1 class="hero__name t-display" id="home-title" data-hero-name>
+          <span>Corollary</span> <span>Labs</span>
+        </h1>
+        <p class="hero__statement">
+          {site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span>
+        </p>
+        <p class="hero__cue t-label" aria-hidden="true"><span class="hero__cue-dot"></span>Scroll</p>
+      </header>
+
+      {figs.map((f, i) => (
+        <article class:list={['block', 'fig', { '-last': i === figs.length - 1 }]} data-block={i + 1} aria-labelledby={`fig-${i + 1}`}>
+          <div class="fig__card">
+            <p class="fig__n t-label">Figure {i + 1} <span aria-hidden="true">of {figs.length}</span></p>
+            <h2 class="fig__title t-title" id={`fig-${i + 1}`}>{f.title}</h2>
+            <p class="fig__legend">{f.legend}</p>
+            <ol class="fig__dots" aria-hidden="true">
+              {figs.map((_, j) => <li class:list={{ on: j === i, done: j < i }}></li>)}
+            </ol>
+          </div>
+        </article>
+      ))}
+      <div class="block tail" data-block="6" aria-hidden="true"></div>
+    </div>
+  </section>
+  <script>
+    import { initHome } from '../scripts/home';
+    initHome();
+  </script>
 </Base>

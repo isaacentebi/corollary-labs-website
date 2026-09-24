@@ -1,0 +1,28 @@
+---
+// Contact: the address, large, beside the firm as it is drawn at the top of the home page.
+import Base from '../layouts/Base.astro';
+import { site } from '../config/site';
+import '../styles/pages.css';
+---
+<Base page="contact" title="Contact" description={`Contact ${site.name}.`}>
+  <article class="page contact" aria-labelledby="contact-title">
+    <p class="page__kicker t-label" data-reveal>Draft, placeholders in brackets</p>
+    <div class="contact__grid">
+      <div>
+        <h1 class="page__title t-display" id="contact-title" data-reveal>Contact</h1>
+        <a class="contact__mail link-u" href={`mailto:${site.email}`} data-reveal style="--rd:0.1s">{site.email}</a>
+        <dl class="contact__rows" data-reveal style="--rd:0.2s">
+          <div><dt class="t-label">Location</dt><dd class="ph">[City]</dd></div>
+          <div><dt class="t-label">Press</dt><dd class="ph">[Placeholder — press contact]</dd></div>
+        </dl>
+      </div>
+      <figure class="plate" data-reveal style="--rd:0.15s">
+        <canvas data-plate="-1" role="img" aria-label="A firm drawn as a cell: inputs enter on the left, three people carry out the steps, output leaves on the right."></canvas>
+      </figure>
+    </div>
+  </article>
+  <script>
+    import { initPlates } from '../scripts/plate';
+    initPlates();
+  </script>
+</Base>

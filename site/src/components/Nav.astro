@@ -1,0 +1,50 @@
+---
+// Navigation: the mark (a limaçon) in the corner. Pressed, it divides into one cell per page.
+import { nav, site, u } from '../config/site';
+import { limacon } from '../lib/mark';
+import { blob, stipple, hash } from '../lib/blob';
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isCur = (h: string) => { const hh = h.replace(/\/$/, '') || '/'; return hh === path || (hh !== u('').replace(/\/$/, '') && path.startsWith(hh)); };
+const cells = nav.map((n, i) => {
+  const s = hash(n.label);
+  return { ...n, i, wall: blob(s, 50, 50, 46, 0.07), wall2: blob(s, 50, 50, 42.5, 0.07), nuc: stipple(s + 1, 50 + ((s % 7) - 3), 36, 7, 26, 1.05) };
+});
+---
+<div class="nav" data-nav>
+  <button class="nav__btn" type="button" aria-expanded="false" aria-controls="menu" data-nav-btn>
+    <svg class="nav__mark" viewBox="0 0 32 32" aria-hidden="true"><path d={limacon(1.6, 1, 220, 32, 3)} data-mark /></svg>
+    <span class="nav__name">{site.name}</span>
+    <span class="u-sr">Menu</span>
+  </button>
+</div>
+<nav class="menu" id="menu" aria-label="Site" data-menu>
+  <div class="menu__veil" data-nav-close></div>
+  <ul class="menu__list">
+    {cells.map((c) => (
+      <li>
+        <a class="menu__cell" href={c.href} style={`--i:${c.i}`} aria-current={isCur(c.href) ? 'page' : undefined} tabindex="-1">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><path class="wall" d={c.wall} /><path class="wall2" d={c.wall2} /><g class="nuc" set:html={c.nuc} /></svg>
+          <span>{c.label}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+  <p class="menu__foot"><a class="link-u" href={`mailto:${site.email}`} tabindex="-1">{site.email}</a></p>
+</nav>
+<style>
+  /* where the daughter cells settle: a loose tissue, different per breakpoint */
+  .menu__cell { --d: clamp(150px, 15vw, 230px); }
+  li:nth-child(1) .menu__cell { --x: 30%; --y: 36%; }
+  li:nth-child(2) .menu__cell { --x: 50%; --y: 27%; }
+  li:nth-child(3) .menu__cell { --x: 68%; --y: 46%; }
+  li:nth-child(4) .menu__cell { --x: 47%; --y: 60%; }
+  li:nth-child(5) .menu__cell { --x: 28%; --y: 70%; }
+  @media (max-width: 700px) {
+    .menu__cell { --d: 136px; font-size: 22px; }
+    li:nth-child(1) .menu__cell { --x: 31%; --y: 25%; }
+    li:nth-child(2) .menu__cell { --x: 70%; --y: 31%; }
+    li:nth-child(3) .menu__cell { --x: 33%; --y: 49%; }
+    li:nth-child(4) .menu__cell { --x: 70%; --y: 57%; }
+    li:nth-child(5) .menu__cell { --x: 40%; --y: 74%; }
+  }
+</style>

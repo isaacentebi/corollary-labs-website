@@ -1,0 +1,64 @@
+/* Home: sticky specimen stage + a column of figure legends.
+   The aperture geometry is mirrored in scripts/home.ts (layout()). Keep them in sync. */
+.home {
+  --ap-r: min(42svh, 29vw);           /* aperture radius (desktop) */
+  --ap-cx: 66.5vw;
+  --col: calc(var(--ap-cx) - var(--ap-r) - var(--gutter) - 28px);
+  position: relative;
+}
+.stage { position: sticky; top: 0; height: 100svh; width: 100%; z-index: 1; }
+.stage__canvas { width: 100%; height: 100%; touch-action: pan-y; }
+.flow { position: relative; z-index: 2; margin-top: -100svh; pointer-events: none; }
+.flow a, .flow button, .fig__card { pointer-events: auto; }
+
+.block { position: relative; padding-left: var(--gutter); width: calc(var(--col) + var(--gutter)); }
+
+/* hero */
+.hero { min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 11svh; }
+.hero__name { font-size: clamp(60px, 8.4vw, 168px); margin-left: -0.04em; width: max-content; pointer-events: none; }
+.hero__name span { display: block; }
+.hero__name span + span { padding-left: 0.62em; }
+.hero__statement { margin-top: clamp(22px, 3vw, 40px); max-width: 25em; font-size: var(--fs-body); line-height: 1.42; }
+.hero__cue { margin-top: clamp(28px, 5svh, 56px); display: flex; align-items: center; gap: 10px; }
+.hero__cue-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--ink); animation: cue 2.4s var(--soft) infinite; }
+@keyframes cue { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(6px) scale(0.8); background: var(--eosin); border-color: var(--eosin); } }
+
+/* figure legends */
+.fig { min-height: 165svh; }
+.fig.-last { min-height: 150svh; }
+.fig__card {
+  position: sticky; top: 26svh; max-width: 30em;
+  padding: 26px 28px 24px; border-radius: 30px; border: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper) 84%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.fig__n { display: block; margin-bottom: 14px; }
+.fig__n span { color: var(--ink-3); }
+.fig__title { font-size: clamp(34px, 3.3vw, 54px); }
+.fig__legend { margin-top: 16px; font-size: var(--fs-body); line-height: 1.45; color: var(--ink); }
+.fig__dots { display: flex; gap: 8px; margin-top: 22px; }
+.fig__dots li { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--ink-3); }
+.fig__dots li.done { background: var(--ink-3); border-color: var(--ink-3); }
+.fig__dots li.on { background: var(--eosin); border-color: var(--eosin); transform: scale(1.25); }
+.tail { min-height: 70svh; }
+
+/* the legend cards drift up softly as they arrive */
+html.js:not(.rm) .fig__card { opacity: 0.001; transform: translateY(24px); transition: opacity 0.8s var(--soft), transform 1s var(--spring); }
+html.js:not(.rm) .fig.is-active .fig__card { opacity: 1; transform: none; }
+
+html[data-page='home'] .foot { border-top: 0; }
+
+/* phones: aperture on top, legends below it */
+@media (max-width: 759px) {
+  .home { --ap-r: min(43vw, 25svh); --col: 100vw; }
+  .block { width: 100%; padding-right: var(--gutter); }
+  .hero { justify-content: flex-start; padding-top: calc(86px + 2 * var(--ap-r)); padding-bottom: 10svh; }
+  .hero__name { font-size: clamp(52px, 16.5vw, 96px); }
+  .hero__name span + span { padding-left: 0; }
+  .fig { min-height: 150svh; }
+  .fig__card { top: calc(82px + 2 * var(--ap-r)); padding: 18px 18px 18px; border-radius: 22px; }
+  .fig__title { font-size: 30px; }
+  .fig__legend { font-size: 16.5px; margin-top: 10px; }
+  .fig__n { margin-bottom: 8px; }
+  .fig__dots { margin-top: 14px; }
+}
