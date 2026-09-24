@@ -96,3 +96,18 @@ What this settles:
   - Reference captures (screenshots, HTML, extracts) go in `research/` (gitignored, never published).
   - Written reference notes with URLs go in `directions/<key>/REFERENCES.md`.
   - Pitch pages go in `directions/<key>/pitch.html`.
+
+## Status (2026-09-24)
+
+All four versions are live on ONE site, https://corollarylabs.vercel.app, with a switcher pill in the bottom-right corner:
+
+| Path | Version | Branch | Final critic score |
+|---|---|---|---|
+| `/` | Plotter (the current site) | `master` | not reviewed |
+| `/organic/` | Organic: the firm as a cell under a lens. Agent engulfed; coordination dissolves into a mesh; tissue diffusion; dark fig 4 | `direction/organic` | 8/10 (5.5 → 7 → 8) |
+| `/proof/` | Proof: a live mathematics paper. String diagrams, planar isotopy on the title plate, replacement vs. rewiring | `direction/proof` | 8/10 (6 → 7 → 8) |
+| `/wild/` | Tableau: the site as one input–output table. Agents move execution and plans onto the diagonal, block reorder, diffusion rounds, 3D homotopy | `direction/wild` | 8/10 (6 → 7.5 → 8) |
+
+- **Copy.** The founder asked to "delete all the copy… unsloppify… delete all copy and metaphors", so every version now carries only quiet `[bracketed]` placeholders. Plain functional labels and diagram labels remain. There are no Superdark mentions on any page.
+- **Build and deploy.** `node tools/combine.mjs --deploy` builds master plus every `direction/*` branch, injects the switcher, and deploys. Use `--only=wild,proof` to include a subset.
+- **Next.** The founder picks what to merge between versions, then writes the copy.
