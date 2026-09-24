@@ -10,37 +10,33 @@ So we turn the single Vercel site into **several complete versions of the same s
 
 The founder's words: be super ambitious; go to Awwwards for inspiration again; use subagents; loop a lot until each one is right. Try different colours and different logos.
 
-## What stays the same in every version (the content)
+## Creative freedom (founder, explicitly)
 
-- **The structure.**
-  1. Hero: the name inside a living field (cursor reveals, click to seed).
-  2. The statement beside an animation of what we do.
-  3. Pull back into diffusion.
-  4. The isotopy/homotopy coda.
-  5. Footer navigation: Home · Essays · About · Team.
-- **The argument in the diagram, figures 1–4:**
-  1. A firm with coordination.
-  2. The agent enters with the inputs.
-  3. Its plan becomes a goal.
-  4. Coordination is absorbed into a mesh of agents, the boundary is redrawn and opened, and new outputs appear.
+> "They should be more creative with even the structure, with even the diagrams and the way to propose the company… You guys have amazing creativity. Don't try to dumb it down."
 
-  Each version *redraws* the diagram in its own visual language. The events stay the same.
-- **Copy.** The Set A captions, the placeholder statement, and the About and Team pages with their placeholders. There is no copy work in this phase.
-- **The founder's rules** (see HANDOFF):
-  - no top navbar;
-  - no slogans or readouts;
-  - one accent colour per version;
-  - check everything at 375px;
-  - respect reduced motion;
-  - no historical references on the page.
+Each version is **not** a reskin. It may reinvent everything:
+- the page structure;
+- the story and its order;
+- how many scenes or figures there are, or whether there are figures at all;
+- the diagrams and the metaphor behind them;
+- how the company introduces itself;
+- the navigation model;
+- the logo.
 
-## What changes per version
+The current site (Plotter) is one answer, not the template.
 
-Palette, typography, logo/wordmark, how things are drawn (line, form, texture), how motion feels (easing, physics, rhythm), and the hero field's behaviour.
+**Fixed (keep this list short):**
+- **What the company is about.** Agents entering firms; a firm understood through its inputs and outputs; reorganisation, not replacement ("more Schumpeterian… replacement is a second-order effect"); how that change spreads through the economy; cybernetic, economic and AI thinking. Never state the business model literally.
+- **Copy quality.** No slogans, no aphorisms or paradoxes, no AI slop. Every claim literally true. Placeholders in [brackets] are fine where copy isn't settled. New copy goes through one clean-room writer and is shown to the founder unedited.
+- **Craft.** Awwwards-level quality. Works at 375px. Respects reduced motion. Fast.
+- **Pages that exist in some form:** Home, Essays (the MDX essays), About, Team, Contact.
+- **Nothing published that isn't ours.** Reference captures stay local and gitignored.
+
+Everything else the founder previously settled (no navbar, one accent colour, footer-only navigation, and so on) is a **default for Plotter**. Other versions may break it if the idea is better, and must say why in their pitch.
 
 ## Versions
 
-| Key | Name | Idea (a starting point; research will sharpen it) |
+| Key | Name | Seed idea (a prompt for the creative team, not a spec; each team may take it anywhere) |
 |---|---|---|
 | `plotter` | **Plotter** (the current site, the baseline) | Technical plotter drawing: hatching, a "boil" wobble on lines, mono labels, one green accent. What exists at `v2` and later. |
 | `organic` | **Organic** (the boss's request) | Growth, not machinery. The firm is a cell or membrane, not a rectangle. Agents are organelles or nodes that bud and divide. Coordination dissolves like a nucleus dividing into a mycelial mesh. Diffusion looks like growth or spreading ink. Soft curves, warm natural palette (e.g. bone, moss, clay), a humanist serif, springy easing. |
@@ -51,25 +47,27 @@ This is at most four versions (Plotter plus three new ones). Add more only if th
 
 ## How the versions are hosted
 
-- **Code.** One git branch per version: `direction/organic`, `direction/proof`, `direction/atlas`. `master` stays Plotter. Each branch keeps the whole site and restyles or redraws it. There is no shared theming layer, so each version is free to diverge.
+- **Code.** One git branch per version: `direction/organic`, `direction/proof`, `direction/atlas`. `master` stays Plotter. Each branch may rebuild the site from scratch or reuse any part of it (the story engine, field, surface, essays). There is no shared theming layer; versions are free to diverge completely.
 - **Deploys.** Each version is its own Vercel project with its own free URL, for example `corollarylabs-organic.vercel.app`. The current `corollarylabs.vercel.app` stays Plotter.
 - **Hub.** `corollarylabs-directions.vercel.app` is one page listing every version, with a screenshot of each (hero and the fig 4 moment), a one-line idea, colour swatches, the logo, and a link.
 - **Switcher.** Each version gets a small pill in the corner that jumps between versions. It must be easy to remove before launch.
 
 ## The process for each version (loop until it's right)
 
-1. **Research.** A subagent goes to Awwwards and finds 3–5 real sites that fit the direction.
-   - Record the URL, what to take (motion, layout, type, colour), and why.
-   - The founder vets the chosen references before we build. Last time they vetted Locomotive.
-   - Capture the references locally only, in `clone-workspace/<site>/`, which is gitignored and never published.
-2. **Moodboard and storyboard.** A static page per version: palette swatches, type specimen, 2–3 logo options, the hero frame, and figures 1–4 redrawn in that language. It works like `storyboard/index.html`, which is what finally got agreement on the diagram. **The founder picks before anything is animated.**
-3. **Build** on the version's branch. Reuse the story engine (`story.ts`, `field.ts`, `surface.ts`) and change how it draws and moves.
-4. **QA loop, at least three rounds.**
-   - Take headless screenshots at every figure, on desktop and at 375px (the `tools/story-shots.mjs` pattern).
-   - A **critic subagent** that has not seen the build process reviews the screenshots against this brief and the references, and lists concrete problems.
-   - Fix them, then repeat.
-   - Keep the style checks green, with a per-version spec if needed.
-5. **Deploy** and add the version to the hub.
+Each version is owned by its own **creative lead**, a subagent with real autonomy. It gets the fixed list above, the founder's own words, and the Superdark file. It does not get my framing or the current site's design decisions. It is told to be ambitious and to propose, not to copy Plotter.
+
+1. **Research.** The creative lead, or a research subagent, goes to Awwwards (and beyond: studios, experimental sites, scientific and mathematical visualisation) and finds 3–5 real references.
+   - Record the URL, what to take, and why.
+   - The founder vets them.
+   - Capture references locally only, in `clone-workspace/<site>/`, which is gitignored.
+2. **Pitch.** A static page per version: the concept in a paragraph; the proposed page structure; how the company introduces itself; palette, type and 2–3 logo options; key frames of the main visual story. It works like `storyboard/index.html`, which is what got agreement last time. **The founder picks and redirects before anything is animated.**
+3. **Build** on the version's branch.
+4. **Critique loop, at least three rounds, more if needed.**
+   - Take headless screenshots of every scene, on desktop and at 375px.
+   - A **critic subagent**, separate and blind to the build process, judges the result against the pitch, the references and Awwwards quality, and lists concrete problems.
+   - The creative lead fixes them, then repeat.
+   - The founder sees the result only after it survives the critic.
+5. **Deploy** to the version's Vercel URL and add it to the hub.
 
 ## Logos
 
@@ -79,7 +77,7 @@ Past lessons from the founder: they disliked the wordmark with dots and "Labs" a
 
 ## Lessons from last time (don't repeat them)
 
-- **Agree the picture before animating.** Static frames first, every time.
+- **Agree the picture before animating.** Static frames and a pitch first, every time.
 - **Don't invent concepts.** Ground the drawing in the agreed argument.
 - **Keep subagent briefs clean.** Give the founder's words plus the references, not my framing.
 - **Show outputs unedited**, and let the founder choose.
@@ -87,5 +85,5 @@ Past lessons from the founder: they disliked the wordmark with dots and "Labs" a
 ## Open questions for the founder, to settle before building
 
 1. **"The math logo."** Which one did you mean? There's the name drawn as a point cloud, a mathematical symbol such as ∴ ("therefore") or ⊢ ("proves"), or something you saw elsewhere. This decides where it gets used.
-2. **Versions.** Organic, Proof and Atlas, or do you want to swap one?
+2. **Versions.** Organic, Proof and Atlas as seeds, or should the creative leads propose their own directions from scratch?
 3. **References.** Do you want to vet the Awwwards picks before we build, as last time? (Recommended.)
