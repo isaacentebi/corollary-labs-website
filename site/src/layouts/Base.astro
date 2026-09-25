@@ -2,8 +2,8 @@
 import '../styles/global.css';
 import Footer from '../components/Footer.astro';
 import Mark from '../components/Mark.astro';
-interface Props { title?: string; description?: string; top?: boolean; page?: string }
-const { title, description = '[Meta description]', top = true, page = '' } = Astro.props;
+interface Props { title?: string; description?: string; page?: string; over?: boolean }
+const { title, description = '[Meta description]', page = '', over = false } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const full = title ? `${title} — Corollary Labs` : 'Corollary Labs';
 const is = (p: string) => (page === p ? 'page' : undefined);
@@ -15,23 +15,26 @@ const is = (p: string) => (page === p ? 'page' : undefined);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{full}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#0b0e20" />
+    <meta name="theme-color" content="#18181a" />
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
   </head>
   <body data-page={page}>
     <div id="top"></div>
-    {top && (
-      <header class="top">
-        <a class="top__home" href={base} aria-label="Corollary Labs, home"><Mark size={26} /><span>Corollary Labs</span></a>
-        <nav class="mono" aria-label="Pages">
-          <a href={`${base}essays/`} aria-current={is('essays')}>Essays</a>
-          <a href={`${base}about/`} aria-current={is('about')}>About</a>
-          <a href={`${base}team/`} aria-current={is('team')}>Team</a>
-          <a href={`${base}contact/`} aria-current={is('contact')}>Contact</a>
-        </nav>
-      </header>
-    )}
+    <header class:list={['hdr', { 'hdr--over': over }]} data-header>
+      <a class="hdr__home" href={base} aria-label="Corollary Labs, home">{!over && <Mark size={24} />}<span class="hdr__name">Corollary Labs</span></a>
+      <nav class="mono" aria-label="Pages">
+        <a href={`${base}essays/`} aria-current={is('essays')}>Essays</a>
+        <a href={`${base}about/`} aria-current={is('about')}>About</a>
+        <a href={`${base}team/`} aria-current={is('team')}>Team</a>
+        <a href={`${base}contact/`} aria-current={is('contact')}>Contact</a>
+      </nav>
+    </header>
     <main><slot /></main>
     <Footer />
+    <script>
+      import { mountWoven, mountLooms } from '../scripts/loom2d';
+      mountWoven();
+      mountLooms();
+    </script>
   </body>
 </html>

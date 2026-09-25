@@ -1,14 +1,15 @@
 ---
-// Essay figure: a drawdown generated in code. Props kept compatible with the essays' MDX.
-import Drawdown from './Drawdown.astro';
+// Essay figure: a cloth with one or more new threads, rewoven when it scrolls into view.
+import Loom from './Loom.astro';
 import { hash } from '../lib/weave';
 interface Props { kind?: string; n: number; caption: string; wide?: boolean }
 const { kind = 'org', n, caption } = Astro.props;
 const h = hash(kind + n);
-const axis = 14 + Math.floor(h * 40);
-const radius = kind === 'gap' ? 10 : kind === 'dissolve' ? 38 : 24;
+const threads = kind === 'dissolve'
+  ? [{ af: 0.2, vc: 8, R: 30 }, { af: 0.56 + h * 0.1, vc: 18, R: 34 }, { af: 0.88, vc: 6, R: 22 }]
+  : kind === 'gap' ? [{ af: 0.3 + h * 0.4, vc: 12, R: 16 }] : [{ af: 0.3 + h * 0.4, vc: 12, R: 44 }];
 ---
 <figure class="fig">
-  <Drawdown cols={72} rows={22} axis={axis} radius={radius} seed={kind + n} />
+  <Loom rows={26} cellCss={5} threads={threads} grow ms={2200} />
   <figcaption><span class="mono">Fig. {n}</span> <span class="ph">[{caption}]</span></figcaption>
 </figure>

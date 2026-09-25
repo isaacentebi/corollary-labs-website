@@ -1,20 +1,27 @@
 ---
 import Base from '../layouts/Base.astro';
-import Woven from '../components/Woven.astro';
-import Drawdown from '../components/Drawdown.astro';
+import WovenTitle from '../components/WovenTitle.astro';
+import Loom from '../components/Loom.astro';
 import '../styles/pages.css';
-const people = [1, 2, 3, 4];
+const people = [
+  { af: 0.3, vc: 6, R: 18 },
+  { af: 0.62, vc: 14, R: 22 },
+  { af: 0.45, vc: 3, R: 14 },
+  { af: 0.74, vc: 10, R: 26 },
+];
 ---
 <Base title="Team" page="team">
-  <div class="title" style="--tw: 360px"><h1>Team</h1><Woven text="Team" /></div>
+  <WovenTitle text="Team" cap={26} width="420px" />
   <section class="wrap">
+    <p class="lede sheet__lede">[Team — one sentence]</p>
     <ul class="people">
-      {people.map((n) => (
+      {people.map((t, n) => (
         <li>
-          <div class="people__sw"><Drawdown cols={20} rows={21} axis={3 + n * 3} cy={4 + n * 3} radius={9 + n * 2} seed={'p' + n} /></div>
-          <p class="people__name ph">[Name]</p>
-          <p class="mono ph">[Role]</p>
-          <p class="people__bio ph">[Bio — two lines]</p>
+          <Loom rows={24} cellCss={4} threads={[t]} grow ms={1800 + n * 250} />
+          <p class="people__n mono">{String(n + 1).padStart(2, '0')}</p>
+          <p class="people__name">[Name]</p>
+          <p class="mono people__role">[Role]</p>
+          <p class="people__bio">[Bio — two lines]</p>
         </li>
       ))}
     </ul>

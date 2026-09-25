@@ -1,45 +1,47 @@
 ---
 import Base from '../layouts/Base.astro';
-import Drawdown from '../components/Drawdown.astro';
-import { getCollection } from 'astro:content';
-import { hash } from '../lib/weave';
+import Loom from '../components/Loom.astro';
+import { essayThreads, fmt, pad } from '../lib/essays';
 import '../styles/home.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
-const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
+const essays = (await essayThreads()).slice(0, 3);
 ---
-<Base top={false} page="home">
+<Base over page="home">
   <section class="story" aria-label="Corollary Labs">
     <div class="stage" data-stage data-state="0">
-      <canvas class="cloth" data-cloth aria-hidden="true"></canvas>
+      <canvas class="cloth" role="img" aria-label="Corollary Labs, woven. Click the cloth to insert a thread."></canvas>
       <h1 class="sr">Corollary Labs</h1>
-      <p class="cap cap--0 mono"><span class="ph">[Statement]</span></p>
-      <p class="cap cap--1 mono"><span class="ph">[Caption 1 — one line]</span></p>
-      <p class="cap cap--2 mono"><span class="ph">[Caption 2 — one line]</span></p>
-      <p class="cap cap--3 mono"><span class="ph">[Caption 3 — one line]</span></p>
-      <ol class="steps mono" aria-hidden="true"><li>1</li><li>2</li><li>3</li><li>4</li></ol>
+      <div class="draft" data-draft aria-hidden="true">
+        <span class="draft__l draft__l--thr">Threading</span>
+        <span class="draft__l draft__l--tie">Tie-up</span>
+        <span class="draft__l draft__l--tre">Treadling</span>
+      </div>
+      <div class="caps">
+        <p class="cap cap--0 mono">[Statement]</p>
+        <p class="cap cap--1 mono">[Caption 1 — one line]</p>
+        <p class="cap cap--2 mono">[Caption 2 — one line]</p>
+        <p class="cap cap--3 mono">[Caption 3 — one line]</p>
+      </div>
+      <p class="count mono" data-count hidden aria-live="polite"></p>
     </div>
   </section>
 
-  <section class="about wrap" aria-labelledby="about-h">
-    <h2 id="about-h" class="label mono">About</h2>
-    <p class="about__p ph">[About — one paragraph]</p>
-    <a class="lnk mono" href={`${base}about/`}>About</a>
+  <section class="about wrap" aria-label="About">
+    <a class="kick mono" href={`${base}about/`}>About <span aria-hidden="true">→</span></a>
+    <p class="about__p">[About — one paragraph]</p>
   </section>
 
-  <section class="latest wrap" aria-labelledby="essays-h">
-    <div class="latest__head">
-      <h2 id="essays-h" class="label mono">Essays</h2>
-      <a class="lnk mono" href={`${base}essays/`}>All essays</a>
-    </div>
-    <ol class="elist">
-      {essays.map((e, n) => (
+  <section class="latest wrap" aria-label="Essays">
+    <a class="kick mono" href={`${base}essays/`}>Essays <span aria-hidden="true">→</span></a>
+    <ol class="threads">
+      {essays.map(({ e, n, af }) => (
         <li>
-          <a class="erow" href={`${base}essays/${e.id}/`}>
-            <span class="erow__sw"><Drawdown cols={40} rows={6} axis={6 + Math.floor(hash(e.id) * 28)} cy={3} radius={10 + n * 7} seed={e.id} /></span>
-            <span class="erow__t">{e.data.title}</span>
-            <time class="erow__d mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+          <a class="thr" href={`${base}essays/${e.id}/`}>
+            <span class="thr__n mono">{pad(n)}</span>
+            <span class="thr__t">{e.data.title}</span>
+            <time class="thr__d mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+            <span class="thr__loom"><Loom rows={12} cellCss={3} threads={[{ af, vc: 6, R: 26 }]} grow ms={1800} /></span>
           </a>
         </li>
       ))}
@@ -54,7 +56,17 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
 
   <script>
     import { mountCloth } from '../scripts/cloth';
+    import type { Loom } from '../scripts/loom2d';
     const stage = document.querySelector<HTMLElement>('[data-stage]')!;
     mountCloth(stage, stage.querySelector('canvas')!);
+    // essays are threads: hovering one lets its re-weave travel further
+    for (const a of document.querySelectorAll<HTMLElement>('.thr')) {
+      const cv = a.querySelector('canvas') as (HTMLCanvasElement & { loom?: Loom; targets?: number[] }) | null;
+      const go = (big: boolean) => { if (cv?.loom && cv.targets) cv.loom.grow(cv.targets.map((r) => (big ? r * 2.6 : r)), big ? 1300 : 700); };
+      a.addEventListener('pointerenter', () => go(true));
+      a.addEventListener('pointerleave', () => go(false));
+      a.addEventListener('focus', () => go(true));
+      a.addEventListener('blur', () => go(false));
+    }
   </script>
 </Base>

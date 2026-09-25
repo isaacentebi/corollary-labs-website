@@ -1,24 +1,40 @@
-.page-grid { display: grid; grid-template-columns: minmax(120px, 1fr) 3fr; gap: 28px 40px; }
-.page-grid > * { grid-column: 2; }
-.lede { margin: 0; font-size: clamp(26px, 3.1vw, 44px); line-height: 1.18; letter-spacing: -0.01em; font-weight: 350; }
-.page-body { max-width: var(--measure); font-size: 19px; }
-.page-body p { margin: 0 0 1em; }
-.page-fig { margin: 24px 0 8px; grid-column: 1 / -1; }
-.colophon { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 18px 28px; margin: 24px 0 0; padding-top: 18px; border-top: 1px solid var(--rule); }
-.colophon dt { color: var(--ink-2); margin-bottom: 6px; }
-.colophon dd { margin: 0; }
+/* Inner pages: a sheet of paper with the woven label pinned at the top. */
+.sheet { display: grid; grid-template-columns: minmax(140px, 1fr) 3fr; gap: 28px 40px; }
+.sheet > * { grid-column: 2; }
+.lede { margin: 0; font-size: clamp(28px, 3.4vw, 50px); line-height: 1.14; letter-spacing: -0.015em; font-weight: 380; max-width: 22ch; }
+.sheet__body { max-width: var(--measure); font-size: 20px; line-height: 1.6; columns: 1; }
+.sheet__body p { margin: 0 0 1em; }
+.sheet__lede { margin: 0 0 56px; }
 
-.people { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 44px 28px; }
-.people__sw { width: 100%; max-width: 240px; margin-bottom: 16px; }
-.people__name { font-size: 24px; margin: 0 0 4px; }
-.people .mono { margin: 0 0 10px; }
-.people__bio { margin: 0; font-size: 17px; }
+.plate { margin-top: clamp(56px, 10vh, 112px); }
+.plate__cap { margin: 12px 0 0; display: flex; gap: 10px; color: var(--ink); }
 
-.elist--index { border-top: 1px solid var(--rule); }
-.erow__main { display: flex; flex-direction: column; gap: 6px; }
-.erow__dek { color: var(--ink-2); font-size: 17px; line-height: 1.4; }
+.colophon { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 22px 28px; margin: clamp(40px, 8vh, 80px) 0 0; padding-top: 18px; border-top: 1px solid var(--ink); }
+.colophon dt { color: var(--ink-2); margin-bottom: 8px; }
+.colophon dd { margin: 0; font-size: 20px; }
 
-@media (max-width: 720px) {
-  .page-grid { grid-template-columns: 1fr; }
-  .page-grid > * { grid-column: 1; }
+.contact__mail { margin: 8px 0 0; font-size: clamp(30px, 4.4vw, 64px); line-height: 1.1; letter-spacing: -0.02em; font-weight: 380; }
+.contact__mail .lnk { background-size: 100% 3px; padding-bottom: 4px; }
+.contact__mail .lnk:hover { background-size: 100% 8px; }
+
+.people { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 56px 28px; }
+.people .loom { margin-bottom: 18px; }
+.people__n { margin: 0 0 10px; color: var(--ink-3); }
+.people__name { font-size: 26px; line-height: 1.15; margin: 0 0 6px; }
+.people__role { margin: 0 0 12px; color: var(--ink-2); }
+.people__bio { margin: 0; font-size: 17px; color: var(--ink-2); }
+
+/* Essays index */
+.shelf { position: relative; margin-bottom: 18px; }
+.shelf__ticks { list-style: none; margin: 10px 0 0; padding: 0; position: relative; height: 16px; }
+.shelf__ticks li { position: absolute; top: 0; transform: translateX(-50%); color: var(--ink-2); }
+.threads--index { margin-top: 36px; }
+.thr--index { grid-template-columns: 3.2em 1fr auto; }
+.thr__main { display: flex; flex-direction: column; gap: 8px; }
+.thr__dek { color: var(--ink-2); font-size: 17px; line-height: 1.4; max-width: 44rem; }
+
+@media (max-width: 760px) {
+  .sheet { grid-template-columns: 1fr; }
+  .sheet > * { grid-column: 1; }
+  .thr--index { grid-template-columns: 2.4em 1fr; }
 }

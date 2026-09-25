@@ -1,15 +1,20 @@
 ---
 import Base from '../layouts/Base.astro';
-import Woven from '../components/Woven.astro';
+import WovenTitle from '../components/WovenTitle.astro';
+import Loom from '../components/Loom.astro';
 import '../styles/pages.css';
 ---
 <Base title="Contact" page="contact">
-  <div class="title" style="--tw: 620px"><h1>Contact</h1><Woven text="Contact" /></div>
-  <section class="wrap page-grid">
-    <p class="lede ph">[Contact — one sentence]</p>
-    <dl class="colophon mono">
-      <div><dt>Email</dt><dd class="ph">[Email]</dd></div>
-      <div><dt>Address</dt><dd class="ph">[Address]</dd></div>
+  <WovenTitle text="Contact" cap={26} width="680px" />
+  <section class="wrap sheet">
+    <p class="lede">[Contact — one sentence]</p>
+    <p class="contact__mail"><span class="lnk">[Email]</span></p>
+    <dl class="colophon">
+      <div><dt class="mono">Address</dt><dd>[Address]</dd></div>
+      <div><dt class="mono">Press</dt><dd>[Email]</dd></div>
     </dl>
+  </section>
+  <section class="wrap plate">
+    <Loom rows={18} cellCss={5} threads={[{ af: 0.5, vc: 9, R: 60 }]} grow ms={3000} />
   </section>
 </Base>

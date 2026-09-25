@@ -1,23 +1,28 @@
 ---
 import Base from '../layouts/Base.astro';
-import Woven from '../components/Woven.astro';
-import Drawdown from '../components/Drawdown.astro';
+import WovenTitle from '../components/WovenTitle.astro';
+import Loom from '../components/Loom.astro';
 import '../styles/pages.css';
 ---
 <Base title="About" page="about">
-  <div class="title" style="--tw: 460px"><h1>About</h1><Woven text="About" /></div>
-  <section class="wrap page-grid">
-    <p class="lede ph">[Statement — two sentences]</p>
-    <div class="page-body">
-      <p class="ph">[About — paragraph 1]</p>
-      <p class="ph">[About — paragraph 2]</p>
+  <WovenTitle text="About" cap={26} width="520px" />
+  <section class="wrap sheet">
+    <p class="lede">[Statement — two sentences]</p>
+    <div class="sheet__body">
+      <p>[About — paragraph 1]</p>
+      <p>[About — paragraph 2]</p>
     </div>
-    <figure class="page-fig"><Drawdown cols={96} rows={28} axis={47} cy={14} radius={40} seed="about" /></figure>
-    <dl class="colophon mono">
-      <div><dt>Entity</dt><dd class="ph">[Legal name]</dd></div>
-      <div><dt>Founded</dt><dd class="ph">[Year]</dd></div>
-      <div><dt>Location</dt><dd class="ph">[City]</dd></div>
-      <div><dt>Contact</dt><dd class="ph">[Email]</dd></div>
+  </section>
+  <section class="wrap plate">
+    <Loom rows={46} cellCss={6} threads={[{ af: 0.24, vc: 16, R: 44 }, { af: 0.62, vc: 30, R: 52 }, { af: 0.86, vc: 10, R: 30 }]} grow ms={3200} label="A cloth with three new threads; the weave re-forms around each" />
+    <p class="plate__cap mono"><span>Fig.</span> <span class="ph">[Caption — one line]</span></p>
+  </section>
+  <section class="wrap sheet">
+    <dl class="colophon">
+      <div><dt class="mono">Entity</dt><dd>[Legal name]</dd></div>
+      <div><dt class="mono">Founded</dt><dd>[Year]</dd></div>
+      <div><dt class="mono">Location</dt><dd>[City]</dd></div>
+      <div><dt class="mono">Contact</dt><dd>[Email]</dd></div>
     </dl>
   </section>
 </Base>

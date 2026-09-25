@@ -1,29 +1,44 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Woven from '../../components/Woven.astro';
-import Drawdown from '../../components/Drawdown.astro';
-import { getCollection } from 'astro:content';
-import { hash } from '../../lib/weave';
+import WovenTitle from '../../components/WovenTitle.astro';
+import Loom from '../../components/Loom.astro';
+import { essayThreads, fmt, pad } from '../../lib/essays';
 import '../../styles/home.css';
 import '../../styles/pages.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
-const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
+const essays = await essayThreads();
+const threads = essays.map(({ af, vc }) => ({ af, vc: vc + 6, R: 16 }));
 ---
 <Base title="Essays" page="essays">
-  <div class="title" style="--tw: 520px"><h1>Essays</h1><Woven text="Essays" /></div>
+  <WovenTitle text="Essays" cap={26} width="620px" />
   <section class="wrap">
-    <ol class="elist elist--index">
-      {essays.map((e, n) => (
+    <div class="shelf">
+      <Loom id="essay-loom" rows={30} cellCss={4} threads={threads} grow ms={2000} label="Every essay as a thread in one cloth" />
+      <ol class="shelf__ticks mono" aria-hidden="true">
+        {essays.map(({ n, af }) => <li style={`left:${(af * 100).toFixed(2)}%`}>{pad(n)}</li>)}
+      </ol>
+    </div>
+    <ol class="threads threads--index" data-rows>
+      {essays.map(({ e, n }, k) => (
         <li>
-          <a class="erow" href={`${base}essays/${e.id}/`}>
-            <span class="erow__sw"><Drawdown cols={40} rows={6} axis={6 + Math.floor(hash(e.id) * 28)} cy={3} radius={10 + n * 7} seed={e.id} /></span>
-            <span class="erow__main"><span class="erow__t">{e.data.title}</span><span class="erow__dek">{e.data.dek}</span></span>
-            <time class="erow__d mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+          <a class="thr thr--index" href={`${base}essays/${e.id}/`} data-k={k}>
+            <span class="thr__n mono">{pad(n)}</span>
+            <span class="thr__main"><span class="thr__t">{e.data.title}</span><span class="thr__dek">{e.data.dek}</span></span>
+            <time class="thr__d mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
           </a>
         </li>
       ))}
     </ol>
   </section>
+  <script>
+    import type { Loom } from '../../scripts/loom2d';
+    const cv = document.getElementById('essay-loom') as (HTMLCanvasElement & { loom?: Loom; targets?: number[] }) | null;
+    const set = (k: number) => { if (cv?.loom && cv.targets) cv.loom.grow(cv.targets.map((r, n) => (n === k ? r * 3.2 : r)), 1100); };
+    for (const a of document.querySelectorAll<HTMLElement>('[data-rows] a')) {
+      const k = Number(a.dataset.k);
+      a.addEventListener('pointerenter', () => set(k)); a.addEventListener('focus', () => set(k));
+      a.addEventListener('pointerleave', () => set(-1)); a.addEventListener('blur', () => set(-1));
+    }
+  </script>
 </Base>

@@ -1,0 +1,14 @@
+---
+// A 2D cloth (scripts/loom2d.ts draws it). threads: af = position across the width (0..1),
+// vc = centre row, R = how far the re-weave has travelled (threads).
+interface Props { rows: number; cellCss?: number; threads?: { af: number; vc: number; R: number }[]; grow?: boolean; ms?: number; label?: string; class?: string; id?: string }
+const { rows, cellCss = 4, threads = [], grow = false, ms, label, class: cls, id } = Astro.props;
+const spec = JSON.stringify({ rows, cellCss, threads, grow, ms });
+---
+<div class:list={['loom', cls]} style={`--rows:${rows};--cell:${cellCss}px`}>
+  <canvas id={id} data-loom={spec} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}></canvas>
+</div>
+<style>
+  .loom { width: 100%; min-height: calc(var(--rows) * var(--cell)); }
+  .loom canvas { display: block; }
+</style>

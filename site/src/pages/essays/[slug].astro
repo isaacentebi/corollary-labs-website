@@ -2,36 +2,37 @@
 import Base from '../../layouts/Base.astro';
 import Figure from '../../components/Figure.astro';
 import Term from '../../components/Term.astro';
-import Drawdown from '../../components/Drawdown.astro';
-import { getCollection, render } from 'astro:content';
-import { hash } from '../../lib/weave';
+import Loom from '../../components/Loom.astro';
+import { render } from 'astro:content';
+import { essayThreads, fmt, pad } from '../../lib/essays';
 import '../../styles/essay.css';
 
 export async function getStaticPaths() {
-  const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
-  return essays.map((entry, i) => ({ params: { slug: entry.id }, props: { entry, next: essays[(i + 1) % essays.length] } }));
+  const list = await essayThreads();
+  return list.map((it, i) => ({ params: { slug: it.e.id }, props: { it, next: list[(i + 1) % list.length], all: list } }));
 }
-const { entry, next } = Astro.props;
+const { it, next, all } = Astro.props;
+const entry = it.e;
 const { Content, remarkPluginFrontmatter: fm } = await render(entry);
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
-const h = hash(entry.id);
+// this essay's thread travels; the others are already in the cloth
+const threads = all.map((o) => ({ af: o.af, vc: 7, R: o.e.id === entry.id ? 48 : 0 }));
 ---
 <Base page="essays" title={entry.data.title} description={entry.data.dek}>
   <article class="essay">
     <header class="essay__head">
-      <p class="mono essay__kicker"><a href={`${base}essays/`}>Essays</a> <span aria-hidden="true">/</span> <time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time> <span aria-hidden="true">/</span> {fm.minutesRead} min</p>
+      <p class="mono essay__kicker"><a href={`${base}essays/`}>Essays</a> <span aria-hidden="true">/</span> {pad(it.n)} <span aria-hidden="true">/</span> <time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time> <span aria-hidden="true">/</span> {fm.minutesRead} min</p>
       <h1 class="essay__title">{entry.data.title}</h1>
       <p class="essay__dek">{entry.data.dek}</p>
       {entry.data.placeholder && <p class="mono ph">[Placeholder essay]</p>}
     </header>
-    <div class="essay__band"><Drawdown cols={120} rows={8} axis={20 + Math.floor(h * 80)} cy={4} radius={26} seed={entry.id} /></div>
+    <div class="essay__band"><Loom rows={14} cellCss={4} threads={threads} grow ms={2600} /></div>
     <div class="prose">
       <Content components={{ Figure, Term }} />
     </div>
     <footer class="essay__end">
-      {next && next.id !== entry.id && (
-        <a class="essay__next" href={`${base}essays/${next.id}/`}><span class="mono">Next essay</span><span class="essay__next-t">{next.data.title}</span></a>
+      {next && next.e.id !== entry.id && (
+        <a class="essay__next" href={`${base}essays/${next.e.id}/`}><span class="mono">Next essay — {pad(next.n)}</span><span class="essay__next-t">{next.e.data.title}</span></a>
       )}
       <a class="lnk mono" href={`${base}essays/`}>All essays</a>
     </footer>
