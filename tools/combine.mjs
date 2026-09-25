@@ -1,7 +1,7 @@
 // Builds every version of the site into ONE static folder and adds a version switcher to every page.
 //   /           Plotter (master, site/)
 //   /<key>/     each direction branch (direction/<key>), built with Astro `base: '/<key>'`
-// Usage: node tools/combine.mjs [--deploy] [--only=wild,organic] [--snapshot]   (Plotter is always included)
+// Usage: node tools/combine.mjs [--deploy] [--only=wild,organic] [--snapshot] [--update=metab]   (Plotter is always included)
 //   --snapshot  build each branch from its last commit in a fresh temp worktree, so in-progress edits never ship
 //   --deploy  deploys deploy/out to the Vercel project linked in site/.vercel (corollarylabs.vercel.app)
 import { execSync } from 'node:child_process';
@@ -79,12 +79,15 @@ function buildInto(siteDir, dest, branch) {
 }
 
 const switcherOnly = process.argv.includes('--switcher-only');
-if (!switcherOnly) { fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true }); }
+// --update=a,b: rebuild only these versions inside the existing deploy/out; keep every other built version as it is
+const update = process.argv.find((a) => a.startsWith('--update='))?.slice(9).split(',');
+if (!switcherOnly && !update) { fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive: true }); }
 const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',');
 const built = [];
 for (const v of VERSIONS) {
   if (v.key && only && !only.includes(v.key)) continue;
-  if (switcherOnly) { if (!v.key || fs.existsSync(path.join(OUT, v.key))) built.push(v); continue; }
+  if (switcherOnly || (update && !update.includes(v.key))) { if (!v.key || fs.existsSync(path.join(OUT, v.key))) built.push(v); continue; }
+  if (update) fs.rmSync(path.join(OUT, v.key), { recursive: true, force: true });
   if (!v.key) { buildInto(path.join(ROOT, 'site'), OUT); built.push(v); continue; }
   const wt = worktreeFor(`direction/${v.key}`);
   if (!wt) { console.warn(`skip ${v.key}: no branch direction/${v.key} yet`); continue; }
