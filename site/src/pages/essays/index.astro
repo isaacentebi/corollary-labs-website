@@ -8,10 +8,10 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 ---
-<Base page="essays" title="Essays">
+<Base page="essays" title="Research">
   <section class="page wrap shaft">
     <header class="phead">
-      <h1 class="phead__title">Essays</h1>
+      <h1 class="phead__title">Research</h1>
       <p class="phead__meta mono">{String(rows.length).padStart(2, '0')}</p>
     </header>
     <ol class="elist elist--index">

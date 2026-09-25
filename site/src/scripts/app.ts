@@ -1,8 +1,7 @@
 import { initStage, drawStatic } from './stage';
 import { figureStruct } from './city';
 
-const stage = document.querySelector<HTMLElement>('[data-stage]');
-if (stage) initStage(stage);
+document.querySelectorAll<HTMLElement>('[data-stage]').forEach((el) => initStage(el, el.dataset.stage === 'story' ? 'story' : 'hero'));
 
 // static axonometric figures (essays, inner pages): drawn once, redrawn on resize
 const figs = [...document.querySelectorAll<HTMLCanvasElement>('canvas[data-axon]')];

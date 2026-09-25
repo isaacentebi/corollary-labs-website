@@ -8,7 +8,7 @@ export function buildHero() {
   const A = H.core(0, 0, 1.1, 11);
   const B = H.core(10, 0, 1.1, 8.2);
   const Cc = H.core(0, 10, 1.1, 9, 12.4, 0.24, 0.44);
-  const D = H.core(10, 10, 1.1, 0, 13.2, 0.18, 0.42);
+  const D = H.core(10, 10, 1.1, 0, 13.2, 0.22, 0.45);
   H.deferSockets = true;
   // present infrastructure
   H.bridge(A, B, 3);
@@ -48,7 +48,13 @@ export function buildHero() {
 
   // wave 1: agents plug into the existing structure
   const w1 = shuffle(H.freeAt(-1));
-  for (let k = 0; k < Math.min(6, w1.length - 6); k++) H.plug(w1[k], 0.06 + k * 0.042, 0.15);
+  // the first agent goes in near the middle of the structure, where it reads at once
+  const mid = (i: number) => { const so = H.socks[i]; return (so.x - 5) ** 2 + (so.y - 5) ** 2 + (so.z - 6) ** 2; };
+  const first = w1.reduce((b, i) => (mid(i) < mid(b) ? i : b), w1[0]);
+  w1.splice(w1.indexOf(first), 1);
+  w1.unshift(first);
+  // (the first one alone: an agent enters; the rest follow as the structure starts to change)
+  for (let k = 0; k < Math.min(6, w1.length - 6); k++) H.plug(w1[k], k === 0 ? 0.03 : 0.2 + k * 0.035, k === 0 ? 0.16 : 0.14);
 
   // re-seat: some units move out onto the new infrastructure (none leave)
   const movers = shuffle(inkCaps.slice()).slice(0, 5);

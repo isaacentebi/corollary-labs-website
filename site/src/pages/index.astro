@@ -1,66 +1,143 @@
 ---
 import Base from '../layouts/Base.astro';
-import Unit from "../components/Unit.astro";
+import Unit from '../components/Unit.astro';
 import { getCollection, render } from 'astro:content';
-import { site, u } from '../config/site';
+import { site, u, contactHref, hasEmail } from '../config/site';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
+
+const capabilities = [
+  ['Agent deployment', 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.'],
+  ['Model fine-tuning', 'Models adapted and evaluated on your data for the specific tasks your agents perform.'],
+  ['Systems integration', 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.'],
+  ['Evaluation and governance', 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.'],
+];
+const beats = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
+const principles = [
+  ['Workflow first', 'We map how work is actually done before choosing a model.'],
+  ['Design the reorganisation', 'Roles, handoffs and controls change when agents arrive. We plan that change.'],
+  ['Measure in production', 'Every deployment reports on accuracy, cost and time saved.'],
+];
+const nn = (i: number) => String(i + 1).padStart(2, '0');
 ---
 <Base page="home">
-  <section class="stage" data-stage aria-label="Corollary Labs">
-    <div class="stage__pin">
-      <canvas class="stage__canvas" tabindex="0" aria-label="Axonometric drawing. Drag or use the arrow keys to turn it; click or press Enter to plug in a unit."></canvas>
-      <div class="stage__text">
-        <h1 class="stage__name">{site.name}</h1>
-        <p class="stage__statement ph">[Statement — one or two sentences]</p>
+  <section class="hero" data-stage="hero" aria-labelledby="hero-name">
+    <canvas class="stage__canvas" tabindex="0" aria-label="Axonometric drawing of a structure. Drag or use the arrow keys to turn it; click or press Enter to plug in a unit."></canvas>
+    <div class="hero__text">
+      <h1 class="hero__name" id="hero-name">{site.name}</h1>
+      <p class="hero__head">We deploy AI agents inside organisations and rebuild the operations around them.</p>
+      <p class="hero__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
+      <div class="hero__acts">
+        <a class="btn btn--unit" href={contactHref}>Contact us</a>
+        <a class="btn btn--socket" href="#approach">Our approach</a>
       </div>
-      <ol class="stage__states" aria-label="Sequence">
-        <li data-state><span class="n">1</span><span class="ph">[Caption — the structure as it stands]</span></li>
-        <li data-state><span class="n">2</span><span class="ph">[Caption — units plug in; the structure reorganises and grows]</span></li>
-        <li data-state><span class="n">3</span><span class="ph">[Caption — the change spreads along the network]</span></li>
-      </ol>
-      <p class="stage__hint" aria-hidden="true"><span class="hint-mouse">Drag to turn · Click to plug in</span><span class="hint-touch">Tap to plug in</span><span class="hint-city">Click or tap to plug in</span></p>
-      <div class="stage__rule" aria-hidden="true"><i></i></div>
     </div>
+    <p class="stage__hint" aria-hidden="true"><span class="hint-mouse">Drag to turn · Click to plug in</span><span class="hint-touch">Tap to plug in</span></p>
   </section>
 
-  <section class="tail">
+  <div class="tail">
     <div class="wrap shaft">
-      <div class="block about-block" data-reveal>
-        <h2 class="label">About</h2>
-        <div>
-          <p class="lede ph">[About — one paragraph]</p>
-          <a class="more" href={u('about/')}>About <span aria-hidden="true">→</span></a>
-        </div>
-      </div>
-
-      <div class="block" data-reveal>
-        <h2 class="label">Essays</h2>
-        <ol class="elist">
-          {rows.map(({ e, fm }) => (
-            <li>
-              <a class="erow" href={u(`essays/${e.id}/`)}>
-                <span class="erow__glyph"><Unit /></span>
-                <time class="erow__date mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
-                <span class="erow__main"><span class="erow__title">{e.data.title}</span><span class="erow__dek">{e.data.dek}</span></span>
-                <span class="erow__time mono">{fm.minutesRead} min</span>
-              </a>
+      <section class="block" id="capabilities" aria-labelledby="cap-h">
+        <h2 class="label" id="cap-h">Capabilities</h2>
+        <ol class="caps">
+          {capabilities.map(([t, d], i) => (
+            <li class="cap" data-reveal>
+              <span class="cap__glyph"><Unit /></span>
+              <span class="cap__n mono">{nn(i)}</span>
+              <h3 class="cap__t">{t}</h3>
+              <p class="cap__d">{d}</p>
             </li>
           ))}
         </ol>
-        <a class="more" href={u('essays/')}>All essays <span aria-hidden="true">→</span></a>
-      </div>
+      </section>
 
-      <nav class="block links" aria-label="Pages" data-reveal>
-        <h2 class="label">Pages</h2>
-        <ul class="bigl">
-          <li><a href={u('about/')}><span>About</span><span aria-hidden="true">→</span></a></li>
-          <li><a href={u('team/')}><span>Team</span><span aria-hidden="true">→</span></a></li>
-          <li><a href={u('contact/')}><span>Contact</span><span aria-hidden="true">→</span></a></li>
-        </ul>
-      </nav>
+      <section class="block" id="approach" aria-labelledby="app-h">
+        <h2 class="label" id="app-h">Approach</h2>
+        <div class="approach">
+          <p class="lede">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+          <figure class="fig" data-stage="story">
+            <div class="fig__plate">
+              <canvas class="stage__canvas" tabindex="0" aria-label="Axonometric drawing in four steps: the organisation, an agent enters, it reorganises, the change spreads. Drag or use the arrow keys to turn it; click or press Enter to plug in a unit."></canvas>
+              <p class="stage__hint fig__hint" aria-hidden="true"><span class="hint-mouse">Drag to turn · Click to plug in</span><span class="hint-touch">Tap to plug in</span><span class="hint-city">Click or tap to plug in</span></p>
+            </div>
+            <figcaption>
+              <ol class="legend" aria-label="Steps">
+                {beats.map((b, i) => (
+                  <li><button type="button" class="legend__b" data-beat={i} aria-pressed={i === 0 ? 'true' : 'false'}>
+                    <span class="legend__rail" aria-hidden="true"><i></i></span>
+                    <span class="legend__n mono">{nn(i)}</span>
+                    <span class="legend__t">{b}</span>
+                  </button></li>
+                ))}
+              </ol>
+            </figcaption>
+          </figure>
+          <ol class="principles">
+            {principles.map(([t, d], i) => (
+              <li data-reveal>
+                <span class="mono principles__n">{nn(i)}</span>
+                <h3 class="principles__t">{t}.</h3>
+                <p>{d}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section class="block" id="research" aria-labelledby="res-h">
+        <h2 class="label" id="res-h">Research</h2>
+        <div>
+          <p class="lede">Essays on agents, organisations and how new technology spreads.</p>
+          <ol class="elist">
+            {rows.map(({ e, fm }) => (
+              <li>
+                <a class="erow" href={u(`essays/${e.id}/`)}>
+                  <span class="erow__glyph"><Unit /></span>
+                  <time class="erow__date mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+                  <span class="erow__main"><span class="erow__title">{e.data.title}</span><span class="erow__dek">{e.data.dek}</span></span>
+                  <span class="erow__time mono">{fm.minutesRead} min</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+          <a class="more" href={u('essays/')}>All research <span aria-hidden="true">→</span></a>
+        </div>
+      </section>
+
+      <section class="block" id="company" aria-labelledby="co-h">
+        <h2 class="label" id="co-h">Company</h2>
+        <div class="company">
+          <div class="company__about">
+            <h3 class="sublabel mono">About</h3>
+            <p class="lede">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
+          </div>
+          <div class="company__team">
+            <h3 class="sublabel mono">Team</h3>
+            <ul class="roster">
+              {[0, 1, 2, 3].map((i) => (
+                <li><span class="mono roster__n">{nn(i)}</span><span class="ph">[Name — Role]</span></li>
+              ))}
+            </ul>
+          </div>
+          <div class="company__links">
+            <a class="more" href={u('about/')}>About the company <span aria-hidden="true">→</span></a>
+            <a class="more" href={u('team/')}>Team <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </section>
+
+      <section class="block contact" id="contact" aria-labelledby="ct-h">
+        <h2 class="label" id="ct-h">Contact</h2>
+        <div class="contact__in">
+          <div>
+            <p class="contact__line">Deploying agents in your organisation? Talk to us.</p>
+            {hasEmail ? <a class="contact__mail" href={`mailto:${site.email}`}>{site.email}</a> : <p class="contact__mail ph">{site.email}</p>}
+          </div>
+          <canvas class="contact__fig" data-axon="gap" data-th="-0.55" data-pad="14" aria-hidden="true"></canvas>
+        </div>
+      </section>
     </div>
-  </section>
+  </div>
 </Base>

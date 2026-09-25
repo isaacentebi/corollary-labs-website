@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import { u } from '../config/site';
 ---
 <Base page="about" title="About">
   <section class="page wrap shaft">
@@ -16,11 +17,20 @@ import Base from '../layouts/Base.astro';
         <canvas class="plate" data-axon="about" data-th="-0.3" aria-hidden="true"></canvas>
       </div>
     </div>
+    <section class="about-team" aria-labelledby="team-h">
+      <h2 class="label" id="team-h">Team</h2>
+      <ul class="roster">
+        {[1, 2, 3, 4].map((n) => (
+          <li><span class="mono roster__n">{String(n).padStart(2, '0')}</span><span class="ph">[Name — Role]</span></li>
+        ))}
+      </ul>
+      <a class="more" href={u('team/')}>Team <span aria-hidden="true">→</span></a>
+    </section>
     <dl class="colophon">
       <div><dt class="label">Entity</dt><dd class="ph">[Legal entity]</dd></div>
       <div><dt class="label">Founded</dt><dd class="ph">[Year]</dd></div>
       <div><dt class="label">Location</dt><dd class="ph">[City]</dd></div>
-      <div><dt class="label">Contact</dt><dd class="ph">[Email]</dd></div>
+      <div><dt class="label">Contact</dt><dd class="ph">[EMAIL]</dd></div>
     </dl>
   </section>
 </Base>

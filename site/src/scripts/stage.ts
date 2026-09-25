@@ -1,7 +1,9 @@
-// Home stage: one sticky canvas, one scroll progress p. Renders on demand only.
-//  p 0.00–0.06  the structure as it stands (open sockets shown; visitor plugs units in; drag turns the drawing)
-//  p 0.06–0.50  agents plug in; a core rises; new infrastructure grows; units re-seat onto it
-//  p 0.56–0.97  pull back and flatten to a plan of the city; the change travels along the network
+// The megastructure, live. Renders on demand only. Two uses on the home page:
+//  'hero'   the structure as it stands; the visitor turns it (drag) and plugs units in (click).
+//  'story'  the Approach figure, four beats on one clock s (0..3), stepped by the legend or played once in view:
+//           s 0→1  an agent enters (one unit plugs in)
+//           s 1→2  it reorganises (more units, a core rises, new infrastructure, units re-seat)
+//           s 2→3  pull back and flatten to a plan of the city; the change travels along the network
 import { type Cam, type Item, C, proj, depthSort } from './axon';
 import { Struct, clamp, ease, BEAM_H, CAP_L, CAP_H } from './mega';
 import { buildHero, buildCity, SPINE_Y, FRONT, type Cluster } from './city';
@@ -18,17 +20,26 @@ const MAX_USER_BEAMS = 3;
 const FRONT_V = 70; // world units per second for a front the visitor starts in the city
 const FRONT_MAX = 170;
 
-export function initStage(root: HTMLElement) {
+// hero timeline at the end of beat 02 (the first unit has latched)
+const T_ENTER = 0.2;
+// seconds per beat when played
+const SEG_S = [2.2, 5.6, 6.2];
+
+export function initStage(root: HTMLElement, mode: 'hero' | 'story' = 'hero') {
+  const story = mode === 'story';
   const canvas = root.querySelector<HTMLCanvasElement>('canvas')!;
   const ctx = canvas.getContext('2d')!;
   const rm = matchMedia('(prefers-reduced-motion: reduce)');
   const { H, cores } = buildHero();
   const { clusters, branches, net } = buildCity();
-  const states = [...root.querySelectorAll<HTMLElement>('[data-state]')];
-  const firstMove = Math.min(...H.caps.flatMap((c) => c.moves.filter((m) => m.t0 >= 0).map((m) => m.t0)));
+  const beats = [...root.querySelectorAll<HTMLButtonElement>('[data-beat]')];
 
-  let W = 0, Hh = 0, dpr = 1;
-  let p = 0;
+  let W = 0, Hh = 0, dpr = 1, textH = 0;
+  const textEl = root.querySelector<HTMLElement>('.hero__text');
+  let s = 0, target = 0; // story clock and where it is heading
+  let lastT = 0;
+  let playing = false, played = false, visible = true;
+  let holdTimer = 0;
   let thUser = 0, thTarget = 0;
   let hover = -1;
   let pointer: { x: number; y: number } | null = null;
@@ -49,13 +60,15 @@ export function initStage(root: HTMLElement) {
     dpr = Math.min(devicePixelRatio || 1, 2);
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(Hh * dpr);
+    if (textEl) textH = r.bottom - textEl.getBoundingClientRect().top;
     invalidate();
   }
 
   function phase() {
-    let q = p;
-    if (rm.matches) q = p < 0.3 ? 0 : p < 0.72 ? 0.52 : 1;
-    return { t: ease(win(q, 0.06, 0.5)), c: win(q, 0.56, 0.97) };
+    if (!story) return { t: 0, c: 0 };
+    if (s <= 1) return { t: T_ENTER * s, c: 0 };
+    if (s <= 2) return { t: lerp(T_ENTER, 1, s - 1), c: 0 };
+    return { t: 1, c: s - 2 };
   }
 
   const mobile = () => W < 720;
@@ -71,18 +84,21 @@ export function initStage(root: HTMLElement) {
       const [sx, sy] = proj(cam, x, y, z);
       x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
     }
-    let s: number, area: { l: number; r: number; t: number; b: number };
-    if (mob) {
-      // portrait: fill the width, sit just above the name
-      area = { l: 8, r: W - 8, t: 74, b: Hh - 196 };
-      s = Math.min((area.r - area.l) / (x1 - x0), (area.b - area.t) / (y1 - y0));
+    let area: { l: number; r: number; t: number; b: number };
+    if (story) {
+      // the figure's own plate
+      const m = mob ? 14 : 34;
+      area = { l: m, r: W - m, t: m + (mob ? 10 : 0), b: Hh - m - (mob ? 26 : 10) };
+    } else if (mob) {
+      // portrait: fill the width, sit above the text
+      area = { l: 10, r: W - 10, t: 72, b: Hh - textH - 18 };
     } else {
-      area = { l: W * lerp(0.42, 0.34, k), r: W - 70, t: 100, b: Hh - 60 };
-      s = Math.min((area.r - area.l) / (x1 - x0), (area.b - area.t) / (y1 - y0));
+      area = { l: W * lerp(0.5, 0.44, k), r: W - 64, t: 104, b: Hh - 56 };
     }
-    cam.s = s;
-    cam.cx = (area.l + area.r) / 2 - ((x0 + x1) / 2) * s;
-    cam.cy = (area.t + area.b) / 2 - ((y0 + y1) / 2) * s;
+    const sc = Math.max(0.05, Math.min((area.r - area.l) / (x1 - x0), (area.b - area.t) / (y1 - y0)));
+    cam.s = sc;
+    cam.cx = (area.l + area.r) / 2 - ((x0 + x1) / 2) * sc;
+    cam.cy = (area.t + area.b) / 2 - ((y0 + y1) / 2) * sc;
     return cam;
   }
 
@@ -93,7 +109,7 @@ export function initStage(root: HTMLElement) {
     const e = ease(clamp(c / 0.6));
     // the plan: spine across the screen (down the screen on phones), seen from straight above
     const thCity = mob ? -PI / 2 + 0.14 : -0.14;
-    const sEnd = mob ? Hh / 230 : Math.min(W / 250, Hh / 150);
+    const sEnd = mob ? Hh / 230 : Math.min(W / 230, Hh / 140);
     const s = Math.exp(lerp(Math.log(h.s), Math.log(sEnd), e));
     const f = (1 / s - 1 / h.s) / (1 / sEnd - 1 / h.s);
     // rotation (including the visitor's) eases back to the canonical plan angle
@@ -101,7 +117,7 @@ export function initStage(root: HTMLElement) {
     dth = Math.atan2(Math.sin(dth), Math.cos(dth));
     const cam: Cam = { ...h, s, th: h.th + dth * e, ky: lerp(h.ky, 0.84, e), kz: lerp(h.kz, 0.5, e) };
     const [hsx, hsy] = proj(h, 5, 5, 0);
-    const endX = mob ? W * 0.44 : W * 0.6, endY = mob ? Hh * 0.44 : Hh * 0.46;
+    const endX = W * 0.5, endY = Hh * 0.46;
     cam.wx = 5;
     cam.wy = lerp(5, mob ? SPINE_Y + 8 : SPINE_Y + 4, f);
     cam.wz = 0;
@@ -378,9 +394,26 @@ export function initStage(root: HTMLElement) {
 
   function frame() {
     raf = 0;
+    if (W < 40 || Hh < 40) return;
     const now = performance.now();
     const tStart = now;
     let busy = false;
+    if (story) {
+      const dt = Math.min(0.05, (now - (lastT || now)) / 1000);
+      lastT = now;
+      if (s !== target) {
+        if (rm.matches) s = target;
+        else {
+          // constant pace within a beat; faster when stepping back
+          const seg = Math.min(2, Math.floor(target > s ? s : s - 1e-6));
+          const v = (target > s ? 1 : 3) / SEG_S[Math.max(0, seg)];
+          s = target > s ? Math.min(target, s + v * dt) : Math.max(target, s - v * dt);
+        }
+        syncBeats();
+        if (s === target) arrived();
+        else busy = true;
+      }
+    }
     if (Math.abs(thTarget - thUser) > 1e-4) {
       thUser += (thTarget - thUser) * (rm.matches ? 1 : 0.18);
       busy = true;
@@ -499,35 +532,50 @@ export function initStage(root: HTMLElement) {
     if (fading(H, now)) busy = true;
     for (const b of H.beams) if (b.real !== undefined && now < b.real + (b.realDur || 0)) busy = true;
     (window as any).__ms = performance.now() - tStart;
-    if (busy) invalidate();
+    if (busy && visible) invalidate();
+    else lastT = 0;
   }
 
   function invalidate() {
     if (!raf) raf = requestAnimationFrame(frame);
   }
 
-  function onScroll() {
-    const r = root.getBoundingClientRect();
-    const span = r.height - innerHeight;
-    const np = clamp(-r.top / Math.max(1, span));
-    if (np !== p) {
-      p = np;
-      const { t, c } = phase();
-      // the caption follows the drawing: state 2 as soon as the first unit is lowered in
-      const st = c > 0.04 ? 2 : t >= firstMove ? 1 : 0;
-      states.forEach((el, i) => el.classList.toggle('is-on', i === st));
-      root.style.setProperty('--p', p.toFixed(4));
-      root.classList.toggle('is-city', c > 0.05);
-      root.classList.toggle('is-open', c === 0 || c > 0.3);
-      if (c > 0) hover = -1;
-      invalidate();
-    }
+  // ——— story: legend, clock, play once in view ———
+  function syncBeats() {
+    const { c } = phase();
+    const cur = s <= 0 ? 0 : Math.min(3, Math.ceil(s - 1e-6));
+    beats.forEach((b, i) => {
+      const fill = i === 0 ? 1 : clamp(s - (i - 1));
+      b.style.setProperty('--f', fill.toFixed(3));
+      b.setAttribute('aria-pressed', i === cur ? 'true' : 'false');
+      b.classList.toggle('is-on', i === cur);
+    });
+    root.classList.toggle('is-city', c > 0.05);
+    root.classList.toggle('is-open', c === 0 || c > 0.3);
+    if (c > 0) hover = -1;
+  }
+  function go(k: number) {
+    target = clamp(k, 0, 3);
+    lastT = 0;
+    invalidate();
+  }
+  function arrived() {
+    if (!playing) return;
+    if (target >= 3) { playing = false; return; }
+    clearTimeout(holdTimer);
+    holdTimer = window.setTimeout(() => { if (playing) go(target + 1); }, target === 0 ? 700 : 1500);
+  }
+  function stopPlay() {
+    playing = false;
+    clearTimeout(holdTimer);
   }
 
   // pointer: drag turns the drawing; a click or tap anywhere on it plugs a unit into the nearest open socket
   let down: { x: number; y: number; th: number; moved: boolean } | null = null;
+  let touched = false;
   canvas.addEventListener('pointerdown', (e) => {
     down = { x: e.clientX, y: e.clientY, th: thTarget, moved: false };
+    touched = true;
   });
   addEventListener('pointerup', (e) => {
     if (!down) return;
@@ -571,6 +619,7 @@ export function initStage(root: HTMLElement) {
   });
   addEventListener('keydown', (e) => {
     if (document.activeElement !== canvas) return;
+    touched = true;
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       thTarget += e.key === 'ArrowLeft' ? -0.12 : 0.12;
       invalidate();
@@ -584,15 +633,78 @@ export function initStage(root: HTMLElement) {
     }
   });
 
-  addEventListener('scroll', onScroll, { passive: true });
   new ResizeObserver(size).observe(canvas);
   rm.addEventListener?.('change', invalidate);
   size();
-  onScroll();
-  states[0]?.classList.add('is-on');
   root.classList.add('is-open');
-  (window as any).__stage = {
-    get p() { return p; },
+
+  // only draw while on screen
+  new IntersectionObserver((es) => {
+    const e = es[es.length - 1];
+    visible = e.isIntersecting;
+    if (visible) invalidate();
+    // the story plays through once, the first time the figure is mostly in view
+    if (story && !played && e.intersectionRatio >= 0.55 && !rm.matches) {
+      played = true;
+      playing = true;
+      holdTimer = window.setTimeout(() => go(1), 600);
+    }
+  }, { threshold: [0, 0.55] }).observe(canvas);
+
+  if (story && W > 40) {
+    // beat 02 must read at once: move the first agent to a socket the camera sees whole, near the middle
+    const cap = H.caps.find((cp) => cp.agent && !cp.user && cp.moves[0].t0 > 0 && cp.moves[0].t0 < 0.1);
+    if (cap) {
+      const cam = camera(T_ENTER, 0);
+      const m = cap.moves[0];
+      const whole = (j: number) => {
+        const so = H.socks[j];
+        const ux = Math.cos(so.a), uy = Math.sin(so.a);
+        const pts: [number, number, number][] = [
+          [so.x, so.y, so.z + CAP_H + 0.02],
+          [so.x + ux * CAP_L * 0.8, so.y + uy * CAP_L * 0.8, so.z + CAP_H + 0.02],
+          [so.x + ux * (CAP_L + 0.02), so.y + uy * (CAP_L + 0.02), so.z + CAP_H * 0.4],
+        ];
+        return [0, T_ENTER, 0.5].every((t) => pts.every((P) => !H.occluded(cam, P, t, 0)));
+      };
+      let best = -1, bd = Infinity;
+      H.socks.forEach((_, j) => {
+        if (j !== m.to && (H.sockReady(j) > 0 || !H.isFree(j, 0, 99))) return;
+        if (!whole(j)) return;
+        const [sx, sy] = proj(cam, H.socks[j].x, H.socks[j].y, H.socks[j].z);
+        const d = (sx - W * 0.5) ** 2 + (sy - Hh * 0.5) ** 2;
+        if (d < bd) { bd = d; best = j; }
+      });
+      if (best >= 0 && best !== m.to) {
+        const iv = H.busy.get(m.to);
+        if (iv) H.busy.set(m.to, iv.filter((v) => !(v[0] === m.t0 && v[1] === 99)));
+        H.reserve(best, m.t0, 99);
+        m.from = m.to = best;
+      }
+    }
+  }
+  if (story) {
+    beats.forEach((b, i) => b.addEventListener('click', () => { stopPlay(); played = true; go(i); }));
+    syncBeats();
+  } else if (!rm.matches) {
+    // the hero shows what it does: a few units plug in by themselves until the visitor takes over
+    let n = 0;
+    const auto = () => {
+      if (touched || n >= 3) return;
+      if (visible && document.visibilityState === 'visible') {
+        const cam = camera(0, 0);
+        const f = visibleFree(cam, 0, performance.now());
+        if (f.length) plugAt(f[Math.floor(Math.random() * f.length)]);
+        n++;
+      }
+      window.setTimeout(auto, 2600);
+    };
+    window.setTimeout(auto, 1100);
+  }
+
+  (window as any)['__' + mode] = {
+    get s() { return s; },
+    go,
     plug: () => { const { t } = phase(); const f = userFree(t, performance.now()); if (f.length) plugAt(f[0]); },
     freeScreen: () => { const { t, c } = phase(); const cam = camera(t, c); return visibleFree(cam, t, performance.now()).map((i) => sockScreen(cam, i)); },
     project: (x: number, y: number, z: number) => { const { t, c } = phase(); return proj(camera(t, c), x, y, z); },
@@ -615,6 +727,7 @@ export function drawStatic(canvas: HTMLCanvasElement, S: Struct, opts: { th?: nu
     x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
   }
   const pad = opts.pad ?? 24;
+  if (r.width < pad * 2 + 20 || r.height < pad * 2 + 20) return;
   const s = Math.min((r.width - pad * 2) / (x1 - x0), (r.height - pad * 2) / (y1 - y0));
   cam.s = s;
   cam.cx = r.width / 2 - ((x0 + x1) / 2) * s;

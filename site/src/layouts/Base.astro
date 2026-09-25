@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import Mark from '../components/Mark.astro';
-import { site, u, nav } from '../config/site';
+import { site, u, nav, footNav } from '../config/site';
 
 interface Props { title?: string; description?: string; page: string }
 const { title, description = site.description, page } = Astro.props;
@@ -43,8 +43,7 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
       <div class="foot__in">
         <a class="brand brand--foot" href={u()}><Mark size={26} /><span class="brand__word">{site.name}</span></a>
         <nav class="foot__nav" aria-label="Footer">
-          <a href={u()}>Home</a>
-          {nav.map((n) => <a href={u(n.href)}>{n.label}</a>)}
+          {footNav.map((n) => <a href={u(n.href)}>{n.label}</a>)}
         </nav>
         <p class="foot__meta"><span>{site.email}</span><span>© {site.year} {site.name}</span></p>
       </div>
