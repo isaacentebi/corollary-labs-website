@@ -16,7 +16,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
     {essays.map((e) => (
       <li>
         <a class="erow erow--full cut" href={href(`essays/${e.id}/`)}>
-          <Emblem seed={e.id} class="erow__mark" />
+          <Emblem seed={e.id} n={4} class="erow__mark" />
           <span class="erow__title">{e.data.title}</span>
           <span class="erow__dek">{e.data.dek}</span>
           <time class="erow__date mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>

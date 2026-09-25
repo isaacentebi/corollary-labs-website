@@ -13,9 +13,13 @@ interface Props { title?: string; description?: string; page: Page; theme?: 'vio
 const { title, description = site.description, page, theme = 'violet' } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 const current = Astro.url.pathname;
+// page change: the old content goes first, then the new content comes in (the field is never cross-faded)
+const out = { name: 'clOut', duration: '120ms', easing: 'ease-in', fillMode: 'both' };
+const inn = { name: 'clIn', duration: '280ms', delay: '120ms', easing: 'cubic-bezier(.2,.7,.2,1)', fillMode: 'both' };
+const pageAnim = { forwards: { old: out, new: inn }, backwards: { old: out, new: inn } };
 ---
 <!doctype html>
-<html lang="en" data-page={page} data-theme={theme}>
+<html lang="en" data-page={page} data-theme={theme} transition:animate="none">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -23,7 +27,7 @@ const current = Astro.url.pathname;
     <meta name="description" content={description} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta name="theme-color" content={theme === 'paper' ? '#eeeaff' : '#2b12b8'} />
+    <meta name="theme-color" content={theme === 'paper' ? '#eeeaff' : '#22158a'} />
     <link rel="icon" href={href('favicon.svg')} type="image/svg+xml" />
     <ClientRouter fallback="swap" />
     <script is:inline>
@@ -36,19 +40,21 @@ const current = Astro.url.pathname;
     <div class="probe" aria-hidden="true" transition:persist="probe"><i></i></div>
     <a class="skip" href="#main">Skip to content</a>
     <header class="top">
-      <a class="top__home chip" href={href()} aria-label={`${site.name}, home`}>
-        <Mark size={26} /><span>{site.name}</span>
+      <a class="top__home" href={href()} aria-label={`${site.name}, home`}>
+        <Mark size={24} /><span>{site.name}</span>
       </a>
       <nav class="top__nav" aria-label="Main">
         {nav.map((n) => (
-          <a class="chip" href={href(n.path)} aria-current={current.startsWith(href(n.path)) ? 'page' : undefined}>{n.label}</a>
+          <a href={href(n.path)} aria-current={current.startsWith(href(n.path)) ? 'page' : undefined}>{n.label}</a>
         ))}
       </nav>
     </header>
-    <main id="main">
-      <slot />
-    </main>
-    <Footer />
+    <div class="page" transition:name="page" transition:animate={pageAnim}>
+      <main id="main">
+        <slot />
+      </main>
+      <Footer />
+    </div>
     <script>
       import '../scripts/app';
     </script>

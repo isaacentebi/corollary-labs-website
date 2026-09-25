@@ -28,7 +28,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
     </div>
     {next && next.id !== entry.id && (
       <a class="erow erow--next cut" href={href(`essays/${next.id}/`)}>
-        <Emblem seed={next.id} class="erow__mark" />
+        <Emblem seed={next.id} n={4} class="erow__mark" />
         <span class="erow__title">{next.data.title}</span>
         <span class="erow__date mono">Next essay</span>
       </a>

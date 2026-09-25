@@ -46,11 +46,26 @@ export function components(n: number, m: number, k: number[]) {
 
 /** SVG markup for an n×n emblem seeded by a string. The longest loop is drawn in the accent. */
 export function emblem(seed: string, n = 3, opts: { stroke?: number; size?: number } = {}) {
-  const r = rng(hash(seed));
-  const k = Array.from({ length: n * n }, () => Math.floor(r() * 4));
-  const { comp, size } = components(n, n, k);
-  let best = comp[0], bestSize = 0;
-  for (const [c, s] of size) if (s > bestSize) { best = c; bestSize = s; }
+  // only layouts whose accent loop closes inside the patch: try seeded variants, keep the largest closed loop
+  const h = hash(seed), r = rng(h);
+  // aim for a loop length chosen by the seed, so emblems differ from each other
+  const want = n <= 2 ? 4 : n === 3 ? [4, 6, 8][h % 3] : n === 4 ? [8, 10, 12][h % 3] : 16;
+  let k: number[] = [], comp: number[] = [], best = -1, bestSize = 0;
+  for (let attempt = 0; attempt < 2000 && bestSize < want; attempt++) {
+    const kk = Array.from({ length: n * n }, () => Math.floor(r() * 4));
+    const res = components(n, n, kk);
+    // a component is closed if none of its arcs ends on the patch border
+    const open = new Set<number>();
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+      const t = j * n + i;
+      for (const a of [0, 1] as const) for (const s of arcSides(kk[t], a)) {
+        const border = (s === 0 && j === 0) || (s === 2 && j === n - 1) || (s === 3 && i === 0) || (s === 1 && i === n - 1);
+        if (border) open.add(res.comp[t * 2 + a]);
+      }
+    }
+    for (const [c, s] of res.size) if (!open.has(c) && s > bestSize && (bestSize < want)) { bestSize = s; best = c; k = kk; comp = res.comp; }
+  }
+  if (best < 0) { k = Array.from({ length: n * n }, (_, t) => (t % n + Math.floor(t / n)) % 2 ? 1 : 0); comp = components(n, n, k).comp; best = -2; }
   const S = opts.size ?? 100, w = opts.stroke ?? 0.16;
   let d0 = '', d1 = '';
   for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {

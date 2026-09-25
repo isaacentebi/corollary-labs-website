@@ -10,38 +10,40 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
 <Base page="home">
   <section class="story" data-story aria-label="Corollary Labs">
     <div class="story__stage">
-      <h1 class="story__name" data-beat="0"><span>Corollary</span> <span>Labs</span></h1>
+      <h1 class="story__name" data-beat="0"><span class="cut" data-snap="out">Corollary</span> <span class="cut" data-snap="out">Labs</span></h1>
       <p class="story__line story__line--0 ph" data-beat="0">[Statement]</p>
+      <p class="story__hint mono" data-beat="0" aria-hidden="true">Drag / click</p>
       <p class="story__line story__line--1 ph" data-beat="1">[Sentence]</p>
       <p class="story__line story__line--2 ph" data-beat="2">[Sentence]</p>
       <div class="story__meter" aria-hidden="true"><i data-meter></i></div>
     </div>
   </section>
 
-  <section class="home-about cut" aria-labelledby="h-about">
-    <h2 id="h-about" class="label">About</h2>
-    <p class="lead ph">[About — one paragraph]</p>
-    <a class="more" href={href('about/')}>About</a>
-  </section>
+  <div class="wrap">
+    <section class="home-about cut" aria-labelledby="h-about">
+      <h2 id="h-about" class="label">About</h2>
+      <p class="lead ph">[About — one paragraph]</p>
+    </section>
 
-  <section class="home-essays" aria-labelledby="h-essays">
-    <div class="home-essays__head cut"><h2 id="h-essays" class="label">Essays</h2><a class="more" href={href('essays/')}>All essays</a></div>
-    <ol class="elist">
-      {essays.map((e) => (
-        <li>
-          <a class="erow cut" href={href(`essays/${e.id}/`)}>
-            <Emblem seed={e.id} class="erow__mark" />
-            <span class="erow__title">{e.data.title}</span>
-            <time class="erow__date mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
-          </a>
-        </li>
-      ))}
-    </ol>
-  </section>
+    <section class="home-essays" aria-labelledby="h-essays">
+      <div class="home-essays__head cut"><h2 id="h-essays" class="label">Essays</h2><a class="more" href={href('essays/')}>All essays</a></div>
+      <ol class="elist">
+        {essays.map((e) => (
+          <li>
+            <a class="erow cut" href={href(`essays/${e.id}/`)}>
+              <Emblem seed={e.id} n={4} class="erow__mark" />
+              <span class="erow__title">{e.data.title}</span>
+              <time class="erow__date mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
 
-  <nav class="bigl" aria-label="Pages">
-    <a class="bigl__a cut" href={href('about/')}><Emblem seed="about" n={2} class="bigl__mark" /><span>About</span></a>
-    <a class="bigl__a cut" href={href('team/')}><Emblem seed="team" n={2} class="bigl__mark" /><span>Team</span></a>
-    <a class="bigl__a cut" href={href('contact/')}><Emblem seed="contact" n={2} class="bigl__mark" /><span>Contact</span></a>
-  </nav>
+    <nav class="bigl" aria-label="Pages">
+      <a class="bigl__a cut" href={href('about/')}>About</a>
+      <a class="bigl__a cut" href={href('team/')}>Team</a>
+      <a class="bigl__a cut" href={href('contact/')}>Contact</a>
+    </nav>
+  </div>
 </Base>

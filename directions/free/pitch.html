@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;500;700&family=Geist:wght@400;500&family=Geist+Mono&display=swap" rel="stylesheet">
 <style>
-  :root { --ground:#2b12b8; --loop:#4f33e6; --acid:#d8ff3c; --paper:#eeeaff; --ink:#170a5e; --white:#f6f4ff; }
+  :root { --ground:#22158a; --loop:#3a2bb8; --acid:#d8ff3c; --paper:#eeeaff; --ink:#170a5e; --white:#f6f4ff; }
   * { box-sizing:border-box; margin:0; }
   body { background:var(--ground); color:var(--white); font:16px/1.5 Geist, system-ui, sans-serif; }
   .wrap { max-width:1180px; margin:0 auto; padding:56px 24px 120px; }
@@ -56,9 +56,9 @@
 
   <h2>Palette</h2>
   <div class="sw">
-    <div style="background:#2b12b8">Violet ground<br>#2B12B8</div>
-    <div style="background:#4f33e6">Loop<br>#4F33E6</div>
-    <div style="background:#1d0b86">Deep ground (Essays, Contact)<br>#1D0B86</div>
+    <div style="background:#22158a">Violet ground<br>#22158A</div>
+    <div style="background:#3a2bb8">Loop<br>#3A2BB8</div>
+    <div style="background:#170f5e">Deep ground (Essays, Contact)<br>#170F5E</div>
     <div style="background:#d8ff3c;color:#170a5e">Acid (agent)<br>#D8FF3C</div>
     <div style="background:#f6f4ff;color:#170a5e">White lilac (type)<br>#F6F4FF</div>
     <div style="background:#eeeaff;color:#170a5e">Paper (reading)<br>#EEEAFF</div>
@@ -70,7 +70,7 @@
   <div class="type1">Corollary Labs</div>
   <div class="type2" style="margin-top:12px">[About — one paragraph] Geist 400 for text: plain, contemporary, legible at 16px on violet.</div>
   <div class="type3" style="margin-top:12px">Geist Mono · labels · dates · 12px</div>
-  <p style="margin-top:12px">Unbounded (wide, geometric, round counters that echo the arcs) for the name and big words only.</p>
+  <p style="margin-top:12px">Unbounded (wide, geometric) for the name only: hero, header, footer. Headings and big words are Geist 600–700 with tight tracking.</p>
 
   <h2>Logo options</h2>
   <div class="grid logos">
@@ -80,7 +80,7 @@
   </div>
 </div>
 <script>
-const C = { g:'#2b12b8', l:'#4f33e6', a:'#d8ff3c' };
+const C = { g:'#22158a', l:'#3a2bb8', a:'#d8ff3c' };
 function rng(s){ return () => (s = (s*16807)%2147483647, (s-1)/2147483646); }
 function frame(id, cell, opts={}) {
   const cv = document.getElementById(id), x = cv.getContext('2d'), W = cv.width, H = cv.height;
