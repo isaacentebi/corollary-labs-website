@@ -1,8 +1,81 @@
 ---
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import '../styles/landing.css';
+import Glyph from '../components/Glyph.astro';
+import { getCollection } from 'astro:content';
+import { site, url, fmtDate } from '../config/site';
+import '../styles/home.css';
+
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const captions = [
+  '[One sentence — a firm as it is arranged today]',
+  '[One sentence — an agent arrives and the arrangement comes apart]',
+  '[One sentence — the same parts reassemble around the agent]',
+  '[One sentence — the change travels from firm to firm]',
+];
 ---
 <Base page="home">
-  <Story />
+  <section class="story" data-story aria-label="Introduction">
+    <div class="stage" data-stage data-state="0">
+      <canvas data-tektonik aria-hidden="true"></canvas>
+
+      <div class="hero">
+        <h1 class="hero__title"><span>Corollary</span><span>Labs</span></h1>
+        <p class="hero__statement ph">[Statement — one or two lines]</p>
+      </div>
+
+      <ol class="caps" aria-label="Story">
+        {captions.map((c, i) => (
+          <li class="cap" data-i={i}>
+            <span class="cap__n t-label">0{i + 1}</span>
+            <span class="cap__t ph">{c}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div class="rail" aria-hidden="true"><i></i><b></b><b></b><b></b><b></b></div>
+    </div>
+  </section>
+
+  <section class="tail">
+    <div class="about">
+      <p class="t-label about__k">About</p>
+      <p class="about__p ph">[About — one paragraph on who we are and what we work on]</p>
+      <a class="t-label lk about__more" href={url('about/')}>About →</a>
+    </div>
+
+    <div class="latest">
+      <div class="latest__head">
+        <h2 class="t-label">Essays</h2>
+        <a class="t-label lk" href={url('essays/')}>All essays →</a>
+      </div>
+      <ol class="rows">
+        {essays.map((e) => (
+          <li>
+            <a class="row" href={url(`essays/${e.id}/`)} data-glyph-host>
+              <Glyph seed={e.id} class="row__g" />
+              <time class="row__d t-label" datetime={e.data.date.toISOString()}>{fmtDate(e.data.date)}</time>
+              <span class="row__m">
+                <span class="row__t">{e.data.title}</span>
+                <span class="row__k">{e.data.dek}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <nav class="steps" aria-label="Pages">
+      <a class="step lk" href={url('about/')} style="--i:0">About</a>
+      <a class="step lk" href={url('team/')} style="--i:1">Team</a>
+      <a class="step lk" href={url('contact/')} style="--i:2">Contact</a>
+      <span class="steps__rule" aria-hidden="true"></span>
+    </nav>
+  </section>
 </Base>
+
+<script>
+  import { mountTektonik } from '../scripts/tektonik';
+  const track = document.querySelector<HTMLElement>('[data-story]');
+  const stage = document.querySelector<HTMLElement>('[data-stage]');
+  if (track && stage) mountTektonik(stage, track);
+</script>

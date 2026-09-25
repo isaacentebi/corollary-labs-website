@@ -1,36 +1,41 @@
 ---
 import Base from '../../layouts/Base.astro';
-import InlineCurve from '../../components/InlineCurve.astro';
+import Glyph from '../../components/Glyph.astro';
 import { getCollection, render } from 'astro:content';
-import '../../styles/index.css';
+import { url, fmtDate } from '../../config/site';
+import '../../styles/home.css';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
-const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
-const pad = (n: number) => String(n).padStart(2, '0');
 ---
-<Base page="index" title="Essays" description="[Meta description]">
-  <section class="index o-container" aria-labelledby="index-title">
-    <header class="index-band" aria-labelledby="index-title">
-      <canvas class="field index-band__field" data-field="index" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="index-title">Essays</h1>
-      <span class="index-band__count t-label" aria-hidden="true" data-reveal="scramble">{String(rows.length).padStart(2, '0')} essays</span>
+<Base page="essays" title="Essays">
+  <section class="page">
+    <header class="page__head">
+      <h1 class="display">Essays</h1>
+      <span class="t-label ph">{String(rows.length).padStart(2, '0')}</span>
     </header>
-    <div class="rule" data-reveal="rule"></div>
-    <ol class="index-list" data-reveal="rows">
-      {rows.map(({ e, fm }, i) => (
+    <ol class="rows">
+      {rows.map(({ e, fm }) => (
         <li>
-          <a class="index-row" href={`/essays/${e.id}/`} data-shuffle-hover>
-            <span class="index-row__n t-label">{pad(rows.length - i)}</span>
-            <time class="index-row__date t-label" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
-            <span class="index-row__main">
-              <span class="index-row__title"><span class="index-row__glyph" aria-hidden="true"><InlineCurve progress={[0.2, 0.5, 0.8][i % 3]} /></span><span data-shuffle-target>{e.data.title}</span></span>
-              <span class="index-row__dek">{e.data.dek}</span>
+          <a class="row row--idx" href={url(`essays/${e.id}/`)} data-glyph-host>
+            <Glyph seed={e.id} class="row__g" />
+            <time class="row__d t-label" datetime={e.data.date.toISOString()}>{fmtDate(e.data.date)} · {fm.minutesRead} min</time>
+            <span class="row__m">
+              <span class="row__t">{e.data.title}</span>
+              <span class="row__k">{e.data.dek}</span>
             </span>
-            <span class="index-row__time t-label">{fm.minutesRead} min</span>
           </a>
         </li>
       ))}
     </ol>
   </section>
 </Base>
+
+<style>
+  .row--idx { grid-template-columns: 110px 170px minmax(0, 1fr); padding: 34px 0; }
+  .row--idx :global(.row__g) { width: 96px; height: 96px; }
+  @media (max-width: 760px) {
+    .row--idx { grid-template-columns: 60px minmax(0, 1fr); padding: 24px 0; }
+    .row--idx :global(.row__g) { width: 56px; height: 56px; }
+  }
+</style>

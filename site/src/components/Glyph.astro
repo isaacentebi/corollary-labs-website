@@ -1,0 +1,46 @@
+---
+// A small seeded composition of planes. On hover (of the nearest [data-glyph-host]) the planes
+// re-order along the other diagonal and a cadmium bar arrives.
+interface Props { seed: string | number; class?: string; big?: boolean }
+const { seed, class: cls = '', big = false } = Astro.props;
+
+let h = 2166136261;
+for (const ch of String(seed)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+let s = (h >>> 0) % 2147483646 || 1;
+const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+
+const cols = ['var(--chalk)', 'var(--haze)', 'var(--pewter)', 'var(--slate)', 'var(--chalk)'];
+const n = big ? 8 : 5;
+const base = -28 + (r() - 0.5) * 20;
+const rects = Array.from({ length: n }, (_, i) => {
+  const long = i === 0 || r() > 0.6;
+  const w = long ? 44 + r() * 42 : 10 + r() * 22;
+  const hh = long ? 3 + r() * (i === 0 ? 16 : 6) : 6 + r() * 16;
+  const ax = 28 + r() * 44, ay = 26 + r() * 48;
+  const aRot = base + (r() > 0.75 ? 90 : 0) + (r() - 0.5) * 8;
+  const bx = 50 + (ax - 50) * 0.55 + (r() - 0.5) * 14, by = 50 + (ay - 50) * 0.55 + (r() - 0.5) * 14;
+  const bRot = base + 90 + (r() - 0.5) * 30;
+  return {
+    w, h: hh, fill: cols[i % cols.length],
+    a: `translate(${ax.toFixed(1)}px,${ay.toFixed(1)}px) rotate(${aRot.toFixed(1)}deg)`,
+    b: `translate(${bx.toFixed(1)}px,${by.toFixed(1)}px) rotate(${bRot.toFixed(1)}deg)`,
+    d: (i * 0.035).toFixed(3),
+  };
+});
+const agA = `translate(112px,${(-8 - r() * 10).toFixed(1)}px) rotate(${(base + 90).toFixed(1)}deg)`;
+const agB = `translate(${(46 + r() * 8).toFixed(1)}px,${(46 + r() * 8).toFixed(1)}px) rotate(${(base).toFixed(1)}deg)`;
+---
+<svg class={`glyph ${cls}`} viewBox="0 0 100 100" aria-hidden="true">
+  {rects.map((q) => (
+    <rect x={-q.w / 2} y={-q.h / 2} width={q.w} height={q.h} fill={q.fill} style={`--a:${q.a};--b:${q.b};--d:${q.d}s`} />
+  ))}
+  <rect class="glyph__ag" x="-9" y="-1.6" width="18" height="3.2" fill="var(--cad)" style={`--a:${agA};--b:${agB};--d:0s`} />
+</svg>
+
+<style is:global>
+  .glyph { overflow: visible; }
+  .glyph rect { transform-box: view-box; transform: var(--a); transition: transform 0.9s var(--ease) var(--d); }
+  .glyph .glyph__ag { opacity: 0; transition: transform 0.9s var(--ease), opacity 0.3s; }
+  [data-glyph-host]:hover .glyph rect, [data-glyph-host]:focus-visible .glyph rect { transform: var(--b); }
+  [data-glyph-host]:hover .glyph .glyph__ag, [data-glyph-host]:focus-visible .glyph .glyph__ag { opacity: 1; }
+</style>

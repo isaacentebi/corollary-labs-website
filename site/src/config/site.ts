@@ -1,18 +1,18 @@
-// Single source of truth for the brand name and site-level copy.
-// Change the name here and it propagates to the wordmark, titles, meta, footer and essays.
+// Single source of truth for the brand name and site-level strings.
 export const site = {
   name: 'Corollary Labs',
-  word: 'Corollary',
-  tag: 'Labs',
   author: 'Corollary Labs',
   email: '[EMAIL]',
   year: 2026,
-  url: 'https://corollarylabs.example',
   description: '[Meta description]',
-  nav: [
-    { label: 'Thesis', href: '/#thesis' },
-    { label: 'About', href: '/#about' },
-    { label: 'Essays', href: '/essays/' },
-  ],
-  cta: { label: 'Contact', href: '#contact' },
 } as const;
+
+/** Prefix an internal path with the deploy base (works under /supre and at root). */
+export const url = (path = '') => {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const p = path.replace(/^\//, '');
+  return `${base}/${p}`;
+};
+
+export const fmtDate = (d: Date) =>
+  d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
