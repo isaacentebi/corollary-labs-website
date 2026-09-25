@@ -28,15 +28,18 @@ const duskRoom = (e: Env): State => ({
   beamFrom: e.ox > 0 ? 0.05 : -2,
 });
 
+// phones: high, above the caption panel; beside a text column: low, below the text
+export const nightHorizon = (e: { m: boolean; ox: number }) => (e.m ? 0.22 : e.ox > 0 ? -0.17 : 0.06);
+
 const nightRoom = (e: Env): State => ({
   wallTop: C.night, wallMid: mul(C.duskMid, 0.5), wallBot: mul(C.duskLow, 0.6),
-  horizon: e.m ? 0.04 : 0.06, horizonSoft: 0.003,
+  horizon: nightHorizon(e), horizonSoft: 0.003,
   horizonGlow: C.duskBand, horizonGlowAmt: 0.5, horizonGlowW: 0.05, horizonLine: 0.8,
   roomLight: 0.08, vignette: 0.35, grain: 0.03, refl: 0,
 });
 
 // where the thinking rooms put the volume
-const roomC = (e: Env): Vec => (e.m ? [0, 0.12] : [e.ox, 0.04]);
+const roomC = (e: Env): Vec => (e.m ? [0, 0.19] : [e.ox, 0.04]);
 const roomR = (e: Env): Vec => (e.m ? [0.12, 0.14] : [0.17, 0.21]);
 
 // The volume as the hero shows it: after Niesche's squircle gradients (core, pale crossing ring, lilac edge)
@@ -114,7 +117,8 @@ export const states: Record<string, StateFn> = {
   // III. New combinations: the volume parts into three translucent panes; they separate (the old
   // arrangement gives way) and settle overlapping in a new one, where colours appear that none had.
   combine: (p, e) => {
-    const k = sm(0.0, 0.4, p), apart = sm(0.05, 0.45, p), settle = sm(0.5, 0.95, p);
+    const k = sm(0.02, 0.4, p), apart = sm(0.08, 0.45, p), settle = sm(0.5, 0.95, p);
+    const fade = sm(0.0, 0.22, p);
     const c = roomC(e);
     const s = e.m ? 0.55 : 1;
     const R0 = roomR(e);
@@ -126,16 +130,16 @@ export const states: Record<string, StateFn> = {
       ...duskRoom(e),
       roomLight: 0.1,
       volC: c, volR: [R0[0] * 1.28, R0[1] * 1.28], volN: 3.2, volSoft: 0.008,
-      volBody: 0, paint: 1 - k, volTint: C.lilac,
-      emitRim: 1 - k, rimCol: C.paleRing, ringPos: 0.66, ringW: 0.2,
-      emitCore: 1.05 * (1 - k), coreCol: C.core, halo: 0.8 * (1 - k), haloCol: C.ring, frame: 0.25 * (1 - k), frameCol: CHROME,
-      beamIn: 0.18 * (1 - k), beamInW: 0.005, beamInCol: C.sun, beamOut: 0.75 * (1 - k), beamOutW: 0.085, beamOutCol: C.ring,
+      volBody: 0, paint: 1 - fade, volTint: C.lilac,
+      emitRim: 1 - fade, rimCol: C.paleRing, ringPos: 0.66, ringW: 0.2,
+      emitCore: 1.05 * (1 - fade), coreCol: C.core, halo: 0.8 * (1 - fade), haloCol: C.ring, frame: 0.25 * (1 - fade), frameCol: CHROME,
+      beamIn: 0.18 * (1 - fade), beamInW: 0.005, beamInCol: C.sun, beamOut: 0.75 * (1 - fade), beamOutW: 0.085, beamOutCol: C.ring,
       // apart in a row, then a new overlapping arrangement
       disc0: pane([-0.36, 0.0], [-0.1, 0.07], 0.14),
       disc1: pane([0.0, 0.0], [0.07, 0.1], 0.13),
       disc2: pane([0.36, 0.0], [0.0, -0.06], 0.135),
       discCol0: mul(C.magenta, 0.8), discCol1: mul(C.cyan, 0.75), discCol2: mul(C.amber, 0.85),
-      discAmt: 0.6 * k, discSoft: 0.004,
+      discAmt: 0.6 * k * k, discSoft: 0.004,
     };
   },
 
@@ -195,7 +199,7 @@ export const states: Record<string, StateFn> = {
       ...night,
       // blue above, a pale neutral lighter than both at the crossing (Pastine), amber at the horizon
       wallTop: lerpV(night.wallTop!, [0.3, 0.34, 0.66], k), wallMid: lerpV(night.wallMid!, [0.94, 0.9, 0.86], k), wallBot: lerpV(night.wallBot!, C.dawnTop, k),
-      horizon: lerp(night.horizon!, -0.02, k), horizonGlow: lerpV(C.duskBand, C.dawnAmber, k), horizonGlowAmt: lerp(0.5, 0.55, k), horizonGlowW: lerp(0.05, 0.07, k), horizonLine: 0.9,
+      horizon: lerp(night.horizon!, -0.02, k), horizonGlow: lerpV(C.duskBand, C.dawnAmber, k), horizonGlowAmt: lerp(0.5, 0.85, k), horizonGlowW: lerp(0.05, 0.1, k), horizonLine: 0.9,
       volC: e.nodeSeed.slice(0, 2), volR: [0.001, 0.001],
       coreCol: lerpV(C.core, C.magenta, 0.2), rimCol: lerpV(C.paleRing, C.cyan, 0.3), haloCol: C.ring,
       field: 1 - k, fieldProg: 1, fieldHaze: 1,

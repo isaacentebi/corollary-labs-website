@@ -1,7 +1,7 @@
 // Binds the light to the page: each [data-light] section names a state; scroll position picks the state
 // and its local progress; neighbouring states are blended across each boundary so the light never cuts.
 import { LightField } from './engine';
-import { states, type Env } from './states';
+import { states, nightHorizon, type Env } from './states';
 import { layoutField } from './diffusion';
 import { pack, mixInto, LENGTH, smooth, clamp } from './params';
 
@@ -36,7 +36,7 @@ export function mountScene() {
     env.m = w < 760;
     const shift = canvas!.dataset.shift;
     env.ox = env.m ? 0 : shift === 'right' ? env.a * 0.5 * 0.42 : 0;
-    const fl = layoutField(env.a, env.m ? 0.04 : 0.06, env.ox);
+    const fl = layoutField(env.a, nightHorizon(env), env.ox);
     field.setNodes(fl.nodes);
     env.nodeSeed = [fl.seed[0], fl.seed[1], fl.seed[2]];
   }

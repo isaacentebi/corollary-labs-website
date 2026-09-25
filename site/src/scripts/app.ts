@@ -36,9 +36,10 @@ const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 function fadeRooms() {
   const vh = window.innerHeight;
   for (const t of roomTexts) {
-    const r = t.parentElement!.getBoundingClientRect();
-    const inn = clamp01((vh * 0.78 - r.top) / (vh * 0.26));
-    const out = clamp01((r.bottom - vh * 0.8) / (vh * 0.2));
+    const r = (t.closest('section') || t.parentElement!).getBoundingClientRect();
+    // captions change where the light changes: as the room's boundary crosses the middle of the screen
+    const inn = clamp01((vh * 0.5 - r.top) / (vh * 0.18));
+    const out = clamp01((r.bottom - vh * 0.52) / (vh * 0.18));
     const o = Math.min(inn, out);
     t.style.opacity = o.toFixed(3);
     t.style.filter = reduced || o > 0.995 ? '' : `blur(${((1 - o) * 7).toFixed(2)}px)`;
@@ -65,5 +66,9 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && toggle?.
 // ---- text arrives as the light reaches it
 const io = new IntersectionObserver((entries) => {
   for (const en of entries) if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
-}, { rootMargin: '0px 0px -12% 0px', threshold: 0.01 });
-document.querySelectorAll('[data-reveal]').forEach((el) => (reduced ? el.classList.add('in') : io.observe(el)));
+}, { rootMargin: '0px 0px -8% 0px', threshold: 0.01 });
+document.querySelectorAll('[data-reveal]').forEach((el) => {
+  // whatever is on the first screen arrives at once; the rest as it is reached
+  if (reduced || el.getBoundingClientRect().top < window.innerHeight) el.classList.add('in');
+  else io.observe(el);
+});

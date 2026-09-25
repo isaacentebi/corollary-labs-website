@@ -38,6 +38,7 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
   <div class="rooms" aria-label="How we think">
     {ideas.map((idea, i) => (
       <section class={`room room--${idea.key}`} data-light={idea.key} data-tone-section="dusk" aria-labelledby={`room-${idea.key}`}>
+        <div class="room__track">
         <div class="room__text wrap" data-room-text>
           <p class="room__kicker label">How we think <span class="room__n">{String(i + 1).padStart(2, '0')} / {String(ideas.length).padStart(2, '0')}</span></p>
           <h2 id={`room-${idea.key}`} class="room__title">{idea.title}</h2>
@@ -45,6 +46,7 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
           {i === ideas.length - 1 && (
             <a class="room__more link" href={u('/thinking/')}>How we think <span class="arrow" aria-hidden="true">→</span></a>
           )}
+        </div>
         </div>
       </section>
     ))}
@@ -116,7 +118,9 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
   .room--auto { min-height: 230vh; }
   .room--deform { min-height: 230vh; }
   .room--diffuse { min-height: 220vh; }
-  .room__text { position: sticky; top: calc(100vh - 36vh); padding-bottom: 8vh; display: grid; gap: 10px; max-width: 46rem; will-change: opacity, filter; }
+  /* the caption's track runs past the room's end, so it stays put while it fades (app.ts) */
+  .room__track { position: absolute; top: 0; bottom: -40vh; left: 0; right: 0; pointer-events: none; }
+  .room__text { position: sticky; top: calc(100vh - 36vh); padding-bottom: 8vh; display: grid; gap: 10px; max-width: 46rem; will-change: opacity, filter; pointer-events: auto; }
   .room__kicker { color: var(--lit-3); display: flex; gap: 1.2em; }
   .room__n { font-variant-numeric: tabular-nums; letter-spacing: 0.08em; }
   .room__title { font-size: 1rem; font-weight: 500; letter-spacing: 0; color: var(--lit-2); margin-top: 6px; }
