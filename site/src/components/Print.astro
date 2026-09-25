@@ -1,0 +1,35 @@
+---
+// A seeded monoprint: a few parts in two inks (the organisation) and one or two in the third
+// (agents). state="before" hides the agents until a parent is hovered/focused; "after" shows
+// the reorganised print. No two seeds print alike. The viewBox is fitted to the parts.
+import { compose, shapePath, shapeRadius, byRadius, INK, type Part } from '../lib/parts';
+interface Props { seed: string; state?: 'before' | 'after'; class?: string; label?: string; base?: number; agents?: number }
+const { seed, state = 'after', class: cls = '', label, base, agents } = Astro.props;
+const parts = compose(seed, { base, agents }).sort(byRadius);
+const t = (p: Part, s: 0 | 1) => {
+  const px = s ? p.px1 : p.px, py = s ? p.py1 : p.py, th = s ? p.th1 : p.th;
+  return `translate(${px.toFixed(2)}px,${py.toFixed(2)}px) rotate(${th.toFixed(1)}deg) translate(${p.ox.toFixed(2)}px,${p.oy.toFixed(2)}px)`;
+};
+// bounds over both states, centred square
+let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+for (const p of parts) for (const s of [0, 1] as const) {
+  if (p.agent && s === 0) continue;
+  const px = s ? p.px1 : p.px, py = s ? p.py1 : p.py, th = ((s ? p.th1 : p.th) * Math.PI) / 180;
+  const cx = px + p.ox * Math.cos(th) - p.oy * Math.sin(th), cy = py + p.ox * Math.sin(th) + p.oy * Math.cos(th);
+  const r = shapeRadius(p.shape) * 0.9;
+  x0 = Math.min(x0, cx - r); y0 = Math.min(y0, cy - r); x1 = Math.max(x1, cx + r); y1 = Math.max(y1, cy + r);
+}
+const side = Math.max(x1 - x0, y1 - y0) + 8;
+const vb = `${((x0 + x1) / 2 - side / 2).toFixed(1)} ${((y0 + y1) / 2 - side / 2).toFixed(1)} ${side.toFixed(1)} ${side.toFixed(1)}`;
+---
+<svg class:list={['print', cls]} data-state={state} viewBox={vb} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'} focusable="false">
+  {parts.map((p) => (
+    <path
+      class:list={[p.agent && 'ag']}
+      d={shapePath(p.shape)}
+      fill={INK[p.ink]}
+      fill-rule="evenodd"
+      style={`--a:${t(p, 0)};--b:${t(p, 1)};--d:${Math.round((p.lag ?? 0) * 160)}ms`}
+    />
+  ))}
+</svg>

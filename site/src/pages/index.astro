@@ -1,8 +1,46 @@
 ---
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import '../styles/landing.css';
+import EssayList from '../components/EssayList.astro';
+import { getCollection } from 'astro:content';
+import { url } from '../config/site';
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 ---
 <Base page="home">
-  <Story />
+  <section class="hero" data-press>
+    <div class="stage" data-stage data-state="0">
+      <canvas tabindex="0" aria-label="Interactive figure: flat parts printed over one another in three inks. Click, tap or press Enter to print a part."></canvas>
+      <div class="hero__text" data-mask>
+        <h1 class="hero__statement">[Statement — one sentence]</h1>
+        <ol class="hero__states" aria-label="Figure states">
+          <li data-s="0"><span class="n">1</span><span>[Caption — the organisation]</span></li>
+          <li data-s="1"><span class="n">2</span><span>[Caption — an agent enters; the organisation rearranges]</span></li>
+          <li data-s="2"><span class="n">3</span><span>[Caption — the change spreads]</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="block block--about" aria-labelledby="h-about">
+    <h2 class="label" id="h-about">About</h2>
+    <p class="lede">[About — one paragraph: who we are and what we work on, in plain terms. Three to four sentences.]</p>
+    <a class="more ov" href={url('about/')} data-text="About">About</a>
+  </section>
+
+  <section class="block block--essays" aria-labelledby="h-essays">
+    <h2 class="label" id="h-essays">Essays</h2>
+    <EssayList essays={essays} />
+    <a class="more ov" href={url('essays/')} data-text="All essays">All essays</a>
+  </section>
+
+  <nav class="block block--links" aria-label="Pages">
+    <a class="big ov" href={url('about/')} data-text="About">About</a>
+    <a class="big ov" href={url('team/')} data-text="Team">Team</a>
+    <a class="big ov" href={url('contact/')} data-text="Contact">Contact</a>
+  </nav>
+
+  <script>
+    import { initPress } from '../scripts/press';
+    const el = document.querySelector<HTMLElement>('[data-press]');
+    if (el) initPress(el);
+  </script>
 </Base>

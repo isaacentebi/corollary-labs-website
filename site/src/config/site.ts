@@ -1,18 +1,15 @@
-// Single source of truth for the brand name and site-level copy.
-// Change the name here and it propagates to the wordmark, titles, meta, footer and essays.
 export const site = {
   name: 'Corollary Labs',
-  word: 'Corollary',
-  tag: 'Labs',
-  author: 'Corollary Labs',
-  email: '[EMAIL]',
+  email: '[Email]',
   year: 2026,
-  url: 'https://corollarylabs.example',
   description: '[Meta description]',
-  nav: [
-    { label: 'Thesis', href: '/#thesis' },
-    { label: 'About', href: '/#about' },
-    { label: 'Essays', href: '/essays/' },
-  ],
-  cta: { label: 'Contact', href: '#contact' },
 } as const;
+
+/** Prefix an internal path with the base path (works under /martens or at root). */
+export const url = (path = '') => {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  return `${base}/${path.replace(/^\//, '')}`;
+};
+
+export const fmtDate = (d: Date) =>
+  d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });

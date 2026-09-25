@@ -1,0 +1,24 @@
+# Martens — overprint
+
+**Concept.** The site is built from a small box of flat, perforated parts (a strip, a disc, a ring, a plate, a half disc) printed over one another in three translucent inks with multiply, as in Karel Martens's monoprints. An organisation is a construction of parts bolted through their holes, printed in two inks (yellow, cyan). An agent is a part in the third ink (pink), bolted into the same holes. Because every ink multiplies and never covers, the agent hides nothing: where it lands, colours appear that neither ink had (vermilion, indigo, near-black). That is Schumpeter's "new combinations" taken literally, and the reason the change is a reorganisation, not a replacement. When the agent arrives, the organisation turns its parts about their bolts and rearranges; no part is taken away. The short scroll story opens from one print to a sheet of prints, and the change passes from print to print along an irregular front (first-passage times on a grid with random delays, so it spreads unevenly rather than in a circle). The visitor holds a part too: it overprints wherever the pointer goes, a click prints it, the parts nearby turn in response, and on the open sheet a print starts the change there, which then passes to its neighbours. Borrowed from Martens: economy of parts, overprinting, registration, play, step and repeat. Borrowed from Aicher: a closed, systematic colour set in which every combination is accounted for (the colour bar under the first print lists each ink and every overprint; the pink ones appear only once an agent is on the sheet). Not borrowed: found index cards, letterpress fonts, or any other period costume.
+
+**Palette.** Uncoated paper `#EEEBE3`; yellow `#F5C21B` and cyan `#26A2C8` (the organisation); pink `#E8487E` (agents); key `#1D1C21`. The overprints are part of the palette: yellow × cyan = green, yellow × pink = vermilion, cyan × pink = indigo, all three = near-black.
+
+**Type.** Instrument Sans (variable, width axis) throughout: condensed 84–86% for display, normal width for reading.
+
+**Mark.** One perforated strip (cyan) overprinted by one disc (pink), with the indigo overlap as the third colour. Link hover repeats the idea: the word turns cyan and a pink second impression lands slightly off register. Alternatives worth exploring in a full build: (b) the wordmark printed twice, cyan and pink, misregistered by a fixed amount; (c) a "C" made from a ring and a half disc in two inks.
+
+## Awwwards references
+
+- **Colors Combinations — Obys** (Site of the Day, 9 June 2021). https://www.awwwards.com/sites/colors-combinations · live: https://colors.combinations.obys.agency/ — Take: a whole site built on colour pairing, with colour as the subject, not decoration. Why: our story is literally colours combining.
+- **Dropbox Brand — Dropbox Brand Studio** (Site of the Month, February 2025; Developer Award). https://www.awwwards.com/sites/dropbox-brand — Take: a brand system you play with rather than read; pieces you can pick up and recombine. Why: the hand-held part and "click to print" come from that register of play.
+- **Lusion v3 — Lusion** (Site of the Day, 2 October 2023). https://www.awwwards.com/sites/lusion-v3 · live: https://lusion.co/ — Take: one continuous camera move carrying the whole story, and pointer interaction that feels physical. Why: our one-print-to-a-sheet pull-back is a single continuous camera, and the parts respond to the pointer as objects.
+
+## Primary sources
+
+- Karel Martens, *Untitled* monoprints (1990s–present): found metal parts, including Meccano, inked and printed onto found index cards on an old press, one colour per day, overprinted over days or weeks. Wilfried Lentz Rotterdam: https://wilfriedlentz.com/work/untitled-monoprints-1990-2019/ · Carpenter Center exhibition: https://carpenter.center/exhibitions/karel-martens-monoprints — Take: economy of parts, translucent overprint, the same part used again and again in new arrangements.
+- Karel Martens, *OASE* covers (from no. 28, 1990): https://socks-studio.com/2013/04/18/oase-covers-by-karel-martens/ · https://oasejournal.nl/en/issue/karel-martens-and-the-architecture-of-the-journal/ · Robin Kinross, https://robinkinross.substack.com/p/oase-and-karel-martens — Take: a title set over its own overprinted image (the essay cover); step and repeat on a small module.
+- Karel Martens, *Printed Matter / Drukwerk* (Hyphen Press, 1996; rev. 2001). Background: https://en.wikipedia.org/wiki/Karel_Martens — Take: a designer's work shown as sheets of prints, which is the open-sheet state.
+- Otl Aicher, colour system for the Munich 1972 Olympics (a closed set of colours with every use specified). Take: the colour bar and the rule that every combination is part of the palette.
+
+Captures, if any, stay under `research/martens/` (gitignored).

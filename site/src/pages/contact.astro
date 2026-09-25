@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import Print from '../components/Print.astro';
+import { site } from '../config/site';
+---
+<Base page="contact" title="Contact" description="[Contact — meta description]">
+  <section class="page">
+    <h1 class="page__title">Contact</h1>
+    <Print seed="contact" class="page__print" base={3} agents={1} />
+    <div class="page__body">
+      <p class="lede">[Contact — one sentence on who should write to us]</p>
+      <ul class="contact">
+        <li><span class="k">Email</span><span>{site.email}</span></li>
+        <li><span class="k">Address</span><span>[Address]</span></li>
+        <li><span class="k">Elsewhere</span><span>[Links]</span></li>
+      </ul>
+    </div>
+  </section>
+</Base>

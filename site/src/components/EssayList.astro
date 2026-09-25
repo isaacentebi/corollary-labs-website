@@ -1,0 +1,19 @@
+---
+import Print from './Print.astro';
+import { url, fmtDate } from '../config/site';
+import type { CollectionEntry } from 'astro:content';
+interface Props { essays: CollectionEntry<'essays'>[]; big?: boolean }
+const { essays, big = false } = Astro.props;
+---
+<ol class:list={['elist', big && 'elist--big']}>
+  {essays.map((e) => (
+    <li>
+      <a class="erow" href={url(`essays/${e.id}/`)}>
+        <Print seed={e.id} state="before" class="erow__print" />
+        <span class="erow__date">{fmtDate(e.data.date)}</span>
+        <span class="erow__title">{e.data.title}</span>
+        <span class="erow__dek">{e.data.dek}</span>
+      </a>
+    </li>
+  ))}
+</ol>

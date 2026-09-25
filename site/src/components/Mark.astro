@@ -1,0 +1,13 @@
+---
+// The mark: one perforated strip (the organisation) overprinted by one disc (an agent).
+// Their overlap prints a third colour neither ink has on its own.
+import { shapePath, INK } from '../lib/parts';
+interface Props { size?: number; class?: string }
+const { size = 28, class: cls = '' } = Astro.props;
+const strip = shapePath({ kind: 'strip', n: 4 });
+const disc = shapePath({ kind: 'disc', r: 8.2 });
+---
+<svg class:list={['mark', cls]} width={size} height={size} viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+  <path class="mark__s" d={strip} fill={INK.c} fill-rule="evenodd" transform="translate(18.5 22) rotate(-34)" />
+  <path class="mark__d" d={disc} fill={INK.m} fill-rule="evenodd" transform="translate(26.5 15.5)" />
+</svg>

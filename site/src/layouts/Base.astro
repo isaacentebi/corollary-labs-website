@@ -1,53 +1,59 @@
 ---
-import '@fontsource/instrument-serif/400.css';
-import '@fontsource/instrument-serif/400-italic.css';
-import '@fontsource-variable/inter-tight/wght.css';
-import '@fontsource-variable/inter-tight/wght-italic.css';
-import '@fontsource/space-mono/400.css';
-import '@fontsource/space-mono/700.css';
-import '../styles/tokens.css';
+import '@fontsource-variable/instrument-sans/wdth.css';
 import '../styles/global.css';
-import { ClientRouter } from 'astro:transitions';
-import Footer from '../components/Footer.astro';
-import Preloader from '../components/Preloader.astro';
-import { site } from '../config/site';
-
-interface Props { title?: string; description?: string; page: 'home' | 'index' | 'essay' | 'about' | 'team' }
-const { title, description = site.description, page } = Astro.props;
-const fullTitle = title ? `${title} — ${site.name}` : site.name;
+import Mark from '../components/Mark.astro';
+import { site, url } from '../config/site';
+interface Props { title?: string; description?: string; page?: string }
+const { title, description = site.description, page = 'page' } = Astro.props;
+const full = title ? `${title} — ${site.name}` : site.name;
+const nav = [
+  { label: 'Essays', href: url('essays/'), key: 'essays' },
+  { label: 'About', href: url('about/'), key: 'about' },
+  { label: 'Team', href: url('team/'), key: 'team' },
+  { label: 'Contact', href: url('contact/'), key: 'contact' },
+];
 ---
 <!doctype html>
-<html lang="en" data-page={page} transition:animate="none">
+<html lang="en" data-page={page}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{fullTitle}</title>
+    <title>{full}</title>
     <meta name="description" content={description} />
-    <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
-    <meta name="theme-color" content="#fafaf8" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <ClientRouter fallback="swap" />
-    <script is:inline>
-      (function () {
-        var d = document.documentElement;
-        d.classList.add('js');
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('rm');
-        try { if (sessionStorage.getItem('corollary.intro')) d.classList.add('intro-seen'); } catch (e) {}
-        // failsafe: never leave content hidden if the motion layer fails to boot
-        window.__motionFailsafe = setTimeout(function () { d.classList.add('motion-fail'); }, 5000);
-      })();
-    </script>
+    <meta name="theme-color" content="#EEEBE3" />
+    <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
   </head>
-  <body id="top">
-    <Preloader />
-    <a class="skip-link" href="#main">Skip to content</a>
-    <main id="main" data-page-root data-page={page}>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+      <filter id="ink" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="3" seed="7" result="n" />
+        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.6 1.22" result="a" />
+        <feComposite in="SourceGraphic" in2="a" operator="in" />
+      </filter>
+    </svg>
+    <header class="top">
+      <a class="brand" href={url('')} aria-label={`${site.name}, home`}>
+        <Mark size={30} />
+        <span class="brand__name" data-text={site.name}>{site.name}</span>
+      </a>
+      <nav class="top__nav" aria-label="Site">
+        {nav.map((n) => (
+          <a href={n.href} class="ov" data-text={n.label} aria-current={page === n.key ? 'page' : undefined}>{n.label}</a>
+        ))}
+      </nav>
+    </header>
+    <main id="main">
       <slot />
     </main>
-    <Footer />
-    <script>
-      import '../scripts/app';
-    </script>
+    <footer class="foot">
+      <div class="foot__grid">
+        <a class="brand brand--foot" href={url('')}><Mark size={22} /><span>{site.name}</span></a>
+        <nav class="foot__nav" aria-label="Footer">
+          {nav.map((n) => <a href={n.href} class="ov" data-text={n.label}>{n.label}</a>)}
+        </nav>
+        <p class="foot__meta"><span>{site.email}</span><span>© {site.year}</span></p>
+      </div>
+    </footer>
   </body>
 </html>

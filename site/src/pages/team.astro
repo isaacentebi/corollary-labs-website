@@ -1,40 +1,23 @@
 ---
-// Team — placeholders until names, roles and portraits are chosen. Same band + hairline system as About and Essays.
 import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
-import '../styles/about.css';
-
-const people = Array.from({ length: 4 }, (_, i) => ({ n: String(i + 1).padStart(2, '0'), name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]' }));
+import Print from '../components/Print.astro';
+const people = [1, 2, 3, 4];
 ---
-<Base page="team" title="Team" description="[Meta description]">
-  <article class="about o-container" aria-labelledby="team-title">
-    <header class="about-band">
-      <canvas class="field about-band__field" data-field="index" data-word="Team" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="team-title">Team</h1>
-      <span class="about-band__note t-label" aria-hidden="true" data-reveal="scramble">Draft — placeholders in brackets</span>
-    </header>
-    <div class="rule" data-reveal="rule"></div>
-
-    <p class="about-statement" data-reveal="lines">
-      <span class="ph">[Placeholder — one sentence on who works at {site.name}.]</span>
-    </p>
-
-    <ol class="team-list" data-reveal="rows">
-      {people.map((p) => (
-        <li class="team-row">
-          <span class="team-row__n t-label">{p.n}</span>
-          <span class="team-row__name ph">{p.name}</span>
-          <span class="team-row__role t-label ph">{p.role}</span>
-          <span class="team-row__line ph">{p.line}</span>
-        </li>
-      ))}
-    </ol>
-
-    <section class="about-colophon" aria-label="Contact">
-      <dl>
-        <div class="about-colophon__row"><dt class="t-label">JOIN</dt><dd class="ph">[Placeholder — how to get in touch about working here.]</dd></div>
-        <div class="about-colophon__row"><dt class="t-label">CONTACT</dt><dd><a href={`mailto:${site.email}`}>{site.email}</a></dd></div>
-      </dl>
-    </section>
-  </article>
+<Base page="team" title="Team" description="[Team — meta description]">
+  <section class="page">
+    <h1 class="page__title">Team</h1>
+    <Print seed="team" class="page__print" base={4} agents={1} />
+    <div class="page__body">
+      <p class="lede">[Team — one sentence introducing the people]</p>
+      <ul class="people">
+        {people.map((n) => (
+          <li>
+            <span class="who">[Name {n}]</span>
+            <span class="role">[Role]</span>
+            <span class="line">[One line: background]</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
 </Base>
