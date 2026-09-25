@@ -7,7 +7,7 @@ const d = document.documentElement;
 const reduced = d.classList.contains('rm');
 
 if (!reduced) {
-  const lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.9, smoothWheel: true });
+  const lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.9, smoothWheel: true, anchors: { duration: 1.4 } });
   const raf = (t: number) => { lenis.raf(t); requestAnimationFrame(raf); };
   requestAnimationFrame(raf);
   (window as any).__lenis = lenis;
@@ -38,7 +38,16 @@ const navCheck = () => {
   let dark = false;
   document.querySelectorAll<HTMLElement>('[data-dark]').forEach((el) => { const r = el.getBoundingClientRect(); if (r.top < 30 && r.bottom > 30) dark = true; });
   nav.classList.toggle('on-dark', dark);
+  // on home, the link of the section in view is marked
+  if (spy.length) {
+    let cur = '';
+    for (const [key, el] of spy) { const r = el.getBoundingClientRect(); if (r.top < window.innerHeight * 0.4 && r.bottom > window.innerHeight * 0.4) cur = key; }
+    nav.querySelectorAll<HTMLElement>('[data-key]').forEach((a) => (a.dataset.key === cur ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
+  }
 };
+const spy: [string, HTMLElement][] = main?.dataset.page === 'home'
+  ? (['capabilities', 'approach', 'company', 'contact'] as const).flatMap((k) => { const el = document.getElementById(k); return el ? [[k === 'company' ? 'about' : k, el] as [string, HTMLElement]] : []; })
+  : [];
 const onScroll = () => { if (!navQueued) { navQueued = true; requestAnimationFrame(navCheck); } };
 window.addEventListener('scroll', onScroll, { passive: true });
 new MutationObserver(onScroll).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['data-dark'] });

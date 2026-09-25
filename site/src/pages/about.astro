@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { u } from '../config/site';
+const people = Array.from({ length: 4 }, () => ({ name: '[Name]', role: '[Role]' }));
 // the same ground seen from very far away, at dusk: many small groups, the lines as texture
 const band = { far: { n: 14, seed: 5 }, dusk: 0.9, tilt: 0.62, zoom: 1, space: 10, kScale: 0.6, clear: '[data-clear]' };
 ---
@@ -11,13 +12,28 @@ const band = { far: { n: 14, seed: 5 }, dusk: 0.9, tilt: 0.62, zoom: 1, space: 1
   <section class="page-body wrap">
     <div class="cols" data-reveal>
       <p class="label">About</p>
-      <p class="lead ph">[About — one paragraph]</p>
+      <p class="lead">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
     </div>
     <div class="cols" data-reveal>
       <p class="label ph">[Heading]</p>
       <div>
         <p class="prose-ph">[Paragraph]</p>
         <p class="prose-ph">[Paragraph]</p>
+      </div>
+    </div>
+    <div class="cols" data-reveal id="team">
+      <p class="label">Team</p>
+      <div>
+        <ul class="people">
+          {people.map((p, i) => (
+            <li class="person">
+              <span class="row__n mono">{String(i + 1).padStart(2, '0')}</span>
+              <span class="person__name">{p.name}</span>
+              <span class="person__role">{p.role}</span>
+            </li>
+          ))}
+        </ul>
+        <a class="more" href={u('team/')}>Team</a>
       </div>
     </div>
     <div class="cols" data-reveal>

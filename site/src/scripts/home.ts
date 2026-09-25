@@ -1,12 +1,10 @@
-// Home: one sticky field, one scroll progress p in [0, 1] over ~1.15 viewport heights.
-// The sticky part ends at p ≈ 0.74; the rest plays while the field slides up as a band and About arrives.
-//   0.02–0.14  the lines flow back into the name's clearing
-//   0.08–0.24  four stones rise in a row; one closed contour forms around them (elongated)
-//   0.26–0.44  a rose stone arrives along the lines; the contour opens to take it in; the row re-forms around it
-//              and the contour relaxes towards a circle. No stone leaves.
-//   0.46–0.66  pull back, tilt, dusk: many other groups on the same ground
-//   0.58–0.92  rose stones travel from group to group along the lines, nearest first; each contour takes one in
-import { Ground, insideCap, insideGroup, effR, type Cap, type GroupState } from './ground';
+// Approach: one sticky field, one scroll progress p in [0, 1] over RUN viewport heights, labelled by a four-step legend.
+//   01  (entering, p < 0.16)  the organisation: four stones rise in a row; one closed contour forms around them
+//   02  0.14–0.34  an agent (the rose stone) arrives along the lines; the contour opens to take it in
+//   03  0.30–0.50  the row re-forms around it and the contour relaxes towards a circle. No stone leaves.
+//   04  0.48–0.92  pull back, tilt, dusk: other groups on the same ground receive rose stones, nearest first
+// The legend rests in a clearing in the lines, kept level with the screen while the view pulls back.
+import { Ground, type Cap, type GroupState } from './ground';
 import { stone, step, rng, type Stone } from './stones';
 
 type Cluster = {
@@ -17,31 +15,26 @@ type Cluster = {
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const ease = (t: number) => t * t * (3 - 2 * t);
 const seg = (p: number, a: number, b: number) => clamp((p - a) / (b - a));
-const SCROLL = 1.15; // viewport heights of scroll the story takes
+const RUN = 1.35; // viewport heights of scroll the story takes (the section is 1 + RUN tall)
+const BEATS = [0.16, 0.32, 0.5]; // legend boundaries
+const BEAT_AT = [0.04, 0.26, 0.44, 0.9]; // where a click on the legend takes you
 
 export function initHome(root: HTMLElement) {
   const section = root.querySelector<HTMLElement>('[data-field]');
   const canvas = root.querySelector<HTMLCanvasElement>('[data-canvas]');
   if (!section || !canvas) return () => {};
   const stick = section.querySelector<HTMLElement>('.field__stick')!;
-  const nameEl = section.querySelector<HTMLElement>('[data-center]')!;
-  const phs = [...section.querySelectorAll<HTMLElement>('[data-ph]')];
-  const cue = section.querySelector<HTMLElement>('[data-cue]');
-  const idx = section.querySelector<HTMLElement>('[data-idx]');
+  const legendEl = section.querySelector<HTMLElement>('[data-legend]')!;
+  const beatBtns = [...section.querySelectorAll<HTMLButtonElement>('[data-beat]')];
   const reduced = document.documentElement.classList.contains('rm');
 
   let ground: Ground;
   try { ground = new Ground(canvas); } catch { section.classList.add('no-gl'); return () => {}; }
   section.classList.add('has-gl');
 
-  let seen = false;
-  try { seen = !!sessionStorage.getItem('soft.intro'); sessionStorage.setItem('soft.intro', '1'); } catch {}
-  let intro = reduced || seen ? 1 : 0;
-
   let W = 0, H = 0, unit = 1, space = 13, mobile = false;
   let org: Cluster; let others: Cluster[] = [];
   let all: Stone[] = [];
-  const user: Stone[] = [], fading: Stone[] = [];
   let zoomOut = 0.42, tiltMax = 0.5;
 
   function rowTargets(c: Cluster) {
@@ -105,6 +98,10 @@ export function initHome(root: HTMLElement) {
     const cols = mobile ? 3 : 4, rows = mobile ? 5 : 3;
     const oScreen = [W / 2 + (org.cx - fv.cam[0]) * zoomOut, H / 2 + (org.cy - fv.cam[1]) * zoomOut];
     const placed: [number, number, number][] = [[oScreen[0], oScreen[1], (mobile ? 0.3 : 0.2) * Math.min(W, H) + 40]];
+    // keep the legend's clearing free of other groups
+    const lb = legendEl.getBoundingClientRect(), sb = stick.getBoundingClientRect();
+    const lx = lb.left - sb.left, ly = lb.top - sb.top;
+    for (let yy = ly; yy <= ly + lb.height; yy += 40) for (let xx = lx; xx <= lx + lb.width; xx += 40) placed.push([xx, yy, 40]);
     const sk = mobile ? 0.55 : 1;
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
       const sx = ((i + 0.5) / cols) * W + (R() - 0.5) * (W / cols) * 0.5;
@@ -140,48 +137,46 @@ export function initHome(root: HTMLElement) {
     measureName();
   }
 
-  let cap: Cap = { cx: 0, cy: 0, hx: 10, hy: 10, rad: 10, moat: 80, k: 0 };
+  // the legend's box on screen; turned into a clearing in world space every frame (the camera moves)
+  let lbox = { x: 0, y: 0, w: 0, h: 0 };
   function measureName() {
-    const r = nameEl.getBoundingClientRect(), s = stick.getBoundingClientRect();
-    const cx = r.left + r.width / 2 - s.left - W / 2, cy = r.top + r.height / 2 - s.top - H / 2;
-    const padX = mobile ? 14 : 40, padY = mobile ? 26 : 30;
-    const hy = r.height / 2 + padY;
-    cap = { cx, cy, hx: Math.min(r.width / 2 + padX, W / 2 - 6), hy, rad: Math.min(hy * 0.95, 110), moat: Math.max(hy * 2.6, mobile ? 200 : 280), k: 0 };
+    const r = legendEl.getBoundingClientRect(), s = stick.getBoundingClientRect();
+    lbox = { x: r.left - s.left + r.width / 2, y: r.top - s.top + r.height / 2, w: r.width, h: r.height };
+  }
+  function legendCap(v: ReturnType<typeof view>): Cap {
+    const [cx, cy] = ground.toWorld(lbox.x, lbox.y, v);
+    const [ax] = ground.toWorld(lbox.x - 20, lbox.y, v), [bx] = ground.toWorld(lbox.x + 20, lbox.y, v);
+    const [, ay] = ground.toWorld(lbox.x, lbox.y - 20, v), [, by] = ground.toWorld(lbox.x, lbox.y + 20, v);
+    const k = (bx - ax) / 40, ky = (by - ay) / 40; // world px per screen px here, across and down
+    const padX = mobile ? 16 : 30, padY = mobile ? 16 : 26;
+    const hy = (lbox.h / 2 + padY) * ky;
+    return { cx, cy, hx: (lbox.w / 2 + padX) * k, hy, rad: Math.min(hy * 0.95, 60 * k), moat: (mobile ? 120 : 170) * k, k: 1 };
   }
 
   let p = 0;
   function readProgress() {
     const r = section!.getBoundingClientRect();
-    p = clamp(-r.top / (H * SCROLL));
+    raw = -r.top / (H * RUN);
+    p = clamp(raw);
   }
+  let raw = -1;
 
   let t = 0;
-  let lastIdx = '';
+  let lastBeat = -1;
   function apply(p: number) {
-    const nameOut = seg(p, 0.02, 0.12);
-    const nameIn = ease(clamp((intro - 0.3) / 0.7));
-    nameEl.style.opacity = String((1 - ease(nameOut)) * nameIn);
-    nameEl.style.transform = `translate3d(0, ${(-ease(nameOut) * 14).toFixed(1)}px, 0)`;
-    const bl = nameOut * 6 + (1 - nameIn) * 10;
-    nameEl.style.filter = bl > 0.05 ? `blur(${bl.toFixed(2)}px)` : '';
-    const show = (el: HTMLElement, a: number, b: number) => {
-      const v = Math.min(seg(p, a, a + 0.05), 1 - seg(p, b - 0.05, b));
-      el.style.opacity = String(ease(v));
-      el.style.transform = `translate3d(0, ${((1 - ease(v)) * 8).toFixed(1)}px, 0)`;
-    };
-    show(phs[1], 0.3, 0.5); show(phs[2], 0.62, 1.3);
-    if (cue) cue.style.opacity = String((1 - seg(p, 0.0, 0.04)) * nameIn);
-    section!.style.setProperty('--edge', ease(seg(p, 0.7, 0.82)).toFixed(3));
+    section!.style.setProperty('--edge', ease(clamp((raw - 1) / 0.12)).toFixed(3));
+    const beat = p < BEATS[0] ? 0 : p < BEATS[1] ? 1 : p < BEATS[2] ? 2 : 3;
+    if (beat !== lastBeat) { beatBtns.forEach((b, i) => (i === beat ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current'))); lastBeat = beat; }
 
     // the organisation rises
-    org.members.forEach((s, i) => { s.tlift = p > 0.09 + i * 0.035 ? 1 : 0; });
+    org.members.forEach((s, i) => { s.tlift = raw > -0.42 + i * 0.06 ? 1 : 0; });
     const lifted = org.members.reduce((a, s) => a + s.lift, 0) / org.members.length;
     org.group.show = ease(clamp(lifted * 1.2 - 0.1));
     // the rose arrives along the lines and joins
-    const travel = seg(p, 0.26, 0.42);
+    const travel = seg(p, 0.15, 0.34);
     const e = ease(travel);
     const startX = -W / 2 - 50 * unit;
-    org.rose.tlift = p > 0.24 ? 1 : 0;
+    org.rose.tlift = p > 0.13 ? 1 : 0;
     org.rose.hold = false;
     org.rose.tx = startX + (org.cx - startX) * e;
     org.rose.ty = org.cy + Math.sin(e * Math.PI) * -18 * unit * (1 - e);
@@ -192,9 +187,9 @@ export function initHome(root: HTMLElement) {
     org.group.tint = org.rose.gw;
 
     // the other groups rise as the view pulls back, and receive rose stones nearest first
-    const wave = seg(p, 0.58, 0.9);
+    const wave = seg(p, 0.6, 0.92);
     for (const c of others) {
-      c.members.forEach((s) => (s.tlift = p > 0.44 + c.dist * 0.1 ? 1 : 0));
+      c.members.forEach((s) => (s.tlift = p > 0.48 + c.dist * 0.1 ? 1 : 0));
       c.group.show = ease(clamp(c.members.reduce((a, s) => a + s.lift, 0) / c.members.length));
       const on = wave > 0.02 && wave >= c.dist * 0.92 + c.jitter * 0.06;
       if (on && !c.on) {
@@ -206,12 +201,6 @@ export function initHome(root: HTMLElement) {
         c.on = false; c.rose.hold = false;
       }
       c.group.tint = c.rose.gw;
-    }
-    if (idx) {
-      const st = p < 0.2 ? 1 : p < 0.45 ? 2 : p < 0.58 ? 3 : 4;
-      const reached = others.filter((c) => c.on).length + (org.rose.gw > 0.5 ? 1 : 0);
-      const s = `state ${st}/4\u2002\u00b7\u2002stones ${org.members.filter((m) => m.tlift > 0).length + (org.rose.gw > 0.5 ? 1 : 0)}\u2002\u00b7\u2002reached ${reached}/${others.length + 1}`;
-      if (s !== lastIdx) { idx.textContent = s; lastIdx = s; }
     }
   }
 
@@ -241,13 +230,13 @@ export function initHome(root: HTMLElement) {
   }
 
   function view(p: number) {
-    const z = ease(seg(p, 0.46, 0.68));
+    const z = ease(seg(p, 0.5, 0.7));
     const fv = finalView();
     return {
       cam: [fv.cam[0] * z, fv.cam[1] * z] as [number, number],
       zoom: 1 + (zoomOut - 1) * z,
-      tilt: tiltMax * ease(seg(p, 0.5, 0.72)),
-      dusk: 0.88 * ease(seg(p, 0.5, 0.7)),
+      tilt: tiltMax * ease(seg(p, 0.52, 0.74)),
+      dusk: 0.88 * ease(seg(p, 0.52, 0.72)),
       z,
     };
   }
@@ -267,21 +256,14 @@ export function initHome(root: HTMLElement) {
     mouse.ts = 1; lastMove = performance.now(); kick();
   };
   const onLeave = () => { mouse.ts = 0; };
-  const onClick = (e: MouseEvent) => {
-    if ((e.target as HTMLElement).closest('a,button')) return;
-    const [x, y] = toWorld(e.clientX, e.clientY);
-    if (insideCap({ ...cap, k: capK() }, x, y)) return;
-    if ([org, ...others].some((c) => c.group.show > 0.3 && insideGroup(c.group, x, y))) return;
-    const s = stone({ x, y, r: (12 + Math.random() * 8) * unit, aspect: 1.1, rot: Math.random() * 3, k: 1.3, rose: 1, trose: 1, lift: 0, tlift: 1, gloss: 0.85 });
-    user.push(s);
-    if (user.length > 5) { const old = user.shift()!; old.tlift = 0; fading.push(old); }
-    kick();
-  };
   section.addEventListener('pointermove', onMove);
   section.addEventListener('pointerleave', onLeave);
-  section.addEventListener('click', onClick);
-
-  const capK = () => ease(clamp(intro / 0.85)) * (1 - ease(seg(p, 0.02, 0.14)));
+  // the legend: the current step is marked; a click scrolls to that step
+  beatBtns.forEach((b, i) => b.addEventListener('click', () => {
+    const top = section!.getBoundingClientRect().top + window.scrollY + BEAT_AT[i] * H * RUN + 2;
+    const lenis = (window as any).__lenis;
+    if (lenis) lenis.scrollTo(top, { duration: 1.6 }); else window.scrollTo({ top, behavior: reduced ? 'auto' : 'smooth' });
+  }));
 
   let raf = 0, last = performance.now(), visible = true;
   const t0 = performance.now();
@@ -289,29 +271,25 @@ export function initHome(root: HTMLElement) {
     raf = 0;
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     t = (now - t0) / 1000;
-    intro = Math.min(1, intro + dt / 1.8);
     readProgress();
     apply(p);
     travel(reduced ? 1e9 : t);
-    // click-placed stones leave once the story starts
-    if (p > 0.1) while (user.length) { const s = user.shift()!; s.tlift = 0; fading.push(s); }
     if (now - lastMove > 2200) mouse.ts = 0;
     mouse.x += (mouse.tx - mouse.x) * 0.12; mouse.y += (mouse.ty - mouse.y) * 0.12;
     mouse.s += (mouse.ts - mouse.s) * (1 - Math.exp(-3 * dt));
     if (!reduced) for (const s of all) if (!s.hold) { s.tx += Math.sin(t * 0.35 + s.seed * 9) * 1.6 * unit; s.ty += Math.cos(t * 0.3 + s.seed * 7) * 1.6 * unit; }
-    const live = [...all, ...user, ...fading];
+    const live = all;
     step(live, dt, { instant: reduced, gap: 8 * unit });
-    for (let i = fading.length - 1; i >= 0; i--) if (fading[i].lift < 0.01) fading.splice(i, 1);
     const v = view(p);
     stick.toggleAttribute('data-dark', v.dusk > 0.45);
-    const breathe = reduced ? 0 : Math.sin(t * 0.8) * 5 * unit;
     ground.draw({
       ...v, space: space * (1 + (1 / v.zoom - 1) * 0.62), kScale: 1 - 0.45 * v.z, time: reduced ? 0 : t, flow: reduced ? 0 : t * 2.4,
       stones: live, groups: [org.group, ...others.map((c) => c.group)],
-      cap: { ...cap, hx: cap.hx + breathe, hy: cap.hy + breathe * 0.6, k: capK() },
+      cap: legendCap(v),
       mouse: reduced ? null : { x: mouse.x, y: mouse.y, s: mouse.s * 0.9, R: 64 * unit },
     });
-    if (visible) kick();
+    // under reduced motion the field only redraws when something changes (scroll, resize, pointer)
+    if (visible && !reduced) kick();
   }
   function kick() { if (!raf && visible) raf = requestAnimationFrame(frame); }
 
@@ -319,6 +297,8 @@ export function initHome(root: HTMLElement) {
   io.observe(section);
   const onResize = () => { layout(); kick(); };
   window.addEventListener('resize', onResize);
+  const onScroll = () => kick();
+  window.addEventListener('scroll', onScroll, { passive: true });
 
   layout();
   readProgress();
@@ -328,5 +308,5 @@ export function initHome(root: HTMLElement) {
   if (document.fonts) document.fonts.ready.then(() => { measureName(); kick(); });
   kick();
 
-  return () => { cancelAnimationFrame(raf); io.disconnect(); window.removeEventListener('resize', onResize); };
+  return () => { cancelAnimationFrame(raf); io.disconnect(); window.removeEventListener('resize', onResize); window.removeEventListener('scroll', onScroll); };
 }

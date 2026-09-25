@@ -19,7 +19,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
     <header class="essay-head">
       <div class="essay-head__in wrap">
         <div class="essay-head__block" data-essay-title>
-          <p class="essay-head__meta"><a href={u('essays/')}>Essays</a><span aria-hidden="true">·</span><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time><span aria-hidden="true">·</span><span>{fm.minutesRead} min</span></p>
+          <p class="essay-head__meta"><a href={u('essays/')}>Research</a><span aria-hidden="true">·</span><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time><span aria-hidden="true">·</span><span>{fm.minutesRead} min</span></p>
           <h1 class="essay-head__title">{entry.data.title}</h1>
           <p class="essay-head__dek">{entry.data.dek}</p>
         </div>
@@ -36,7 +36,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
       <p class="essay-end__by">{site.author}, {fmt(entry.data.date)}</p>
       {next && next.id !== entry.id && (
         <a class="next" href={u(`essays/${next.id}/`)}>
-          <span class="label">Next essay</span>
+          <span class="label">Next</span>
           <span class="next__title">{next.data.title}</span>
         </a>
       )}

@@ -3,6 +3,7 @@ import Mark from './Mark.astro';
 import { site, nav, u } from '../config/site';
 interface Props { page: string }
 const { page } = Astro.props;
+const current = (key: string) => key === page || (key === 'about' && page === 'team');
 ---
 <header class="nav" data-nav>
   <a class="nav__home" href={u('/')} aria-label={`${site.name}, home`}>
@@ -10,10 +11,6 @@ const { page } = Astro.props;
     <span class="nav__name">{site.name}</span>
   </a>
   <nav class="nav__links" aria-label="Main">
-    {nav.map((l) => {
-      const key = l.href.replace('/', '');
-      const cur = page === key || (key === 'essays' && page === 'essay');
-      return <a href={u(l.href)} aria-current={cur ? 'page' : undefined}>{l.label}</a>;
-    })}
+    {nav.map((l) => <a href={u(l.href)} data-key={l.key} aria-current={current(l.key) ? 'page' : undefined}>{l.label}</a>)}
   </nav>
 </header>

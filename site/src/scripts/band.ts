@@ -8,7 +8,9 @@
 //   drag:    stones can be picked up and moved with a mouse; the lines and the contour follow on a spring
 //   far:     { n, seed } a view from far away: many small groups, the lines as texture
 //   dusk, zoom, tilt, space
-import { Ground, type Cap, type GroupState } from './ground';
+//   breathe: the clearing's outline breathes slowly; place: a click on the open ground sets a small rose stone down
+//   capMoat: moat width as a multiple of the clearing's half-height; capPad / mcapPad: [x, y] padding around it
+import { Ground, insideCap, type Cap, type GroupState } from './ground';
 import { stone, step, rng, type Stone } from './stones';
 
 type SCfg = { x: number; y: number; r: number; a?: number; rot?: number; rose?: number; tone?: number; gloss?: number; sq?: number };
@@ -17,6 +19,7 @@ type Cfg = {
   group?: boolean; clear?: string; hover?: string; hoverMode?: 'warm' | 'part'; drag?: boolean;
   far?: { n: number; seed: number }; dusk?: number; zoom?: number; tilt?: number; space?: number; moat?: number; pad?: number;
   anchor?: string; labels?: string; bounded?: boolean; kScale?: number;
+  breathe?: boolean; place?: boolean; capMoat?: number; capPad?: [number, number]; mcapPad?: [number, number];
 };
 
 export function initBands(root: HTMLElement) {
@@ -118,9 +121,10 @@ function band(el: HTMLElement) {
       const b = clearEl.getBoundingClientRect();
       const cx = b.left + b.width / 2 - r.left - W / 2, cy = b.top + b.height / 2 - r.top - H / 2;
       const [wx, wy] = ground.toWorld(b.left + b.width / 2 - r.left, b.top + b.height / 2 - r.top, V());
-      const padX = W < 720 ? 14 : 34, padY = 20;
-      const hx = (b.width / 2 + padX) / zoom, hy = (b.height / 2 + padY) / zoom;
-      cap = { cx: tilt ? wx : cx / zoom, cy: tilt ? wy : cy / zoom, hx, hy, rad: Math.min(hy * 0.95, 100 / zoom), moat: Math.max(hy * 2.4, (W < 720 ? 170 : 230) / zoom), k: 0 };
+      const [padX, padY] = (W < 720 ? cfg.mcapPad ?? cfg.capPad : cfg.capPad) ?? [W < 720 ? 14 : 34, 20];
+      const hx = Math.min(b.width / 2 + padX, W / 2 - 6) / zoom, hy = (b.height / 2 + padY) / zoom;
+      const moat = cfg.capMoat ? Math.max(hy * cfg.capMoat, (W < 720 ? 150 : 200) / zoom) : Math.max(hy * 2.4, (W < 720 ? 170 : 230) / zoom);
+      cap = { cx: tilt ? wx : cx / zoom, cy: tilt ? wy : cy / zoom, hx, hy, rad: Math.min(hy * 0.95, 100 / zoom), moat, k: 0 };
     }
   }
 
@@ -176,6 +180,22 @@ function band(el: HTMLElement) {
     el.addEventListener('pointercancel', end);
   }
 
+  // a click on the open ground sets a small rose stone down; the oldest of five sinks again
+  const placed: Stone[] = [];
+  if (cfg.place) {
+    el.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a,button')) return;
+      const r = el.getBoundingClientRect();
+      const [x, y] = ground.toWorld(e.clientX - r.left, e.clientY - r.top, V());
+      if (insideCap(cap ? { ...cap, k: 1 } : null, x, y)) return;
+      const k = Math.min(W, 1200) / 900;
+      const s = stone({ x, y, r: (12 + Math.random() * 9) * Math.max(0.7, k), aspect: 1.1, rot: Math.random() * 3, k: 1.3, rose: 1, trose: 1, lift: 0, tlift: 1, gloss: 0.85 });
+      placed.push(s); all.push(s);
+      if (placed.length > 5) placed.shift()!.tlift = 0;
+      kick();
+    });
+  }
+
   if (cfg.hover) {
     const hs = [...document.querySelectorAll<HTMLElement>(cfg.hover)];
     hs.forEach((h, i) => {
@@ -210,6 +230,7 @@ function band(el: HTMLElement) {
     mouse.x += (mouse.tx - mouse.x) * 0.12; mouse.y += (mouse.ty - mouse.y) * 0.12;
     mouse.s += (mouse.ts - mouse.s) * (1 - Math.exp(-3 * dt));
     step(all, dt, { instant: reduced, gap: 6 });
+    for (let i = all.length - 1; i >= stones.length + far.length; i--) if (all[i].tlift === 0 && all[i].lift < 0.01) all.splice(i, 1);
     open = Math.min(1, open + dt / 1.6);
     if (groups.length && cfg.group) {
       const want = hovered >= 0 || dragging || base.some((b) => (b.rose ?? 0) > 0.5) ? 1 : 0;
@@ -222,9 +243,10 @@ function band(el: HTMLElement) {
       lb.style.transform = `translate3d(${(W / 2 + s.x + s.r * Math.max(s.aspect, 1 / s.aspect) + 12).toFixed(1)}px, ${(H / 2 + s.y - 10).toFixed(1)}px, 0)`;
     });
     const t = (now - t0) / 1000;
+    const br = cfg.breathe && !reduced ? Math.sin(t * 0.8) * 5 * Math.min(1.25, Math.max(0.56, W / 1000)) : 0;
     ground.draw({
       ...V(), space: cfg.space ?? (W < 720 ? 9.5 : 13), time: reduced ? 0 : t, flow: reduced ? 0 : t * 2, dusk: cfg.dusk ?? 0,
-      kScale: cfg.kScale ?? 1, stones: all, groups, cap: cap ? { ...cap, k: ease(open) } : null,
+      kScale: cfg.kScale ?? 1, stones: all, groups, cap: cap ? { ...cap, hx: cap.hx + br, hy: cap.hy + br * 0.6, k: ease(open) } : null,
       mouse: reduced ? null : { x: mouse.x, y: mouse.y, s: mouse.s * 0.85, R: 60 / zoom },
     });
     const moving = all.some((s) => Math.abs(s.vx) + Math.abs(s.vy) > 0.02 || Math.abs(s.lift - s.tlift) > 0.002 || Math.abs(s.rose - s.trose) > 0.002 || Math.abs(s.r - s.tr) > 0.05)

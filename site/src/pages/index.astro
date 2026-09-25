@@ -1,56 +1,163 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
-import { site, u } from '../config/site';
+import { site, u, contactHref } from '../config/site';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 const pad = (n: number) => String(n).padStart(2, '0');
-// a thin strip of ground between sections: one small group you can pick apart
-const strip = {
-  stones: [{ x: 0.21, y: 0.02, r: 0.075, tone: 1, gloss: 0.8 }, { x: 0.265, y: -0.02, r: 0.12, sq: 0.6, a: 1.3 }, { x: 0.32, y: 0.03, r: 0.05, rose: 1, gloss: 0.85 }],
-  mstones: [{ x: 0.04, y: 0.02, r: 0.08 }, { x: 0.22, y: -0.02, r: 0.12 }, { x: 0.37, y: 0.03, r: 0.055 }],
-  group: true, drag: true, moat: 60, pad: 18, bounded: true,
+
+// the hero: the raked ground, parted around the company's statement; click to set a stone down
+const hero = { clear: '[data-clear]', breathe: true, place: true, capMoat: 1.05, capPad: [56, 44], mcapPad: [10, 26] };
+
+const capabilities = [
+  { t: 'Agent deployment.', d: 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.' },
+  { t: 'Model fine-tuning.', d: 'Models adapted and evaluated on your data for the specific tasks your agents perform.' },
+  { t: 'Systems integration.', d: 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.' },
+  { t: 'Evaluation and governance.', d: 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.' },
+];
+// one stone per capability, level with its row, all inside one contour; hover a capability and its stone warms
+const capKinds = [{ sq: 0.1 }, { sq: 0.62, a: 1.3 }, { tone: 1, gloss: 0.85 }, { gloss: 0.4, tone: 0.25 }];
+const capStones = capabilities.map((_, i) => ({ x: [-0.04, 0.08, -0.07, 0.05][i], y: 0, r: [0.11, 0.13, 0.075, 0.06][i], ...capKinds[i] }));
+
+const legend = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
+const principles = [
+  { t: 'Workflow first.', d: 'We map how work is actually done before choosing a model.' },
+  { t: 'Design the reorganisation.', d: 'Roles, handoffs and controls change when agents arrive. We plan that change.' },
+  { t: 'Measure in production.', d: 'Every deployment reports on accuracy, cost and time saved.' },
+];
+
+const people = Array.from({ length: 4 }, () => ({ name: '[Name]', role: '[Role]' }));
+// the team: four stones in one contour; hover a person and their stone warms
+const teamBand = {
+  stones: [{ x: -0.2, y: 0.02, r: 0.2, sq: 0.1 }, { x: -0.04, y: -0.06, r: 0.14, tone: 1, gloss: 0.85 }, { x: 0.13, y: 0.04, r: 0.26, sq: 0.62, a: 1.3 }, { x: 0.3, y: -0.04, r: 0.1, gloss: 0.4 }],
+  mstones: [{ x: -0.3, y: 0.02, r: 0.17 }, { x: -0.08, y: -0.06, r: 0.12 }, { x: 0.15, y: 0.04, r: 0.22 }, { x: 0.36, y: -0.04, r: 0.09 }],
+  group: true, drag: true, hover: '[data-person]', moat: 60, pad: 16,
+};
+
+// contact: a slab and a small rose stone, with the line resting in a clearing between them
+const contactBand = {
+  stones: [{ x: -0.37, y: 0.27, r: 0.15, sq: 0.55, a: 1.3 }, { x: 0.34, y: -0.24, r: 0.05, rose: 1, gloss: 0.85 }, { x: 0.39, y: -0.15, r: 0.028, tone: 1, gloss: 0.8 }],
+  mstones: [{ x: -0.2, y: 0.36, r: 0.14 }, { x: 0.26, y: -0.36, r: 0.07 }, { x: 0.38, y: -0.3, r: 0.035 }],
+  drag: true, clear: '[data-clear]',
 };
 ---
 <Base page="home">
-  <section class="field" data-field aria-label={site.name}>
-    <div class="field__stick">
-      <canvas class="field__canvas" data-canvas aria-hidden="true"></canvas>
-      <div class="field__fallback" aria-hidden="true"></div>
-      <div class="field__center" data-center>
-        <h1 class="field__name" data-name><span>Corollary</span> <span>Labs</span></h1>
-        <p class="field__ph field__ph--0 ph" data-ph="0">[Statement]</p>
+  <!-- 1. Hero: what the company is -->
+  <section class="hero band" data-band={JSON.stringify(hero)} aria-labelledby="hero-title">
+    <div class="hero__in" data-clear>
+      <h1 class="hero__name" id="hero-title">{site.name}</h1>
+      <p class="hero__head">We deploy AI agents inside organisations and rebuild the operations around them.</p>
+      <p class="hero__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
+      <div class="hero__acts">
+        <a class="btn" href={contactHref}>Contact us</a>
+        <a class="more" href="#approach">Our approach</a>
       </div>
-      <p class="field__ph field__ph--1 ph" data-ph="1">[Sentence]</p>
-      <p class="field__ph field__ph--2 ph" data-ph="2">[Sentence]</p>
-      <p class="field__idx mono" data-idx aria-hidden="true">01/04 t 0.00</p>
-      <div class="field__cue" data-cue aria-hidden="true"><i></i></div>
     </div>
   </section>
 
-  <section class="home-about wrap" data-reveal>
-    <p class="label">About</p>
-    <p class="home-about__text ph">[About — one paragraph]</p>
-  </section>
-
-  <div class="strip band" data-band={JSON.stringify(strip)} aria-hidden="true"></div>
-
-  <section class="home-essays wrap" data-reveal>
-    <div class="home-essays__head">
-      <p class="label">Essays</p>
-      <a class="more" href={u('essays/')}>All essays</a>
+  <!-- 2. Capabilities -->
+  <section class="sec wrap" id="capabilities" aria-labelledby="cap-title">
+    <div class="sec__head" data-reveal>
+      <h2 class="sec__title" id="cap-title">Capabilities</h2>
     </div>
-    <ol class="rows">
-      {essays.map((e, i) => (
-        <li>
-          <a class="row" href={u(`essays/${e.id}/`)}>
+    <div class="side-grid">
+      <ol class="caps" data-reveal>
+        {capabilities.map((c, i) => (
+          <li class="cap" data-cap tabindex="0">
             <span class="row__n mono">{pad(i + 1)}</span>
-            <span class="row__title">{e.data.title}</span>
-            <time class="row__date" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
-          </a>
+            <h3 class="cap__t">{c.t.replace(/\.$/, '')}</h3>
+            <p class="cap__d">{c.d}</p>
+          </li>
+        ))}
+      </ol>
+      <div class="side-field band" data-band={JSON.stringify({ stones: capStones, group: true, drag: true, hover: '[data-cap]', hoverMode: 'part', anchor: '[data-cap]', moat: 90, pad: 26 })} aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- 3. Approach: the story, short, labelled -->
+  <section class="approach" id="approach" aria-labelledby="ap-title">
+    <div class="sec__head sec__head--split wrap" data-reveal>
+      <h2 class="sec__title" id="ap-title">Approach</h2>
+      <p class="sec__intro">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+    </div>
+    <div class="field" data-field>
+      <div class="field__stick">
+        <canvas class="field__canvas" data-canvas aria-hidden="true"></canvas>
+        <div class="field__fallback" aria-hidden="true"></div>
+        <ol class="legend" data-legend aria-label="Approach, in four steps">
+          {legend.map((l, i) => (
+            <li><button type="button" class="legend__b" data-beat={i} aria-current={i === 0 ? 'step' : undefined}><span class="mono">{pad(i + 1)}</span><span>{l}</span></button></li>
+          ))}
+        </ol>
+      </div>
+    </div>
+    <ol class="principles wrap" data-reveal>
+      {principles.map((p, i) => (
+        <li class="principle">
+          <span class="row__n mono">{pad(i + 1)}</span>
+          <h3 class="principle__t">{p.t.replace(/\.$/, '')}</h3>
+          <p class="principle__d">{p.d}</p>
         </li>
       ))}
     </ol>
+  </section>
+
+  <!-- 4. Research -->
+  <section class="sec wrap" id="research" aria-labelledby="re-title">
+    <div class="sec__head sec__head--split" data-reveal>
+      <h2 class="sec__title" id="re-title">Research</h2>
+      <p class="sec__intro">Essays on agents, organisations and how new technology spreads.</p>
+    </div>
+    <div data-reveal>
+      <ol class="rows">
+        {essays.map((e, i) => (
+          <li>
+            <a class="row" href={u(`essays/${e.id}/`)}>
+              <span class="row__n mono">{pad(i + 1)}</span>
+              <span class="row__title">{e.data.title}</span>
+              <time class="row__date" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+            </a>
+          </li>
+        ))}
+      </ol>
+      <a class="more more--end" href={u('essays/')}>All research →</a>
+    </div>
+  </section>
+
+  <!-- 5. Company -->
+  <section class="sec wrap" id="company" aria-labelledby="co-title">
+    <div class="sec__head" data-reveal>
+      <h2 class="sec__title" id="co-title">Company</h2>
+    </div>
+    <div class="company">
+      <div class="company__about" data-reveal>
+        <p class="label">About</p>
+        <p class="lead">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
+      </div>
+      <div class="company__team" data-reveal>
+        <p class="label">Team</p>
+        <div class="team-strip band" data-band={JSON.stringify(teamBand)} aria-hidden="true"></div>
+        <ul class="people people--home">
+          {people.map((p, i) => (
+            <li class="person" tabindex="0" data-person>
+              <span class="row__n mono">{pad(i + 1)}</span>
+              <span class="person__name">{p.name}</span>
+              <span class="person__role">{p.role}</span>
+            </li>
+          ))}
+        </ul>
+        <a class="more more--end" href={u('about/')}>About the company →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Contact -->
+  <section class="contact-band contact-band--home band" id="contact" data-band={JSON.stringify(contactBand)} aria-labelledby="ct-title">
+    <div class="contact-band__in" data-clear>
+      <h2 class="label" id="ct-title">Contact</h2>
+      <p class="contact-line">Deploying agents in your organisation? Talk to us.</p>
+      <p class="contact-email ph">{site.email}</p>
+    </div>
   </section>
 </Base>

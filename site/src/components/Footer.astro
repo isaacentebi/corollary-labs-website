@@ -1,15 +1,15 @@
 ---
 import Mark from './Mark.astro';
-import { site, nav, u } from '../config/site';
+import { site, footerNav, u } from '../config/site';
 ---
 <footer class="foot">
   <div class="foot__in">
-    <nav class="foot__big" aria-label="Pages">
-      {nav.map((l, i) => <a href={u(l.href)}><span class="mono">{String(i + 1).padStart(2, '0')}</span>{l.label}</a>)}
+    <nav class="foot__big" aria-label="Site">
+      {footerNav.map((l, i) => <a href={u(l.href)}><span class="mono">{String(i + 1).padStart(2, '0')}</span>{l.label}</a>)}
     </nav>
     <div class="foot__row">
       <a class="foot__home" href={u('/')}><Mark size={22} /><span>{site.name}</span></a>
-      <p class="foot__meta"><span class="ph">{site.email}</span><span>© {site.year}</span></p>
+      <p class="foot__meta"><span class="ph">{site.email}</span><span>© {site.year} {site.name}</span></p>
     </div>
   </div>
 </footer>
