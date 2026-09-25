@@ -56,7 +56,7 @@ export function mountScene() {
     for (let k = 0; k < sections.length; k++) if (focus < bottoms[k]) { i = k; break; }
     const span = Math.max(1, bottoms[i] - tops[i]);
     const p = clamp((focus - tops[i]) / span);
-    const Z = reduced ? 1 : Math.min(vh * 0.35, span * 0.45);
+    const Z = reduced ? 1 : Math.min(vh * 0.22, span * 0.4);
     stateAt(i, p, A);
     let result = A;
     if (i > 0 && focus - tops[i] < Z) {

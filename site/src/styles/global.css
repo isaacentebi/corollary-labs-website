@@ -110,12 +110,12 @@ html.js [data-reveal][data-d='4'] { transition-delay: 0.48s; }
   transition: color 0.5s var(--ease);
 }
 html[data-nav-tone='dusk'] .nav { color: var(--lit); }
-/* a scrim, not a bar: whatever passes under the navigation goes out of focus (Irwin's scrim veils) */
+/* a plain tint of the wall behind (set from the light in app.ts), fading out by ~80px, so text that
+   passes under the navigation fades instead of colliding with it */
 .nav::before {
-  content: ''; position: absolute; inset: 0 0 -28px; z-index: -1; pointer-events: none;
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent);
-  opacity: 0; transition: opacity 0.5s var(--ease);
+  content: ''; position: absolute; inset: 0 0 -14px; z-index: -1; pointer-events: none;
+  background: linear-gradient(var(--nav-tint, var(--paper)) 50%, transparent);
+  opacity: 0; transition: opacity 0.4s var(--ease);
 }
 .nav.is-scrolled::before { opacity: 1; }
 .nav__brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 520; font-size: 1.02rem; letter-spacing: -0.005em; }

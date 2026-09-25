@@ -7,7 +7,8 @@ import { u } from '../lib/url';
 
 interface Props { title?: string; description?: string; page: string; field?: 'fixed' | 'none'; tone?: 'day' | 'dusk'; intro?: boolean; shift?: 'right' }
 const { title, description = site.description, page, field = 'fixed', tone = 'day', intro = false, shift } = Astro.props;
-const fullTitle = title ? `${title} — ${site.name}` : site.name;
+const fullTitle = title ? `${title} — ${site.name}` : site.homeTitle;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 <!doctype html>
 <html lang="en" data-page={page} data-tone={tone}>
@@ -16,6 +17,7 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
     <meta name="theme-color" content="#e7e3dd" />
     <link rel="icon" href={u('/favicon.svg')} type="image/svg+xml" />
     <link rel="preload" href={u('/fonts/albert-sans.woff2')} as="font" type="font/woff2" crossorigin />

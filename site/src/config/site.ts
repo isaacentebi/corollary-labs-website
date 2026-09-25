@@ -3,6 +3,7 @@
 
 export const site = {
   name: 'Corollary Labs',
+  homeTitle: 'Corollary Labs — AI agents inside organisations',
   email: '[email]',
   location: '[City]',
   founded: '[Year]',
@@ -36,10 +37,9 @@ export const work = {
   items: [
     { name: 'Agents', text: 'We build agents that carry out defined work inside an organisation’s existing systems.' },
     { name: 'Models', text: 'We adapt and evaluate models for the specific tasks those agents perform.' },
-    { name: 'Integration', text: 'We connect agents to the systems where work already happens.' },
+    { name: 'Integration', text: 'We connect agents to ERP, CRM, data warehouses and internal tools.' },
     { name: 'Reorganisation', text: 'We help the organisation change its roles, handoffs and controls around the agents.' },
   ],
-  research: 'We study, and write about, how this change spreads through the economy.',
 };
 
 export const thinking = {
@@ -70,7 +70,7 @@ export const ideas = [
   {
     key: 'combine',
     title: 'New combinations',
-    line: 'Change arrives as new combinations. Old arrangements give way to new ones.',
+    line: 'Change arrives as new combinations.',
     body: [
       'The gains from a new technology come from new arrangements of work, not from inserting it into the old one.',
       'People being replaced is, at most, a second-order effect.',
@@ -79,10 +79,9 @@ export const ideas = [
   {
     key: 'deform',
     title: 'Continuous deformation',
-    line: 'An organisation can take a new shape without being torn. Where it cannot bend, it is cut and re-joined.',
+    line: 'Roles, handoffs and controls change shape while the organisation keeps working. Where a change can’t be gradual, it is made as a cut and a re-join.',
     body: [
-      'Most reorganisation is gradual: roles, handoffs and controls change shape while the organisation keeps working.',
-      'Some changes cannot be made gradually. We identify those early and plan the cut and the re-joining.',
+      'We identify those changes early and plan them.',
     ],
   },
   {
@@ -101,7 +100,7 @@ export const practice = {
   items: [
     { name: 'Start from the workflow', text: 'We map a workflow’s inputs, outputs and decisions before choosing a model.' },
     { name: 'Design the reorganisation', text: 'We plan how roles, handoffs and controls change when agents arrive.' },
-    { name: 'Measure in production', text: 'Every deployment reports on accuracy, cost and time.' },
+    { name: 'Measure in production', text: 'Each deployment is set up to report on accuracy, cost and time.' },
   ],
 };
 

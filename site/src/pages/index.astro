@@ -5,12 +5,14 @@ import { hero, work, ideas, research, company, contact, site } from '../config/s
 import { u } from '../lib/url';
 import { getCollection } from 'astro:content';
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const auto = ideas.find((i) => i.key === 'auto')!;
+const deform = ideas.find((i) => i.key === 'deform')!;
 ---
 <Base page="home" intro>
   <section class="hero wrap" data-light="hero" data-tone-section="day" aria-labelledby="hero-h">
     <div class="hero__text">
-      <h1 class="hero__name label" data-reveal>{site.name}</h1>
-      <p id="hero-h" class="hero__headline" data-reveal data-d="1">{hero.headline}</p>
+      <p class="hero__name label" data-reveal>{site.name}</p>
+      <h1 id="hero-h" class="hero__headline" data-reveal data-d="1">{hero.headline}</h1>
       <p class="hero__sub muted" data-reveal data-d="2">{hero.sub}</p>
       <div class="hero__actions" data-reveal data-d="3">
         <a class="btn" href={u('/contact/')}>{hero.primary}</a>
@@ -22,36 +24,30 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
   <section class="work wrap" data-light="work" data-tone-section="day" aria-labelledby="work-h">
     <div class="work__inner">
       <h2 id="work-h" class="label" data-reveal>{work.title}</h2>
-      <ol class="work__list">
+      <ul class="work__list">
         {work.items.map((it, i) => (
           <li class="work__item" data-reveal data-d={String(i % 4)}>
-            <span class="work__n faint">{String(i + 1).padStart(2, '0')}</span>
             <h3 class="work__name">{it.name}</h3>
             <p class="work__text muted">{it.text}</p>
           </li>
         ))}
-      </ol>
-      <p class="work__research" data-reveal>{work.research} <a class="link" href={u('/research/')}>{research.title} <span class="arrow" aria-hidden="true">→</span></a></p>
+      </ul>
     </div>
   </section>
 
-  <div class="rooms" aria-label="How we think">
-    {ideas.map((idea, i) => (
-      <section class={`room room--${idea.key}`} data-light={idea.key} data-tone-section="dusk" aria-labelledby={`room-${idea.key}`}>
-        <div class="room__track">
-        <div class="room__text wrap" data-room-text>
-          <p class="room__kicker label">How we think <span class="room__n">{String(i + 1).padStart(2, '0')} / {String(ideas.length).padStart(2, '0')}</span></p>
-          <h2 id={`room-${idea.key}`} class="room__title">{idea.title}</h2>
-          <p class="room__line">{idea.line}</p>
-          {i === ideas.length - 1 && (
-            <a class="room__more link" href={u('/thinking/')}>How we think <span class="arrow" aria-hidden="true">→</span></a>
-          )}
+  <!-- one light moment carries the thinking: the object lights from within, then is reshaped and cut -->
+  <section class="moment" data-light="moment" data-tone-section="dusk" aria-labelledby="moment-h">
+    <div class="moment__track">
+      <div class="moment__text wrap">
+        <h2 id="moment-h" class="label moment__kicker">How we think</h2>
+        <div class="moment__lines">
+          <p class="moment__line is-on" data-moment-line="0">{auto.line}</p>
+          <p class="moment__line" data-moment-line="1">{deform.line}</p>
         </div>
-        </div>
-      </section>
-    ))}
-  </div>
-  <div class="dawn" data-light="dawn" data-tone-section="dusk" aria-hidden="true"></div>
+        <a class="moment__more link" href={u('/thinking/')}>{hero.secondary} <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
 
   <section class="research-teaser wrap" data-light="research" data-tone-section="day" aria-labelledby="research-h">
     <div class="section-head">
@@ -65,23 +61,25 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
   <section class="company-teaser wrap" data-light="company" data-tone-section="day" aria-labelledby="company-h">
     <div class="section-head">
       <h2 id="company-h" class="label" data-reveal>{company.title}</h2>
-      <p class="section-head__intro" data-reveal data-d="1">{company.about} <span class="ph">{company.aboutMore}</span></p>
+      <div data-reveal data-d="1">
+        <p class="section-head__intro">{company.about} <span class="ph">{company.aboutMore}</span></p>
+        <ul class="team-mini">
+          {company.team.map((m) => <li><span class="ph">{m.name}</span><span class="ph">{m.role}</span></li>)}
+        </ul>
+        <a class="section-more link" href={u('/company/')}>{company.more} <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
     </div>
-    <ul class="team-mini" data-reveal>
-      {company.team.map((m) => <li><span class="ph">{m.name}</span><span class="faint">{m.role}</span></li>)}
-    </ul>
-    <a class="section-more link" href={u('/company/')} data-reveal>{company.more} <span class="arrow" aria-hidden="true">→</span></a>
   </section>
 
   <section class="contact-block wrap" data-light="contact" data-tone-section="day" aria-labelledby="contact-h">
     <h2 id="contact-h" class="label" data-reveal>{contact.title}</h2>
     <p class="contact-block__line" data-reveal data-d="1">{contact.line}</p>
-    <p class="contact-block__email" data-reveal data-d="2"><span class="ph">{site.email}</span></p>
+    <p class="contact-block__email" data-reveal data-d="2">{site.email}</p>
   </section>
 </Base>
 
 <style>
-  /* hero: the company in plain words on the left; the light on the right (top on phones) */
+  /* hero: the company in plain words on the left; the light on the right (above, on phones) */
   .hero { min-height: 100svh; display: flex; align-items: center; padding-top: 68px; }
   .hero__text { max-width: min(50vw, 800px); display: grid; gap: 22px; }
   .hero__name { color: var(--ink-2); }
@@ -89,65 +87,56 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
   .hero__sub { font-size: var(--fs-lede); max-width: 36em; line-height: 1.5; text-wrap: pretty; }
   .hero__actions { display: flex; align-items: center; gap: 28px; margin-top: 8px; font-weight: 480; }
   @media (max-width: 759px) {
-    .hero { align-items: flex-end; padding-bottom: 32px; padding-top: 42svh; min-height: 100svh; }
+    /* the column occupies the top ~40%; text begins below it; the CTAs stay clear of the bottom-right corner */
+    .hero { align-items: flex-end; padding-top: 46svh; padding-bottom: 84px; min-height: 100svh; }
     .hero__text { max-width: none; gap: 14px; }
     .hero__headline { font-size: clamp(1.6rem, 7vw, 2.2rem); line-height: 1.06; }
     .hero__sub { font-size: 0.95rem; line-height: 1.45; }
     .hero__actions { margin-top: 4px; }
   }
 
-  /* what we do: a list beside the column of light */
-  .work { min-height: 150vh; display: flex; align-items: center; padding-block: 18vh; }
-  .work__inner { margin-left: auto; width: min(52%, 720px); }
-  .work__list { margin-top: 28px; border-top: 1px solid var(--rule); }
-  .work__item { display: grid; grid-template-columns: 3.2em 11em 1fr; gap: 8px 20px; padding: 26px 0 28px; border-bottom: 1px solid var(--rule); align-items: baseline; }
-  .work__n { font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
+  /* what we do: a list beside the column */
+  .work { min-height: 88vh; display: flex; align-items: center; padding-block: 8vh; }
+  .work__inner { margin-left: auto; width: min(54%, 740px); }
+  .work__list { margin-top: 24px; border-top: 1px solid var(--rule); }
+  .work__item { display: grid; grid-template-columns: 11em 1fr; gap: 6px 24px; padding: 22px 0 24px; border-bottom: 1px solid var(--rule); align-items: baseline; }
   .work__name { font-size: var(--fs-h3); font-weight: 380; }
   .work__text { font-size: 1.02rem; line-height: 1.5; }
-  .work__research { margin-top: 30px; font-size: 1.02rem; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; }
-  .work__research .link { color: var(--ink); }
-  @media (max-width: 1100px) { .work__item { grid-template-columns: 2.6em 1fr; } .work__text { grid-column: 2; } }
+  @media (max-width: 1100px) { .work__item { grid-template-columns: 1fr; } }
   @media (max-width: 759px) {
-    .work { padding-top: 46vh; padding-bottom: 12vh; min-height: 0; }
+    .work { padding-top: 14vh; padding-bottom: 10vh; min-height: 0; }
     .work__inner { width: 100%; }
   }
 
-  /* the rooms: tall sections; the light does the work, one plain line stays in view */
-  .room { min-height: 170vh; position: relative; }
-  .room--io { min-height: 190vh; }
-  .room--auto { min-height: 230vh; }
-  .room--deform { min-height: 230vh; }
-  .room--diffuse { min-height: 220vh; }
-  /* the caption's track runs past the room's end, so it stays put while it fades (app.ts) */
-  .room__track { position: absolute; top: 0; bottom: -40vh; left: 0; right: 0; pointer-events: none; }
-  .room__text { position: sticky; top: calc(100vh - 36vh); padding-bottom: 8vh; display: grid; gap: 10px; max-width: 46rem; will-change: opacity, filter; pointer-events: auto; }
-  .room__kicker { color: var(--lit-3); display: flex; gap: 1.2em; }
-  .room__n { font-variant-numeric: tabular-nums; letter-spacing: 0.08em; }
-  .room__title { font-size: 1rem; font-weight: 500; letter-spacing: 0; color: var(--lit-2); margin-top: 6px; }
-  .room__line { font-size: var(--fs-h2); font-weight: 300; line-height: 1.12; letter-spacing: -0.018em; text-wrap: balance; }
-  .room__more { margin-top: 10px; font-weight: 480; justify-self: start; }
-  .dawn { height: 70vh; }
+  /* the moment: tall, so the light has time; its text stays in the lower left, clear of the object */
+  .moment { min-height: 200vh; position: relative; }
+  .moment__track { position: absolute; inset: 0 0 -30vh 0; pointer-events: none; }
+  .moment__text { position: sticky; top: 48vh; padding-bottom: 6vh; display: grid; gap: 12px; max-width: min(46vw, 40rem); pointer-events: auto; will-change: opacity; }
+  .moment__kicker { color: var(--lit-2); }
+  .moment__lines { display: grid; }
+  .moment__line { grid-area: 1 / 1; font-size: clamp(1.4rem, 0.9rem + 1.3vw, 2.3rem); font-weight: 300; line-height: 1.14; letter-spacing: -0.016em; text-wrap: pretty; opacity: 0; transition: opacity 0.6s var(--ease); }
+  .moment__line.is-on { opacity: 1; }
+  .moment__more { justify-self: start; margin-top: 8px; font-weight: 480; }
   @media (max-width: 759px) {
-    .room { min-height: 160vh; }
-    .room--auto, .room--deform, .room--diffuse { min-height: 200vh; }
-    .room__text { top: calc(100svh - 40svh); }
-    .room__line { font-size: 1.45rem; }
-    .dawn { height: 50vh; }
+    .moment { min-height: 180vh; }
+    .moment__text { top: 50svh; max-width: none; }
+    .moment__line { font-size: 1.3rem; }
   }
 
-  .section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 16px 40px; align-items: baseline; margin-bottom: 36px; }
+  .section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 16px 40px; align-items: baseline; margin-bottom: 32px; }
   .section-head__intro { font-size: var(--fs-h3); font-weight: 320; line-height: 1.25; letter-spacing: -0.01em; max-width: 30em; text-wrap: pretty; }
-  .section-more { margin-top: 30px; font-weight: 480; }
+  .section-more { margin-top: 28px; font-weight: 480; display: inline-flex; }
   @media (max-width: 759px) { .section-head { grid-template-columns: 1fr; } }
 
-  .research-teaser { padding-top: 30vh; padding-bottom: 18vh; }
-  .company-teaser { padding-top: 14vh; padding-bottom: 22vh; min-height: 90vh; }
+  .research-teaser { padding-top: 16vh; padding-bottom: 8vh; }
+  .company-teaser { padding-top: 10vh; padding-bottom: 10vh; }
+  .company-teaser .section-head { margin-bottom: 0; }
   .company-teaser .section-head__intro { max-width: 24em; }
-  .team-mini { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; border-top: 1px solid var(--rule); padding-top: 18px; max-width: min(60%, 820px); }
+  .team-mini { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 24px; }
   .team-mini li { display: grid; gap: 2px; font-size: var(--fs-small); }
-  @media (max-width: 759px) { .team-mini { grid-template-columns: 1fr 1fr; max-width: none; } .company-teaser { padding-top: 40vh; } }
+  @media (max-width: 759px) { .team-mini { grid-template-columns: 1fr 1fr; } }
 
-  .contact-block { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 20px; padding-block: 16vh 8vh; }
+  .contact-block { min-height: 76svh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 20px; padding-block: 14vh 6vh; }
   .contact-block__line { font-size: var(--fs-h2); font-weight: 300; line-height: 1.12; letter-spacing: -0.018em; max-width: 18em; text-wrap: balance; }
-  .contact-block__email { font-size: var(--fs-lede); }
+  .contact-block__email { font-size: var(--fs-lede); color: var(--ink-2); }
 </style>

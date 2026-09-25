@@ -7,15 +7,29 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const field = mountScene();
 paintPlates();
 
-// ---- nav tone follows the light behind it (the wall's top colour), or the section when there is no light
+// ---- the navigation and the text follow the light behind them
 const nav = document.querySelector<HTMLElement>('[data-nav]');
 const toned = [...document.querySelectorAll<HTMLElement>('[data-tone-section]')];
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+const sstep = (a: number, b: number, x: number) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const lumOf = (c: Float32Array, o: number) => 0.2126 * c[o] + 0.7152 * c[o + 1] + 0.0722 * c[o + 2];
 function navTone() {
   let tone = root.dataset.tone || 'day';
   if (field) {
-    const c = field.cur; // wallTop is the first parameter
-    const lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-    tone = lum < 0.55 ? 'dusk' : 'day';
+    const c = field.cur; // wallTop, wallMid are the first two parameters
+    const top = lumOf(c, 0), wall = (top + lumOf(c, 3)) / 2;
+    tone = top < 0.55 ? 'dusk' : 'day';
+    // the nav gets a plain tint of the wall behind it, fading out by ~80px
+    root.style.setProperty('--nav-tint', `rgb(${Math.round(c[0] * 255)} ${Math.round(c[1] * 255)} ${Math.round(c[2] * 255)})`);
+    // a section's text shows only where the light behind it can carry it (dark text on a light wall,
+    // light text on a dark one), so text and light always change at the same point
+    const vh = window.innerHeight;
+    for (const s of toned) {
+      const r = s.getBoundingClientRect();
+      if (r.bottom < -50 || r.top > vh + 50) continue;
+      const o = s.dataset.toneSection === 'dusk' ? 1 - sstep(0.5, 0.64, wall) : sstep(0.44, 0.6, wall);
+      s.style.opacity = o > 0.995 ? '' : o.toFixed(3);
+    }
   } else {
     for (const s of toned) {
       const r = s.getBoundingClientRect();
@@ -30,19 +44,18 @@ navTone();
 window.addEventListener('scroll', navTone, { passive: true });
 window.addEventListener('resize', navTone);
 
-// ---- room captions: one at a time; each fades in as its room arrives and out before the next one
-const roomTexts = [...document.querySelectorAll<HTMLElement>('[data-room-text]')];
-const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+// ---- the home moment's text fades with its section; its line changes when the light is reshaped
+const roomTexts = [...document.querySelectorAll<HTMLElement>('.moment__text')];
+const momentLines = [...document.querySelectorAll<HTMLElement>('[data-moment-line]')];
 function fadeRooms() {
   const vh = window.innerHeight;
   for (const t of roomTexts) {
-    const r = (t.closest('section') || t.parentElement!).getBoundingClientRect();
-    // captions change where the light changes: as the room's boundary crosses the middle of the screen
-    const inn = clamp01((vh * 0.5 - r.top) / (vh * 0.18));
-    const out = clamp01((r.bottom - vh * 0.52) / (vh * 0.18));
-    const o = Math.min(inn, out);
-    t.style.opacity = o.toFixed(3);
-    t.style.filter = reduced || o > 0.995 ? '' : `blur(${((1 - o) * 7).toFixed(2)}px)`;
+    const r = t.closest('section')!.getBoundingClientRect();
+    const inn = clamp01((vh * 0.55 - r.top) / (vh * 0.2));
+    const out = clamp01((r.bottom - vh * 0.5) / (vh * 0.2));
+    t.style.opacity = Math.min(inn, out).toFixed(3);
+    const k = (vh * 0.5 - r.top) / r.height > 0.55 ? 1 : 0;
+    momentLines.forEach((l) => l.classList.toggle('is-on', +l.dataset.momentLine! === k));
   }
 }
 if (roomTexts.length) {
