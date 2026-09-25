@@ -1,19 +1,32 @@
 ---
 import Base from '../layouts/Base.astro';
+import Emblem from '../components/Emblem.astro';
+import { href } from '../config/site';
+const people = [1, 2, 3, 4];
 ---
 <Base page="about" title="About">
   <header class="phead">
     <h1 class="phead__t cut">About</h1>
   </header>
   <section class="prose-block cut">
-    <p class="lead ph">[About — statement]</p>
-    <p class="ph">[About — paragraph one]</p>
-    <p class="ph">[About — paragraph two]</p>
+    <p class="lead">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
   </section>
   <dl class="facts cut">
     <div><dt class="label">Company</dt><dd class="ph">[Legal entity]</dd></div>
     <div><dt class="label">Founded</dt><dd class="ph">[Year]</dd></div>
     <div><dt class="label">Location</dt><dd class="ph">[City]</dd></div>
-    <div><dt class="label">Contact</dt><dd class="ph">[Email]</dd></div>
+    <div><dt class="label">Contact</dt><dd class="ph">[EMAIL]</dd></div>
   </dl>
+  <section class="prose-block prose-block--team cut" aria-labelledby="h-team">
+    <h2 id="h-team" class="label"><a href={href('team/')}>Team</a></h2>
+  </section>
+  <ul class="people">
+    {people.map((n) => (
+      <li class="person cut">
+        <Emblem seed={`person-${n}`} n={4} class="person__mark" />
+        <p class="person__name ph">[Name]</p>
+        <p class="person__role mono ph">[Role]</p>
+      </li>
+    ))}
+  </ul>
 </Base>

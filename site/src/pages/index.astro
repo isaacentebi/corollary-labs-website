@@ -2,31 +2,97 @@
 import Base from '../layouts/Base.astro';
 import Emblem from '../components/Emblem.astro';
 import { getCollection } from 'astro:content';
-import { href } from '../config/site';
+import { site, href, contactHref, hasEmail } from '../config/site';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+const capabilities = [
+  ['Agent deployment', 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.'],
+  ['Model fine-tuning', 'Models adapted and evaluated on your data for the specific tasks your agents perform.'],
+  ['Systems integration', 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.'],
+  ['Evaluation and governance', 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.'],
+];
+const legend = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
+const principles = [
+  ['Workflow first', 'We map how work is actually done before choosing a model.'],
+  ['Design the reorganisation', 'Roles, handoffs and controls change when agents arrive. We plan that change.'],
+  ['Measure in production', 'Every deployment reports on accuracy, cost and time saved.'],
+];
+const team = [1, 2, 3, 4];
 ---
 <Base page="home">
-  <section class="story" data-story aria-label="Corollary Labs">
+  <!-- 1 · what the company is, over the live loop field -->
+  <section class="hero" aria-labelledby="h-name">
+    <div class="hero__stack">
+      <h1 id="h-name" class="hero__name"><span class="cut" data-snap="out">Corollary</span> <span class="cut" data-snap="out">Labs</span></h1>
+      <div class="hero__card cut" data-snap="out">
+        <p class="hero__head">We deploy AI agents inside organisations and rebuild the operations around them.</p>
+        <p class="hero__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
+        <p class="hero__acts">
+          <a class="btn btn--primary" href={contactHref()}>Contact us</a>
+          <a class="btn btn--ghost" href="#approach">Our approach</a>
+        </p>
+      </div>
+    </div>
+    <p class="hero__hint mono" aria-hidden="true">Drag / click</p>
+  </section>
+
+  <div class="wrap">
+    <!-- 2 · capabilities -->
+    <section id="capabilities" class="sec" aria-labelledby="h-cap">
+      <div class="sec__head cut"><h2 id="h-cap" class="sec__title">Capabilities</h2></div>
+      <ol class="caps">
+        {capabilities.map(([t, d], i) => (
+          <li class="cap cut">
+            <Emblem seed={`cap-${i}`} n={3} class="cap__mark" />
+            <span class="cap__n mono">0{i + 1}</span>
+            <h3 class="cap__t">{t}</h3>
+            <p class="cap__d">{d}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <!-- 3 · approach: intro, then the field itself tells the four beats -->
+    <section id="approach" class="sec sec--approach" aria-labelledby="h-app">
+      <div class="sec__head sec__head--lead cut">
+        <h2 id="h-app" class="sec__title">Approach</h2>
+        <p class="lead">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+      </div>
+    </section>
+  </div>
+
+  <section class="story" data-story aria-label="Approach, in four steps">
     <div class="story__stage">
-      <h1 class="story__name" data-beat="0"><span class="cut" data-snap="out">Corollary</span> <span class="cut" data-snap="out">Labs</span></h1>
-      <p class="story__line story__line--0 ph" data-beat="0">[Statement]</p>
-      <p class="story__hint mono" data-beat="0" aria-hidden="true">Drag / click</p>
-      <p class="story__line story__line--1 ph" data-beat="1">[Sentence]</p>
-      <p class="story__line story__line--2 ph" data-beat="2">[Sentence]</p>
+      <ol class="legend" data-no-field>
+        {legend.map((l, i) => (
+          <li class="legend__i" data-step={i}><span class="legend__n mono">0{i + 1}</span><span>{l}</span></li>
+        ))}
+      </ol>
       <div class="story__meter" aria-hidden="true"><i data-meter></i></div>
     </div>
   </section>
 
   <div class="wrap">
-    <section class="home-about cut" aria-labelledby="h-about">
-      <h2 id="h-about" class="label"><a href={href('about/')}>About</a></h2>
-      <p class="lead ph">[About — one paragraph]</p>
-    </section>
+    <ol class="principles">
+      {principles.map(([t, d], i) => (
+        <li class="principle cut">
+          <span class="principle__n mono">{i + 1}</span>
+          <h3 class="principle__t">{t}.</h3>
+          <p class="principle__d">{d}</p>
+        </li>
+      ))}
+    </ol>
 
-    <section class="home-essays" aria-labelledby="h-essays">
-      <div class="home-essays__head cut"><h2 id="h-essays" class="label">Essays</h2><a class="more" href={href('essays/')}>All essays</a></div>
+    <!-- 4 · research (secondary: not in the main nav) -->
+    <section id="research" class="sec" aria-labelledby="h-res">
+      <div class="sec__head sec__head--row cut">
+        <div class="sec__head--lead">
+          <h2 id="h-res" class="sec__title">Research</h2>
+          <p class="sec__intro">Essays on agents, organisations and how new technology spreads.</p>
+        </div>
+      </div>
       <ol class="elist">
         {essays.map((e) => (
           <li>
@@ -38,11 +104,31 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
           </li>
         ))}
       </ol>
+      <div class="sec__foot cut"><a class="more" href={href('essays/')}>All research →</a></div>
     </section>
 
-    <nav class="bigl" aria-label="Pages">
-      <a class="bigl__a cut" href={href('team/')}>Team</a>
-      <a class="bigl__a cut" href={href('contact/')}>Contact</a>
-    </nav>
+    <!-- 5 · company -->
+    <section id="company" class="sec" aria-labelledby="h-co">
+      <div class="sec__head sec__head--lead cut">
+        <h2 id="h-co" class="sec__title">Company</h2>
+        <p class="lead">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
+      </div>
+      <ul class="crew">
+        {team.map((n) => (
+          <li class="crew__p cut">
+            <Emblem seed={`person-${n}`} n={3} class="crew__mark" />
+            <span class="ph">[Name — Role]</span>
+          </li>
+        ))}
+      </ul>
+      <div class="sec__foot cut"><a class="more" href={href('about/')}>About the company →</a></div>
+    </section>
+
+    <!-- 6 · contact -->
+    <section id="contact" class="sec contact-block cut" aria-labelledby="h-ct">
+      <h2 id="h-ct" class="sec__title">Contact</h2>
+      <p class="contact-block__line">Deploying agents in your organisation? Talk to us.</p>
+      {hasEmail ? <a class="contact-block__mail" href={`mailto:${site.email}`}>{site.email}</a> : <p class="contact-block__mail ph">{site.email}</p>}
+    </section>
   </div>
 </Base>

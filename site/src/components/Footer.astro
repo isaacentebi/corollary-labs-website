@@ -1,17 +1,15 @@
 ---
 import Mark from './Mark.astro';
-import { site, href, nav } from '../config/site';
+import { site, href, footerNav, hasEmail } from '../config/site';
 ---
 <footer class="foot">
   <div class="foot__card cut">
     <a class="foot__name" href={href()}><Mark size={40} /><span>{site.name}</span></a>
     <nav class="foot__nav" aria-label="Footer">
-      <a href={href()}>Home</a>
-      {nav.map((n) => <a href={href(n.path)}>{n.label}</a>)}
+      {footerNav.map((n) => <a href={href(n.path)}>{n.label}</a>)}
     </nav>
     <div class="foot__meta">
-      <span class="ph">{site.email}</span>
-      <span class="ph">[Location]</span>
+      {hasEmail ? <a href={`mailto:${site.email}`}>{site.email}</a> : <span class="ph">{site.email}</span>}
       <span>© {site.year} {site.name}</span>
     </div>
   </div>

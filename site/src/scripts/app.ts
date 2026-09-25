@@ -1,7 +1,7 @@
 // One field for the whole visit. The canvas persists across page swaps; each page re-scales,
 // re-colours and reorganises the same surface (tiles turn to the page's pattern, colour changes tile by tile).
 import { LoopField, type Mode } from './field';
-import { story, HOME_SEED } from './story';
+import { story, homeCamera, HOME_SEED } from './story';
 
 const small = () => innerWidth < 700;
 const MODES: Record<string, () => Mode> = {
@@ -20,7 +20,7 @@ let cleanup: (() => void) | null = null;
 /** Panels painted by the field: every visible .cut, except story beats that are hidden. */
 const panels = () => [...document.querySelectorAll('.cut')].filter((el) => !el.closest('[data-beat]:not(.on)'));
 
-function onLoad() {
+async function onLoad() {
   const root = document.documentElement;
   const canvas = document.getElementById('field') as HTMLCanvasElement | null;
   if (!canvas) return;
@@ -33,10 +33,14 @@ function onLoad() {
   cleanup?.(); cleanup = null;
   if (!field) return;
   const page = root.dataset.page || 'home';
+  // home measures its sections to place the camera: wait for the final layout
+  if (page === 'home' && document.fonts && document.fonts.status !== 'loaded') await document.fonts.ready;
   const mode = (MODES[page] || MODES.home)();
   field.scrollPx = () => scrollY;
+
   field.rectEls = panels;
   root.style.setProperty('--cell', `${Math.max(mode.cell, field.minCell).toFixed(2)}px`);
+  if (page === 'home') mode.cam = homeCamera(field);
   if (first) {
     // arrive: every tile aligned, then the page's pattern turns in from the centre
     field.apply({ ...mode, pattern: 'diagonal', agents: 0 }, { instant: true });

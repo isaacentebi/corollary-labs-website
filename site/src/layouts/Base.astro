@@ -45,7 +45,7 @@ const pageAnim = { forwards: { old: out, new: inn }, backwards: { old: out, new:
       </a>
       <nav class="top__nav" aria-label="Main">
         {nav.map((n) => (
-          <a href={href(n.path)} aria-current={current.startsWith(href(n.path)) ? 'page' : undefined}>{n.label}</a>
+          <a href={href(n.path)} aria-current={'current' in n && n.current.some((c) => current.startsWith(href(c))) ? 'page' : undefined}>{n.label}</a>
         ))}
       </nav>
     </header>

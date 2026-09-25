@@ -173,6 +173,7 @@ export class LoopField {
   W = 0; H = 0; dpr = 1;
   pointer = { x: -1, y: -1, vx: 0, vy: 0, inside: false, lastTile: -1, down: false };
   onFrame: ((f: LoopField) => void) | null = null;
+  rotd = false;
   raf = 0; running = false; idle = 0; visible = true; keepAwake = false;
 
   static create(canvas: HTMLCanvasElement) {
@@ -355,7 +356,7 @@ export class LoopField {
   apply(mode: Mode, opts: { instant?: boolean } = {}) {
     const cell = Math.max(mode.cell, this.minCell);
     this.viewT.cell = cell;
-    if (mode.cam) Object.assign(this.viewT, { camX: mode.cam[0], camY: mode.cam[1] });
+    if (mode.cam) { Object.assign(this.viewT, { camX: mode.cam[0], camY: mode.cam[1] }); Object.assign(this.view, { camX: mode.cam[0], camY: mode.cam[1] }); }
     Object.assign(this.viewT, { cell, w: mode.width ?? 0.16, rot: 0 });
     if (opts.instant) { Object.assign(this.view, this.viewT); }
     this.camYe = this.view.camY + this.scrollPx() / this.view.cell;
@@ -480,7 +481,12 @@ export class LoopField {
     }
     // drain what lost its connection (turning tiles keep their state until they land)
     for (let arc = 0; arc < T * 2; arc++) {
-      if (this.lit[arc] && !reach[arc] && (this.settled[arc >> 1] >= 0 || this.covered[arc >> 1])) { this.lit[arc] = 0; this.unlitT[arc] = this.now; until = Math.max(until, this.now + 0.5); }
+      if (this.lit[arc] && !reach[arc] && (this.settled[arc >> 1] >= 0 || this.covered[arc >> 1])) {
+        this.lit[arc] = 0;
+        // an arc the colour front had not reached yet is simply never lit; the others drain
+        if (this.litT[arc] > this.now) { this.litT[arc] = 1e9; this.unlitT[arc] = -1e9; }
+        else { this.unlitT[arc] = this.now; until = Math.max(until, this.now + 0.5); }
+      }
     }
     this.fillUntil = Math.max(this.fillUntil, until);
     this.dirtyB = true;
@@ -588,6 +594,9 @@ export class LoopField {
       }
     }
     this.measureRects();
+    // while the plane is rotated, panels can't sit on whole tiles: they fall back to a flat colour
+    const rotd = Math.abs(v.rot) >= 0.002;
+    if (rotd !== this.rotd) { this.rotd = rotd; document.documentElement.classList.toggle('field-rot', rotd); }
     // tile angles + settled topology
     const A = this.dataA;
     for (let t = 0; t < T; t++) {

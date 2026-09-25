@@ -18,7 +18,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
   <article class="essay">
     <header class="essay__head cut">
       <Emblem seed={entry.id} n={4} class="essay__mark" />
-      <p class="mono essay__meta"><a href={href('essays/')}>Essays</a><span>{fmt(entry.data.date)}</span><span>{fm.minutesRead} min</span></p>
+      <p class="mono essay__meta"><a href={href('essays/')}>Research</a><span>{fmt(entry.data.date)}</span><span>{fm.minutesRead} min</span></p>
       <h1 class="essay__title">{entry.data.title}</h1>
       <p class="essay__dek">{entry.data.dek}</p>
     </header>
@@ -30,7 +30,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
       <a class="erow erow--next cut" href={href(`essays/${next.id}/`)}>
         <Emblem seed={next.id} n={4} class="erow__mark" />
         <span class="erow__title">{next.data.title}</span>
-        <span class="erow__date mono">Next essay</span>
+        <span class="erow__date mono">Next</span>
       </a>
     )}
   </article>
