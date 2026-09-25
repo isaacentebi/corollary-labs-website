@@ -1,11 +1,12 @@
-// Home story: one sticky stage, one scroll progress T in [0, TMAX], seven states of one table.
-// Each state's caption switches at the midpoint of its transition.
+// Approach: one sticky stage, one scroll progress, the table's story in four beats (the plain legend):
+// 01 the organisation (the table, then one firm's column) · 02 an agent enters (execution, then plans, move inside)
+// · 03 it reorganises (entries change, rows and columns take a new order) · 04 the change spreads (rounds).
+// Each beat gets an equal share of the scroll. Frames are drawn only when something changes.
 import { Table, ease, type Params } from './table';
 import { N, SUPPLIED } from './economy';
 
-const TMAX = 7.0;
-const START = [0.3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.13];
-const HOLD = [0.65, 1.6, 2.7, 3.55, 4.9, 5.82, 6.9];   // a resting T inside each state (rail jumps, reduced motion)
+const BEAT = [0.2, 1.72, 3.66, 4.95, 5.84];            // story time T at each beat's start (and the end)
+const HOLD = [1.5, 3.55, 4.9, 5.84];                   // a resting T inside each beat (legend jumps, reduced motion)
 
 const clamp = (x: number, a = 0, b = 1) => (x < a ? a : x > b ? b : x);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -24,11 +25,10 @@ export function initStory() {
 
   const $ = <T extends Element = HTMLElement>(s: string) => stage.querySelector(s) as unknown as T;
   const $$ = <T extends Element = HTMLElement>(s: string) => Array.from(stage.querySelectorAll(s)) as unknown as T[];
-  const caps = $$('[data-cap]'), capsHost = $('[data-caps]'), railBtns = $$<HTMLButtonElement>('[data-goto]');
-  const hero = $('[data-hero]'), tip = $('[data-tip]'), cue = $('[data-cue]'), coda = $('[data-coda]');
+  const capsHost = $('[data-beats]'), railBtns = $$<HTMLButtonElement>('[data-goto]'), bars = $$('[data-bp]');
+  const tip = $('[data-tip]');
   const title = $('[data-title]'), buyer = $('[data-buyer]'), supplier = $('[data-supplier]'), rule = $('[data-rule]');
   const colIds = $$('[data-cl]'), rowIds = $$('[data-rl]'), rowLab = $$('[data-row]');
-  const trange = $<HTMLInputElement>('[data-trange]'), tout = $('[data-tout]');
   const numsHost = $('[data-nums]'), chip = $('[data-chip]'), sum = $('[data-sum]'), rounds = $('[data-rounds]');
 
   // on phones, number only a few firms: ones that stay well apart both before and after the reorganisation
@@ -55,10 +55,6 @@ export function initStory() {
     W = stage.clientWidth; H = stage.clientHeight;
     mobile = W < 900;
     head = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--head')) || 52;
-    // captions share one top edge: the container is as tall as the tallest caption
-    let ch = 0;
-    caps.forEach((c) => (ch = Math.max(ch, c.offsetHeight)));
-    capsHost.style.height = `${ch}px`;
     capTop = capsHost.getBoundingClientRect().top - stage.getBoundingClientRect().top;
     if (mobile) {
       G = 40;
@@ -68,7 +64,7 @@ export function initStory() {
       u = Math.floor(Math.min(bw / N, bh / (N + 7.4)) * 4) / 4;
     }
     table.resize(W, H);
-    dirty = true;
+    kick();
   };
 
   // per-frame geometry (on phones the enlarged column also grows taller)
@@ -92,33 +88,31 @@ export function initStory() {
     }
   };
 
-  // ── scroll → T ──
-  let T = 0;
+  // ── scroll → T: each beat gets a quarter of the scroll (the last 6% rests on the final state) ──
+  let T = BEAT[0];
+  const tOf = (p: number) => { const q = clamp(p / 0.94) * 4, i = Math.min(3, Math.floor(q)); return lerp(BEAT[i], BEAT[i + 1], q - i); };
+  const pOf = (t: number) => { let i = 0; while (i < 3 && t >= BEAT[i + 1]) i++; return (0.94 * (i + (t - BEAT[i]) / (BEAT[i + 1] - BEAT[i]))) / 4; };
   const readScroll = () => {
     const r = root.getBoundingClientRect();
     const span = r.height - innerHeight;
     const p = span > 0 ? clamp(-r.top / span) : 0;
-    let t = p * TMAX;
-    if (RM) { const i = stateOf(t); t = i < 0 ? 0 : HOLD[i]; }
-    if (t !== T) { T = t; tUser = null; dirty = true; }
+    let t = tOf(p);
+    if (RM) t = HOLD[beatOf(t)];
+    if (t !== T) { T = t; kick(); }
   };
-  const stateOf = (t: number) => { let i = -1; for (let k = 0; k < START.length; k++) if (t >= START[k]) i = k; return i; };
-
-  // ── coda: t follows scroll; the slider can take it over until the next scroll ──
-  let tUser: number | null = null;
-  trange.addEventListener('input', () => { tUser = parseFloat(trange.value); dirty = true; });
+  const beatOf = (t: number) => { let i = 0; for (let k = 1; k < 4; k++) if (t >= BEAT[k]) i = k; return i; };
 
   // ── click trace ──
-  let pulseSlot = -1, pulseT = 0, lastNow = performance.now();
+  let pulseSlot = -1, pulseT = 0, lastNow = 0;
 
   // ── hover / tap ──
   const pointer = (ev: PointerEvent | MouseEvent, click = false) => {
     const rect = stage.getBoundingClientRect();
     const px = ev.clientX - rect.left, py = ev.clientY - rect.top;
-    const cell = T < START[1] - 0.2 ? table.cellAt(px, py) : null;
+    const cell = T < 0.8 ? table.cellAt(px, py) : null;
     const prev = table.hover;
     table.hover = cell;
-    if ((prev?.r ?? -1) !== (cell?.r ?? -1) || (prev?.c ?? -1) !== (cell?.c ?? -1)) dirty = true;
+    if ((prev?.r ?? -1) !== (cell?.r ?? -1) || (prev?.c ?? -1) !== (cell?.c ?? -1)) kick();
     if (!cell) { tip.classList.remove('-on'); stage.style.cursor = ''; return; }
     stage.style.cursor = 'crosshair';
     let txt: string;
@@ -134,35 +128,34 @@ export function initStory() {
     const x = clamp(px + 16 + tw > W - 8 ? px - 16 - tw : px + 16, 8, W - 8 - tw);
     tip.style.transform = `translate(${x}px, ${py + 16}px)`;
     tip.classList.add('-on');
-    if (click) { pulseSlot = cell.c; pulseT = 0; dirty = true; }
+    if (click) { pulseSlot = cell.c; pulseT = 0; lastNow = 0; kick(); }
   };
   stage.addEventListener('pointermove', (ev) => { if (ev.pointerType === 'mouse') pointer(ev); });
-  stage.addEventListener('pointerleave', () => { table.hover = null; tip.classList.remove('-on'); dirty = true; });
+  stage.addEventListener('pointerleave', () => { table.hover = null; tip.classList.remove('-on'); kick(); });
   stage.addEventListener('click', (ev) => { if (!(ev.target as HTMLElement).closest('button, input, a')) pointer(ev, true); });
 
-  // ── rail ──
+  // ── legend: each beat jumps to its resting state ──
   railBtns.forEach((b) => b.addEventListener('click', () => {
     const i = +b.dataset.goto!;
     const r = root.getBoundingClientRect();
-    scrollTo({ top: scrollY + r.top + (HOLD[i] / TMAX) * (r.height - innerHeight), behavior: RM ? 'auto' : 'smooth' });
+    scrollTo({ top: scrollY + r.top + pOf(HOLD[i]) * (r.height - innerHeight), behavior: RM ? 'auto' : 'smooth' });
   }));
 
-  // ── frame ──
-  let dirty = true, visible = true, lastState = -2;
+  // ── frame (on demand) ──
+  let raf = 0, visible = true, lastState = -2;
   const P: Params = { focus: 0, eK: 0, pK: 0, vals: 0, rows: 0, cols: 0, front: -99, agent: 0, fold: 0, lift: 0, t: 1 };
-
+  function kick() { if (!raf && visible) raf = requestAnimationFrame(frame); }
   const frame = (now: number) => {
-    const dt = Math.min(0.05, (now - lastNow) / 1000); lastNow = now;
-    if (visible) {
-      if (pulseSlot >= 0) {
-        pulseT += dt;
-        table.pulse(pulseSlot, RM ? 1.6 : pulseT);
-        if (pulseT > 3) { pulseSlot = -1; table.flash.fill(0); }
-        dirty = true;
-      }
-      if (dirty) { dirty = false; draw(); }
+    raf = 0;
+    const dt = lastNow ? Math.min(0.05, (now - lastNow) / 1000) : 0; lastNow = now;
+    let more = false;
+    if (pulseSlot >= 0) {
+      pulseT += dt;
+      table.pulse(pulseSlot, RM ? 1.6 : pulseT);
+      if (pulseT > 3) { pulseSlot = -1; table.flash.fill(0); } else more = true;
     }
-    requestAnimationFrame(frame);
+    draw();
+    if (more) kick(); else lastNow = 0;
   };
 
   const draw = () => {
@@ -177,18 +170,7 @@ export function initStory() {
     P.rows = clamp((t - 4.05) / 0.4);
     P.cols = clamp((t - 4.45) / 0.4);
     P.front = t < 4.95 ? -99 : -0.6 + clamp((t - 4.95) / 0.85) * (e.R + 1.2);
-    P.fold = clamp((t - 5.86) / 0.1);
-    P.lift = clamp((t - 5.96) / 0.34);
-    // the lift starts from the end of diffusion (t = 1); the reader can take t back to 0 with the slider
-    let tH = 1;
-    if (P.lift > 0) {
-      if (tUser !== null) tH = tUser;
-      P.t = tH;
-      P.front = tH < 0.01 ? -99 : -0.6 + tH * (e.R + 1.2);
-      P.eK = 0; P.pK = 0; P.agent = 0;
-    }
     geom(P.focus);
-    if (P.lift > 0) table.L.rz += Math.max(0, t - 6.3) * (mobile ? 0.1 : 0.25);
     table.render(P);
 
     const { ox, oy, uy } = table.L;
@@ -268,30 +250,19 @@ export function initStory() {
       chip.style.transform = `translate(${x}px, ${cellY + uy / 2}px) translateY(-50%)`;
     }
 
-    const si = stateOf(t);
+    const si = beatOf(t);
     if (si !== lastState) {
       lastState = si;
-      caps.forEach((c, i) => c.classList.toggle('-on', i === si));
-      railBtns.forEach((b, i) => b.classList.toggle('-on', i === si));
-      hero.classList.toggle('-off', si >= 0);
-      cue.classList.toggle('-off', si >= 0);
+      railBtns.forEach((b, i) => { b.classList.toggle('-on', i === si); b.setAttribute('aria-current', i === si ? 'step' : 'false'); });
       if (si > 0) { table.hover = null; tip.classList.remove('-on'); }
     }
-    // the slider appears once the table has finished lifting
-    const on = P.lift >= 1;
-    coda.classList.toggle('-on', on);
-    if (on) {
-      coda.style.setProperty('--codaY', `${capTop - 62}px`);
-      if (document.activeElement !== trange) trange.value = String(tH);
-      tout.textContent = `t = ${tH.toFixed(2)}`;
-    }
+    bars.forEach((b, i) => { b.style.transform = `scaleX(${clamp((t - BEAT[i]) / (BEAT[i + 1] - BEAT[i]))})`; });
   };
 
-  new IntersectionObserver((es) => { visible = es[0].isIntersecting; if (visible) dirty = true; }).observe(root);
+  new IntersectionObserver((es) => { visible = es[0].isIntersecting; if (visible) kick(); }).observe(root);
   addEventListener('scroll', readScroll, { passive: true });
   addEventListener('resize', () => { layout(); readScroll(); });
   layout(); readScroll();
-  document.fonts?.ready.then(() => { layout(); dirty = true; });
+  document.fonts?.ready.then(() => { layout(); kick(); });
   stage.classList.add('-ready');
-  requestAnimationFrame(frame);
 }

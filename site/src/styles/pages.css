@@ -59,3 +59,12 @@
   .tg__c { min-height: 52px; padding: 10px 0; justify-content: space-between; align-items: center; gap: 12px; }
   .tg__c em { display: inline; }
 }
+
+/* About: the team row */
+.ab-team { margin-top: clamp(48px, 7vw, 104px); max-width: 880px; }
+.ab-team__row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; }
+.ab-team__cell { display: flex; flex-direction: column; justify-content: space-between; gap: 28px; min-height: 110px; padding: 12px 14px 14px; border-bottom: 1px solid var(--ln2); font-size: 15px; }
+.ab-team__n { color: var(--i3); }
+.ab-team__more { margin-top: 18px; }
+.ab-team__more a { color: var(--i2); }
+@media (max-width: 640px) { .ab-team__row { grid-template-columns: 1fr 1fr; } .ab-team__cell { min-height: 84px; } }

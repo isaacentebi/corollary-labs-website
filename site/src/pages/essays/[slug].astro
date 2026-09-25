@@ -21,14 +21,14 @@ const pad = (x: number) => String(x).padStart(2, '0');
   <article class="es">
     <header class="es__head">
       <dl class="es__meta mono">
-        <div><dt>Essay</dt><dd>{pad(n)}</dd></div>
+        <div><dt>Research</dt><dd>{pad(n)}</dd></div>
         <div><dt>Date</dt><dd><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time></dd></div>
         <div><dt>Reading</dt><dd>{fm.minutesRead} min</dd></div>
         <div><dt>Sections</dt><dd>{pad(sections.length)}</dd></div>
       </dl>
       <h1 class="es__title">{entry.data.title}</h1>
       <p class="es__dek">{entry.data.dek}</p>
-      {entry.data.placeholder && <p class="es__flag mono">[Placeholder essay]</p>}
+      {entry.data.placeholder && <p class="es__flag mono">[Placeholder]</p>}
     </header>
 
     {sections.length > 0 && (
@@ -46,7 +46,7 @@ const pad = (x: number) => String(x).padStart(2, '0');
       <p class="mono es__sign">— {site.name}, {fmt(entry.data.date)}</p>
       {next && next.id !== entry.id && (
         <a class="es__next" href={url(`essays/${next.id}/`)}>
-          <span class="mono">Next essay</span>
+          <span class="mono">Next · Research</span>
           <span class="es__next-t">{next.data.title}</span>
           <span class="es__next-d">{next.data.dek}</span>
         </a>

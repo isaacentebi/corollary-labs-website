@@ -12,12 +12,13 @@ const rows = await Promise.all(essays.map(async (e) => {
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
-<Base page="essays" title="Essays" description="[Meta description]">
+<Base page="essays" title="Research">
   <section class="page">
     <header class="ph-row reveal">
-      <p class="ph-row__n mono">01</p>
-      <h1 class="ph-row__t">Essays</h1>
+      <p class="ph-row__n mono">—</p>
+      <h1 class="ph-row__t">Research</h1>
     </header>
+    <p class="page__lede reveal">Essays on agents, organisations and how new technology spreads.</p>
     <table class="tb ix" data-sortable>
       <thead class="mono">
         <tr>
@@ -33,7 +34,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
         {rows.map(({ e, fm, sections, notes }, i) => (
           <tr class="reveal" data-n={rows.length - i} data-title={e.data.title} data-date={+e.data.date} data-sections={sections} data-notes={notes} data-min={fm.minutesRead}>
             <td class="num mono ix__n">{pad(rows.length - i)}</td>
-            <td><a class="ix__a" href={url(`essays/${e.id}/`)}><span class="ix__t">{e.data.title}</span><span class="ix__d">{e.data.dek}</span>{e.data.placeholder && <span class="ix__ph mono">[Placeholder essay]</span>}</a></td>
+            <td><a class="ix__a" href={url(`essays/${e.id}/`)}><span class="ix__t">{e.data.title}</span><span class="ix__d">{e.data.dek}</span>{e.data.placeholder && <span class="ix__ph mono">[Placeholder]</span>}</a></td>
             <td class="mono -hide-s"><time datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time></td>
             <td class="mono -hide-s"><span class="ix__cells" aria-label={`${sections} sections`}>{Array.from({ length: sections }, () => <i />)}</span>{pad(sections)}</td>
             <td class="mono -hide-s"><span class="ix__cells" aria-label={`${notes} notes`}>{Array.from({ length: notes }, () => <i />)}</span>{pad(notes)}</td>

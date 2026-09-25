@@ -38,7 +38,7 @@ const path = Astro.url.pathname;
       </a>
       <nav class="hd__nav mono" aria-label="Site">
         {nav.map((n) => (
-          <a href={n.href} aria-current={path.startsWith(n.href.replace(/\/$/, '')) ? 'page' : undefined}>
+          <a href={n.href} aria-current={n.match?.some((m) => path.includes(`/${m}`)) ? 'page' : undefined}>
             <span class="hd__n">{n.n}</span>{n.label}
           </a>
         ))}

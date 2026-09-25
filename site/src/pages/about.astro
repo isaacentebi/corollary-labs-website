@@ -3,7 +3,7 @@
 // Everything in [brackets] is a placeholder.
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
-import { site, url } from '../config/site';
+import { site, company, url } from '../config/site';
 import '../styles/pages.css';
 
 const essays = await getCollection('essays', ({ data }) => !data.draft);
@@ -13,7 +13,7 @@ const groups: { name: string; cells: Cell[] }[] = [
   { name: 'Inputs', cells: Array.from({ length: 4 }, () => ({ k: '[Input]', v: '[Input — description]', kind: 'ph' as const })) },
   {
     name: 'Outputs', cells: [
-      { k: 'Essays', v: `${pad(essays.length)} essays (drafts)`, href: url('essays/'), kind: 'on' },
+      { k: 'Research', v: `${pad(essays.length)} essays (drafts)`, href: url('essays/'), kind: 'on' },
       { k: '[Output]', v: '[Output — description]', kind: 'ph' },
       { k: '[Output]', v: '[Output — description]', kind: 'ph' },
     ],
@@ -23,18 +23,28 @@ const groups: { name: string; cells: Cell[] }[] = [
       { k: 'Company', v: '[Company]', kind: 'ph' },
       { k: 'Founded', v: '[Year]', kind: 'ph' },
       { k: 'Location', v: '[City]', kind: 'ph' },
-      { k: 'Email', v: site.email, href: `mailto:${site.email}`, kind: 'fact' },
+      { k: 'Email', v: site.email, kind: 'fact' },
     ],
   },
 ];
 ---
-<Base page="about" title="About" description="[Meta description]">
+<Base page="about" title="About">
   <section class="page">
     <header class="ph-row reveal">
-      <p class="ph-row__n mono">02</p>
+      <p class="ph-row__n mono">03</p>
       <h1 class="ph-row__t">About</h1>
     </header>
-    <p class="page__lede ph reveal">[About — one paragraph]</p>
+    <p class="page__lede reveal">{company.about} <span class="ph">{company.aboutPh}</span></p>
+
+    <div class="ab-team reveal">
+      <p class="cc__gname mono"><span>Team</span></p>
+      <ul class="ab-team__row">
+        {company.team.map((p, i) => (
+          <li class="ab-team__cell"><span class="mono ab-team__n">{pad(i + 1)}</span><span class="ph">{p.name} — {p.role}</span></li>
+        ))}
+      </ul>
+      <p class="ab-team__more"><a class="mono link" href={url('team/')}>Team →</a></p>
+    </div>
 
     <div class="cc reveal" role="table" aria-label="About">
       {groups.map((g) => (

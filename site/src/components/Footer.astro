@@ -1,21 +1,21 @@
 ---
-import { site, url } from '../config/site';
+import { site, footerNav } from '../config/site';
 ---
 <footer class="ft">
   <div class="ft__grid">
+    <nav class="ft__col -nav" aria-label="Footer">
+      <h2 class="mono" aria-hidden="true">&nbsp;</h2>
+      <ul>{footerNav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}</ul>
+    </nav>
     <div class="ft__col">
       <h2 class="mono">Contact</h2>
-      <ul><li><a href={`mailto:${site.email}`}>{site.email}</a></li><li><a href={url('contact/')}>Contact</a></li></ul>
+      <ul><li class="ft__email">{site.email}</li></ul>
     </div>
     <div class="ft__col">
       <h2 class="mono">Company</h2>
       <ul><li>{site.name}</li><li class="ph">[Location]</li></ul>
     </div>
-    <div class="ft__col">
-      <h2 class="mono">Top</h2>
-      <ul><li><a href="#main">Back to top ↑</a></li></ul>
-    </div>
   </div>
   <p class="ft__big" aria-hidden="true" data-fit><span>{site.name}</span></p>
-  <p class="ft__base mono"><span>©{site.year} {site.name}</span></p>
+  <p class="ft__base mono"><span>©{site.year} {site.name}</span><span>{site.email}</span></p>
 </footer>
