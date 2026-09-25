@@ -1,40 +1,22 @@
 ---
-// Team — placeholders until names, roles and portraits are chosen. Same band + hairline system as About and Essays.
 import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
-import '../styles/about.css';
-
-const people = Array.from({ length: 4 }, (_, i) => ({ n: String(i + 1).padStart(2, '0'), name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]' }));
+import Woven from '../components/Woven.astro';
+import Drawdown from '../components/Drawdown.astro';
+import '../styles/pages.css';
+const people = [1, 2, 3, 4];
 ---
-<Base page="team" title="Team" description="[Meta description]">
-  <article class="about o-container" aria-labelledby="team-title">
-    <header class="about-band">
-      <canvas class="field about-band__field" data-field="index" data-word="Team" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="team-title">Team</h1>
-      <span class="about-band__note t-label" aria-hidden="true" data-reveal="scramble">Draft — placeholders in brackets</span>
-    </header>
-    <div class="rule" data-reveal="rule"></div>
-
-    <p class="about-statement" data-reveal="lines">
-      <span class="ph">[Placeholder — one sentence on who works at {site.name}.]</span>
-    </p>
-
-    <ol class="team-list" data-reveal="rows">
-      {people.map((p) => (
-        <li class="team-row">
-          <span class="team-row__n t-label">{p.n}</span>
-          <span class="team-row__name ph">{p.name}</span>
-          <span class="team-row__role t-label ph">{p.role}</span>
-          <span class="team-row__line ph">{p.line}</span>
+<Base title="Team" page="team">
+  <div class="title" style="--tw: 360px"><h1>Team</h1><Woven text="Team" /></div>
+  <section class="wrap">
+    <ul class="people">
+      {people.map((n) => (
+        <li>
+          <div class="people__sw"><Drawdown cols={20} rows={21} axis={3 + n * 3} cy={4 + n * 3} radius={9 + n * 2} seed={'p' + n} /></div>
+          <p class="people__name ph">[Name]</p>
+          <p class="mono ph">[Role]</p>
+          <p class="people__bio ph">[Bio — two lines]</p>
         </li>
       ))}
-    </ol>
-
-    <section class="about-colophon" aria-label="Contact">
-      <dl>
-        <div class="about-colophon__row"><dt class="t-label">JOIN</dt><dd class="ph">[Placeholder — how to get in touch about working here.]</dd></div>
-        <div class="about-colophon__row"><dt class="t-label">CONTACT</dt><dd><a href={`mailto:${site.email}`}>{site.email}</a></dd></div>
-      </dl>
-    </section>
-  </article>
+    </ul>
+  </section>
 </Base>

@@ -1,0 +1,19 @@
+---
+// The mark: a 9 × 9 draft. The centre thread is new (saffron); the diamond is rewoven around it.
+import { rewovenUp } from '../lib/weave';
+interface Props { size?: number }
+const { size = 28 } = Astro.props;
+const N = 9, M = 4;
+const rects: string[] = [];
+for (let i = 0; i < N; i++) for (let c = 0; c < N; c++) {
+  const up = rewovenUp(Math.abs(c - M), i - M);
+  const cls = c === M ? (up ? 'a' : 'f') : up ? 'w' : 'f';
+  rects.push(`<rect class="${cls}" x="${c + 0.1}" y="${i + 0.1}" width="0.8" height="0.8"/>`);
+}
+---
+<svg class="mark" width={size} height={size} viewBox={`0 0 ${N} ${N}`} aria-hidden="true" shape-rendering="crispEdges"><Fragment set:html={rects.join('')} /></svg>
+<style>
+  .mark :global(.w) { fill: #3a4a95; }
+  .mark :global(.f) { fill: var(--weft-1); }
+  .mark :global(.a) { fill: var(--saffron); }
+</style>
