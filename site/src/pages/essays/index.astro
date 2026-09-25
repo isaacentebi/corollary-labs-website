@@ -1,33 +1,29 @@
 ---
 import Base from '../../layouts/Base.astro';
-import InlineCurve from '../../components/InlineCurve.astro';
-import { getCollection, render } from 'astro:content';
-import '../../styles/index.css';
+import Pebble from '../../components/Pebble.astro';
+import { getCollection } from 'astro:content';
+import { u } from '../../config/site';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
-const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
-const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
-const pad = (n: number) => String(n).padStart(2, '0');
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+// one stone per essay, resting in a loose line to the right of the heading; hovering an essay warms its stone
+const stones = essays.map((_, i) => ({ x: 0.16 + i * 0.12, y: (i % 2 ? 0.1 : -0.06) + i * 0.02, r: 0.11 - i * 0.012 }));
+const mstones = essays.map((_, i) => ({ x: -0.22 + i * 0.24, y: -0.3 + (i % 2 ? 0.05 : 0), r: 0.13 - i * 0.012 }));
 ---
-<Base page="index" title="Essays" description="[Meta description]">
-  <section class="index o-container" aria-labelledby="index-title">
-    <header class="index-band" aria-labelledby="index-title">
-      <canvas class="field index-band__field" data-field="index" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="index-title">Essays</h1>
-      <span class="index-band__count t-label" aria-hidden="true" data-reveal="scramble">{String(rows.length).padStart(2, '0')} essays</span>
-    </header>
-    <div class="rule" data-reveal="rule"></div>
-    <ol class="index-list" data-reveal="rows">
-      {rows.map(({ e, fm }, i) => (
+<Base page="essays" title="Essays">
+  <section class="page-band page-band--left band" data-band={JSON.stringify({ stones, mstones, clear: '[data-clear]', hover: '[data-essay-row]' })}>
+    <div class="wrap page-band__in"><h1 data-clear>Essays</h1></div>
+    <div class="band__edge"></div>
+  </section>
+  <section class="page-body wrap">
+    <ol class="essay-list" data-reveal>
+      {essays.map((e, i) => (
         <li>
-          <a class="index-row" href={`/essays/${e.id}/`} data-shuffle-hover>
-            <span class="index-row__n t-label">{pad(rows.length - i)}</span>
-            <time class="index-row__date t-label" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
-            <span class="index-row__main">
-              <span class="index-row__title"><span class="index-row__glyph" aria-hidden="true"><InlineCurve progress={[0.2, 0.5, 0.8][i % 3]} /></span><span data-shuffle-target>{e.data.title}</span></span>
-              <span class="index-row__dek">{e.data.dek}</span>
-            </span>
-            <span class="index-row__time t-label">{fm.minutesRead} min</span>
+          <a class="essay-row" href={u(`essays/${e.id}/`)} data-essay-row>
+            <Pebble size={48} seed={i + 3} />
+            <span class="essay-row__title">{e.data.title}</span>
+            <span class="essay-row__dek">{e.data.dek}</span>
+            <span class="essay-row__meta"><time datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time></span>
           </a>
         </li>
       ))}

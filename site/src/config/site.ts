@@ -1,18 +1,19 @@
-// Single source of truth for the brand name and site-level copy.
-// Change the name here and it propagates to the wordmark, titles, meta, footer and essays.
+// Brand name and site-level placeholders. Every sentence on the site is a bracketed placeholder until the copy is written.
 export const site = {
   name: 'Corollary Labs',
-  word: 'Corollary',
-  tag: 'Labs',
   author: 'Corollary Labs',
-  email: '[EMAIL]',
+  email: '[Email]',
   year: 2026,
-  url: 'https://corollarylabs.example',
   description: '[Meta description]',
-  nav: [
-    { label: 'Thesis', href: '/#thesis' },
-    { label: 'About', href: '/#about' },
-    { label: 'Essays', href: '/essays/' },
-  ],
-  cta: { label: 'Contact', href: '#contact' },
 } as const;
+
+// Every internal link and asset goes through this, so the build works under a base path (/soft).
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+export const u = (p = '/') => `${BASE}/${p.replace(/^\//, '')}`;
+
+export const nav = [
+  { label: 'Essays', href: 'essays/' },
+  { label: 'About', href: 'about/' },
+  { label: 'Team', href: 'team/' },
+  { label: 'Contact', href: 'contact/' },
+] as const;

@@ -1,8 +1,54 @@
 ---
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import '../styles/landing.css';
+import Pebble from '../components/Pebble.astro';
+import { getCollection } from 'astro:content';
+import { site, u } from '../config/site';
+
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 ---
 <Base page="home">
-  <Story />
+  <section class="field" data-field aria-label={site.name}>
+    <div class="field__stick">
+      <canvas class="field__canvas" data-canvas aria-hidden="true"></canvas>
+      <div class="field__fallback" aria-hidden="true"></div>
+      <div class="field__center" data-center>
+        <h1 class="field__name" data-name><span>Corollary</span> <span>Labs</span></h1>
+        <p class="field__ph field__ph--0 ph" data-ph="0">[Statement]</p>
+      </div>
+      <p class="field__ph field__ph--1 ph" data-ph="1">[Sentence]</p>
+      <p class="field__ph field__ph--2 ph" data-ph="2">[Sentence]</p>
+      <div class="field__cue" data-cue aria-hidden="true"><i></i></div>
+    </div>
+  </section>
+
+  <section class="home-about wrap" data-reveal>
+    <p class="label">About</p>
+    <p class="home-about__text ph">[About — one paragraph]</p>
+    <a class="more" href={u('about/')}><span>About</span><Pebble size={34} seed={1} /></a>
+  </section>
+
+  <section class="home-essays wrap" data-reveal>
+    <div class="home-essays__head">
+      <p class="label">Essays</p>
+      <a class="more more--small" href={u('essays/')}><span>All essays</span></a>
+    </div>
+    <ol class="rows">
+      {essays.map((e, i) => (
+        <li>
+          <a class="row" href={u(`essays/${e.id}/`)}>
+            <Pebble size={40} seed={i + 3} />
+            <span class="row__title">{e.data.title}</span>
+            <time class="row__date" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="home-links wrap" data-reveal aria-label="Pages">
+    <a class="bigLink" href={u('about/')}><Pebble size={52} seed={7} /><span>About</span></a>
+    <a class="bigLink" href={u('team/')}><Pebble size={52} seed={8} /><span>Team</span></a>
+    <a class="bigLink" href={u('contact/')}><Pebble size={52} seed={9} /><span>Contact</span></a>
+  </section>
 </Base>
