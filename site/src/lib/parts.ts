@@ -18,7 +18,7 @@ export type Ink = 'y' | 'c' | 'm';
 export type Kind = 'strip' | 'plate' | 'disc' | 'ring' | 'sector' | 'angle' | 'rod';
 export interface Shape {
   kind: Kind; seed: number;
-  L?: number; w?: number; h?: number; r?: number; t?: number; a?: number; b?: number; span?: number;
+  L?: number; w?: number; h?: number; r?: number; t?: number; a?: number; b?: number; span?: number; plain?: boolean;
 }
 type Pt = [number, number];
 export interface Geo { d: string; holes: Pt[]; pins: Pt[]; radius: number; outline: Pt[] }
@@ -127,7 +127,7 @@ export function geo(s: Shape): Geo {
       outer = arc(0, 0, R, 0, Math.PI * 2, 0.8);
       if (R > 7 && r() < 0.4) { const cut = R * (0.62 + r() * 0.2); outer = outer.map(([x, y]) => [x, Math.min(y, cut)]); }
       if (R < 6) drill(0, 0, R * 0.28);
-      else if (r() < 0.5) { drill(0, 0, R * (0.08 + r() * 0.06) + 0.5); }
+      else if (s.plain || r() < 0.7) { drill(0, 0, R * (0.08 + r() * 0.06) + 0.5); }
       else {
         const n = 3 + Math.floor(r() * 4), rr = R * (0.55 + r() * 0.12), a0 = r() * 6.28;
         for (let i = 0; i < n; i++) drill(Math.cos(a0 + (i * 6.28) / n) * rr, Math.sin(a0 + (i * 6.28) / n) * rr, 0.8 + R * 0.04);
@@ -203,10 +203,12 @@ function pick(r: () => number, role: 'spine' | 'big' | 'small' | 'agent'): Shape
     return { kind: 'sector', seed, r: 18 + r() * 8, span: r() < 0.5 ? Math.PI / 2 : Math.PI * 0.66 };
   }
   if (role === 'agent') {
-    if (k < 0.45) return { kind: 'strip', seed, L: 22 + r() * 22, w: 4 + r() * 2 };
-    if (k < 0.7) return { kind: 'disc', seed, r: 6 + r() * 6 };
-    if (k < 0.85) return { kind: 'plate', seed, w: 12 + r() * 8, h: 10 + r() * 6 };
-    return { kind: 'sector', seed, r: 10 + r() * 6, span: Math.PI / 2 };
+    // agents are mostly strips, brackets and half discs; a plain disc now and then
+    if (k < 0.42) return { kind: 'strip', seed, L: 24 + r() * 22, w: 4 + r() * 2 };
+    if (k < 0.64) return { kind: 'angle', seed, a: 20 + r() * 14, b: 12 + r() * 10, w: 4 + r() * 1.4 };
+    if (k < 0.84) return { kind: 'sector', seed, r: 10 + r() * 6, span: Math.PI };
+    if (k < 0.93) return { kind: 'plate', seed, w: 12 + r() * 8, h: 10 + r() * 6 };
+    return { kind: 'disc', seed, r: 6 + r() * 4, plain: true };
   }
   if (k < 0.28) return { kind: 'strip', seed, L: 16 + r() * 20, w: 3.4 + r() * 2 };
   if (k < 0.46) return { kind: 'ring', seed, r: 3.2 + r() * 5, t: 1.1 + r() * 1.4 };
@@ -314,7 +316,7 @@ export function firstPrint(): Part[] {
     at(S('disc', 31, { r: 3.4 }), 'y', 57, 12, 0, 61, 12, 0, 0, 0.3),
     // agents
     { ...at(S('strip', 55, { L: 60, w: 5.2 }), 'm', 50, 50, 34, 50, 50, 34, 1), agent: true },
-    { ...at(S('disc', 14, { r: 10 }), 'm', 64, 63, 0, 64, 63, 0), agent: true },
+    { ...at(S('sector', 14, { r: 12, span: Math.PI }), 'm', 64, 64, -20, 64, 64, -20, 0, 0.6), agent: true },
   ];
 }
 

@@ -58,8 +58,17 @@ img, svg, canvas { display: block; }
 .ov::before, .reg::before { color: var(--c); }
 .ov::after, .reg::after { color: var(--m); }
 .reg { position: relative; isolation: isolate; }
-.ov:hover::before, .ov:focus-visible::before, a:hover .reg::before, a:focus-visible .reg::before { opacity: 1; transform: translate(-0.045em, 0.035em); }
-.ov:hover::after, .ov:focus-visible::after, a:hover .reg::after, a:focus-visible .reg::after { opacity: 1; transform: translate(0.05em, -0.04em); }
+/* on hover the key drops out and the word prints in cyan and pink, a hair off register, so
+   where they overlap it reads indigo */
+.ov, .reg { transition: color 0.18s var(--ease); }
+.ov:focus-visible, a:focus-visible .reg { color: transparent; }
+.ov:focus-visible::before, a:focus-visible .reg::before { opacity: 1; transform: translate(-0.03em, 0.02em); }
+.ov:focus-visible::after, a:focus-visible .reg::after { opacity: 1; transform: translate(0.03em, -0.02em); }
+@media (hover: hover) {
+  .ov:hover, a:hover .reg { color: transparent; }
+  .ov:hover::before, a:hover .reg::before { opacity: 1; transform: translate(-0.03em, 0.02em); }
+  .ov:hover::after, a:hover .reg::after { opacity: 1; transform: translate(0.03em, -0.02em); }
+}
 .ov[aria-current='page'] { box-shadow: inset 0 -2px 0 var(--m); }
 
 /* ——— header: fixed, hides on the way down, returns on the way up ——— */
@@ -69,7 +78,7 @@ img, svg, canvas { display: block; }
   padding: 16px var(--gut);
   transition: transform 0.45s var(--ease), background-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
-.top.is-solid { background-color: rgb(238 235 227 / 0.94); box-shadow: 0 1px 0 var(--rule); }
+.top.is-solid { background-color: var(--paper); box-shadow: 0 1px 0 var(--rule); }
 .top.is-hidden { transform: translateY(-101%); }
 .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; letter-spacing: -0.01em; font-size: 17px; }
 .brand .mark path { mix-blend-mode: multiply; }
@@ -82,16 +91,18 @@ img, svg, canvas { display: block; }
     display: block; appearance: none; border: 0; background: none; font: inherit; font-size: 15px; font-weight: 500;
     color: var(--key); padding: 8px 0 8px 16px; margin: -8px 0; cursor: pointer;
   }
+  /* the menu: a full-height sheet of paper over the page */
   .top__nav {
-    position: absolute; left: 0; right: 0; top: 100%;
-    flex-direction: column; gap: 0; padding: 4px var(--gut) 20px;
-    background: var(--paper); box-shadow: 0 1px 0 var(--rule);
-    font-size: 30px; font-weight: 550; letter-spacing: -0.02em; line-height: 1.25;
+    position: fixed; left: 0; right: 0; top: 58px; bottom: 0;
+    flex-direction: column; gap: 0; padding: 24px var(--gut) 40px;
+    background: var(--paper); border-top: 1px solid var(--rule);
+    font-size: 52px; font-weight: 600; letter-spacing: -0.04em; line-height: 1.05; font-stretch: 84%;
     visibility: hidden; opacity: 0; transform: translateY(-8px);
     transition: opacity 0.25s var(--ease), transform 0.35s var(--ease), visibility 0s 0.35s;
   }
   .top__nav a { padding: 6px 0; align-self: flex-start; }
-  .top[data-open='true'] { background-color: var(--paper); }
+  .top[data-open='true'] { background-color: var(--paper); transform: none; }
+  .top__nav a { border-bottom: 1px solid var(--rule); align-self: stretch; padding: 10px 0 12px; }
   .top[data-open='true'] .top__nav { visibility: visible; opacity: 1; transform: none; transition: opacity 0.25s var(--ease), transform 0.35s var(--ease); }
 }
 
@@ -114,32 +125,32 @@ img, svg, canvas { display: block; }
 .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .print path {
   mix-blend-mode: multiply;
-  filter: url(#ink);
   transform: var(--a);
   transition: transform 0.9s var(--ease) var(--d, 0ms), opacity 0.35s var(--ease);
 }
 .print[data-state='after'] path { transform: var(--b); }
+.print path.st { mix-blend-mode: normal; pointer-events: none; }
 .print .ag { transform: var(--a); }
 .print[data-state='before'] .ag { opacity: 0; transform: var(--a) scale(1.25); transition: transform 0.4s var(--ease), opacity 0.25s var(--ease); }
 a:hover .print[data-state='before'] path, a:focus-visible .print[data-state='before'] path { transform: var(--b); }
 a:hover .print[data-state='before'] .ag, a:focus-visible .print[data-state='before'] .ag { opacity: 1; transform: var(--a); }
 
 /* ——— home: hero ——— */
-.hero { position: relative; height: 250vh; }
-@media (max-width: 819px) { .hero { height: 200vh; } }
+.hero { position: relative; height: 330vh; }
+@media (max-width: 819px) { .hero { height: 260vh; } }
 .stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
 .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: multiply; cursor: crosshair; touch-action: pan-y; }
 @media (hover: hover) and (pointer: fine) { .stage canvas { cursor: none; } }
 .stage canvas:focus-visible { outline-offset: -6px; }
 .hero__text {
-  position: absolute; left: var(--gut); bottom: clamp(24px, 6vh, 64px);
-  width: min(30vw, 400px);
+  position: absolute; left: var(--gut); bottom: clamp(24px, 5vh, 56px);
+  width: min(32vw, 470px);
   display: flex; flex-direction: column; gap: clamp(28px, 7vh, 72px);
   pointer-events: none;
 }
 .hero__statement {
-  margin: 0; font-weight: 500; font-size: var(--t-l); line-height: 1.12; letter-spacing: -0.02em;
-  max-width: 15ch; font-stretch: 92%;
+  margin: 0; font-weight: 600; font-size: clamp(56px, 5.4vw, 92px); line-height: 0.9; letter-spacing: -0.045em;
+  font-stretch: 80%; text-wrap: balance;
 }
 .hero__states {
   order: -1; margin: 0; padding: 0; list-style: none;
@@ -151,7 +162,7 @@ a:hover .print[data-state='before'] .ag, a:focus-visible .print[data-state='befo
 .stage[data-state='1'] [data-s='1'] .n, .stage[data-state='2'] [data-s='2'] .n { color: var(--m); }
 @media (max-width: 819px) {
   .hero__text { right: var(--gut); width: auto; bottom: 22px; gap: 14px; }
-  .hero__statement { max-width: 16ch; font-size: 30px; line-height: 1.08; }
+  .hero__statement { font-size: 48px; line-height: 0.92; }
   .hero__states li { transition: none; }
   .stage[data-state='0'] .hero__states li:not([data-s='0']),
   .stage[data-state='1'] .hero__states li:not([data-s='1']),
@@ -168,12 +179,12 @@ a:hover .print[data-state='before'] .ag, a:focus-visible .print[data-state='befo
 .more { grid-column: 4 / span 6; justify-self: start; margin-top: 28px; font-size: 15px; font-weight: 550; border-bottom: 1px solid currentColor; padding-bottom: 2px; }
 .block--essays .elist { grid-column: 4 / span 9; }
 .block--links { padding-bottom: 8px; }
-.pages { grid-column: 4 / span 9; list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
-.pages li { border-bottom: 1px solid var(--rule); }
-.pages a { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--col); padding: 14px 0; text-decoration: none; }
-.pages .big { font-size: clamp(40px, 5.6vw, 88px); font-weight: 600; letter-spacing: -0.03em; line-height: 1; font-stretch: 88%; }
-.pages .print { width: clamp(64px, 7vw, 104px); height: auto; aspect-ratio: 1; }
-@media (max-width: 819px) { .pages { grid-column: 1 / -1; } .pages .big { font-size: 40px; } }
+.pages { grid-column: 4 / span 9; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--col); }
+.pages a { display: grid; grid-template-rows: auto auto; text-decoration: none; border-top: 1px solid var(--rule); padding-top: 18px; }
+/* the word overprints the bottom of its print */
+.pages .print { width: 100%; max-width: 360px; height: auto; aspect-ratio: 1; grid-row: 1; grid-column: 1; }
+.pages .big { grid-row: 1; grid-column: 1; align-self: end; position: relative; font-size: clamp(56px, 6.4vw, 110px); font-weight: 600; letter-spacing: -0.045em; line-height: 0.85; font-stretch: 82%; mix-blend-mode: multiply; }
+@media (max-width: 819px) { .pages { grid-column: 1 / -1; } .pages .big { font-size: 44px; } }
 @media (max-width: 819px) {
   .label, .lede, .more, .block--essays .elist { grid-column: 1 / -1; }
   .lede { font-size: 23px; }
@@ -207,7 +218,7 @@ a:hover .print[data-state='before'] .ag, a:focus-visible .print[data-state='befo
    ink, so the letters take new colours where they cross the organisation's parts ——— */
 .page { padding: clamp(84px, 12vh, 120px) var(--gut) 0; display: grid; grid-template-columns: repeat(12, 1fr); column-gap: var(--col); }
 .cover { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(12, 1fr); column-gap: var(--col); align-items: end; }
-.cover__print { grid-column: 3 / span 10; grid-row: 1; justify-self: start; width: min(100%, 84vh, 900px); height: auto; aspect-ratio: 1; }
+.cover__print { grid-column: 3 / span 10; grid-row: 1; justify-self: start; width: min(100%, 84vh, 900px); height: auto; aspect-ratio: 1; margin-bottom: -2vh; }
 /* team: the print stays in view beside the list, so pointing at a person shows their part */
 .page--split .split__print { grid-column: 6 / span 7; grid-row: 1 / span 2; align-self: start; position: sticky; top: 72px; width: min(100%, 84vh); height: auto; aspect-ratio: 1; justify-self: end; }
 .page--split .cover__title { grid-column: 1 / span 9; grid-row: 1; align-self: end; margin: 30vh 0 0; }
@@ -222,12 +233,13 @@ a:hover .print[data-state='before'] .ag, a:focus-visible .print[data-state='befo
 .page__body p { margin: 0 0 1em; max-width: 36em; }
 .page__body .lede { max-width: 30ch; margin-bottom: 1.2em; }
 .people { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
-.people li { display: grid; grid-template-columns: 1.4em 1fr 1fr; gap: var(--col); padding: 18px 0; border-bottom: 1px solid var(--rule); outline: none; cursor: default; }
+.people li { display: grid; grid-template-columns: 64px 1fr 1fr; column-gap: var(--col); row-gap: 4px; padding: 18px 0; border-bottom: 1px solid var(--rule); outline: none; cursor: default; }
+.people__print { grid-row: 1 / span 2; width: 64px; height: 64px; }
 .people .n { font-size: var(--t-s); color: var(--mute); padding-top: 0.25em; font-variant-numeric: tabular-nums; }
 .people .who { font-weight: 550; }
 .people .role { color: var(--mute); }
 .people .line { grid-column: 2 / -1; color: var(--mute); font-size: 16px; }
-.people li:hover .n, .people li:focus-visible .n { color: var(--m); }
+.people li:focus-visible { box-shadow: inset 3px 0 0 var(--m); }
 .print path { transition: transform 0.9s var(--ease) var(--d, 0ms), opacity 0.35s var(--ease); }
 .print[data-hl] path[data-part] { opacity: 0.18; }
 .print[data-hl='0'] path[data-part='0'], .print[data-hl='1'] path[data-part='1'], .print[data-hl='2'] path[data-part='2'],
@@ -236,7 +248,8 @@ a:hover .print[data-state='before'] .ag, a:focus-visible .print[data-state='befo
 .contact li { display: grid; grid-template-columns: 9em 1fr; gap: var(--col); padding: 18px 0; border-bottom: 1px solid var(--rule); }
 .contact .k { color: var(--mute); font-size: var(--t-s); padding-top: 0.3em; }
 @media (max-width: 819px) {
-  .cover__print { grid-column: 1 / -1; width: 100%; margin-top: 8px; }
+  .cover__print { grid-column: 1 / -1; width: 100%; margin: 8px 0 0; }
+  .cover__title { margin-bottom: -0.04em; }
   .page--split .split__print { grid-column: 1 / -1; grid-row: 1; position: static; width: 100%; margin-top: 8px; }
   .page--split .cover__title { grid-column: 1 / -1; grid-row: 1; margin: 0; }
   .page--split .page__body { grid-column: 1 / -1; grid-row: 2; }

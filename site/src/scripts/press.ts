@@ -31,7 +31,7 @@ interface LivePart extends Part { path: Path2D; nudges: Nudge[]; enter: 'slide' 
 interface Tile {
   gx: number; gy: number; x: number; y: number; rot: number; hero: boolean;
   parts: LivePart[]; extra: LivePart[]; T: number; arr: number; jolt: number; inSheet: boolean;
-  sc: number; cx: number; cy: number; ghost: number;
+  sc: number; cx: number; cy: number; ghost: number; jx: number; jy: number;
 }
 interface Stamp { path: Path2D; x: number; y: number; th: number; t0: number }
 
@@ -84,14 +84,13 @@ export function initPress(root: HTMLElement) {
   for (let gy = -GY; gy <= GY; gy++) for (let gx = -GX; gx <= GX; gx++) {
     const hero = gx === 0 && gy === 0;
     const parts = (hero ? heroParts() : compose(4200 + (gy + GY) * 31 + gx + GX)).map(live);
-    if (hero) parts.forEach((p) => { if (p.agent && p.shape.kind === 'strip') p.enter = 'slide'; });
     // each print is centred in its cell and set to fill it
     const [bx0, by0, bx1, by1] = bounds(parts);
     const ext = Math.max(bx1 - bx0, by1 - by0);
     tiles.push({
       gx, gy, hero, parts, extra: [], T: Infinity, arr: 0, jolt: 0, inSheet: false, ghost: 0,
       sc: hero ? 1 : clamp(90 / ext, 0.85, 1.45), cx: hero ? 50 : (bx0 + bx1) / 2, cy: hero ? 50 : (by0 + by1) / 2,
-      x: gx * P + (hero ? 0 : (R() - 0.5) * 6), y: gy * P + (hero ? 0 : (R() - 0.5) * 6), rot: hero ? 0 : (R() - 0.5) * 3,
+      jx: hero ? 0 : (R() - 0.5) * 5, jy: hero ? 0 : (R() - 0.5) * 5, x: gx * P, y: gy * P, rot: hero ? 0 : (R() - 0.5) * 2.4,
     });
   }
   const tileAt = (gx: number, gy: number) => tiles.find((t) => t.gx === gx && t.gy === gy);
@@ -122,14 +121,14 @@ export function initPress(root: HTMLElement) {
   // ——— state ———
   let W = 0, H = 0, dpr = 1, z0 = 1, z1 = 1, wide = true;
   let f0 = [0, 0], f1 = [0, 0], c1 = [50, 50];
-  let p = 0, sheetStart = 0;
+  let p = 0, sheetStart = 0, intro = 0;
   let cam = { z: 1, tx: 0, ty: 0 };
   let pat: Record<Ink, CanvasPattern>;
   let mask = { x: 0, y: 0, w: 0, h: 0 }, headH = 0;
   const stamps: Stamp[] = [];
   const hand: Shape[] = [
-    S('disc', 101, { r: 7 }), S('strip', 102, { L: 30, w: 4.8 }), S('ring', 103, { r: 6.5, t: 2 }),
-    S('sector', 104, { r: 13, span: Math.PI / 2 }), S('plate', 105, { w: 15, h: 12 }), S('angle', 106, { a: 24, b: 15, w: 4.4 }),
+    S('strip', 102, { L: 30, w: 4.8 }), S('angle', 106, { a: 24, b: 15, w: 4.4 }), S('sector', 104, { r: 11, span: Math.PI }),
+    S('strip', 107, { L: 20, w: 4.2 }), S('ring', 103, { r: 6.5, t: 2 }), S('plate', 105, { w: 15, h: 12 }), S('disc', 101, { r: 6, plain: true }),
   ];
   let handI = 0, handTh = 24;
   let handPath = new Path2D(geo(hand[0]).d);
@@ -163,8 +162,10 @@ export function initPress(root: HTMLElement) {
       const need = 114 * z0, slack = Math.max(0, bottom - top - need);
       f0 = [W * 0.5, top + slack * 0.4 + need / 2 - 4 * z0];
     }
-    // the sheet: 5 × 3 prints beside the words (2 × 3 above them on a phone)
-    const [c0, cN, r0, rN] = wide ? [-2, 2, -1, 1] : [0, 1, -1, 1];
+    // on a phone the agent's strip is pressed in place rather than slid in past the edge
+    for (const part of tiles.find((t) => t.hero)!.parts) if (part.agent && part.shape.kind === 'strip') part.enter = wide ? 'slide' : 'press';
+    // the sheet: 4 × 3 cards beside the words (2 × 3 above them on a phone)
+    const [c0, cN, r0, rN] = wide ? [-1, 2, -1, 1] : [0, 1, -1, 1];
     const rx0 = wide ? mask.x + mask.w + 8 : 22, rx1 = W - (wide ? 36 : 22);
     const ry0 = headH + (wide ? 16 : 4), ry1 = wide ? H - 28 : mask.y - 2;
     const cols = cN - c0 + 1, rows = rN - r0 + 1;
@@ -173,9 +174,6 @@ export function initPress(root: HTMLElement) {
     c1 = [((c0 + cN) / 2) * P + 50, ((r0 + rN) / 2) * P + 50];
     for (const t of tiles) {
       t.inSheet = t.gx >= c0 && t.gx <= cN && t.gy >= r0 && t.gy <= rN;
-      const sx0 = f0[0] + (t.x - 50) * z0, sy0 = f0[1] + (t.y - 50) * z0, sx1 = sx0 + 100 * z0, sy1 = sy0 + 100 * z0;
-      const under = sx1 > mask.x && sx0 < mask.x + mask.w && sy1 > mask.y && sy0 < mask.y + mask.h;
-      t.ghost = wide && !under ? 0.13 : 0;
     }
     const T = travel(tileAt(0, 0)!, tiles.filter((t) => t.inSheet));
     const maxT = Math.max(...[...T.values()].filter(isFinite));
@@ -190,15 +188,17 @@ export function initPress(root: HTMLElement) {
   function progress() {
     const r = root.getBoundingClientRect();
     let q = clamp(-r.top / Math.max(1, r.height - innerHeight));
-    if (reduce.matches) q = q < 0.3 ? 0 : q < 0.66 ? 0.5 : 1;
+    if (reduce.matches) q = q < 0.2 ? 0 : q < 0.5 ? 0.36 : 1;
     return q;
   }
 
   function request() { if (!raf) raf = requestAnimationFrame(frame); }
   function frame(now: number) { raf = 0; if (draw(now)) request(); }
 
-  const heroA = () => ease(seg(p, 0.05, 0.42));
-  const zoomOf = () => ease(seg(p, 0.52, 0.9));
+  // scroll: 0.04–0.32 the agent is bolted in; 0.4–0.66 the view opens; then the sheet holds
+  const heroA = () => ease(seg(p, 0.04, 0.32));
+  const zoomOf = () => ease(seg(p, 0.4, 0.66));
+  const INTRO = 1300;
 
   /** A part's current pose inside its print: position, angle, scale, opacity. */
   function pose(part: LivePart, a: number, hero: boolean, now: number) {
@@ -215,7 +215,8 @@ export function initPress(root: HTMLElement) {
         if (k <= 0) return null;
         x += 150 * (1 - k); y -= 16 * (1 - k);
       } else {
-        const k = seg(a, hero ? 0.34 : 0, hero ? 0.56 : 0.3);
+        const l = part.lag ?? 0;
+        const k = hero ? seg(a, 0.1 + l * 0.4, 0.3 + l * 0.4) : seg(a, 0, 0.3);
         if (k <= 0) return null;
         const e = easeOut(k); sc = 1 + 0.35 * (1 - e); al = e;
       }
@@ -255,10 +256,16 @@ export function initPress(root: HTMLElement) {
     const z = z0 * Math.pow(z1 / z0, zoom);
     const fwx = lerp(50, c1[0], zoom), fwy = lerp(50, c1[1], zoom);
     cam = { z, tx: lerp(f0[0], f1[0], zoom) - fwx * z, ty: lerp(f0[1], f1[1], zoom) - fwy * z };
-    stage.dataset.state = p < 0.28 ? '0' : p < 0.62 ? '1' : '2';
+    stage.dataset.state = p < 0.2 ? '0' : p < 0.5 ? '1' : '2';
+    // prints stand apart while the first one is close, and close up as the view opens, so the
+    // neighbours arrive from beyond the frame in full ink
+    const gap = lerp(1.9, 1, zoom);
+    for (const t of tiles) { t.x = t.gx * P * gap + t.jx; t.y = t.gy * P * gap + t.jy; }
+    const ik = intro ? clamp((now - intro) / INTRO) : 1;
+    if (ik < 1) busy = true;
 
     // the sheet's front: plays once the view has opened, from the first print
-    if (zoom > 0.9 && !sheetStart) {
+    if (zoom > 0.92 && !sheetStart) {
       sheetStart = now + 120;
       for (const t of tiles) if (!t.hero && t.inSheet && !t.arr) { t.arr = sheetStart + t.T; t.jolt = t.arr; }
     }
@@ -275,8 +282,8 @@ export function initPress(root: HTMLElement) {
 
     for (const t of tiles) {
       if (!t.hero && !t.inSheet) continue;
-      const al = t.hero ? 1 : lerp(t.ghost, 1, zoom);
-      if (al <= 0.005) continue;
+      if (!t.hero && zoom <= 0.001) continue;
+      const al = 1;
       const sx = t.x * z + cam.tx, sy = t.y * z + cam.ty;
       if (sx > W || sy > H || sx + 110 * z < 0 || sy + 110 * z < 0) continue;
       const a = tileA(t, now);
@@ -286,24 +293,47 @@ export function initPress(root: HTMLElement) {
       // the impression: the print is pressed (a slight give) as the plates jolt
       let press = 1;
       if (t.jolt && !reduce.matches) { const k = (now - t.jolt) / 260; if (k > 0 && k < 1) press = 1 - 0.05 * Math.sin(k * Math.PI); }
-      ctx.translate(t.x + 50, t.y + 50); ctx.rotate(rad(t.rot)); ctx.scale(t.sc * press, t.sc * press); ctx.translate(-t.cx, -t.cy);
+      ctx.translate(t.x + 50, t.y + 50); ctx.rotate(rad(t.rot));
+      // each print sits on its own card
+      const cardA = seg(zoom, 0.45, 1);
+      if (cardA > 0.01) {
+        ctx.globalAlpha = cardA * 0.035; ctx.fillStyle = INK.key; ctx.fillRect(-51, -51, 102, 102);
+        ctx.globalAlpha = cardA * 0.16; ctx.strokeStyle = INK.key; ctx.lineWidth = 1 / z; ctx.strokeRect(-51, -51, 102, 102);
+      }
+      ctx.scale(t.sc * press, t.sc * press); ctx.translate(-t.cx, -t.cy);
       ctx.globalAlpha = al;
       for (const part of [...t.parts, ...t.extra]) {
         const q = pose(part, a, t.hero, now);
         if (!q) { if (part.t0 !== undefined && now < part.t0) busy = true; continue; }
         if (q.busy) busy = true;
         const [jx, jy] = jolt(t, part.ink, now);
+        // on load: each part is laid in as bare metal, then the plate comes down, yellow then cyan
+        let inkA = 1;
+        if (t.hero && ik < 1 && !part.agent) {
+          const lay = seg(ik, 0.04 + (part.lag ?? 0) * 0.22, 0.16 + (part.lag ?? 0) * 0.22);
+          const at0 = part.ink === 'y' ? 0.42 : 0.6;
+          inkA = easeOut(seg(ik, at0, at0 + 0.14));
+          if (inkA < 1 && lay > 0) {
+            ctx.save();
+            ctx.globalAlpha = lay * (1 - inkA) * 0.45;
+            ctx.translate(q.x, q.y); ctx.rotate(rad(q.th)); ctx.translate(part.ox, part.oy);
+            ctx.strokeStyle = INK.key; ctx.lineWidth = 1 / z; ctx.stroke(part.path);
+            ctx.restore();
+          }
+          if (inkA <= 0) continue;
+        }
         ctx.save();
-        ctx.globalAlpha = al * q.al;
+        ctx.globalAlpha = al * q.al * inkA;
         ctx.translate(q.x + jx, q.y + jy); ctx.rotate(rad(q.th)); ctx.translate(part.ox, part.oy);
-        if (q.sc !== 1) ctx.scale(q.sc, q.sc);
+        const isc = q.sc * (1 + 0.04 * (1 - inkA));
+        if (isc !== 1) ctx.scale(isc, isc);
         ink(part.path, part.ink);
         ctx.restore();
       }
       ctx.restore();
     }
 
-    marks(hA, zoom, now);
+    marks(hA, zoom, now, ik);
 
     // printed by the reader
     for (const s of stamps) {
@@ -352,12 +382,19 @@ export function initPress(root: HTMLElement) {
     } else ptr.snap = null;
 
     // a paper margin keeps the words clear once the sheet opens
-    const mk = wide ? clamp(zoom * 1.6) : 1;
+    const mk = wide ? clamp(zoom * 3) : 1;
     if (mk > 0) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.globalCompositeOperation = 'destination-out';
       ctx.globalAlpha = mk;
-      ctx.fillRect(mask.x, mask.y, mask.w, mask.h);
+      if (wide) {
+        // the whole column of words is kept as paper, with a soft edge, so cards passing under
+        // it on their way in fade rather than being cut
+        const x1 = mask.x + mask.w, g = ctx.createLinearGradient(x1 - 70, 0, x1 + 10, 0);
+        g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, x1 + 10, H);
+      } else ctx.fillRect(mask.x, mask.y, mask.w, mask.h);
       ctx.globalAlpha = 1;
     }
     ctx.globalCompositeOperation = 'source-over';
@@ -378,7 +415,7 @@ export function initPress(root: HTMLElement) {
 
   // registration targets and crop marks: around the first print, then around every print on
   // the sheet. A print gets its pink target when the agents' ink has been added to it.
-  function marks(hA: number, zoom: number, now: number) {
+  function marks(hA: number, zoom: number, now: number, ik = 1) {
     const z = cam.z;
     ctx.save();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -413,15 +450,15 @@ export function initPress(root: HTMLElement) {
       const o = wide ? 9 : 5.2, tr = wide ? 2.4 : 1.6;
       for (const [wx, wy] of [[-o, -o], [100 + o, -o], [-o, 100 + o], [100 + o, 100 + o]]) {
         const [x, y] = toS(wx, wy);
-        target(x, y, tr * z, [['y', hm], ['c', hm], ['m', hm * hA]]);
+        target(x, y, tr * z, [['y', hm * seg(ik, 0.42, 0.56)], ['c', hm * seg(ik, 0.6, 0.74)], ['m', hm * hA]]);
       }
-      crops(x0, y0, x1, y1, (wide ? 3 : 2) * z, (wide ? 4 : 2.6) * z, hm * 0.5);
+      crops(x0, y0, x1, y1, (wide ? 3 : 2) * z, (wide ? 4 : 2.6) * z, hm * 0.5 * seg(ik, 0, 0.3));
       // colour bar: each ink alone, then every overprint; pink ones print once an agent has
       const bar: Ink[][] = [['y'], ['c'], ['y', 'c'], ['m'], ['y', 'm'], ['c', 'm'], ['y', 'c', 'm']];
       ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * cam.tx, dpr * cam.ty);
       ctx.globalCompositeOperation = 'multiply';
       bar.forEach((inks, i) => {
-        const al = inks.includes('m') ? Math.max(hA, stamps.length ? 1 : 0) : 1;
+        const al = inks.includes('m') ? Math.max(hA, stamps.length ? 1 : 0) : easeOut(seg(ik, 0.78 + i * 0.05, 0.86 + i * 0.05));
         if (al <= 0.01) return;
         for (const k of inks) { ctx.globalAlpha = hm * al; ctx.fillStyle = pat[k]; ctx.fillRect(12 + i * 6.4, 105, 5.4, 3.4); }
       });
@@ -557,6 +594,8 @@ export function initPress(root: HTMLElement) {
     const d = down;
     down = null;
     if (e.pointerType === 'mouse') {
+      // a drag only turns the part in your hand; a click prints it
+      if (moved > 8) { ptr.x = x; ptr.y = y; request(); return; }
       if (overWords(d.x, d.y)) return;
       printAt(d.x, d.y);
       ptr.x = x; ptr.y = y;
@@ -595,6 +634,11 @@ export function initPress(root: HTMLElement) {
   new ResizeObserver(() => resize()).observe(stage);
   reduce.addEventListener('change', () => { p = progress(); request(); });
   p = progress();
+  if (p < 0.02 && !reduce.matches) {
+    intro = performance.now() + 150;
+    const hero = tiles.find((t) => t.hero)!;
+    hero.jolt = intro + INTRO * 0.44;
+  }
   resize();
   document.fonts?.ready.then(() => resize());
 }

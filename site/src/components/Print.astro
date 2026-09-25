@@ -6,9 +6,9 @@
 import { compose, shapePath, byRadius, bounds, INK, RIM, type Part } from '../lib/parts';
 interface Props {
   seed?: string; parts?: Part[]; state?: 'before' | 'after'; class?: string; label?: string;
-  base?: number; agents?: number; pad?: number; tag?: (p: Part, i: number) => string | undefined;
+  base?: number; agents?: number; pad?: number; tag?: (p: Part, i: number) => string | undefined; hl?: string;
 }
-const { seed = 'print', parts: given, state = 'after', class: cls = '', label, base, agents, pad = 6, tag } = Astro.props;
+const { seed = 'print', parts: given, state = 'after', class: cls = '', label, base, agents, pad = 6, tag, hl } = Astro.props;
 const parts = (given ?? compose(seed, { base, agents })).slice().sort(byRadius);
 const t = (p: Part, s: 0 | 1) => {
   const px = s ? p.px1 : p.px, py = s ? p.py1 : p.py, th = s ? p.th1 : p.th;
@@ -18,19 +18,15 @@ const [x0, y0, x1, y1] = bounds(parts);
 const side = Math.max(x1 - x0, y1 - y0) + pad * 2;
 const vb = `${((x0 + x1) / 2 - side / 2).toFixed(1)} ${((y0 + y1) / 2 - side / 2).toFixed(1)} ${side.toFixed(1)} ${side.toFixed(1)}`;
 ---
-<svg class:list={['print', cls]} data-state={state} viewBox={vb} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'} focusable="false">
-  {parts.map((p, i) => (
-    <path
-      class:list={[p.agent && 'ag']}
-      data-part={tag?.(p, i)}
-      d={shapePath(p.shape)}
-      fill={INK[p.ink]}
-      stroke={RIM[p.ink]}
-      stroke-width="0.35"
-      stroke-opacity="0.45"
-      stroke-linejoin="round"
-      fill-rule="evenodd"
-      style={`--a:${t(p, 0)};--b:${t(p, 1)};--d:${Math.round((p.lag ?? 0) * 160)}ms`}
-    />
-  ))}
+<svg class:list={['print', cls]} data-state={state} data-hl={hl} viewBox={vb} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'} focusable="false">
+  {parts.map((p, i) => {
+    const style = `--a:${t(p, 0)};--b:${t(p, 1)};--d:${Math.round((p.lag ?? 0) * 160)}ms`;
+    return (
+      <>
+        <path class:list={[p.agent && 'ag']} data-part={tag?.(p, i)} d={shapePath(p.shape)} fill={INK[p.ink]} stroke={RIM[p.ink]}
+          stroke-width="0.3" stroke-opacity="0.55" stroke-linejoin="round" fill-rule="evenodd" style={style} />
+        <path class:list={['st', p.agent && 'ag']} data-part={tag?.(p, i)} d={shapePath(p.shape)} fill="url(#streak)" fill-rule="evenodd" style={style} />
+      </>
+    );
+  })}
 </svg>

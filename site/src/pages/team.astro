@@ -8,15 +8,17 @@ const people = [1, 2, 3, 4];
 const parts = teamPrint(people.length).map((p, i) => ({ ...p, who: i >= 1 && i <= people.length ? String(i - 1) : undefined }));
 ---
 <Base page="team" title="Team" description="[Team — meta description]">
-  <section class="page page--split">
-    <Print parts={parts} state="after" class="split__print" pad={4} tag={(p) => (p as { who?: string }).who} />
-    <h1 class="cover__title">Team</h1>
+  <section class="page">
+    <header class="cover">
+      <Print parts={parts} state="after" class="cover__print" pad={4} tag={(p) => (p as { who?: string }).who} />
+      <h1 class="cover__title">Team</h1>
+    </header>
     <div class="page__body">
       <p class="lede">[Team — one sentence introducing the people]</p>
       <ul class="people" data-people>
         {people.map((n, i) => (
           <li tabindex="0" data-who={i}>
-            <span class="n">{n}</span>
+            <Print parts={parts} state="after" class="people__print" pad={3} hl={String(i)} tag={(p) => (p as { who?: string }).who} />
             <span class="who">[Name {n}]</span>
             <span class="role">[Role]</span>
             <span class="line">[One line: background]</span>
@@ -26,7 +28,7 @@ const parts = teamPrint(people.length).map((p, i) => ({ ...p, who: i >= 1 && i <
     </div>
   </section>
   <script>
-    const print = document.querySelector<SVGElement>('.split__print');
+    const print = document.querySelector<SVGElement>('.cover__print');
     document.querySelectorAll<HTMLElement>('[data-people] li').forEach((li) => {
       const on = () => print?.setAttribute('data-hl', li.dataset.who!);
       const off = () => print?.removeAttribute('data-hl');

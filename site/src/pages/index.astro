@@ -4,7 +4,7 @@ import EssayList from '../components/EssayList.astro';
 import { getCollection } from 'astro:content';
 import Print from '../components/Print.astro';
 import { url } from '../config/site';
-import { firstPrint, teamPrint, compose } from '../lib/parts';
+import { teamPrint, compose } from '../lib/parts';
 const people = 4;
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 ---
@@ -35,12 +35,10 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
     <a class="more ov" href={url('essays/')} data-text="All essays">All essays</a>
   </section>
 
-  <nav class="block block--links" aria-label="Pages">
-    <h2 class="label">Pages</h2>
+  <nav class="block block--links" aria-label="Team and contact">
     <ul class="pages">
-      <li><a href={url('about/')}><span class="big reg" data-text="About">About</span><Print parts={firstPrint()} state="before" pad={4} /></a></li>
-      <li><a href={url('team/')}><span class="big reg" data-text="Team">Team</span><Print parts={teamPrint(people)} state="before" pad={4} /></a></li>
-      <li><a href={url('contact/')}><span class="big reg" data-text="Contact">Contact</span><Print parts={compose('contact', { base: 3, agents: 1 })} state="before" pad={4} /></a></li>
+      <li><a href={url('team/')}><Print parts={teamPrint(people)} state="before" pad={3} /><span class="big reg" data-text="Team">Team</span></a></li>
+      <li><a href={url('contact/')}><Print parts={compose('contact', { base: 5, agents: 1 })} state="before" pad={3} /><span class="big reg" data-text="Contact">Contact</span></a></li>
     </ul>
   </nav>
 
