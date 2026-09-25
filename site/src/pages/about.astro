@@ -1,28 +1,33 @@
 ---
 import Base from '../layouts/Base.astro';
 import PageTitle from '../components/PageTitle.astro';
-import { site } from '../config/site';
+import { site, url } from '../config/site';
 import '../styles/pages.css';
 ---
 <Base page="about" title="About">
   <header class="phead grid">
     <PageTitle text="About" />
-    <p class="phead__lead lead ph">[Statement — what Corollary Labs is, in one or two sentences]</p>
+    <p class="phead__lead lead">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
   </header>
   <section class="section grid" aria-labelledby="a1">
-    <h2 class="section__label label" id="a1">About</h2>
-    <div class="prose-ph ph">
-      <p>[About — first paragraph]</p>
-      <p>[About — second paragraph]</p>
-    </div>
+    <h2 class="section__label label" id="a1">Team</h2>
+    <ol class="people">
+      {Array.from({ length: 4 }, (_, i) => (
+        <li class="person">
+          <span class="person__n label">{String(i + 1).padStart(2, '0')}</span>
+          <span class="person__name ph">[Name]</span>
+          <span class="person__role label ph">[Role]</span>
+        </li>
+      ))}
+    </ol>
+    <a class="section__more textlink" href={url('team/')}>Team →</a>
   </section>
   <section class="section grid" aria-labelledby="a2">
     <h2 class="section__label label" id="a2">Details</h2>
     <dl class="rows">
-      <div><dt class="label">Entity</dt><dd class="ph">[Entity]</dd></div>
       <div><dt class="label">Founded</dt><dd class="ph">[Year]</dd></div>
       <div><dt class="label">Location</dt><dd class="ph">[Location]</dd></div>
-      <div><dt class="label">Contact</dt><dd class="ph">{site.email}</dd></div>
+      <div><dt class="label">Contact</dt><dd>{site.email}</dd></div>
     </dl>
   </section>
 </Base>

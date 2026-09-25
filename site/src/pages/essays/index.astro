@@ -8,12 +8,12 @@ import '../../styles/pages.css';
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 ---
-<Base page="essays" title="Essays">
+<Base page="essays" title="Research">
   <header class="phead grid">
-    <PageTitle text="Essays" />
-    <p class="phead__lead lead ph">[Essays — one sentence]</p>
+    <PageTitle text="Research" />
+    <p class="phead__lead lead">Essays on agents, organisations and how new technology spreads.</p>
   </header>
-  <section class="section grid" aria-label="All essays">
+  <section class="section grid" aria-label="All research">
     <ol class="elist">
       {essays.map((e, i) => (
         <li>

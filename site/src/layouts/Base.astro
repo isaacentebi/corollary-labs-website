@@ -1,13 +1,13 @@
 ---
 import '../styles/swiss.css';
 import fontUrl from '../fonts/archivo-latin-wdth-normal.woff2?url';
-import { site, url, nav } from '../config/site';
+import { site, url, nav, footerNav } from '../config/site';
 import Wordmark from '../components/Wordmark.astro';
 
 interface Props { title?: string; description?: string; page: 'home' | 'essays' | 'essay' | 'about' | 'team' | 'contact'; head?: boolean }
 const { title, description = site.description, page, head = true } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
-const current = (href: string) => (href === url(`${page}/`) ? 'page' : undefined);
+const current = (href: string) => (href === url(`${page}/`) || (page === 'team' && href === url('about/')) ? 'page' : undefined);
 ---
 <!doctype html>
 <html lang="en" data-page={page}>
@@ -37,10 +37,11 @@ const current = (href: string) => (href === url(`${page}/`) ? 'page' : undefined
     </main>
     <footer class="site-foot grid">
       <div class="site-foot__top" aria-hidden="true"></div>
-      <div><Wordmark /><p class="ph" style="margin-top:8px">[Location]</p></div>
-      <div><span class="label">Pages</span><ul><li><a class="textlink" href={url()}>Home</a></li>{nav.slice(0, 2).map((n) => <li><a class="textlink" href={n.href}>{n.label}</a></li>)}</ul></div>
-      <div><span class="label">&nbsp;</span><ul>{nav.slice(2).map((n) => <li><a class="textlink" href={n.href}>{n.label}</a></li>)}</ul></div>
-      <div><span class="label">Contact</span><p class="ph">{site.email}</p><p class="ph" style="margin-top:4px">© {site.year}</p></div>
+      <div class="site-foot__id"><Wordmark /><p class="ph">[Location]</p></div>
+      <nav class="site-foot__nav" aria-label="Footer">
+        <ul>{footerNav.map((n) => <li><a class="textlink" href={n.href}>{n.label}</a></li>)}</ul>
+      </nav>
+      <div class="site-foot__meta"><p>{site.email}</p><p class="site-foot__c">© {site.year} {site.name}</p></div>
     </footer>
   </body>
 </html>

@@ -1,49 +1,89 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
-import { url, nav } from '../config/site';
+import { url, nav, site, contactHref } from '../config/site';
 import Wordmark from '../components/Wordmark.astro';
+import PageTitle from '../components/PageTitle.astro';
 import '../styles/home.css';
 
 const all = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
 const essays = all.slice(0, 3);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
+
+const capabilities = [
+  ['Agent deployment', 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.'],
+  ['Model fine-tuning', 'Models adapted and evaluated on your data for the specific tasks your agents perform.'],
+  ['Systems integration', 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.'],
+  ['Evaluation and governance', 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.'],
+];
+const beats = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
+const principles = [
+  ['Workflow first.', 'We map how work is actually done before choosing a model.'],
+  ['Design the reorganisation.', 'Roles, handoffs and controls change when agents arrive. We plan that change.'],
+  ['Measure in production.', 'Every deployment reports on accuracy, cost and time saved.'],
+];
+const n2 = (i: number) => String(i + 1).padStart(2, '0');
 ---
 <Base page="home" head={false}>
   <header class="site-head grid homebar" data-homebar aria-hidden="true" inert>
     <Wordmark />
     <nav aria-label="Primary">{nav.map((n) => <a class="navlink" href={n.href}>{n.label}</a>)}</nav>
   </header>
-  <section class="story" data-programme aria-label="Corollary Labs">
-    <div class="stage" data-stage>
-      <canvas aria-hidden="true"></canvas>
-      <div class="stage__layer" data-layer>
-        <h1 class="st-title" data-title aria-label="Corollary Labs">Corollary Labs</h1>
-        <p class="st-lead lead ph" data-lead>[Statement — one or two sentences]</p>
-        <nav aria-label="Primary">
-          {nav.map((n) => <a class="st-nav navlink" data-navitem href={n.href}>{n.label}</a>)}
-        </nav>
-      </div>
+
+  <section class="hero" data-hero aria-labelledby="hero-h">
+    <div class="hero__grid" aria-hidden="true">{Array.from({ length: 13 }, (_, i) => <i class={i === 10 ? 'is-new' : ''} />)}</div>
+    <h1 class="hero__name" id="hero-h" aria-label="Corollary Labs"><span class="wm" aria-hidden="true">Corollary<i class="wm__m"></i>Labs</span></h1>
+    <nav class="hero__nav" aria-label="Primary">{nav.map((n) => <a class="navlink" href={n.href}>{n.label}</a>)}</nav>
+    <p class="hero__headline" data-headline>We deploy AI agents inside organisations and rebuild the operations around them.</p>
+    <div class="hero__col" data-col aria-hidden="true">{Array.from({ length: 8 }, () => <b />)}</div>
+    <i class="hero__caret" data-caret aria-hidden="true"></i>
+    <p class="hero__sub">Agent design, model <span class="nw">fine-tuning</span>, systems integration and evaluation, from first workflow to production.</p>
+    <div class="hero__actions">
+      <a class="btn" href={contactHref}><span class="btn__m" aria-hidden="true"></span>Contact us</a>
+      <a class="textlink hero__alt" href="#approach">Our approach</a>
     </div>
   </section>
 
-  <section class="section grid home-about" aria-labelledby="about-h">
-    <h2 class="section__label label" id="about-h">About</h2>
-    <p class="home-about__lead lead ph">[About — the company in two sentences]</p>
-    <div class="home-about__cols ph">
-      <p>[About — first paragraph: what Corollary Labs studies]</p>
-      <p>[About — second paragraph: how it works with firms]</p>
-    </div>
-    <dl class="home-about__facts">
-      <div><dt class="label">Founded</dt><dd class="ph">[Year]</dd></div>
-      <div><dt class="label">Location</dt><dd class="ph">[Location]</dd></div>
-      <div><dt class="label">Email</dt><dd class="ph">[Email]</dd></div>
-    </dl>
+  <section class="hs grid" id="capabilities" aria-labelledby="cap-h">
+    <PageTitle as="h2" view text="Capabilities" id="cap-h" class="hs__title" />
+    <ol class="caps">
+      {capabilities.map(([t, d], i) => (
+        <li class="cap">
+          <span class="cap__n label">{n2(i)}</span>
+          <h3 class="cap__t">{t}.</h3>
+          <p class="cap__d">{d}</p>
+        </li>
+      ))}
+    </ol>
   </section>
 
-  <section class="section grid home-essays" aria-labelledby="essays-h">
-    <h2 class="section__label label" id="essays-h">Essays</h2>
-    <ol class="elist">
+  <section class="hs grid" id="approach" aria-labelledby="app-h" data-approach>
+    <PageTitle as="h2" view text="Approach" id="app-h" class="hs__title" />
+    <p class="hs__lead">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+    <figure class="fig">
+      <div class="fig__box" data-fig><canvas aria-hidden="true"></canvas></div>
+      <figcaption class="fig__legend">
+        <ol>
+          {beats.map((b, i) => (
+            <li><button type="button" class="beat" data-beat aria-pressed={i === 0 ? 'true' : 'false'}><i class="beat__bar" aria-hidden="true"></i><span class="beat__n">{n2(i)}</span> <span class="beat__t">{b}</span></button></li>
+          ))}
+        </ol>
+      </figcaption>
+    </figure>
+    <ol class="principles">
+      {principles.map(([t, d], i) => (
+        <li class="pr">
+          <span class="pr__n label">{i + 1}</span>
+          <p><strong>{t}</strong> {d}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="hs grid" id="research" aria-labelledby="res-h">
+    <PageTitle as="h2" view text="Research" id="res-h" class="hs__title" />
+    <p class="hs__lead">Essays on agents, organisations and how new technology spreads.</p>
+    <ol class="elist hs__list">
       {essays.map((e, i) => (
         <li>
           <a class="erow" href={url(`essays/${e.id}/`)}>
@@ -55,19 +95,36 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
         </li>
       ))}
     </ol>
-    <a class="home-essays__all textlink" href={url('essays/')}>All essays</a>
+    <a class="hs__more textlink" href={url('essays/')}>All research →</a>
   </section>
 
+  <section class="hs grid" id="company" aria-labelledby="co-h">
+    <PageTitle as="h2" view text="Company" id="co-h" class="hs__title" />
+    <p class="hs__lead">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
+    <h3 class="hs__side label">Team</h3>
+    <ol class="team">
+      {Array.from({ length: 4 }, (_, i) => (
+        <li><span class="label">{n2(i)}</span><span class="ph">[Name — Role]</span></li>
+      ))}
+    </ol>
+    <a class="hs__more textlink" href={url('about/')}>About the company →</a>
+  </section>
+
+  <section class="hs grid hs--contact" id="contact" aria-labelledby="ct-h">
+    <PageTitle as="h2" view text="Contact" id="ct-h" class="hs__title" />
+    <p class="contact__line">Deploying agents in your organisation? Talk to us.</p>
+    <p class="contact__mail">{site.email}</p>
+  </section>
 
   <script>
-    import { mountProgramme } from '../scripts/programme';
-    const root = document.querySelector<HTMLElement>('[data-programme]');
+    import { mountHero } from '../scripts/hero';
+    import { mountApproach } from '../scripts/approach';
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
     const bar = document.querySelector<HTMLElement>('[data-homebar]');
-    const tail = document.querySelector<HTMLElement>('.home-about');
-    if (bar && tail) {
-      // the links return once the story has passed
+    if (hero && bar) {
+      // the bar returns once the hero has passed
       const upd = () => {
-        const on = tail.getBoundingClientRect().top < innerHeight * 0.5;
+        const on = hero.getBoundingClientRect().bottom < 0;
         if (on === bar.classList.contains('is-on')) return;
         bar.classList.toggle('is-on', on);
         bar.toggleAttribute('inert', !on);
@@ -75,6 +132,12 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
       };
       addEventListener('scroll', upd, { passive: true }); upd();
     }
-    if (root) document.fonts.load("700 100px Archivo").then(() => document.fonts.ready).then(() => mountProgramme(root)).catch(() => root.classList.add('is-static'));
+    // section titles take in their module when they come into view
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { threshold: 0.6 });
+    document.querySelectorAll('[data-view]').forEach((el) => io.observe(el));
+    const fonts = document.fonts.load("740 100px Archivo").then(() => document.fonts.ready);
+    if (hero) fonts.then(() => mountHero(hero)).catch(() => hero.classList.add('is-static'));
+    const app = document.querySelector<HTMLElement>('[data-approach]');
+    if (app) mountApproach(app);
   </script>
 </Base>

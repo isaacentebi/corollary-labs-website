@@ -20,7 +20,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
   <article class="essay">
     <header class="ehead grid">
       <dl class="ehead__meta">
-        <div><dt class="label">Index</dt><dd><a class="textlink" href={url("essays/")}>Essays</a></dd></div>
+        <div><dt class="label">Index</dt><dd><a class="textlink" href={url("essays/")}>Research</a></dd></div>
         <div><dt class="label">Date</dt><dd><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time></dd></div>
         <div><dt class="label">Length</dt><dd>{fm.minutesRead} min</dd></div>
         <div><dt class="label">By</dt><dd>{site.author}</dd></div>

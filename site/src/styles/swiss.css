@@ -114,9 +114,16 @@ main, .site-foot, .site-head { position: relative; z-index: 1; }
 
 /* ---------- header (inner pages) ---------- */
 .site-head { padding-top: var(--mx); align-items: start; }
-.site-head .wm { grid-column: 1 / span 3; }
-.site-head nav { grid-column: 4 / -1; display: flex; justify-content: flex-end; gap: var(--g); }
+.site-head { row-gap: 10px; }
+.site-head .wm { grid-column: 1 / -1; }
+.site-head nav { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 12px; }
+.site-head nav .navlink { font-size: 13px; }
 @media (min-width: 820px) {
+  .site-head .wm { grid-column: 1 / span 4; }
+  .site-head nav { grid-column: 7 / -1; justify-content: flex-end; gap: 28px; }
+  .site-head nav .navlink { font-size: var(--t-s); }
+}
+@media (min-width: 1200px) {
   .site-head nav { grid-column: 9 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--g); justify-content: stretch; }
 }
 .navlink { font-size: var(--t-s); font-weight: 500; position: relative; }
@@ -130,18 +137,20 @@ main, .site-foot, .site-head { position: relative; z-index: 1; }
 .textlink:hover::after { right: 0; }
 
 /* ---------- footer ---------- */
-.site-foot { padding-top: calc(var(--lh) * 5); padding-bottom: 96px; row-gap: var(--lh); font-size: var(--t-s); }
-.site-foot > * { grid-column: span 3; }
-.site-foot > *:nth-child(2), .site-foot > *:nth-child(5) { grid-column: 1 / -1; }
-.site-foot__top { border-top: 2px solid var(--ink); grid-column: 1 / -1; height: 0; margin-bottom: calc(var(--lh) * 0.5); }
-.site-foot ul { display: grid; gap: 4px; }
+.site-foot { padding-top: calc(var(--lh) * 5); padding-bottom: 104px; row-gap: var(--lh); font-size: var(--t-s); }
+.site-foot__top { border-top: 2px solid var(--ink); grid-column: 1 / -1; height: 0; margin-bottom: calc(var(--lh) * 0.25); }
+.site-foot__id { grid-column: 1 / -1; display: grid; gap: 6px; }
+.site-foot__nav { grid-column: 1 / -1; }
+.site-foot__nav ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--g); row-gap: 6px; }
+.site-foot__meta { grid-column: 1 / -1; display: grid; gap: 6px; }
+.site-foot__c { color: var(--ink-3); }
 @media (min-width: 820px) {
-  .site-foot > *:nth-child(2) { grid-column: 1 / span 4; }
-  .site-foot > *:nth-child(3) { grid-column: 5 / span 2; }
-  .site-foot > *:nth-child(4) { grid-column: 7 / span 2; }
-  .site-foot > *:nth-child(5) { grid-column: 9 / span 2; }
+  .site-foot__id { grid-column: 1 / span 3; }
+  .site-foot__nav { grid-column: 4 / span 6; }
+  .site-foot__nav ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .site-foot__meta { grid-column: 10 / span 3; }
 }
-.site-foot .label { color: var(--ink-3); display: block; margin-bottom: 8px; }
+.site-foot .textlink { font-weight: 500; }
 
 /* ---------- page titles: the site's one move, absorption. A carmine module stands
    before the word, then is taken in: it narrows to nothing while the letters widen to fill the line ---------- */
