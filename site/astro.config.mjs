@@ -6,10 +6,10 @@ import { rehypeSidenotes } from './src/lib/rehype-sidenotes.mjs';
 
 export default defineConfig({
   site: 'https://corollarylabs.example',
+  base: '/cyber',
   output: 'static',
   devToolbar: { enabled: false },
   trailingSlash: 'ignore',
-  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   integrations: [mdx()],
   markdown: {
     remarkPlugins: [remarkReadingTime],

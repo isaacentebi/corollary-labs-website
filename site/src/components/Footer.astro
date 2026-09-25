@@ -1,30 +1,22 @@
 ---
-import { site } from '../config/site';
-const path = Astro.url.pathname;
-const cur = (h: string) => (h === '/' ? path === '/' : path.startsWith(h)) ? 'page' : undefined;
+import Mark from './Mark.astro';
+import { site, pages } from '../config/site';
+import { url } from '../lib/url';
 ---
-<footer class="c-footer" id="contact" data-footer>
-  <nav class="c-footer__menus" aria-label="Site">
-    <div class="c-footer__menu -main">
-      <ul class="c-footer__list" data-reveal="lines">
-        <li><a href="/" aria-current={cur('/')}>Home</a></li>
-        <li><a href="/essays/" aria-current={cur('/essays')}>Essays</a></li>
-        <li><a href="/about/" aria-current={cur('/about')}>About</a></li>
-        <li><a href="/team/" aria-current={cur('/team')}>Team</a></li>
-      </ul>
-      <ul class="c-footer__list -b" data-reveal="lines">
-        <li><a href="#top" data-to-top>Back to top ↑</a></li>
-      </ul>
+<footer class="site-foot wrap">
+  <div class="site-foot__grid">
+    <div class="site-foot__brand">
+      <a class="brand" href={url()}><Mark /><span class="brand__word">{site.name}</span></a>
     </div>
-    <div class="c-footer__menu -contact">
-      <p class="c-footer__title" data-reveal="scramble">Contact</p>
-      <ul class="c-footer__list" data-reveal="lines">
-        <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+    <nav aria-label="Footer">
+      <ul>
+        {pages.map((p) => <li><a href={url(p.path)}>{p.label}</a></li>)}
       </ul>
+    </nav>
+    <div class="site-foot__meta">
+      <p><a href="#">{site.email}</a></p>
+      <p class="ph">[Location]</p>
+      <p class="ph">© {site.year} {site.name}</p>
     </div>
-  </nav>
-  <p class="c-footer__big" data-reveal="lines">
-    {site.name}
-  </p>
-  <p class="c-footer__copy">©{site.year} {site.name}</p>
+  </div>
 </footer>

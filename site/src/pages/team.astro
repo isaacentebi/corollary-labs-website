@@ -1,40 +1,28 @@
 ---
-// Team — placeholders until names, roles and portraits are chosen. Same band + hairline system as About and Essays.
 import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
-import '../styles/about.css';
-
-const people = Array.from({ length: 4 }, (_, i) => ({ n: String(i + 1).padStart(2, '0'), name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]' }));
+import '../styles/pages.css';
+const people = [0, 1, 2, 3];
+// each card carries one small gauge; its needle angle is just an index, not a value
+const angle = (i: number) => -58 + i * 31;
 ---
-<Base page="team" title="Team" description="[Meta description]">
-  <article class="about o-container" aria-labelledby="team-title">
-    <header class="about-band">
-      <canvas class="field about-band__field" data-field="index" data-word="Team" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="team-title">Team</h1>
-      <span class="about-band__note t-label" aria-hidden="true" data-reveal="scramble">Draft — placeholders in brackets</span>
+<Base page="team" title="Team">
+  <div class="wrap page">
+    <header class="page-head">
+      <h1 class="h-page">Team</h1>
+      <p class="page-head__note ph">[One line about the team]</p>
     </header>
-    <div class="rule" data-reveal="rule"></div>
-
-    <p class="about-statement" data-reveal="lines">
-      <span class="ph">[Placeholder — one sentence on who works at {site.name}.]</span>
-    </p>
-
-    <ol class="team-list" data-reveal="rows">
-      {people.map((p) => (
-        <li class="team-row">
-          <span class="team-row__n t-label">{p.n}</span>
-          <span class="team-row__name ph">{p.name}</span>
-          <span class="team-row__role t-label ph">{p.role}</span>
-          <span class="team-row__line ph">{p.line}</span>
+    <ul class="team">
+      {people.map((i) => (
+        <li class="team__card">
+          <svg class="team__gauge" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="13" fill="none" stroke="#dcdad4" stroke-opacity=".25" />
+            <path d={`M20 20 L${(20 + 11 * Math.sin((angle(i) * Math.PI) / 180)).toFixed(2)} ${(20 - 11 * Math.cos((angle(i) * Math.PI) / 180)).toFixed(2)}`} stroke="#dcdad4" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <p class="team__name ph">[Name]</p>
+          <p class="team__role ph">[Role]</p>
+          <p class="team__line ph">[One line — background]</p>
         </li>
       ))}
-    </ol>
-
-    <section class="about-colophon" aria-label="Contact">
-      <dl>
-        <div class="about-colophon__row"><dt class="t-label">JOIN</dt><dd class="ph">[Placeholder — how to get in touch about working here.]</dd></div>
-        <div class="about-colophon__row"><dt class="t-label">CONTACT</dt><dd><a href={`mailto:${site.email}`}>{site.email}</a></dd></div>
-      </dl>
-    </section>
-  </article>
+    </ul>
+  </div>
 </Base>

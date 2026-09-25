@@ -1,8 +1,89 @@
 ---
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import '../styles/landing.css';
+import Mark from '../components/Mark.astro';
+import Selector from '../components/Selector.astro';
+import MotionSwitch from '../components/MotionSwitch.astro';
+import { getCollection } from 'astro:content';
+import { site } from '../config/site';
+import { url } from '../lib/url';
+import '../styles/home.css';
+
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+// Four states of one continuous scroll. `at` is where each state is fully reached.
+const states = [
+  { at: 0, caption: '[State 1 — one line: the organisation in equilibrium]' },
+  { at: 0.3, caption: '[State 2 — one line: an agent enters]' },
+  { at: 0.62, caption: '[State 3 — one line: the organisation reorganises around it]' },
+  { at: 1, caption: '[State 4 — one line: the change spreads to linked organisations]' },
+];
 ---
-<Base page="home">
-  <Story />
+<Base page="home" header={false}>
+  <section class="story" data-story>
+    <div class="instrument">
+      <div class="face" data-face>
+        <canvas data-field aria-hidden="true"></canvas>
+        <p class="visually-hidden">[Description of the animated field for screen readers]</p>
+      </div>
+
+      <div class="deck">
+        <div class="deck__head">
+          <h1 class="deck__brand"><a class="brand" href={url()}><Mark /><span class="brand__word">{site.name}</span></a></h1>
+          <p class="deck__statement ph">[Statement — one sentence]</p>
+        </div>
+        <div class="deck__switch"><MotionSwitch /></div>
+        <div class="deck__nav"><Selector current="home" /></div>
+
+        <div class="scale" data-scale role="slider" tabindex="0" aria-label="Story position" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="State 1 of 4">
+          <div class="scale__track" aria-hidden="true"><span class="scale__fill"></span><span class="scale__thumb"></span></div>
+          <ol class="scale__stops" aria-hidden="true">
+            {states.map((s, i) => (
+              <li style={`--at:${s.at}`} data-stop={s.at}><span class="lamp"></span><span class="scale__n">{i + 1}</span></li>
+            ))}
+          </ol>
+        </div>
+        <p class="deck__caption ph" aria-live="polite" data-caption data-captions={JSON.stringify(states)}>{states[0].caption}</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="tail wrap">
+    <section class="t-about" aria-labelledby="h-about">
+      <h2 class="t-label" id="h-about"><span class="lamp"></span>About</h2>
+      <div>
+        <p class="lede ph">[About — one paragraph, three or four sentences, on what the company studies and builds]</p>
+        <a class="t-more" href={url('about/')}>About <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <section class="t-essays" aria-labelledby="h-essays">
+      <h2 class="t-label" id="h-essays"><span class="lamp"></span>Essays</h2>
+      <div>
+        <ul class="elist">
+          {essays.map((e) => (
+            <li>
+              <a href={url(`essays/${e.id}/`)}>
+                <span class="lamp" aria-hidden="true"></span>
+                <time class="elist__date" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+                <span class="elist__title">{e.data.title}</span>
+                <span class="elist__dek">{e.data.dek}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a class="t-more" href={url('essays/')}>All essays <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <nav class="t-keys" aria-label="Pages">
+      <a class="key" href={url('about/')}><span class="key__label">About</span><span class="lamp" aria-hidden="true"></span></a>
+      <a class="key" href={url('team/')}><span class="key__label">Team</span><span class="lamp" aria-hidden="true"></span></a>
+      <a class="key" href={url('contact/')}><span class="key__label">Contact</span><span class="lamp" aria-hidden="true"></span></a>
+    </nav>
+  </div>
+
+  <script>
+    import '../scripts/field';
+  </script>
 </Base>
