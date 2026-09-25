@@ -1,0 +1,18 @@
+---
+import Base from '../layouts/Base.astro';
+import Face from '../components/Face.astro';
+import { url } from '../lib/url';
+import '../styles/pages.css';
+---
+<Base page="404" title="Not found">
+  <Face kind="empty" class="face--band" />
+  <div class="page">
+    <header class="page-head">
+      <h1 class="h-page">Not found</h1>
+      <p class="page-head__note"><a class="t-more" href={url()}>Home <span aria-hidden="true">→</span></a></p>
+    </header>
+  </div>
+</Base>
+<script>
+  import '../scripts/faces';
+</script>

@@ -1,0 +1,20 @@
+---
+// The desktop deck: the housing's control column. It stays put on every page.
+import Brand from './Brand.astro';
+import Selector from './Selector.astro';
+import Switch from './Switch.astro';
+interface Props { current: any; statement?: boolean; brandTag?: 'div' | 'h1' }
+const { current, statement = false, brandTag = 'div' } = Astro.props;
+---
+<aside class="deck" aria-label="Controls">
+  <div class="deck__head">
+    <Brand tag={brandTag} />
+    {statement && <p class="deck__statement ph">[Statement — one sentence]</p>}
+  </div>
+  <div class="deck__switches">
+    <Switch kind="motion" />
+    <Switch kind="sound" />
+  </div>
+  <div class="deck__nav"><Selector current={current} /></div>
+  <div class="deck__slot"><slot /></div>
+</aside>

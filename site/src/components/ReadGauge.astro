@@ -1,0 +1,19 @@
+---
+// A small gauge that tracks reading progress through an essay. The lamp lights at the end.
+interface Props { size?: number }
+const { size = 88 } = Astro.props;
+const ticks = Array.from({ length: 11 }, (_, i) => -135 + i * 27);
+---
+<div class="rgauge" data-read-gauge style={`--size:${size}px`} role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="48.5" fill="#e6e4de" stroke="#1b1b1a" stroke-opacity=".22" />
+    <circle cx="50" cy="50" r="36" fill="none" stroke="#1b1b1a" stroke-opacity=".1" />
+    {ticks.map((a, i) => {
+      const r = (a * Math.PI) / 180, r1 = i % 5 === 0 ? 38 : 41, r2 = 45;
+      return <path d={`M${50 + r1 * Math.sin(r)} ${50 - r1 * Math.cos(r)}L${50 + r2 * Math.sin(r)} ${50 - r2 * Math.cos(r)}`} stroke="#1b1b1a" stroke-opacity={i % 5 === 0 ? 0.75 : 0.35} stroke-width="1.4" stroke-linecap="round" />;
+    })}
+    <g class="rgauge__needle"><path d="M50 58 L50 17" stroke="#1b1b1a" stroke-width="3" stroke-linecap="round" /></g>
+    <circle cx="50" cy="50" r="5" fill="#1b1b1a" />
+    <circle class="rgauge__lamp" cx="50" cy="76" r="4" />
+  </svg>
+</div>

@@ -1,22 +1,20 @@
 ---
-import Mark from './Mark.astro';
+// The footer is the rating plate: what the instrument is, where it comes from.
+import Brand from './Brand.astro';
 import { site, pages } from '../config/site';
 import { url } from '../lib/url';
 ---
-<footer class="site-foot wrap">
-  <div class="site-foot__grid">
-    <div class="site-foot__brand">
-      <a class="brand" href={url()}><Mark /><span class="brand__word">{site.name}</span></a>
-    </div>
-    <nav aria-label="Footer">
-      <ul>
-        {pages.map((p) => <li><a href={url(p.path)}>{p.label}</a></li>)}
-      </ul>
+<footer class="foot">
+  <div class="plate">
+    <div class="plate__brand"><Brand size="lg" /></div>
+    <dl class="plate__rows">
+      <div><dt class="mono">Contact</dt><dd><a href={url('contact/')}>{site.email}</a></dd></div>
+      <div><dt class="mono">Location</dt><dd class="ph">[City]</dd></div>
+      <div><dt class="mono">Entity</dt><dd class="ph">[Legal name]</dd></div>
+      <div><dt class="mono">Year</dt><dd>{site.year}</dd></div>
+    </dl>
+    <nav class="plate__nav" aria-label="Footer">
+      <ul>{pages.map((p) => <li><a href={url(p.path)}>{p.label}</a></li>)}</ul>
     </nav>
-    <div class="site-foot__meta">
-      <p><a href="#">{site.email}</a></p>
-      <p class="ph">[Location]</p>
-      <p class="ph">© {site.year} {site.name}</p>
-    </div>
   </div>
 </footer>

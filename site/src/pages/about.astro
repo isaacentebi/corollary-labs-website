@@ -1,31 +1,35 @@
 ---
 import Base from '../layouts/Base.astro';
-import Figure from '../components/Figure.astro';
+import Face from '../components/Face.astro';
 import { site } from '../config/site';
+import { url } from '../lib/url';
 import '../styles/pages.css';
 ---
 <Base page="about" title="About">
-  <div class="wrap page">
+  <Face kind="about" class="face--band" />
+  <div class="page">
     <header class="page-head">
       <h1 class="h-page">About</h1>
     </header>
     <section class="split">
-      <h2 class="t-label"><span class="lamp is-on"></span>Company</h2>
+      <h2 class="t-label mono"><span class="lamp"></span>Company</h2>
       <div class="prose-lg">
         <p class="lede ph">[About — opening paragraph]</p>
         <p class="ph">[About — second paragraph, on the questions the company works on]</p>
         <p class="ph">[About — third paragraph, on how it works]</p>
       </div>
     </section>
-    <div class="about-fig"><Figure kind="org" n={1} caption="[Caption]" /></div>
     <section class="split">
-      <h2 class="t-label"><span class="lamp"></span>Details</h2>
+      <h2 class="t-label mono"><span class="lamp"></span>Details</h2>
       <dl class="spec">
-        <div><dt>Entity</dt><dd class="ph">[Legal name]</dd></div>
-        <div><dt>Founded</dt><dd class="ph">[Year]</dd></div>
-        <div><dt>Location</dt><dd class="ph">[City]</dd></div>
-        <div><dt>Contact</dt><dd><a href="#">{site.email}</a></dd></div>
+        <div><dt class="mono">Entity</dt><dd class="ph">[Legal name]</dd></div>
+        <div><dt class="mono">Founded</dt><dd class="ph">[Year]</dd></div>
+        <div><dt class="mono">Location</dt><dd class="ph">[City]</dd></div>
+        <div><dt class="mono">Contact</dt><dd><a href={url('contact/')}>{site.email}</a></dd></div>
       </dl>
     </section>
   </div>
 </Base>
+<script>
+  import '../scripts/faces';
+</script>

@@ -1,18 +1,18 @@
 ---
 import '../styles/global.css';
 import Footer from '../components/Footer.astro';
-import Mark from '../components/Mark.astro';
-import Selector from '../components/Selector.astro';
-import MotionSwitch from '../components/MotionSwitch.astro';
-import { site, type PageKey } from '../config/site';
+import Deck from '../components/Deck.astro';
+import MHead from '../components/MHead.astro';
+import Menu from '../components/Menu.astro';
+import { site } from '../config/site';
 import { url } from '../lib/url';
 
-interface Props { title?: string; description?: string; page: PageKey | 'essay'; header?: boolean }
-const { title, description = site.description, page, header = true } = Astro.props;
+interface Props { title?: string; description?: string; page: string; home?: boolean }
+const { title, description = site.description, page, home = false } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 ---
 <!doctype html>
-<html lang="en" data-page={page}>
+<html lang="en" data-page={page} data-motion="on" data-sound="off">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -24,30 +24,31 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
     <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
     <script is:inline>
       (function () {
-        var d = document.documentElement, v = null;
-        try { v = localStorage.getItem('cyber.motion'); } catch (e) {}
-        if (!v) v = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'off' : 'on';
-        d.setAttribute('data-motion', v);
+        var d = document.documentElement, m = null, s = null;
+        try { m = localStorage.getItem('cyber.motion'); s = localStorage.getItem('cyber.sound'); } catch (e) {}
+        if (!m) m = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'off' : 'on';
+        d.setAttribute('data-motion', m);
+        d.setAttribute('data-sound', s === 'on' ? 'on' : 'off');
+        // with motion off, pages cut instead of carrying the face across
+        window.addEventListener('pagereveal', function (e) { if (e.viewTransition && d.getAttribute('data-motion') === 'off') e.viewTransition.skipTransition(); });
       })();
     </script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    {header && (
-      <header class="site-head wrap">
-        <div class="site-head__left">
-          <a class="brand" href={url()}><Mark /><span class="brand__word">{site.name}</span></a>
-        </div>
-        <div class="site-head__right">
-          <MotionSwitch />
-          <Selector current={page} />
-        </div>
-      </header>
-    )}
-    <main id="main">
-      <slot />
-    </main>
-    <Footer />
+    <Menu current={page} />
+    <div class="shell">
+      <div class="col">
+        {!home && <MHead current={page}><slot name="mhead" /></MHead>}
+        <main id="main">
+          <slot />
+        </main>
+        <Footer />
+      </div>
+      <Deck current={page} statement={home} brandTag={home ? 'h1' : 'div'}>
+        <slot name="deck" />
+      </Deck>
+    </div>
     <script>
       import '../scripts/controls';
     </script>

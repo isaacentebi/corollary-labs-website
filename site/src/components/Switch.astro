@@ -1,0 +1,11 @@
+---
+// A real switch. Motion follows the system setting by default; Sound is off by default.
+interface Props { kind: 'motion' | 'sound' }
+const { kind } = Astro.props;
+const label = kind === 'motion' ? 'Motion' : 'Sound';
+---
+<button class="switch" type="button" role="switch" aria-checked="false" data-switch={kind}>
+  <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+  <span class="mono">{label}</span>
+  <span class="lamp switch__lamp" aria-hidden="true"></span>
+</button>

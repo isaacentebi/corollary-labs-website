@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Face from '../../components/Face.astro';
 import { getCollection } from 'astro:content';
 import { url } from '../../lib/url';
 import '../../styles/pages.css';
@@ -7,22 +8,27 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
 ---
 <Base page="essays" title="Essays">
-  <div class="wrap page">
+  <Face kind="essays" class="face--band" />
+  <div class="page">
     <header class="page-head">
       <h1 class="h-page">Essays</h1>
       <p class="page-head__note ph">[One line on what the essays cover]</p>
     </header>
-    <ul class="elist">
-      {essays.map((e) => (
+    <ol class="elist" data-count={essays.length}>
+      {essays.map((e, i) => (
         <li>
-          <a href={url(`essays/${e.id}/`)}>
+          <a href={url(`essays/${e.id}/`)} data-ping={i}>
             <span class="lamp" aria-hidden="true"></span>
-            <time class="elist__date" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+            <span class="elist__n mono">{String(i + 1).padStart(2, '0')}</span>
+            <time class="elist__date mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
             <span class="elist__title">{e.data.title}</span>
             <span class="elist__dek">{e.data.dek}</span>
           </a>
         </li>
       ))}
-    </ul>
+    </ol>
   </div>
 </Base>
+<script>
+  import '../../scripts/faces';
+</script>

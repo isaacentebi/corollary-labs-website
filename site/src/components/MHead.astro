@@ -1,0 +1,20 @@
+---
+// Phone header: the wordmark, an optional statement, and the knob that opens the menu.
+import Brand from './Brand.astro';
+import { angleOf } from '../config/site';
+interface Props { current: string; statement?: boolean; brandTag?: 'div' | 'h1' }
+const { current, statement = false, brandTag = 'div' } = Astro.props;
+---
+<header class="mhead">
+  <div class="mhead__row">
+    <Brand tag={brandTag} />
+    <div class="mhead__right">
+      <slot />
+      <button class="knobbtn" type="button" data-menu-toggle aria-expanded="false" aria-controls="menu" style={`--a:${angleOf(current)}deg`}>
+        <span class="visually-hidden">Menu</span>
+        <span class="knobbtn__dial" aria-hidden="true"><span class="knobbtn__pointer"></span></span>
+      </button>
+    </div>
+  </div>
+  {statement && <p class="mhead__statement ph">[Statement — one sentence]</p>}
+</header>

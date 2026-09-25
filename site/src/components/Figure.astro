@@ -1,6 +1,6 @@
 ---
 // Essay figures: a still of the needle field, drawn at build time with the same maths as the home instrument.
-import { baseAngle, flowParams, swirl, HOLD } from '../lib/fieldmath';
+import { baseAngle, flowParams, swirl, holdAt } from '../lib/fieldmath';
 interface Props { kind: string; n: number; caption: string }
 const { kind, n, caption } = Astro.props;
 
@@ -23,7 +23,7 @@ for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
   if (reach) for (const a of pts) {
     const dx = ((x - a.x) / L) * 0.62, dy = ((y - a.y) / L) * 0.62;
     swirl(dx, dy, out); vx += out.x; vy += out.y;
-    keep *= 1 - HOLD * Math.exp(-((Math.hypot(dx, dy) / 0.32) ** 2));
+    keep *= 1 - holdAt(Math.hypot(dx, dy));
   }
   const t = Math.atan2(vy + keep * Math.sin(b), vx + keep * Math.cos(b));
   const hx = Math.cos(t) * s * 0.34, hy = Math.sin(t) * s * 0.34, tx = Math.cos(t) * s * 0.1, ty = Math.sin(t) * s * 0.1;
@@ -41,5 +41,5 @@ for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
       {pts.map((a) => <circle cx={a.x} cy={a.y} r={s * 0.3} fill="#f2bf1b" />)}
     </svg>
   </div>
-  <figcaption><b>Fig. {n}</b><span>{caption}</span></figcaption>
+  <figcaption><span class="mono">Fig. {String(n).padStart(2, "0")}</span><span>{caption}</span></figcaption>
 </figure>

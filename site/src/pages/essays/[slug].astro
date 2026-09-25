@@ -1,7 +1,9 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Face from '../../components/Face.astro';
 import Figure from '../../components/Figure.astro';
 import Term from '../../components/Term.astro';
+import ReadGauge from '../../components/ReadGauge.astro';
 import { getCollection, render } from 'astro:content';
 import { url } from '../../lib/url';
 import '../../styles/pages.css';
@@ -11,26 +13,45 @@ export async function getStaticPaths() {
   return essays.map((entry, i) => ({ params: { slug: entry.id }, props: { entry, next: essays[(i + 1) % essays.length] } }));
 }
 const { entry, next } = Astro.props;
-const { Content, remarkPluginFrontmatter: fm } = await render(entry);
-const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const { Content, headings, remarkPluginFrontmatter: fm } = await render(entry);
+const sections = headings.filter((h) => h.depth === 2);
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
 ---
 <Base page="essay" title={entry.data.title} description={entry.data.dek}>
-  <article class="essay wrap">
+  <ReadGauge slot="mhead" size={36} />
+  <div class="essay-strip"><Face kind="essay" class="face--strip" label="[Description: reading progress through the essay]" /></div>
+  <article class="essay">
     <header class="essay-head">
-      <p class="essay-head__meta label"><a href={url('essays/')}>Essays</a><span aria-hidden="true">/</span><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time><span aria-hidden="true">/</span><span>{fm.minutesRead} min</span></p>
+      <p class="essay-head__meta mono"><a href={url('essays/')}>Essays</a><span aria-hidden="true">/</span><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time><span aria-hidden="true">/</span><span>{fm.minutesRead} min</span></p>
       <h1 class="essay-head__title">{entry.data.title}</h1>
       <p class="essay-head__dek">{entry.data.dek}</p>
     </header>
-    <div class="essay-body">
+    <div class="essay-body" data-essay-body>
       <Content components={{ Figure, Term }} />
     </div>
     <footer class="essay-end">
       {next && next.id !== entry.id && (
-        <a class="key essay-next" href={url(`essays/${next.id}/`)}>
-          <span><span class="label">Next essay</span><span class="essay-next__title">{next.data.title}</span></span>
-          <span class="lamp" aria-hidden="true"></span>
+        <a class="essay-next" href={url(`essays/${next.id}/`)}>
+          <span class="mono">Next essay</span>
+          <span class="essay-next__title">{next.data.title}</span>
+          <span class="essay-next__arrow" aria-hidden="true">→</span>
         </a>
       )}
     </footer>
   </article>
+
+  <Fragment slot="deck">
+    <div class="deck-read">
+      <ReadGauge />
+      <p class="mono deck-read__meta">{fm.minutesRead} min<br />{fmt(entry.data.date)}</p>
+    </div>
+    {sections.length > 0 && (
+      <ol class="deck-toc">
+        {sections.map((h, i) => <li><a href={`#${h.slug}`}><span class="mono">{String(i + 1).padStart(2, '0')}</span><span>{h.text}</span></a></li>)}
+      </ol>
+    )}
+  </Fragment>
 </Base>
+<script>
+  import '../../scripts/faces';
+</script>

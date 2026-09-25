@@ -1,28 +1,28 @@
 ---
 import Base from '../layouts/Base.astro';
+import Face from '../components/Face.astro';
 import '../styles/pages.css';
 const people = [0, 1, 2, 3];
-// each card carries one small gauge; its needle angle is just an index, not a value
-const angle = (i: number) => -58 + i * 31;
 ---
 <Base page="team" title="Team">
-  <div class="wrap page">
+  <Face kind="team" class="face--band" />
+  <div class="page">
     <header class="page-head">
       <h1 class="h-page">Team</h1>
       <p class="page-head__note ph">[One line about the team]</p>
     </header>
     <ul class="team">
       {people.map((i) => (
-        <li class="team__card">
-          <svg class="team__gauge" viewBox="0 0 40 40" aria-hidden="true">
-            <circle cx="20" cy="20" r="13" fill="none" stroke="#dcdad4" stroke-opacity=".25" />
-            <path d={`M20 20 L${(20 + 11 * Math.sin((angle(i) * Math.PI) / 180)).toFixed(2)} ${(20 - 11 * Math.cos((angle(i) * Math.PI) / 180)).toFixed(2)}`} stroke="#dcdad4" stroke-width="2" stroke-linecap="round" />
-          </svg>
+        <li class="team__col" data-ping={i} tabindex="0">
+          <span class="team__n mono">{String(i + 1).padStart(2, '0')}</span>
           <p class="team__name ph">[Name]</p>
-          <p class="team__role ph">[Role]</p>
+          <p class="team__role mono ph">[Role]</p>
           <p class="team__line ph">[One line — background]</p>
         </li>
       ))}
     </ul>
   </div>
 </Base>
+<script>
+  import '../scripts/faces';
+</script>

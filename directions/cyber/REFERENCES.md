@@ -21,6 +21,14 @@
 
 ## Identity
 
-- Palette: housing `#dcdad4` (warm instrument grey), graphite face `#1c1d1f` with gaps `#141516`, ink `#1b1b1a`, and a single signal colour, yellow `#f2bf1b`, used only for the agent and for change in progress.
-- Type: Archivo variable (width axis), one family. The wordmark is set at 116% width, weight 560, and text at 100%.
-- Mark: a gauge whose needle has moved off its old set point (the faint tick at 12 o'clock), with a yellow hub. It stands for an equilibrium that has moved.
+- Palette: housing `#dcdad4` (warm instrument grey), graphite face `#1c1d1f` with gutters `#141516`, ink `#1b1b1a`, and a single signal colour, yellow `#f2bf1b`, used only for the agent, for change in progress and for lit lamps.
+- Type: Instrument Sans (variable, text and display) with Martian Mono (instrument markings: labels, numbers and dates, set in small caps with tracking). Both are self-hosted woff2 files.
+- Wordmark: "corollary labs" in lowercase Instrument Sans semibold with tight tracking, in the Olivetti lowercase tradition, beside the mark.
+- Mark: a gauge whose needle has left its old set point (the short tick at 12 o'clock), with a yellow hub. It stands for an equilibrium that has moved.
+
+## Full build: what carries the idea
+
+- Renderer: WebGL2 instanced signed-distance gauges (ring, needle, hub), lamps, rings and panels, all in screen space so they stay crisp at every zoom. LOD comes from ring alpha, minimum needle length and width, and a hub drawn only on large gauges. It falls back to Canvas 2D (`?2d`). Frames render on demand only: the page makes 0 animation-frame calls per second when idle.
+- Home: four states on one scroll (about 2 screens). (1) Equilibrium: a ghost lamp glides in on load and pushes the field, which springs back and teaches that it can be pushed. A crosshair and ghost follow the pointer, a click or the arrow keys choose the entry point. (2) The agent enters along the flow; on arrival a double pulse, and nearby needles lean towards it. (3) A damped front moves the set point; needles overshoot and settle and are tinted only while moving. (4) One continuous log-space pull-back centred on the home panel onto a 3×3 wall. Each organisation answers differently (handedness, spiral, gain, core). Fronts relay organisation to organisation across the gutters; two holdouts are disturbed as fronts pass and then return to their old state.
+- Controls: the rotary selector is spring-driven with detents: drag it and it resists, then snaps. The switches have press states and spring throws. The story scale can be dragged, flicked with inertia (it settles into the nearest detent) or clicked on a detent. Optional synthesised sounds are off by default.
+- Pages: every page has a face, carried across pages by cross-document view transitions. Essays: one lamp per essay, and pointing at a row pings its lamp. Essay: a sticky strip with one lamp per section, where the front moves through as you read, plus a light-faced reading gauge. About: the reorganised field settling as it arrives. Contact: one lamp. Team: four large gauges at different angles. 404: an empty field. The footer is a rating plate.

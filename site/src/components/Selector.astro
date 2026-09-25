@@ -1,29 +1,27 @@
 ---
-// The site navigation as a rotary selector. Five detents, one per page.
-// The links are ordinary links (keyboard and screen readers use them as a list);
-// the knob points at the current page, follows hover/focus, and can be turned by drag.
-import { pages, type PageKey } from '../config/site';
+// Site navigation as a rotary selector: five detents, one per page.
+// The labels are ordinary links; the knob points at the current page, follows hover
+// and focus, and can be turned by dragging (it resists between detents).
+import { pages, ANGLES, angleOf, type PageKey } from '../config/site';
 import { url } from '../lib/url';
-interface Props { current: PageKey | 'essay' }
-const { current } = Astro.props;
+interface Props { current: PageKey | 'essay' | '404'; size?: 'deck' | 'menu' }
+const { current, size = 'deck' } = Astro.props;
 const cur = current === 'essay' ? 'essays' : current;
-const angles = [-104, -52, 0, 52, 104];
-const curAng = angles[pages.findIndex((p) => p.key === cur)] ?? 0;
+const curAng = angleOf(current);
 const items = pages.map((p, i) => {
-  const a = angles[i];
-  const rad = (a * Math.PI) / 180;
-  const sx = Math.sin(rad), sy = -Math.cos(rad);
-  const tx = a < -10 ? '-100%' : a > 10 ? '0%' : '-50%';
-  return { ...p, a, sx: sx.toFixed(4), sy: sy.toFixed(4), tx };
+  const a = ANGLES[i], rad = (a * Math.PI) / 180;
+  return { ...p, a, sx: Math.sin(rad).toFixed(4), sy: (-Math.cos(rad)).toFixed(4), tx: a < -10 ? '-100%' : a > 10 ? '0%' : '-50%' };
 });
 ---
-<nav class="selector" aria-label="Site" data-selector style={`--a:${curAng}deg`} data-current-angle={curAng}>
-  <div class="selector__dial" data-dial aria-hidden="true"><span class="selector__pointer"></span></div>
+<nav class={`selector selector--${size}`} aria-label="Site" data-selector style={`--a:${curAng}deg`} data-current-angle={curAng}>
+  <div class="selector__dial" data-dial aria-hidden="true">
+    <span class="selector__pointer"></span>
+  </div>
   <ul>
     {items.map((it) => (
       <li style={`--ang:${it.a}deg;--sx:${it.sx};--sy:${it.sy};--tx:${it.tx}`}>
         <span class="selector__tick" aria-hidden="true"></span>
-        <a href={url(it.path)} data-ang={it.a} aria-current={it.key === cur ? 'page' : undefined}>{it.label}</a>
+        <a href={url(it.path)} data-ang={it.a} aria-current={it.key === cur ? 'page' : undefined}><span>{it.label}</span></a>
       </li>
     ))}
   </ul>

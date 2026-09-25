@@ -1,0 +1,9 @@
+---
+import Mark from './Mark.astro';
+import { url } from '../lib/url';
+interface Props { tag?: 'div' | 'h1'; size?: 'sm' | 'lg' }
+const { tag: Tag = 'div', size = 'sm' } = Astro.props;
+---
+<Tag class={`brand-wrap brand--${size}`}>
+  <a class="brand" href={url()} aria-label="Corollary Labs, home"><Mark /><span class="brand__word" aria-hidden="true">corollary labs</span></a>
+</Tag>
