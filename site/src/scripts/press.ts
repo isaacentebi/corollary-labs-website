@@ -134,7 +134,6 @@ export function initPress(root: HTMLElement) {
   let handI = 0, handTh = 24;
   let handPath = new Path2D(geo(hand[0]).d);
   const ptr = { x: 0, y: 0, sx: 0, sy: 0, on: false, idle: false, last: 0, snap: null as null | { hx: number; hy: number; ox: number; oy: number } };
-  let press: { t0: number; x: number; y: number } | null = null;
   let raf = 0, idleTimer = 0;
 
   function measure() {
@@ -160,13 +159,13 @@ export function initPress(root: HTMLElement) {
     } else {
       // the print and its marks, centred in the space between the header and the words
       const top = headH + 6, bottom = mask.y + 4;
-      z0 = Math.min(W * 0.86, (bottom - top) / 1.14) / 100;
+      z0 = Math.min(W * 0.82, (bottom - top) / 1.14) / 100;
       const need = 114 * z0, slack = Math.max(0, bottom - top - need);
-      f0 = [W * 0.5, top + slack * 0.58 + need / 2 - 4 * z0];
+      f0 = [W * 0.5, top + slack * 0.4 + need / 2 - 4 * z0];
     }
     // the sheet: 5 × 3 prints beside the words (2 × 3 above them on a phone)
     const [c0, cN, r0, rN] = wide ? [-2, 2, -1, 1] : [0, 1, -1, 1];
-    const rx0 = wide ? mask.x + mask.w + 8 : 10, rx1 = W - (wide ? 36 : 10);
+    const rx0 = wide ? mask.x + mask.w + 8 : 22, rx1 = W - (wide ? 36 : 22);
     const ry0 = headH + (wide ? 16 : 4), ry1 = wide ? H - 28 : mask.y - 2;
     const cols = cN - c0 + 1, rows = rN - r0 + 1;
     z1 = Math.min((rx1 - rx0) / (cols * P), (ry1 - ry0) / (rows * P));
@@ -246,7 +245,7 @@ export function initPress(root: HTMLElement) {
     if (!t.jolt || reduce.matches) return [0, 0];
     const k = (now - t.jolt) / 1000;
     if (k < 0 || k > 0.7) return [0, 0];
-    const amp = (3.2 / cam.z + 0.25) * Math.exp(-6 * k) * Math.cos(k * 26);
+    const amp = (6 / cam.z + 0.3) * Math.exp(-5.5 * k) * Math.cos(k * 24);
     return [JOLT[ink][0] * amp, JOLT[ink][1] * amp];
   }
 
@@ -284,7 +283,10 @@ export function initPress(root: HTMLElement) {
       if (!t.hero && t.arr && now < t.arr + ARRIVE + 100) busy = true;
       if (t.jolt && now < t.jolt + 800) busy = true;
       ctx.save();
-      ctx.translate(t.x + 50, t.y + 50); ctx.rotate(rad(t.rot)); ctx.scale(t.sc, t.sc); ctx.translate(-t.cx, -t.cy);
+      // the impression: the print is pressed (a slight give) as the plates jolt
+      let press = 1;
+      if (t.jolt && !reduce.matches) { const k = (now - t.jolt) / 260; if (k > 0 && k < 1) press = 1 - 0.05 * Math.sin(k * Math.PI); }
+      ctx.translate(t.x + 50, t.y + 50); ctx.rotate(rad(t.rot)); ctx.scale(t.sc * press, t.sc * press); ctx.translate(-t.cx, -t.cy);
       ctx.globalAlpha = al;
       for (const part of [...t.parts, ...t.extra]) {
         const q = pose(part, a, t.hero, now);
@@ -326,6 +328,11 @@ export function initPress(root: HTMLElement) {
       ptr.snap = findSnap(wx, wy, now);
       let ox = wx, oy = wy;
       if (ptr.snap) { ox = ptr.snap.ox; oy = ptr.snap.oy; }
+      // held above the sheet: a faint shadow on the paper, the part itself not yet pressed
+      ctx.save();
+      ctx.translate(ox + 5 / z, oy + 7 / z); ctx.rotate(rad(handTh));
+      ctx.globalAlpha = 0.1; ctx.fillStyle = INK.key; ctx.fill(handPath, 'evenodd');
+      ctx.restore();
       ctx.save();
       ctx.globalAlpha = 0.72;
       ctx.translate(ox, oy); ctx.rotate(rad(handTh));
@@ -459,7 +466,7 @@ export function initPress(root: HTMLElement) {
       if (!t.hero && (!t.inSheet || zoom < 0.6)) continue;
       if (Math.abs(t.x + 50 - wx) > 80 || Math.abs(t.y + 50 - wy) > 80) continue;
       const a = tileA(t, now);
-      for (const part of [...t.parts, ...t.extra]) {
+      for (const part of t.parts) {
         const q = pose(part, a, t.hero, now);
         if (!q || q.al < 0.9) continue;
         for (const [hx, hy] of geo(part.shape).holes) {
@@ -528,7 +535,9 @@ export function initPress(root: HTMLElement) {
         x += spine.px1; y += spine.py1;
         const g = geo(shape);
         const [bx, by] = g.pins[Math.floor(r() * g.pins.length)];
-        t.extra.push({ shape, ink: 'm', px: x, py: y, px1: x, py1: y, ox: -bx, oy: -by, th: r() * 360, th1: 0, agent: true, path: new Path2D(g.d), nudges: [], enter: 'press', t0: at });
+        const k = 1.6, path = new Path2D();
+        path.addPath(new Path2D(g.d), new DOMMatrix().scale(k, k));
+        t.extra.push({ shape, ink: 'm', px: x, py: y, px1: x, py1: y, ox: -bx * k, oy: -by * k, th: r() * 360, th1: 0, agent: true, path, nudges: [], enter: 'press', t0: at });
       }
       for (const part of t.parts) if (!part.agent && r() < 0.6) part.nudges.push({ amt: (r() < 0.5 ? -1 : 1) * (5 + r() * 10), t0: at + 120 });
     }

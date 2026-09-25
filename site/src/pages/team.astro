@@ -1,17 +1,22 @@
 ---
+// The team's print has one part per person, bolted to one spine. Point at a person and
+// their part is the one left printed.
 import Base from '../layouts/Base.astro';
 import Print from '../components/Print.astro';
+import { teamPrint } from '../lib/parts';
 const people = [1, 2, 3, 4];
+const parts = teamPrint(people.length).map((p, i) => ({ ...p, who: i >= 1 && i <= people.length ? String(i - 1) : undefined }));
 ---
 <Base page="team" title="Team" description="[Team — meta description]">
-  <section class="page">
-    <h1 class="page__title">Team</h1>
-    <Print seed="team" class="page__print" base={4} agents={1} />
+  <section class="page page--split">
+    <Print parts={parts} state="after" class="split__print" pad={4} tag={(p) => (p as { who?: string }).who} />
+    <h1 class="cover__title">Team</h1>
     <div class="page__body">
       <p class="lede">[Team — one sentence introducing the people]</p>
-      <ul class="people">
-        {people.map((n) => (
-          <li>
+      <ul class="people" data-people>
+        {people.map((n, i) => (
+          <li tabindex="0" data-who={i}>
+            <span class="n">{n}</span>
             <span class="who">[Name {n}]</span>
             <span class="role">[Role]</span>
             <span class="line">[One line: background]</span>
@@ -20,4 +25,13 @@ const people = [1, 2, 3, 4];
       </ul>
     </div>
   </section>
+  <script>
+    const print = document.querySelector<SVGElement>('.split__print');
+    document.querySelectorAll<HTMLElement>('[data-people] li').forEach((li) => {
+      const on = () => print?.setAttribute('data-hl', li.dataset.who!);
+      const off = () => print?.removeAttribute('data-hl');
+      li.addEventListener('pointerenter', on); li.addEventListener('pointerleave', off);
+      li.addEventListener('focus', on); li.addEventListener('blur', off);
+    });
+  </script>
 </Base>

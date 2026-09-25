@@ -3,26 +3,23 @@ import Base from '../../layouts/Base.astro';
 import EssayList from '../../components/EssayList.astro';
 import Print from '../../components/Print.astro';
 import { getCollection } from 'astro:content';
+import { essaysPrint } from '../../lib/parts';
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
 ---
 <Base page="essays" title="Essays" description="[Essays — meta description]">
   <section class="page">
-    <h1 class="page__title">Essays</h1>
-    <Print seed="essays-index" class="page__print" base={4} agents={2} />
-    <div class="page__body page__lede"><p class="lede">[Essays — one sentence on what we write about]</p></div>
-    <div class="page__body--wide">
+    <header class="cover">
+      <Print parts={essaysPrint(essays.map((e) => e.id))} state="after" class="cover__print" pad={4} />
+      <h1 class="cover__title">Essays</h1>
+    </header>
+    <div class="page__body">
+      <p class="lede">[Essays — one sentence on what we write about]</p>
+    </div>
+    <div class="essays-list">
       <EssayList essays={essays} big />
     </div>
   </section>
 </Base>
 <style>
-  .page__body--wide { grid-column: 1 / -1; grid-row: 3; }
-  .page__body--wide .lede { margin-top: clamp(40px, 8vh, 88px); }
-  .page__body--wide :global(.elist) { margin-top: clamp(40px, 7vh, 80px); }
-  .page .page__lede { grid-column: 1 / span 6; grid-row: 2; }
-  .page :global(.page__print) { grid-row: 1 / span 2; position: static; max-width: 440px; }
-  @media (max-width: 819px) {
-    .page .page__lede { grid-column: 1 / -1; grid-row: 3; }
-    .page__body--wide { grid-row: 4; }
-  }
+  .essays-list { grid-column: 1 / -1; margin-top: clamp(24px, 5vh, 56px); }
 </style>

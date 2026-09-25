@@ -1,11 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
 import Print from '../components/Print.astro';
+import { firstPrint } from '../lib/parts';
 ---
 <Base page="about" title="About" description="[About — meta description]">
   <section class="page">
-    <h1 class="page__title">About</h1>
-    <Print seed="about" class="page__print" base={5} agents={2} />
+    <header class="cover">
+      <Print parts={firstPrint()} state="after" class="cover__print" pad={4} />
+      <h1 class="cover__title">About</h1>
+    </header>
     <div class="page__body">
       <p class="lede">[About — opening paragraph: who we are and what we work on]</p>
       <p>[About — second paragraph: the questions we study]</p>

@@ -226,7 +226,7 @@ const quarter = (r: () => number) => (r() < 0.55 ? Math.floor(r() * 4) * 90 : (r
  * its own bolt. Agents (pink) are bolted into the same holes, so they always print over the
  * organisation.
  */
-export function compose(seed: number | string, opts: { base?: number; agents?: number } = {}) {
+export function compose(seed: number | string, opts: { base?: number; agents?: number; even?: boolean } = {}) {
   const r = rng(typeof seed === 'string' ? hash(seed) : seed);
   const nb = Math.max(2, opts.base ?? 4 + (r() < 0.4 ? 1 : 0));
   const na = opts.agents ?? 1 + (r() < 0.3 ? 1 : 0);
@@ -252,7 +252,7 @@ export function compose(seed: number | string, opts: { base?: number; agents?: n
     return Math.floor(r() * sg.pins.length);
   };
   for (let i = 1; i < nb; i++) {
-    const shape = pick(r, i === 1 ? 'big' : 'small');
+    const shape = pick(r, opts.even ? 'agent' : i === 1 ? 'big' : 'small');
     const g = geo(shape);
     const [bx, by] = g.pins[Math.floor(r() * g.pins.length)];
     const h = free();
@@ -319,7 +319,7 @@ export function firstPrint(): Part[] {
 
 /** The team: one spine, one part bolted to it for each person. */
 export function teamPrint(n: number): Part[] {
-  return compose('team', { base: n + 1, agents: 1 });
+  return compose('team', { base: n + 1, agents: 1, even: true });
 }
 
 /** Every essay's print, overprinted on one sheet, each a little off the last. */
