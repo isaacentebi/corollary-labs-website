@@ -97,17 +97,26 @@ What this settles:
   - Written reference notes with URLs go in `directions/<key>/REFERENCES.md`.
   - Pitch pages go in `directions/<key>/pitch.html`.
 
-## Status (2026-09-24)
+## Status (2026-09-24, round 2)
 
-All four versions are live on ONE site, https://corollarylabs.vercel.app, with a switcher pill in the bottom-right corner:
+All eight versions are live on ONE site, https://corollarylabs.vercel.app. A switcher sits bottom-right: a pill on desktop, a "Version ▴" menu on phones.
 
-| Path | Version | Branch | Final critic score |
-|---|---|---|---|
-| `/` | Plotter (the current site) | `master` | not reviewed |
-| `/organic/` | Organic: the firm as a cell under a lens. Agent engulfed; coordination dissolves into a mesh; tissue diffusion; dark fig 4 | `direction/organic` | 8/10 (5.5 → 7 → 8) |
-| `/proof/` | Proof: a live mathematics paper. String diagrams, planar isotopy on the title plate, replacement vs. rewiring | `direction/proof` | 8/10 (6 → 7 → 8) |
-| `/wild/` | Tableau: the site as one input–output table. Agents move execution and plans onto the diagonal, block reorder, diffusion rounds, 3D homotopy | `direction/wild` | 8/10 (6 → 7.5 → 8) |
+| Path | Switcher name | Idea | Branch | Critic |
+|---|---|---|---|---|
+| `/` | Plotter | The original: technical plotter drawing, paper + green, long scroll story | `master` | — |
+| `/organic/` | Organic | A firm as a cell under a lens. Refined after founder feedback: no labels, no figurines, three states, short | `direction/organic` | 8 |
+| `/proof/` | Proof | A live mathematics paper; string diagrams; isotopy on the title plate | `direction/proof` | 8 |
+| `/wild/` | Tableau | The site as one input–output table on black, orange diagonal | `direction/wild` | 8 |
+| `/plotsoft/` | Plotter soft | Plotter softened: mist + jade, breathing squircle, springs, ~4 screens | `direction/plotsoft` | 8 |
+| `/soft/` | Soft | Raked-line ground in mineral lilac; stones; closed outlines that reshape and never split; dusk pull-back | `direction/soft` | 7.5 (+ final fixes) |
+| `/free/` | Loops | Truchet tiles that only rotate; acid spreads along connected loops; violet | `direction/free` | 7.5 (+ final fixes) |
+| `/out/` | Interference | Two rulings; moiré fringes trace deformation; navigation by folding one sheet | `direction/out` | 7 (+ final fixes) |
 
-- **Copy.** The founder asked to "delete all the copy… unsloppify… delete all copy and metaphors", so every version now carries only quiet `[bracketed]` placeholders. Plain functional labels and diagram labels remain. There are no Superdark mentions on any page.
-- **Build and deploy.** `node tools/combine.mjs --deploy` builds master plus every `direction/*` branch, injects the switcher, and deploys. Use `--only=wild,proof` to include a subset.
-- **Next.** The founder picks what to merge between versions, then writes the copy.
+Founder rules applied to every version:
+- No copy: `[bracketed]` placeholders only, plain labels, no metaphors, no source mentions.
+- A short home scroll that reaches About, essays and links quickly.
+- References drawn mainly from Awwwards.
+
+Build and deploy: `node tools/combine.mjs --deploy`. Use `--only=a,b` for a subset, or `--switcher-only` to rewrite only the switcher.
+
+Next: the founder picks what to merge, then the copy gets written.
