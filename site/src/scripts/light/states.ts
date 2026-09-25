@@ -57,8 +57,8 @@ export const states: Record<string, StateFn> = {
   // the room before the light is on (intro)
   dark: (p, e) => ({
     ...dayRoom(e), ...heroVolume(e),
-    wallTop: grey(0.8), wallMid: grey(0.77), wallBot: grey(0.68),
-    paint: 0.25, emitRim: 0, emitCore: 0, halo: 0, volBody: 0.2, sheen: 0, frame: 0.3, refl: 0.3,
+    wallTop: [0.7, 0.69, 0.68], wallMid: [0.66, 0.65, 0.64], wallBot: [0.56, 0.55, 0.54],
+    paint: 0.08, volTint: [0.8, 0.78, 0.84], coreCol: [0.72, 0.7, 0.76], emitRim: 0, emitCore: 0, halo: 0, volBody: 0.35, sheen: 0, frame: 0.6, refl: 0.1,
   }),
 
   hero: (p, e) => ({ ...dayRoom(e), ...heroVolume(e) }),
@@ -117,13 +117,14 @@ export const states: Record<string, StateFn> = {
   // III. New combinations: the volume parts into three translucent panes; they separate (the old
   // arrangement gives way) and settle overlapping in a new one, where colours appear that none had.
   combine: (p, e) => {
-    const k = sm(0.02, 0.4, p), apart = sm(0.08, 0.45, p), settle = sm(0.5, 0.95, p);
+    const k = sm(0.02, 0.36, p), apart = sm(0.08, 0.4, p), settle = sm(0.46, 0.82, p);
     const fade = sm(0.0, 0.22, p);
     const c = roomC(e);
     const s = e.m ? 0.55 : 1;
     const R0 = roomR(e);
+    const ax = e.m ? 0.62 : 1; // phones: the row of panes stays on screen
     const pane = (a: Vec, b: Vec, r: number): Vec => {
-      const x = lerp(0, lerp(a[0], b[0], settle), apart), y = lerp(0, lerp(a[1], b[1], settle), apart);
+      const x = lerp(0, lerp(a[0] * ax, b[0], settle), apart), y = lerp(0, lerp(a[1], b[1], settle), apart);
       return [c[0] + x * s, c[1] + y * s, lerp(R0[0] * 1.1, r * s, k)];
     };
     return {
@@ -151,7 +152,7 @@ export const states: Record<string, StateFn> = {
     const c = roomC(e);
     const s = e.m ? 0.55 : 1;
     const Ra: Vec = e.m ? [0.12, 0.14] : [0.17, 0.21];
-    const Rb: Vec = e.m ? [0.2, 0.075] : [0.36, 0.1];
+    const Rb: Vec = e.m ? [0.165, 0.07] : [0.36, 0.1];
     const pane = (dx: number, dy: number, r: number): Vec => [c[0] + dx * s * (1 - gather), c[1] + dy * s * (1 - gather), lerp(r * s, Ra[0], gather)];
     return {
       ...duskRoom(e),
@@ -172,7 +173,7 @@ export const states: Record<string, StateFn> = {
   diffuse: (p, e) => {
     const back = sm(0.0, 0.3, p), prog = sm(0.22, 0.92, p);
     const c = roomC(e);
-    const Rb: Vec = e.m ? [0.2, 0.075] : [0.36, 0.1];
+    const Rb: Vec = e.m ? [0.165, 0.07] : [0.36, 0.1];
     const seed = e.nodeSeed;
     const room = duskRoom(e);
     const night = nightRoom(e);

@@ -22,8 +22,9 @@ const P: Record<string, RGB[]> = {
 function shade(kind: string, pal: RGB[], u: number, v: number, ar: number): RGB {
   switch (kind) {
     case 'volume': {
-      const x = (u - 0.5) * 2, y = (v - 0.5) * 2 * ar;
-      const n = 3.2, rx = 0.78, ry = 0.78 * ar;
+      // sized by the shorter side, so a wide plate shows the volume on its wall rather than stretched
+      const x = (u - 0.5) * 2 / Math.min(1, ar), y = (v - 0.5) * 2 * Math.max(1, ar);
+      const n = 3.2, rx = 0.78, ry = 0.78 * Math.min(Math.max(1, ar), 1.25);
       const r = Math.pow(Math.pow(Math.abs(x) / rx, n) + Math.pow(Math.abs(y) / ry, n), 1 / n);
       let c = mix(pal[0], pal[1], ss(0.0, 0.62, r));
       c = mix(c, pal[2], ss(0.55, 1.0, r));

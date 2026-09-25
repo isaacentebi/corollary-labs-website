@@ -86,7 +86,7 @@ void main(){
 
   // a gloss floor: the volume's light reflected below the horizon (Brindle's installation floors),
   // and the coloured, not grey, pool of light it throws down (Pashgian's tinted shadows)
-  if (refl > 0.001 && y < horizon) {
+  if (refl > 0.02 && y < horizon) {
     float depth = horizon - y;
     vec2 pm = vec2(p.x, 2.0 * horizon - y) - volC;
     pm.x *= 1.0 + depth * 1.5;

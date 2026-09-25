@@ -103,7 +103,7 @@ export function mountScene() {
     field.snap();
   } else if (intro && window.scrollY < 10) {
     // the room first, then its light comes on
-    field.tween(pack(states.dark(0, env)), 2.8);
+    field.tween(pack(states.dark(0, env)), 3.2);
   } else if (prev) {
     field.tween(prev, 1.1);
   } else {
