@@ -21,7 +21,7 @@ export interface Shape {
   L?: number; w?: number; h?: number; r?: number; t?: number; a?: number; b?: number; span?: number;
 }
 type Pt = [number, number];
-export interface Geo { d: string; holes: Pt[]; pins: Pt[]; radius: number }
+export interface Geo { d: string; holes: Pt[]; pins: Pt[]; radius: number; outline: Pt[] }
 
 // ——— seeded randomness ———
 export function hash(str: string): number {
@@ -168,7 +168,8 @@ export function geo(s: Shape): Geo {
   d = loopD(roughen(outer, amp, r)) + d;
   const radius = Math.max(...outer.map(([x, y]) => Math.hypot(x, y)));
   const pins: Pt[] = holes.length ? holes : s.kind === 'rod' ? [[-(s.L ?? 40) / 2 + 1.2, 0], [(s.L ?? 40) / 2 - 1.2, 0]] : [[0, 0]];
-  const g: Geo = { d, holes, pins, radius };
+  const step = Math.max(1, Math.floor(outer.length / 48));
+  const g: Geo = { d, holes, pins, radius, outline: outer.filter((_, i) => i % step === 0) };
   cache.set(key, g);
   return g;
 }
@@ -280,9 +281,10 @@ export function bounds(parts: Part[]): [number, number, number, number] {
   for (const p of parts) for (const s of [0, 1] as const) {
     if (p.agent && s === 0) continue;
     const px = s ? p.px1 : p.px, py = s ? p.py1 : p.py, th = s ? p.th1 : p.th;
-    const [cx, cy] = rot(p.ox, p.oy, th);
-    const rad = geo(p.shape).radius * 0.92;
-    x0 = Math.min(x0, px + cx - rad); y0 = Math.min(y0, py + cy - rad); x1 = Math.max(x1, px + cx + rad); y1 = Math.max(y1, py + cy + rad);
+    for (const [ox, oy] of geo(p.shape).outline) {
+      const [x, y] = rot(ox + p.ox, oy + p.oy, th);
+      x0 = Math.min(x0, px + x); y0 = Math.min(y0, py + y); x1 = Math.max(x1, px + x); y1 = Math.max(y1, py + y);
+    }
   }
   return [x0, y0, x1, y1];
 }
