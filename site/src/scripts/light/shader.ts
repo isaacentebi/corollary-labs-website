@@ -162,6 +162,9 @@ void main(){
       vec3 pc = lin(k == 0 ? planeCol0 : (k == 1 ? planeCol1 : (k == 2 ? planeCol2 : planeCol3)));
       vec2 b = abs(p - pl.xy) - pl.zw;
       float m = (1.0 - smoothstep(-px, px, b.x)) * (1.0 - smoothstep(-px, px, b.y)) * planeAmt;
+      // the coating is graded down the plane, as on Bell's cubes: toward a thin-film tint at the top
+      float gy = clamp((p.y - (pl.y - pl.w)) / max(2.0 * pl.w, 1e-3), 0.0, 1.0);
+      pc = mix(pc, pc * lin(planeRefl) * 1.6, smoothstep(0.45, 1.0, gy) * 0.45);
       col = mix(col, col * pc * 1.15, m);
       col += lin(planeRefl) * 0.035 * m * (0.5 + 0.5 * (p.y - pl.y) / max(pl.w, 1e-3));
       float edgeX = p.x - (pl.x - pl.z);

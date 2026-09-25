@@ -25,10 +25,11 @@ export const fieldHorizon = (e: { m: boolean }) => (e.m ? 0.1 : -0.16);
 // the first screen: silver light above, deepening to gold, rising from a razor horizon over black
 // ground (Brindle, "Refracting Twilight"; Turrell, "Twilight Epiphany")
 const dusk = (e: Env): State => ({
-  wallTop: C.silver, wallMid: C.gold, groundTop: C.emberDeep, groundBot: C.night,
+  wallTop: C.silver, wallMid: C.amber, groundTop: C.emberDeep, groundBot: C.night,
   horizon: e.m ? -0.36 : -0.27, horizonSoft: 0,
-  glowCol: C.hot, glowAmt: 0.85, glowW: e.m ? 0.1 : 0.13, glowX: e.m ? 0.1 : e.a * 0.5 * 0.45, glowSpread: e.m ? 0.35 : 0.75,
-  lineCol: C.goldPale, lineAmt: 0.9, groundGlow: 0.35, roomLight: 0.04, vignette: 0.12, grain: 0.022,
+  // the light surges in the last stretch above the horizon (Brindle): a narrow, saturated band
+  glowCol: C.ember, glowAmt: 0.7, glowW: e.m ? 0.035 : 0.045, glowX: e.m ? 0.1 : e.a * 0.5 * 0.45, glowSpread: e.m ? 0.4 : 0.8,
+  lineCol: C.goldPale, lineAmt: 1.0, groundGlow: 0.35, roomLight: 0.04, vignette: 0.12, grain: 0.022,
 });
 // below the horizon: the deep dark with the light far above (the horizon has risen past the top)
 const ground = (e: Env): State => ({
