@@ -57,11 +57,22 @@ const menu = document.querySelector<HTMLElement>('[data-menu]');
 toggle?.addEventListener('click', () => {
   const open = toggle.getAttribute('aria-expanded') !== 'true';
   toggle.setAttribute('aria-expanded', String(open));
-  if (open) { menu!.hidden = false; requestAnimationFrame(() => menu!.classList.add('is-open')); }
-  else { menu!.classList.remove('is-open'); window.setTimeout(() => { menu!.hidden = true; }, reduced ? 0 : 320); }
+  if (open) {
+    menu!.hidden = false;
+    menu!.inert = false;
+    requestAnimationFrame(() => menu!.classList.add('is-open'));
+    menu!.querySelector<HTMLElement>('a')?.focus({ preventScroll: true });
+  } else {
+    menu!.classList.remove('is-open');
+    menu!.inert = true;
+    window.setTimeout(() => { if (toggle.getAttribute('aria-expanded') !== 'true') menu!.hidden = true; }, reduced ? 0 : 320);
+  }
+  toggle.querySelector('.nav__toggle-label')!.textContent = open ? 'Close' : 'Menu';
   root.classList.toggle('menu-open', open);
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') toggle.click(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') { toggle.click(); toggle.focus(); }
+});
 
 // ---- text arrives as the light reaches it
 const io = new IntersectionObserver((entries) => {
