@@ -13,10 +13,10 @@ const threads = essays.map(({ af, vc }) => ({ af, vc: vc + 6, R: 16 }));
 <Base title="Essays" page="essays">
   <WovenTitle text="Essays" cap={26} width="620px" />
   <section class="wrap">
-    <div class="shelf">
+    <div class="shelf" data-shelf>
       <Loom id="essay-loom" rows={30} cellCss={4} threads={threads} grow ms={2000} label="Every essay as a thread in one cloth" />
-      <ol class="shelf__ticks mono" aria-hidden="true">
-        {essays.map(({ n, af }) => <li style={`left:${(af * 100).toFixed(2)}%`}>{pad(n)}</li>)}
+      <ol class="shelf__ticks mono">
+        {essays.map(({ e, n, af }, k) => <li style={`left:${(af * 100).toFixed(2)}%`}><a href={`${base}essays/${e.id}/`} data-k={k} aria-label={`${pad(n)} — ${e.data.title}`}>{pad(n)}</a></li>)}
       </ol>
     </div>
     <ol class="threads threads--index" data-rows>
@@ -34,11 +34,32 @@ const threads = essays.map(({ af, vc }) => ({ af, vc: vc + 6, R: 16 }));
   <script>
     import type { Loom } from '../../scripts/loom2d';
     const cv = document.getElementById('essay-loom') as (HTMLCanvasElement & { loom?: Loom; targets?: number[] }) | null;
-    const set = (k: number) => { if (cv?.loom && cv.targets) cv.loom.grow(cv.targets.map((r, n) => (n === k ? r * 3.2 : r)), 1100); };
-    for (const a of document.querySelectorAll<HTMLElement>('[data-rows] a')) {
+    const rows = [...document.querySelectorAll<HTMLAnchorElement>('[data-rows] a')];
+    const ticks = [...document.querySelectorAll<HTMLAnchorElement>('.shelf__ticks a')];
+    let cur = -1;
+    const set = (k: number) => {
+      if (k === cur) return; cur = k;
+      rows.forEach((r, n) => r.classList.toggle('is-hot', n === k));
+      ticks.forEach((t, n) => t.classList.toggle('is-hot', n === k));
+      if (cv?.loom && cv.targets) cv.loom.grow(cv.targets.map((r, n) => (n === k ? r * 3.2 : r)), 1100);
+    };
+    for (const a of [...rows, ...ticks]) {
       const k = Number(a.dataset.k);
       a.addEventListener('pointerenter', () => set(k)); a.addEventListener('focus', () => set(k));
       a.addEventListener('pointerleave', () => set(-1)); a.addEventListener('blur', () => set(-1));
+    }
+    // the strip is the index: the thread nearest the pointer is the essay it opens
+    if (cv) {
+      const nearest = (e: PointerEvent) => {
+        const r = cv.getBoundingClientRect(), f = (e.clientX - r.left) / r.width;
+        let k = 0, d = 9;
+        ticks.forEach((t, n) => { const af = parseFloat((t.parentElement as HTMLElement).style.left) / 100; if (Math.abs(af - f) < d) { d = Math.abs(af - f); k = n; } });
+        return k;
+      };
+      cv.style.cursor = 'pointer';
+      cv.addEventListener('pointermove', (e) => set(nearest(e)));
+      cv.addEventListener('pointerleave', () => set(-1));
+      cv.addEventListener('click', (e) => { location.href = rows[nearest(e)].href; });
     }
   </script>
 </Base>

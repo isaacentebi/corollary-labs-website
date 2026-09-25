@@ -1,6 +1,5 @@
 ---
 import Base from '../layouts/Base.astro';
-import Loom from '../components/Loom.astro';
 import { essayThreads, fmt, pad } from '../lib/essays';
 import '../styles/home.css';
 
@@ -17,13 +16,18 @@ const essays = (await essayThreads()).slice(0, 3);
         <span class="draft__l draft__l--tie">Tie-up</span>
         <span class="draft__l draft__l--tre">Treadling</span>
       </div>
-      <div class="caps">
-        <p class="cap cap--0 mono">[Statement]</p>
-        <p class="cap cap--1 mono">[Caption 1 — one line]</p>
-        <p class="cap cap--2 mono">[Caption 2 — one line]</p>
-        <p class="cap cap--3 mono">[Caption 3 — one line]</p>
+      <div class="band">
+        <div class="caps">
+          <p class="cap cap--0 mono">[Statement]</p>
+          <p class="cap cap--1 mono">[Caption 1 — one line]</p>
+          <p class="cap cap--2 mono">[Caption 2 — one line]</p>
+          <p class="cap cap--3 mono">[Caption 3 — one line]</p>
+        </div>
+        <div class="tools">
+          <button class="ins mono" type="button" data-insert>Insert thread</button>
+          <span class="count mono" data-count aria-live="polite"></span>
+        </div>
       </div>
-      <p class="count mono" data-count hidden aria-live="polite"></p>
     </div>
   </section>
 
@@ -41,7 +45,7 @@ const essays = (await essayThreads()).slice(0, 3);
             <span class="thr__n mono">{pad(n)}</span>
             <span class="thr__t">{e.data.title}</span>
             <time class="thr__d mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
-            <span class="thr__loom"><Loom rows={12} cellCss={3} threads={[{ af, vc: 6, R: 26 }]} grow ms={1800} /></span>
+            <span class="thr__rule" aria-hidden="true"><i style={`left:${(af * 100).toFixed(2)}%`}></i></span>
           </a>
         </li>
       ))}
@@ -56,17 +60,7 @@ const essays = (await essayThreads()).slice(0, 3);
 
   <script>
     import { mountCloth } from '../scripts/cloth';
-    import type { Loom } from '../scripts/loom2d';
     const stage = document.querySelector<HTMLElement>('[data-stage]')!;
     mountCloth(stage, stage.querySelector('canvas')!);
-    // essays are threads: hovering one lets its re-weave travel further
-    for (const a of document.querySelectorAll<HTMLElement>('.thr')) {
-      const cv = a.querySelector('canvas') as (HTMLCanvasElement & { loom?: Loom; targets?: number[] }) | null;
-      const go = (big: boolean) => { if (cv?.loom && cv.targets) cv.loom.grow(cv.targets.map((r) => (big ? r * 2.6 : r)), big ? 1300 : 700); };
-      a.addEventListener('pointerenter', () => go(true));
-      a.addEventListener('pointerleave', () => go(false));
-      a.addEventListener('focus', () => go(true));
-      a.addEventListener('blur', () => go(false));
-    }
   </script>
 </Base>

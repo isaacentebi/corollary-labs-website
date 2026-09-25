@@ -1,7 +1,7 @@
 // 2D cloths: woven titles, essay threads, figures. Same rules as the WebGL cloth (lib/weave.ts).
 // Each cloth draws once (and again on resize, or while a front is animating). No idle work.
 
-import { groundUp, figureUp, rewovenUp, rewovenWhite, frontDist, warpColour, PALETTE } from '../lib/weave';
+import { groundUp, figureUp, rewovenUp, stagedUp, frontDist, warpColour, PALETTE } from '../lib/weave';
 
 export type Thread = { a: number; vc: number; R: number; hot?: boolean };
 type Mask = { data: Uint8Array; w: number; h: number; x: number; y: number };
@@ -32,45 +32,39 @@ export function paintLoom(ctx: CanvasRenderingContext2D, spec: LoomSpec, s: numb
   const W = colsOut.length * s, H = spec.rows * s;
   ctx.fillStyle = PALETTE.gap; ctx.fillRect(0, 0, W, H);
   const weftTop = PALETTE.weft, weftUnder = shade(PALETTE.weft, 0.62), weftSunk = shade(PALETTE.weft, 0.42), weftEdge = shade(PALETTE.weft, 0.86);
-  const m = spec.mask, P = spec.protect;
+  const m = spec.mask;
   const inset = s >= 10 ? Math.max(1, Math.round(s * 0.1)) : 0;
   for (let i = 0; i < spec.rows; i++) {
     const y = i * s;
     for (let c = 0; c < colsOut.length; c++) {
       const x = c * s; const col = colsOut[c];
-      let up: boolean, wc: string, sunk = false, sunkWarp = false;
+      let up: boolean, wc: string, sunk = false;
       if (col.t >= 0) {
         const th = threads[col.t];
         up = rewovenUp(0, i - th.vc); wc = PALETTE.saffron;
       } else {
         const j = col.j;
-        const fig = m && j >= m.x && j < m.x + m.w && i >= m.y && i < m.y + m.h && m.data[(i - m.y) * m.w + (j - m.x)];
+        // mask: 1 = glyph (figure), 2 = halo (kept as ground so the letters hold their outline)
+        const fig = m && j >= m.x && j < m.x + m.w && i >= m.y && i < m.y + m.h ? m.data[(i - m.y) * m.w + (j - m.x)] : 0;
         wc = warpColour(j);
-        if (fig) up = figureUp(i, j);
+        if (fig === 1) up = figureUp(i, j);
         else {
           up = groundUp(i, j);
-          const prot = P && j >= P[0] && j < P[2] && i >= P[1] && i < P[3];
           let best = 0, bdx = 0, bdy = 0;
-          if (!prot) {
+          if (fig !== 2) {
             for (const th of threads) {
               const o = j + 0.5 - th.a, dx = Math.sign(o) * (Math.abs(o) + 0.5), dy = i - th.vc;
-              const mg = th.R - frontDist(dx, dy);
+              const mg = th.R - frontDist(dx, dy, i, j);
               if (mg > 0) { best = mg; bdx = dx; bdy = dy; break; } // the first thread to arrive keeps the cell
             }
-            if (best > 0) up = rewovenUp(bdx, bdy);
+            if (best > 0) up = stagedUp(best, bdx, bdy);
           }
-          sunk = !up && (best <= 0 || !!prot);
-          if (best > 0 && up && rewovenWhite(bdx, bdy)) sunkWarp = true;
+          sunk = !up && best <= 0;
         }
       }
       if (sunk) { // a satin binding point sinks between the floats
         ctx.fillStyle = wc; ctx.fillRect(x, y, s, s);
         if (s >= 3) { ctx.fillStyle = weftSunk; const d = Math.max(1, Math.round(s * 0.34)); ctx.fillRect(x + (s - d) / 2, y + (s - d) / 2, d, d); }
-        continue;
-      }
-      if (sunkWarp) { // in the white blocks the warp binding points sink instead
-        ctx.fillStyle = weftTop; ctx.fillRect(x, y, s, s);
-        if (s >= 3) { ctx.fillStyle = shade(wc, 1.6); const d = Math.max(1, Math.round(s * 0.34)); ctx.fillRect(x + (s - d) / 2, y + (s - d) / 2, d, d); }
         continue;
       }
       if (!inset) { ctx.fillStyle = up ? wc : weftTop; ctx.fillRect(x, y, s, s); continue; }
@@ -109,9 +103,24 @@ export async function textMask(lines: string[], cap: number, weight = 600, lead 
   const img = c.getImageData(0, 0, W0, H0).data;
   let x0 = W0, y0 = H0, x1 = 0, y1 = 0;
   for (let y = 0; y < H0; y++) for (let x = 0; x < W0; x++) if (img[(y * W0 + x) * 4 + 3] > 118) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-  const w = Math.max(1, x1 - x0 + 1), h = Math.max(1, y1 - y0 + 1);
+  const HALO = 2;
+  const w = Math.max(1, x1 - x0 + 1) + HALO * 2, h = Math.max(1, y1 - y0 + 1) + HALO * 2;
   const data = new Uint8Array(w * h);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) data[y * w + x] = img[((y + y0) * W0 + (x + x0)) * 4 + 3] > 118 ? 1 : 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const sx = x - HALO + x0, sy = y - HALO + y0;
+    if (sx >= 0 && sy >= 0 && sx < W0 && sy < H0 && img[(sy * W0 + sx) * 4 + 3] > 118) data[y * w + x] = 1;
+  }
+  // halo: two cells around every glyph stay ground, so figure and ground meet as in damask
+  const g = data.slice();
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (g[y * w + x]) continue;
+    let near = false;
+    for (let dy = -HALO; dy <= HALO && !near; dy++) for (let dx = -HALO; dx <= HALO; dx++) {
+      const X = x + dx, Y = y + dy;
+      if (X >= 0 && Y >= 0 && X < w && Y < h && g[Y * w + X] === 1) { near = true; break; }
+    }
+    if (near) data[y * w + x] = 2;
+  }
   return { data, w, h, x: 0, y: 0 };
 }
 
@@ -161,15 +170,20 @@ export async function mountWoven(root: ParentNode = document) {
     const text = cv.dataset.woven!.split('|');
     const cap = Number(cv.dataset.cap || 22);
     const mask = await textMask(text, cap, 600);
-    const padX = Math.round(cap * 0.55), padY = Math.round(cap * 0.5), padR = Math.round(cap * 1.5);
+    const padX = Math.round(cap * 0.55), padY = Math.round(cap * 0.5);
     mask.x = padX; mask.y = padY;
-    const cols = mask.w + padX + padR, rows = mask.h + padY * 2;
-    // the label's own new thread, in its right margin
-    const a = cols - Math.round(padR * 0.45);
-    const loom = new Loom(cv, { cols, rows, mask, fit: 'cols', protect: [mask.x - 2, mask.y - 2, mask.x + mask.w + 2, mask.y + mask.h + 2], threads: [{ a, vc: Math.round(rows / 2), R: 0 }] });
+    // a full-width band: the cell size follows the column width, the letters sit at the left
+    const cssW = cv.parentElement!.clientWidth || 600;
+    const sCss = Math.min(3.4, Math.max(1.4, cssW / (mask.w * 2.3)));
+    const dprT = Math.min(devicePixelRatio || 1, 2), sDev = Math.max(1, Math.round(sCss * dprT));
+    const cols = Math.max(mask.w + padX + cap * 3, Math.floor((cssW * dprT) / sDev) - 1), rows = mask.h + padY * 2;
+    const free = cols - (mask.x + mask.w);
+    const a = mask.x + mask.w + Math.round(Math.max(cap * 1.6, free * 0.5));
+    const Rt = Math.max(cap * 0.8, Math.min(free * 0.5 - cap * 0.9, cap * 2.4));
+    const loom = new Loom(cv, { cols, rows, mask, fit: 'cols', threads: [{ a, vc: Math.round(rows * 0.62), R: 0 }] });
     loom.draw();
     cv.classList.add('is-ready');
-    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); loom.grow([cap * 0.62], 1600); } });
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); loom.grow([Rt], 2000); } });
     io.observe(cv);
   }
 }

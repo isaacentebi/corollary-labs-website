@@ -57,8 +57,9 @@ float figure(float i, float j) {
 bool protectedCell(float i, float j) { return j >= uProtect.x && j < uProtect.z && i >= uProtect.y && i < uProtect.w; }
 
 // front: margin of the nearest new thread that has reached (i, j)
-void front(float i, float j, out float t, out float fdx, out float fdy, out float fside) {
+void front(float i, float j, out float t, out float fdx, out float fdy, out float fside, out float fmg) {
   float best = 0.0; fdx = 0.0; fdy = 0.0; fside = 1.0;
+  float sx = 1.0 + 0.22 * (h1(floor(i / 6.0)) - 0.5), sy = 1.25 * (1.0 + 0.22 * (h1(floor(j / 6.0) + 57.0) - 0.5));
   for (int k = 0; k < ${MAXA}; k++) {
     if (float(k) >= uN) break;
     vec4 A = uA[k];
@@ -66,32 +67,40 @@ void front(float i, float j, out float t, out float fdx, out float fdy, out floa
     float o = j + 0.5 - A.x;
     float dx = sign(o) * (abs(o) + 0.5);
     float dy = i - A.y;
-    float mg = i + 2.0 < A.z ? A.w - max(abs(dx), abs(dy) * 1.6) : -1.0;
+    float mg = i + 2.0 < A.z ? A.w - (abs(dx) * sx + abs(dy) * sy) : -1.0;
     if (mg > 0.0) { best = mg; fdx = dx; fdy = dy; fside = sign(o); break; } // first to arrive keeps the cell
   }
-  t = clamp(best / 1.5, 0.0, 1.0);
+  t = clamp(best / 1.5, 0.0, 1.0); fmg = best;
+}
+// behind the edge the cloth changes in steps: plain weave, then herringbone twill, then the block profile
+bool staged(float mg, float dx, float dy) {
+  if (abs(dx) < 0.5) return rew(0.0, dy);
+  if (mg < 3.0) return md(abs(dx) + dy, 2.0) == 0.0;
+  if (mg < 10.0) return md(md(abs(dx), 4.0) - md(dy, 4.0), 4.0) < 2.0;
+  return rew(dx, dy);
 }
 
-vec3 warpCol(float j) { return texture2D(uWarp, vec2((md(j, uWarpN) + 0.5) / uWarpN, 0.5)).rgb * (0.94 + 0.12 * h1(j)); }
+vec3 warpCol(float j) { return texture2D(uWarp, vec2((md(j, uWarpN) + 0.5) / uWarpN, 0.5)).rgb * (0.975 + 0.05 * h1(j)); }
 vec3 weftCol(float i) { return uWeft * (0.975 + 0.05 * h1(i + 91.0)); }
 
 // screen → cloth. Reports the inserted thread under the point, and the local slope of the warps.
-vec3 toCloth(vec2 sp, out float agentK, out float afx, out vec4 aA, out float slope) {
+vec3 toCloth(vec2 sp, out float agentK, out float afx, out vec4 aA, out float slope, out float ag, out float near) {
   float wx = uCam.x + (sp.x - uRes.x * 0.5) / uPitch;
   float v = uCam.y + (sp.y - uRes.y * 0.5) / uPitch;
-  float shift = 0.0; agentK = -1.0; afx = 0.0; aA = vec4(0.0); slope = 0.0;
+  float shift = 0.0; agentK = -1.0; afx = 0.0; aA = vec4(0.0); slope = 0.0; ag = 1.0; near = 99.0;
   for (int k = 0; k < ${MAXA}; k++) {
     if (float(k) >= uN) break;
     vec4 A = uA[k]; vec2 G = uG[k];
     float tt = clamp((v - (A.z - 6.0)) / 6.0, 0.0, 1.0);
-    float z = (v - A.z) / 5.0; float bump = exp(-z * z);
+    float z = (v - A.z) / 9.0; float bump = exp(-z * z);
     float g = G.x * (1.0 - tt * tt * (3.0 - 2.0 * tt)) + G.y * bump;
-    float dg = -G.x * 6.0 * tt * (1.0 - tt) / 6.0 + G.y * bump * (-2.0 * z / 5.0);
+    float dg = -G.x * 6.0 * tt * (1.0 - tt) / 6.0 + G.y * bump * (-2.0 * z / 9.0);
     float dxw = wx - A.x;
     float s = abs(dxw) - g * 0.5;
-    if (s < 0.0) { agentK = float(k); afx = (dxw + g * 0.5) / max(g, 1e-3); aA = A; }
+    if (s < 0.0) { agentK = float(k); afx = (dxw + g * 0.5) / max(g, 1e-3); aA = A; ag = g; }
     else {
       float e = exp(-s / 8.0);
+      near = min(near, s / max(g, 0.3));
       shift += sign(dxw) * g * 0.5 * e;
       slope += sign(dxw) * dg * 0.5 * e;
     }
@@ -100,31 +109,39 @@ vec3 toCloth(vec2 sp, out float agentK, out float afx, out vec4 aA, out float sl
 }
 
 vec3 shade(vec2 sp) {
-  float agentK; float afx; vec4 aA; float slope;
-  vec3 c = toCloth(sp, agentK, afx, aA, slope);
+  float agentK; float afx; vec4 aA; float slope; float ag; float near;
+  vec3 c = toCloth(sp, agentK, afx, aA, slope, ag, near);
   float u = c.x, v = c.y;
   float i = floor(v), fy = v - i;
   float j = floor(u), fx = u - j;
   bool isAgent = agentK >= 0.0;
   if (isAgent) fx = afx;
 
-  bool oldUp, newUp; float tFlip = 0.0, side = 1.0; bool ground = false; bool white = false;
+  bool oldUp, newUp; float tFlip = 0.0, side = 1.0; bool ground = false; bool agentWeft = false;
   vec3 wc;
   if (isAgent) {
     oldUp = rew(0.0, i - aA.y); newUp = oldUp; wc = uAccent;
+    // the new thread takes one thread's width in the middle of its opening; the wefts cross the rest
+    float hw0 = 0.5 / max(ag, 1.0);
+    if (abs(fx - 0.5) > hw0) agentWeft = true; else fx = 0.5 + (fx - 0.5) / (2.0 * hw0);
   } else {
     wc = warpCol(j);
-    if (figure(i, j) > 0.5) { oldUp = fUp(i, j); newUp = oldUp; }
+    float fig = figure(i, j);
+    if (fig > 0.75) {
+      oldUp = fUp(i, j); newUp = oldUp;
+      tFlip = 0.0; // letters keep their light twill; their dark halo holds the outline
+    }
     else {
       oldUp = gUp(i, j); newUp = oldUp; ground = true;
-      if (!protectedCell(i, j)) {
-        float fdx, fdy; front(i, j, tFlip, fdx, fdy, side);
-        if (tFlip > 0.0) { newUp = rew(fdx, fdy); white = whiteBlock(fdx, fdy); }
+      if (fig < 0.25) {   // the halo around each glyph stays ground
+        float fdx, fdy, fmg; front(i, j, tFlip, fdx, fdy, side, fmg);
+        if (tFlip > 0.0) newUp = staged(fmg, fdx, fdy);
       }
     }
   }
   float q = side > 0.0 ? fx : 1.0 - fx;
   bool top = (oldUp == newUp) ? oldUp : (q < tFlip ? newUp : oldUp);
+  if (agentWeft) top = false;
 
   vec3 fc = weftCol(i);
   float aa = 0.8 / uPitch;
@@ -139,29 +156,27 @@ vec3 shade(vec2 sp) {
   float rw = 1.0 - (0.06 + 0.18 * z) * pow(clamp(pw / hw, 0.0, 1.0), 2.0);
   float rf = 1.0 - (0.03 + 0.10 * z) * pow(clamp(pf / hf, 0.0, 1.0), 2.0);
   vec3 lit = vec3(0.55) * clamp(slope * 2.2, 0.0, 0.8) * (1.0 - pw / hw);
-  vec3 wTop = wc * rw + lit - vec3(0.06) * clamp(-slope * 2.2, 0.0, 1.0);
+  // warps pressed against the opening sit in its shadow
+  float ao = isAgent ? 1.0 : 1.0 - 0.38 * exp(-near * 1.6);
+  vec3 wTop = (wc * rw + lit - vec3(0.06) * clamp(-slope * 2.2, 0.0, 1.0)) * ao;
   vec3 col;
   // satin binding points sink between the floats: the ground reads smooth
   bool sunk = ground && !top && tFlip <= 0.0;
-  bool sunkW = white && top && tFlip >= 1.0;
-  if (sunkW && v < uWoven && z < 0.5) {
-    float dotw = mix(0.16, 0.26, z);
-    float d = 1.0 - smoothstep(dotw - aa, dotw + aa, max(pw, pf));
-    return mix(fc * rf, wc * 1.6 + vec3(0.08), d);
-  }
   if (sunk && v < uWoven && z < 0.5) {
     float dotw = mix(0.16, 0.26, z);
     float d = 1.0 - smoothstep(dotw - aa, dotw + aa, max(pw, pf));
-    return mix(wc * rw, fc * mix(0.34, 0.6, z), d);
+    return mix(wc * rw * ao, fc * mix(0.34, 0.6, z), d);
   }
   if (v >= uWoven) {
     // not yet woven: bare warp over the loom's light
-    float bare = 1.0 - smoothstep(0.3 - aa, 0.3 + aa, pw);
-    col = mix(uPaper, wc * 1.1, bare);
+    // not yet woven: bare warps, a little lighter than the ground they will make
+    col = mix(uGap, wc * 1.7, inWarp * 0.9);
   } else if (top) {
     col = mix(fc * 0.5, wTop, inWarp);
   } else {
-    col = fc * rf * (1.0 - 0.12 * z * smoothstep(0.5 - 1.2 * aa, 0.5, pf));
+    col = fc * rf * (1.0 - 0.12 * z * smoothstep(0.5 - 1.2 * aa, 0.5, pf)) * (ao * 0.5 + 0.5);
+    // in the opening beside the new thread the weft runs in shadow: the warps read as parted
+    if (agentWeft) col = mix(uGap, fc * 0.5, 0.35 + 0.35 * z);
   }
   col = mix(col, uAccent, (1.0 - smoothstep(0.0, 1.5 * uDpr / uPitch, abs(v - uWoven))) * step(uWoven, 1e4));
   if (uHover.y > 0.0 && !isAgent) {
@@ -186,12 +201,12 @@ vec3 bands(vec2 sp, vec3 col) {
   bool inRight = !narrow && sp.x >= right0 && sp.x < right0 + bh && sp.y >= top0 && sp.y < top0 + (uBandBottom - top0) * wipe;
   if (!inTop && !inRight) return col;
 
-  float agentK; float afx; vec4 aA; float slope;
-  vec3 cc = toCloth(uRes * 0.5, agentK, afx, aA, slope);
+  float agentK; float afx; vec4 aA; float slope; float bag, bnear;
+  vec3 cc = toCloth(uRes * 0.5, agentK, afx, aA, slope, bag, bnear);
   float ci = floor(cc.y), cj = floor(cc.x);
   vec3 ink = uInk, paper = uPaper, rule = uRule;
   vec3 o = paper;
-  float t, fdx, fdy, fs;
+  float t, fdx, fdy, fs, fm;
 
   if (inTop) {
     float y = sp.y - top0;
@@ -199,14 +214,14 @@ vec3 bands(vec2 sp, vec3 col) {
       // label row
       o = paper; if (y < bh + px) o = rule;
     } else {
-      vec3 c = toCloth(sp, agentK, afx, aA, slope);
+      vec3 c = toCloth(sp, agentK, afx, aA, slope, bag, bnear);
       float j = floor(c.x); float fx = agentK >= 0.0 ? afx : c.x - j;
       float colW = agentK >= 0.0 ? max(uG[0].x, 0.2) * uPitch : uPitch;
       float r = floor(y / rh); float fr = y / rh - r;
       float sh;
       if (agentK >= 0.0) sh = 0.0;
       else {
-        front(ci, j, t, fdx, fdy, fs);
+        front(ci, j, t, fdx, fdy, fs, fm);
         sh = t > 0.5 ? blockX(fdx) * 4.0 + md(abs(fdx), 4.0) : md(j, 8.0);
       }
       float gx = min(fx, 1.0 - fx) * colW, gy = min(fr, 1.0 - fr) * rh;
@@ -222,7 +237,7 @@ vec3 bands(vec2 sp, vec3 col) {
     if (sp.y < top0 + bh) {
       // tie-up
       float y = sp.y - top0; float cy = floor(y / rh); float fyy = y / rh - cy;
-      front(ci, cj, t, fdx, fdy, fs);
+      front(ci, cj, t, fdx, fdy, fs, fm);
       float s = 7.0 - cy, tr = cx;
       bool up;
       if (t > 0.5) { bool wb = s > 3.5 && tr > 3.5; float rr = md(md(s, 4.0) - md(tr, 4.0), 4.0); up = wb ? rr == 0.0 : rr < 2.0; }
@@ -233,9 +248,9 @@ vec3 bands(vec2 sp, vec3 col) {
     } else if (sp.y < top0 + bh + lab || sp.y > uBandBottom - lab) {
       o = paper; if (abs(sp.y - (top0 + bh)) < px) o = rule;
     } else {
-      vec3 c = toCloth(sp, agentK, afx, aA, slope);
+      vec3 c = toCloth(sp, agentK, afx, aA, slope, bag, bnear);
       float i = floor(c.y), fy = c.y - i;
-      front(i, cj, t, fdx, fdy, fs);
+      front(i, cj, t, fdx, fdy, fs, fm);
       float tr = t > 0.5 ? blockY(fdy) * 4.0 + md(fdy, 4.0) : md(i, 8.0);
       o = paper;
       if (min(fxx, 1.0 - fxx) * rh < px * 0.75 || min(fy, 1.0 - fy) * uPitch < px * 0.75) o = rule;
@@ -341,25 +356,38 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
     pitch1 = wide ? 34 : 26;
     pitch2 = pitch0 * (wide ? 0.46 : 0.6);
     // the name, woven at thread resolution
-    const targetW = (wide ? Math.min(W * 0.74, 1180) : W * 0.84) / pitch0;
+    const targetW = (wide ? Math.min(W * 0.6, 980) : W * 0.7) / pitch0;
     const wt = wide ? 560 : 620;
     cap = Math.round(targetW / 5.6);
     let m = await textMask(['Corollary', 'Labs'], cap, wt, 0.3);
     if (Math.abs(m.w - targetW) > 3) { cap = Math.round((cap * targetW) / m.w); m = await textMask(['Corollary', 'Labs'], cap, wt, 0.3); }
-    const x0 = -Math.floor(m.w / 2), y0 = -Math.floor(m.h / 2);
-    tex(1, 'uMask', m.w, m.h, gl.LUMINANCE, m.data.map((x) => x * 255));
+    // phones: the name anchors in the upper third; the first thread enters the open cloth below it
+    cy0 = (wide ? H * 0.02 : H * 0.2) / pitch0;
+    const gutter = clamp(W * 0.04, 16, 56);
+    const x0 = Math.round(-W / pitch0 / 2 + gutter / pitch0), y0 = -Math.floor(m.h / 2);
+    tex(1, 'uMask', m.w, m.h, gl.LUMINANCE, m.data.map((x) => (x === 1 ? 255 : x === 2 ? 128 : 0)));
     gl.uniform4f(u.maskRect, x0, y0, m.w, m.h);
+    // columns that cross the name without touching a letter (or its halo): threads may run there
+    gapCols = [];
+    for (let c = 0; c < m.w; c++) { let clear = true; for (let r = 0; r < m.h; r++) if (m.data[r * m.w + c]) { clear = false; break; } if (clear) gapCols.push(x0 + c); }
+    nameSpan = [x0, x0 + m.w];
     const pad = Math.round(cap * 0.35);
     nameBox = { x0: x0 - pad, y0: y0 - pad, x1: x0 + m.w + pad, y1: y0 + m.h + pad };
-    gl.uniform4f(u.protect, nameBox.x0, nameBox.y0, nameBox.x1, nameBox.y1);
+    gl.uniform4f(u.protect, 1e6, 1e6, 1e6, 1e6);
     maskReady = true;
-    cy0 = (H * 0.02) / pitch0;
-    F = { x: Math.round(m.w * 0.16), y: Math.round(y0 + m.h + Math.max(50, (H * 0.34) / pitch0)) };
+    F0 = { x: Math.round(x0 + m.w * 0.3), y: Math.round(y0 + m.h + Math.max(50, (H * 0.34) / pitch0)) };
+    F = { ...F0 };
+    // the first thread runs down the free third to the right of the name
+    const right = W / pitch0 / 2;
+    auto.a = Math.round(x0 + m.w + (right - (x0 + m.w)) * (wide ? 0.42 : 0.3));
+    auto.vc = Math.round(wide ? cy0 + (H * 0.12) / pitch0 : y0 + m.h + (H * 0.3) / pitch0);
+    auto.Rmax = wide ? 58 : 50;
+    chooseF();
     const sx = W / pitch2 / 2, sy = H / pitch2 / 2;
     const pts = wide
-      ? [[-0.74, -0.6], [0.76, -0.58], [-0.84, 0.42], [0.6, 0.66], [-0.28, 0.82], [0.9, 0.08], [-0.52, -0.92]]
-      : [[-0.6, -0.72], [0.62, -0.5], [-0.66, 0.46], [0.5, 0.74], [0.0, -0.9], [0.64, 0.12], [-0.2, 0.9]];
-    far = pts.map(([px, py], n) => ({ a: Math.round(px * sx), vc: Math.round(py * sy), Rmax: (56 + ((n * 37) % 5) * 10) * (wide ? 1 : 0.5), d: n * 0.018 }));
+      ? [[-0.74, -0.6], [0.76, -0.58], [-0.84, 0.42], [0.6, 0.66], [0.9, 0.08], [-0.52, -0.92]]
+      : [[-0.6, -0.72], [0.62, -0.5], [-0.66, 0.46], [0.5, 0.74], [0.0, -0.9], [0.64, 0.12]];
+    far = pts.map(([px, py], n) => ({ a: between(Math.round(px * sx), 14), vc: Math.round(py * sy), Rmax: (56 + ((n * 37) % 5) * 10) * (wide ? 1 : 0.5), d: n * 0.018 }));
     // draft geometry, below the header
     const hh = header ? header.getBoundingClientRect().height : 60;
     const rh = wide ? 10 : 7, lab = wide ? 18 : 16;
@@ -375,9 +403,45 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
   // ---------------------------------------------------------------------------------------------
   let p = 0;
   const users: UserAgent[] = [];
+  // the first thread: drawn down through the hero by itself once the cloth is woven
+  const auto: UserAgent = { a: 0, vc: 0, tip: -1e5, R: 0, g: 0, b: 0, t0: 0, tipFrom: 0, tipTo: 0, Rmax: 48 };
+  let F0 = { x: 0, y: 0 };
+  let gapCols: number[] = [], nameSpan = [0, 0];
+  /** A column inside the name moves to the nearest gap between letters (within reach), else stays. */
+  const between = (a: number, reach = 8) => {
+    if (a < nameSpan[0] || a > nameSpan[1]) return a;
+    let best = a, d = reach + 1;
+    for (const g of gapCols) { const e = Math.abs(g - a); if (e < d) { d = e; best = g; } }
+    return d <= reach ? best : a;
+  };
+  // keep the story's close-up on its own: frame it where no other thread's re-weave can reach
+  function chooseF() {
+    if (!W) return;
+    const hc = W / pitch1 / 2 + 3, hr = H / pitch1 / 2 + 3;
+    const others = [auto, ...users];
+    const score = (x: number, y: number) => Math.min(1e9, ...others.map((o) => {
+      const dx = Math.max(0, Math.abs(x - o.a) - hc), dy = Math.max(0, Math.abs(y - o.vc) - hr);
+      return Math.abs(x - o.a) < hc + 4 ? -1e3 : 0.75 * dx + 0.95 * dy - o.Rmax - 4;
+    }));
+    // candidates: gaps between letters first, then columns outside the name
+    const cands = [...gapCols, ...Array.from({ length: 80 }, (_, k) => nameSpan[0] - 2 - k * 4), ...Array.from({ length: 80 }, (_, k) => nameSpan[1] + 2 + k * 4)]
+      .sort((a, b) => Math.abs(a - F0.x) - Math.abs(b - F0.x));
+    let best = { x: cands[0] ?? F0.x, y: F0.y, s: score(cands[0] ?? F0.x, F0.y) };
+    if (best.s < 0) {
+      outer: for (const dy of [0, 24, 48, 80]) for (const x of cands) {
+        {
+          const y = F0.y + dy, sc = score(x, y);
+          if (sc >= 0) { best = { x, y, s: sc }; break outer; }
+          if (sc > best.s) best = { x, y, s: sc };
+        }
+      }
+    }
+    F = { x: best.x, y: best.y };
+  }
   let hover = { u: 0, a: 0 };
   let wovenT0 = 0;
   let introDone = reduce;
+  if (reduce) stage.classList.add('is-woven');
 
   const camera = (): Cam => {
     const zin = ease(seg(p, 0.06, 0.34)), zout = ease(seg(p, 0.76, 1));
@@ -407,7 +471,7 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
     const wx = cam.cx + (x - W / 2) / cam.pitch, v = cam.cy + (y - H / 2) / cam.pitch;
     let shift = 0, inside = false;
     for (const A of agents) {
-      const z = (v - A.tip) / 5;
+      const z = (v - A.tip) / 9;
       const g = A.g * (1 - sstep(A.tip - 6, A.tip, v)) + A.b * Math.exp(-z * z);
       const d = wx - A.a, s = Math.abs(d) - g / 2;
       if (s < 0) inside = true; else shift += Math.sign(d) * (g / 2) * Math.exp(-s / 8);
@@ -432,17 +496,29 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
       woven = lerp(viewTop - 1, viewBot + 1, 1 - Math.pow(1 - t, 2));
       if (t >= 1) { introDone = true; woven = 1e5 + 1; stage.classList.add('is-woven'); } else animating = true;
     }
-    for (const a of users) {
+    // at hero scale the opening is wider, so the warps visibly part; in the close-up it is one thread
+    const open = lerp(2.2, 1, ease(seg(p, 0.06, 0.34)));
+    const run = (a: UserAgent, zipS: number, growS: number) => {
       const t = (now - a.t0) / 1000;
-      if (reduce) { a.g = 1; a.b = 0; a.tip = 1e5; a.R = a.Rmax; continue; }
-      a.g = out(clamp(t / 0.25, 0, 1));
-      const zt = clamp(t / 1.1, 0, 1);
+      if (reduce) { a.g = open; a.b = 0; a.tip = 1e5; a.R = a.Rmax; return; }
+      if (t < 0) { a.g = 0; a.tip = a.tipFrom; return; }
+      a.g = open * out(clamp(t / 0.3, 0, 1));
+      const zt = clamp(t / zipS, 0, 1);
       a.tip = zt >= 1 ? 1e5 : lerp(a.tipFrom, a.tipTo, ease(zt));
-      a.b = zt >= 1 ? 0 : 2.4 * Math.sin(Math.PI * Math.min(1, zt * 1.15));
-      a.R = a.Rmax * out(clamp((t - 0.5) / 2.4, 0, 1));
-      if (t < 3) animating = true;
+      a.b = zt >= 1 ? 0 : 3.4 * Math.sin(Math.PI * Math.min(1, zt * 1.1));
+      // the re-weave starts when the thread's tip passes its centre row
+      const tc = zipS * clamp((a.vc - a.tipFrom) / Math.max(1, a.tipTo - a.tipFrom), 0, 1);
+      a.R = a.Rmax * out(clamp((t - tc) / growS, 0, 1));
+      if (t < tc + growS) animating = true;
+    };
+    if (introDone && !auto.t0) {
+      auto.t0 = now + (reduce ? 0 : 350);
+      const vt = cy0 - H / pitch0 / 2;
+      auto.tipFrom = vt - 12; auto.tipTo = cy0 + H / pitch0 / 2 + 14;
     }
-    const agents = [...storyAgents(), ...users].slice(0, MAXA);
+    if (auto.t0) { run(auto, 2.4, 3.4); if (!reduce && now < auto.t0) animating = true; }
+    for (const a of users) run(a, 1.2, 2.6);
+    const agents = [...storyAgents(), ...(auto.t0 ? [auto] : []), ...users].slice(0, MAXA);
     const A = new Float32Array(MAXA * 4), G = new Float32Array(MAXA * 2);
     agents.forEach((a, n) => { A.set([a.a, a.vc, a.tip, a.R], n * 4); G.set([a.g, a.b], n * 2); });
     gl.uniform2f(u.res, canvas.width, canvas.height);
@@ -470,7 +546,7 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
     const run = r.height - innerHeight;
     let np = clamp(-r.top / Math.max(1, run), 0, 1);
     if (reduce) { const keys = [0, 0.5, 0.74, 1]; np = keys.reduce((b, k2) => (Math.abs(k2 - np) < Math.abs(b - np) ? k2 : b), 0); }
-    if (header) header.dataset.tone = r.bottom < 70 ? 'light' : np > 0.08 ? 'dark' : 'clear';
+    if (header) header.dataset.tone = r.bottom < 70 ? 'light' : 'dark';
     if (np !== p) {
       p = np;
       stage.dataset.state = String(p < 0.2 ? 0 : p < 0.5 ? 1 : p < 0.76 ? 2 : 3);
@@ -488,31 +564,48 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
     if (!fine) return;
     const { x, y } = local(e);
     const c = clothAt(x, y, lastCam, lastAgents);
-    const nu = Math.round(c.u), na = c.inside || inDraft(x, y) ? 0 : 1;
+    const nu = Math.round(c.u), na = c.inside || inDraft(x, y) || y > H - 72 ? 0 : 1;
     if (nu !== hover.u || na !== hover.a) { hover = { u: nu, a: na }; request(); }
   });
   canvas.addEventListener('pointerleave', () => { if (hover.a) { hover.a = 0; request(); } });
+  const insertBtn = stage.querySelector<HTMLButtonElement>('[data-insert]');
   const updateCount = (full = false) => {
-    if (!counter) return;
-    counter.textContent = `Threads ${users.length} / ${MAXU}`;
-    counter.hidden = users.length === 0;
-    counter.classList.toggle('is-full', full);
-    if (full) { counter.classList.remove('flash'); void counter.offsetWidth; counter.classList.add('flash'); }
+    if (counter) {
+      counter.textContent = `${users.length} / ${MAXU}`;
+      counter.classList.toggle('is-full', full);
+      if (full) { counter.classList.remove('flash'); void counter.offsetWidth; counter.classList.add('flash'); }
+    }
+    if (insertBtn) insertBtn.setAttribute('aria-disabled', String(users.length >= MAXU));
+  };
+  /** Insert a thread at a screen point. Returns false if there is no room there. */
+  const insertAt = (x: number, y: number) => {
+    if (users.length >= MAXU) { updateCount(true); return false; }
+    const cam = lastCam;
+    const c = clothAt(x, y, cam, lastAgents);
+    const a = between(Math.round(c.u));
+    if (c.inside || lastAgents.some((g) => g.g > 0 && Math.abs(g.a - a) < 4)) return false;
+    const viewTop = cam.cy - H / cam.pitch / 2, viewBot = cam.cy + H / cam.pitch / 2;
+    const Rmax = clamp((Math.min(W, H) / cam.pitch) * 0.3, 14, 56);
+    users.push({ a, vc: Math.floor(c.v), tip: viewTop - 12, R: 0, g: 0, b: 0, t0: performance.now(), tipFrom: viewTop - 12, tipTo: viewBot + 14, Rmax });
+    if (p < 0.06) chooseF();
+    updateCount(users.length >= MAXU);
+    request();
+    return true;
   };
   canvas.addEventListener('click', (e) => {
     const { x, y } = local(e);
     if (inDraft(x, y)) return;
-    if (users.length >= MAXU) { updateCount(true); return; }
-    const cam = lastCam;
-    const c = clothAt(x, y, cam, lastAgents);
-    const a = Math.round(c.u);
-    if (c.inside || lastAgents.some((g) => g.g > 0 && Math.abs(g.a - a) < 3)) return;
-    const viewTop = cam.cy - H / cam.pitch / 2, viewBot = cam.cy + H / cam.pitch / 2;
-    const Rmax = clamp((Math.min(W, H) / cam.pitch) * 0.3, 14, 64);
-    users.push({ a, vc: Math.floor(c.v), tip: viewTop - 8, R: 0, g: 0, b: 0, t0: performance.now(), tipFrom: viewTop - 8, tipTo: viewBot + 12, Rmax });
-    updateCount(users.length >= MAXU);
-    request();
+    insertAt(x, y);
   });
+  // keyboard / screen reader: insert at a free place in view
+  insertBtn?.addEventListener('click', () => {
+    if (users.length >= MAXU) { updateCount(true); return; }
+    for (let k = 0; k < 40; k++) {
+      const x = W * (0.12 + 0.76 * ((k * 0.618 + users.length * 0.29) % 1));
+      if (insertAt(x, H * (0.45 + 0.2 * ((k * 0.37) % 1)))) return;
+    }
+  });
+  updateCount();
 
   let lw = 0, lh = 0;
   new ResizeObserver(() => {

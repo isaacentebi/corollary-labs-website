@@ -7,8 +7,9 @@
 //             rows fall into blocks A/B with widths from a proportional series (not mirrored: an
 //             asymmetric grid). A×A, A×B, B×A weave 2/2 twill (grey); B×B weaves 1/3 twill (white).
 //             The satin ground stays black. Only the twill direction mirrors on the new thread.
-//   front   : a rectangle growing from the new thread (the change runs along warp and weft only,
-//             faster along the weft).
+//   front   : a stepped diamond growing from the new thread (distance measured along warp and weft
+//             only; each group of threads carries it at its own speed). Behind the edge the cloth
+//             changes in steps: plain weave → herringbone twill → the block profile.
 
 export const mod = (a: number, n: number) => ((a % n) + n) % n;
 
@@ -35,7 +36,18 @@ export function rewovenUp(dx: number, dy: number) {
 /** true where a rewoven cell is the white block (its warp binding points sink). */
 export const rewovenWhite = (dx: number, dy: number) => dx !== 0 && blockX(dx) === 1 && blockY(dy) === 1;
 
-export const frontDist = (dx: number, dy: number) => Math.max(Math.abs(dx), Math.abs(dy) * 1.6);
+const hn = (n: number) => { const x = Math.sin(n * 12.9898 + 4.1) * 43758.5453; return x - Math.floor(x); };
+/** Diamond (Manhattan) distance; speed varies per group of six threads, so the edge steps. */
+export const frontDist = (dx: number, dy: number, i = 0, j = 0) =>
+  Math.abs(dx) * (1 + 0.22 * (hn(Math.floor(i / 6)) - 0.5)) + Math.abs(dy) * 1.25 * (1 + 0.22 * (hn(Math.floor(j / 6) + 57) - 0.5));
+export const STEP1 = 3, STEP2 = 10;
+/** The structure a cell takes `mg` threads behind the front: plain → herringbone → block profile. */
+export function stagedUp(mg: number, dx: number, dy: number) {
+  if (dx === 0) return rewovenUp(0, dy);
+  if (mg < STEP1) return mod(Math.abs(dx) + dy, 2) === 0;
+  if (mg < STEP2) return mod(mod(Math.abs(dx), 4) - mod(dy, 4), 4) < 2;
+  return rewovenUp(dx, dy);
+}
 
 export function hash(str: string) {
   let h = 2166136261;
@@ -44,7 +56,7 @@ export function hash(str: string) {
 }
 
 export const PALETTE = {
-  warp: ['#18181a', '#202023', '#161618', '#27272b', '#1c1c1f'],
+  warp: ['#1a1a1c', '#1e1e21', '#18181a', '#222225', '#1c1c1e'],
   warpW: [34, 8, 21, 5, 13],
   weft: '#ebe9e3',
   gap: '#0c0c0e',

@@ -65,23 +65,23 @@ img, svg, canvas { display: block; }
 .hdr nav a:hover { color: var(--ink); background-size: 100% 2px; }
 .hdr nav a[aria-current] { color: var(--ink); background-size: 100% 2px; }
 @media (max-width: 640px) {
-  .hdr { flex-direction: column; align-items: flex-start; gap: 10px; padding-top: 16px; padding-bottom: 12px; }
-  .hdr nav { gap: 0; width: 100%; justify-content: space-between; border-top: 1px solid var(--rule); padding-top: 8px; }
+  .hdr { height: 44px; padding-top: 0; padding-bottom: 0; gap: 10px; }
+  .hdr .mark { display: none; }
+  .hdr__name { font-size: 11px; white-space: nowrap; }
+  .hdr nav { gap: 11px; }
+  .hdr nav a { font-size: 10px; letter-spacing: 0.02em; }
 }
 
-/* Home: the header floats over the cloth. Clear over the calm ground; a graphite bar over the
-   close-up; paper once the cloth has scrolled away. */
-.hdr--over { position: fixed; top: 0; left: 0; right: 0; color: #ebe9e3; transition: background-color .35s var(--ease), color .35s var(--ease), box-shadow .35s var(--ease); }
+/* Home: over the cloth the header is an opaque graphite bar with a hairline; paper once the cloth has gone. */
+.hdr--over { position: fixed; top: 0; left: 0; right: 0; color: #ebe9e3; background: #0c0c0e; box-shadow: 0 1px 0 rgba(235, 233, 227, 0.16); transition: background-color .3s var(--ease), color .3s var(--ease), box-shadow .3s var(--ease); }
 .hdr--over nav a, .hdr--over nav a:hover, .hdr--over nav a[aria-current] { color: inherit; }
-.hdr--over[data-tone='dark'] { background: rgba(12, 12, 14, 0.94); }
-.hdr--over[data-tone='light'] { background: rgba(235, 233, 227, 0.94); color: var(--ink); box-shadow: 0 1px 0 var(--rule); }
+.hdr--over[data-tone='light'] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 0 var(--rule); }
 .hdr--over[data-tone='light'] nav a { color: var(--ink-2); }
 .hdr--over[data-tone='light'] nav a:hover { color: var(--ink); }
-@media (max-width: 640px) { .hdr--over nav { border-top-color: currentColor; border-top-color: color-mix(in srgb, currentColor 30%, transparent); } }
 
 /* Woven title */
 .title { padding: clamp(28px, 7vh, 88px) var(--gutter) clamp(28px, 5vh, 56px); }
-.title__cloth { width: min(100%, var(--tw, 560px)); }
+.title__cloth { width: 100%; }
 .title canvas { max-width: 100%; opacity: 0; transition: opacity .6s var(--ease); }
 .title canvas.is-ready { opacity: 1; }
 
