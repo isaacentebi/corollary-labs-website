@@ -86,8 +86,8 @@ const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split('
 const built = [];
 for (const v of VERSIONS) {
   if (v.key && only && !only.includes(v.key)) continue;
-  if (switcherOnly || (update && !update.includes(v.key))) { if (!v.key || fs.existsSync(path.join(OUT, v.key))) built.push(v); continue; }
-  if (update) fs.rmSync(path.join(OUT, v.key), { recursive: true, force: true });
+  if (switcherOnly || (update && !update.includes(v.key || 'plotter'))) { if (!v.key || fs.existsSync(path.join(OUT, v.key))) built.push(v); continue; }
+  if (update && v.key) fs.rmSync(path.join(OUT, v.key), { recursive: true, force: true });
   if (!v.key) { buildInto(path.join(ROOT, 'site'), OUT); built.push(v); continue; }
   const wt = worktreeFor(`direction/${v.key}`);
   if (!wt) { console.warn(`skip ${v.key}: no branch direction/${v.key} yet`); continue; }
