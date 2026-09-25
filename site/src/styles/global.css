@@ -107,6 +107,7 @@ ol, ul { list-style: none; }
     var(--ground);
 }
 .field.has-gl .field__fallback { display: none; }
+.field__stick::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; z-index: 1; pointer-events: none; background: linear-gradient(to bottom, rgba(220, 217, 226, 0), var(--ground)); opacity: var(--edge, 0); }
 .field__center { position: absolute; left: 50%; top: 50%; translate: -50% -54%; display: grid; justify-items: center; gap: clamp(14px, 1.6vw, 26px); will-change: opacity, transform, filter; }
 .field__name {
   font-family: var(--display); font-weight: 300; font-variation-settings: 'SOFT' 100, 'WONK' 0;
@@ -134,7 +135,8 @@ html.rm .field__cue i { animation: none; top: 24px; }
 .home-about { padding-top: clamp(72px, 12vh, 140px); padding-bottom: clamp(56px, 9vh, 100px); display: grid; grid-template-columns: minmax(120px, 1fr) 4fr; gap: 24px 40px; align-items: start; }
 .home-about .label { padding-top: 0.9em; }
 .home-about__text { font-family: var(--display); font-weight: 300; font-variation-settings: 'SOFT' 100, 'WONK' 0; font-size: clamp(34px, 4.6vw, 68px); line-height: 1.06; letter-spacing: -0.02em; }
-.strip { height: clamp(150px, 22vh, 220px); }
+.strip { height: clamp(170px, 24vh, 240px); }
+.strip .band__canvas { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%, #000 72%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 28%, #000 72%, transparent); }
 .strip.is-grab, .band.is-grab { cursor: grab; }
 .band.is-dragging { cursor: grabbing; }
 
@@ -240,3 +242,21 @@ html.js:not(.rm) [data-reveal].in { opacity: 1; transform: none; filter: none; }
 html.js:not(.rm) .page-band [data-clear], html.js:not(.rm) .essay-head [data-essay-title], html.js:not(.rm) .contact-band [data-clear] > * { animation: settle 1.5s var(--soft) 0.35s both; }
 html.js:not(.rm) .contact-band [data-clear] > :nth-child(2) { animation-delay: 0.5s; }
 html.js:not(.rm) .contact-band [data-clear] > :nth-child(3) { animation-delay: 0.65s; }
+
+/* essays index: the list, with its stones in a column of ground beside it */
+.essays-page { padding-top: clamp(120px, 20vh, 200px); padding-bottom: clamp(80px, 14vh, 160px); }
+.page-title { font-family: var(--display); font-weight: 300; font-variation-settings: 'SOFT' 100, 'WONK' 0; font-size: clamp(56px, 10vw, 160px); line-height: 0.9; letter-spacing: -0.03em; margin: 0 0 clamp(32px, 6vh, 64px) -0.06em; }
+.essays-grid { display: grid; grid-template-columns: 1fr minmax(180px, 32%); align-items: stretch; }
+.essays-field { border-radius: 0 0 0 0; min-height: 360px; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent); }
+.essays-grid .essay-row { grid-template-columns: 56px 1fr; }
+.essays-grid .essay-row__meta { grid-column: 2; grid-row: auto; text-align: left; }
+@media (max-width: 720px) {
+  .essays-grid { grid-template-columns: 1fr 26%; }
+  .essays-grid .essay-row { grid-template-columns: 30px 1fr; padding-right: 10px; }
+}
+
+/* team: the group in the middle, names beside their stones */
+.page-band--team { height: clamp(460px, 76vh, 760px); place-items: end stretch; }
+.page-band--team h1 { font-size: clamp(48px, 7vw, 110px); }
+.band > .stone-label { position: absolute; left: 0; top: 0; z-index: 3; font-family: var(--display); font-weight: 300; font-variation-settings: 'SOFT' 100, 'WONK' 0; font-size: 22px; white-space: nowrap; pointer-events: none; opacity: 0; filter: blur(4px); transition: opacity 0.5s var(--soft), filter 0.5s var(--soft); }
+.band > .stone-label.on { opacity: 1; filter: none; }

@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { u } from '../config/site';
 // the same ground seen from very far away, at dusk: many small groups, the lines as texture
-const band = { far: { n: 15, seed: 5 }, dusk: 0.9, tilt: 0.62, zoom: 1, space: 7, clear: '[data-clear]' };
+const band = { far: { n: 14, seed: 5 }, dusk: 0.9, tilt: 0.62, zoom: 1, space: 10, kScale: 0.6, clear: '[data-clear]' };
 ---
 <Base page="about" title="About">
   <section class="page-band page-band--left page-band--tall band" data-band={JSON.stringify(band)}>

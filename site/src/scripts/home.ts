@@ -171,6 +171,7 @@ export function initHome(root: HTMLElement) {
     };
     show(phs[1], 0.3, 0.5); show(phs[2], 0.62, 1.3);
     if (cue) cue.style.opacity = String((1 - seg(p, 0.0, 0.04)) * nameIn);
+    section!.style.setProperty('--edge', ease(seg(p, 0.7, 0.82)).toFixed(3));
 
     // the organisation rises
     org.members.forEach((s, i) => { s.tlift = p > 0.09 + i * 0.035 ? 1 : 0; });
@@ -209,17 +210,18 @@ export function initHome(root: HTMLElement) {
     if (idx) {
       const st = p < 0.2 ? 1 : p < 0.45 ? 2 : p < 0.58 ? 3 : 4;
       const reached = others.filter((c) => c.on).length + (org.rose.gw > 0.5 ? 1 : 0);
-      const s = `${String(st).padStart(2, '0')}/04 t ${p.toFixed(2)} n ${org.members.filter((m) => m.tlift > 0).length + (org.rose.gw > 0.5 ? 1 : 0)} ${reached}/${others.length + 1}`;
+      const s = `state ${st}/4\u2002\u00b7\u2002stones ${org.members.filter((m) => m.tlift > 0).length + (org.rose.gw > 0.5 ? 1 : 0)}\u2002\u00b7\u2002reached ${reached}/${others.length + 1}`;
       if (s !== lastIdx) { idx.textContent = s; lastIdx = s; }
     }
   }
 
+  const r0 = (r: Stone) => ((r as any).r0 ??= r.tr);
   // each travelling rose follows the lines: mostly across first, then down into its group
   function travel(now: number) {
     for (const c of others) {
       const r = c.rose;
       if (!c.on) { r.tlift = 0; r.tgw = 0; r.hold = false; rowTargets(c); continue; }
-      const tau = clamp((now - c.t0) / 1.2);
+      const tau = clamp((now - c.t0) / 1.7);
       r.tlift = 1;
       if (tau < 1) {
         const ex = ease(tau), ey = ease(clamp((tau - 0.25) / 0.75));
@@ -229,9 +231,10 @@ export function initHome(root: HTMLElement) {
         r.tx = r.x; r.ty = r.y;
         r.tgw = ease(clamp((tau - 0.6) / 0.4));
         r.solid = false;
+        r.trose = r.rose = 1 + 1.6 * Math.sin(Math.PI * tau); r.tr = r.r = r0(r) * (1 + 0.35 * Math.sin(Math.PI * tau));
         rowTargets(c);
       } else {
-        r.hold = false; r.tx = c.cx; r.ty = c.cy; r.tgw = 1; r.solid = true;
+        r.hold = false; r.tx = c.cx; r.ty = c.cy; r.tgw = 1; r.solid = true; r.trose = 1; r.tr = r0(r);
         ringTargets(c);
       }
     }
@@ -245,6 +248,7 @@ export function initHome(root: HTMLElement) {
       zoom: 1 + (zoomOut - 1) * z,
       tilt: tiltMax * ease(seg(p, 0.5, 0.72)),
       dusk: 0.88 * ease(seg(p, 0.5, 0.7)),
+      z,
     };
   }
 
@@ -300,10 +304,11 @@ export function initHome(root: HTMLElement) {
     for (let i = fading.length - 1; i >= 0; i--) if (fading[i].lift < 0.01) fading.splice(i, 1);
     const v = view(p);
     stick.toggleAttribute('data-dark', v.dusk > 0.45);
+    const breathe = reduced ? 0 : Math.sin(t * 0.8) * 5 * unit;
     ground.draw({
-      ...v, space, time: reduced ? 0 : t, flow: reduced ? 0 : t * 2.4,
+      ...v, space: space * (1 + (1 / v.zoom - 1) * 0.62), kScale: 1 - 0.45 * v.z, time: reduced ? 0 : t, flow: reduced ? 0 : t * 2.4,
       stones: live, groups: [org.group, ...others.map((c) => c.group)],
-      cap: { ...cap, k: capK() },
+      cap: { ...cap, hx: cap.hx + breathe, hy: cap.hy + breathe * 0.6, k: capK() },
       mouse: reduced ? null : { x: mouse.x, y: mouse.y, s: mouse.s * 0.9, R: 64 * unit },
     });
     if (visible) kick();

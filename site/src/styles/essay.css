@@ -1,6 +1,6 @@
 /* Essay reading page */
-.essay-head { min-height: clamp(460px, 74vh, 760px); display: flex; align-items: flex-end; }
-.essay-head__in { padding-top: 120px; padding-bottom: clamp(56px, 10vh, 110px); }
+.essay-head { display: flex; align-items: flex-end; }
+.essay-head__in { padding-top: clamp(120px, 20vh, 200px); padding-bottom: clamp(40px, 7vh, 80px); }
 .essay-head__block { max-width: min(760px, 62vw); padding: 0.4em 0.6em 0.4em 0; }
 .essay-head__meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 13.5px; color: var(--ink-2); margin-bottom: 22px; }
 .essay-head__meta a { color: var(--ink); }
@@ -9,7 +9,7 @@
 .essay-head__dek { margin-top: 22px; font-size: clamp(17px, 1.5vw, 20px); line-height: 1.5; color: var(--ink-2); max-width: 34em; }
 @media (max-width: 720px) {
   .essay-head { min-height: 0; }
-  .essay-head__in { padding-top: 64vw; }
+  .essay-head__in { padding-top: 110px; }
   .essay-head__block { max-width: none; }
 }
 

@@ -128,11 +128,22 @@ void main(){
   }
 
   // a heading's clearing: a rounded box, part of the same function
+  float capS = 1e9, capK = 0.0;
   if (uCapK.x > 0.001) {
     vec2 d = p - uCap.xy; vec2 b = max(uCap.zw - uCapK.y, vec2(0.0)); vec2 q = abs(d) - b;
     vec2 mq = max(q, 0.0); float lq = length(mq);
     float s = lq + min(max(q.x, q.y), 0.0) - uCapK.y;
     vec2 gs = lq > 1e-4 ? sign(d) * mq / lq : (q.x > q.y ? vec2(sign(d.x), 0.0) : vec2(0.0, sign(d.y)));
+    // an organic, slowly breathing outline rather than a box: a low-frequency wobble along the edge
+    float th0 = atan(d.y / max(uCap.w, 1.0), d.x / max(uCap.z, 1.0));
+    s += (sin(3.0*th0 + uTime*0.35) * 0.55 + sin(5.0*th0 - uTime*0.23 + 1.3) * 0.3 + sin(2.0*th0 + 0.8) * 0.4) * min(uCap.w, 60.0) * 0.28;
+    // the outline gives way where the cursor presses on it
+    if (uMouse.z > 0.001) {
+      vec2 dm = p - uMouse.xy; float Rm = uMouse.w * 1.3;
+      float em = exp(-dot(dm, dm) / (Rm*Rm)) * uMouse.z * Rm * 0.45;
+      s += em; gs += em * 2.0 * (-dm) / (Rm*Rm);
+    }
+    capS = s; capK = uCapK.x;
     float W = uCapK.z; float x = clamp(s / W, 0.0, 1.0);
     float F = x*x*(3.0 - 2.0*x); float dF = (s > 0.0 && s < W) ? 6.0*x*(1.0 - x)/W : 0.0;
     float M = 1.0 - uCapK.x*(1.0 - F);
@@ -206,6 +217,7 @@ void main(){
   // relief
   float T = (psi - uFlow) / uSpace;
   float amp = smoothstep(0.42, 0.16, length(g)/uSpace*px);
+  amp *= mix(1.0, smoothstep(0.0, uCapK.z * 0.42, capS), capK);   // no lit rim at the clearing's edge
   vec2 gh = (3.14159 * sin(6.2831853*T) / uSpace) * g * amp;
   float ampIn = smoothstep(0.42, 0.16, length(gin)*px);
   vec2 ghIn = 3.14159 * sin(6.2831853*Tin) * gin * ampIn * 0.85;
@@ -228,6 +240,12 @@ void main(){
   col = mix(col, uRose, inM * fillT * (0.05 + 0.05*uDusk));
   vec3 lc = mix(uInk, uRose * (1.0 + 0.5*uDusk), lineTint);
   col = mix(col, lc, lineA * (0.62 - 0.12*uDusk));
+  // the clearing's own closed outline
+  if (capK > 0.001) {
+    float dc = capS / px, di = (capS + 13.0) / px;
+    col = mix(col, uInk, capK * 0.34 * exp(-dc*dc / 1.1));
+    col = mix(col, uInk, capK * 0.12 * exp(-di*di / 0.9));
+  }
 
   float rz = clamp(rose, 0.0, 1.0);
   col = mix(col, mix(uRose, uLight, 0.35 - 0.3*uDusk), rz * (0.3 + 0.25*uDusk));
@@ -250,16 +268,17 @@ void main(){
     vec3 sn3 = normalize(vec3(wdir * prof, nz));
     float lam = clamp(dot(sn3, L), 0.0, 1.0);
     float wrap = clamp(dot(sn3, L) * 0.5 + 0.5, 0.0, 1.0);
-    vec3 base = mix(mix(uStone, uBasalt, hitU.z), uRose, hitT.z);
-    vec3 dark = mix(mix(uShade * 1.02, uBasalt * 0.45, hitU.z), uRose * 0.55 + vec3(0.02, 0.0, 0.04), hitT.z);
+    float rz1 = min(hitT.z, 1.0);
+    vec3 base = mix(mix(uStone, uBasalt, hitU.z), uRose, rz1);
+    vec3 dark = mix(mix(uShade * 1.02, uBasalt * 0.45, hitU.z), uRose * 0.55 + vec3(0.02, 0.0, 0.04), rz1);
     vec3 sc = mix(dark, base, smoothstep(0.05, 0.85, wrap));
-    sc = mix(sc, uLight, pow(lam, 6.0) * (0.3 + 0.2*hitT.z) * (1.0 - 0.5*hitU.z));
+    sc = mix(sc, uLight, pow(lam, 6.0) * (0.3 + 0.2*rz1) * (1.0 - 0.5*hitU.z));
     // lacquer: a sharp highlight and a reflection of the ground along the rim
     vec3 R3 = reflect(-L, sn3);
     float spec = pow(clamp(R3.z, 0.0, 1.0), 60.0);
     sc += vec3(1.0) * spec * hitU.x * 0.75;
     sc = mix(sc, uGround * 1.05, hitU.x * 0.22 * smoothstep(0.6, 1.0, f2));
-    sc += uRose * hitT.z * 0.2 * pow(1.0 - sn3.z, 2.0) * (1.0 - lam);
+    sc += uRose * rz1 * 0.2 * pow(1.0 - sn3.z, 2.0) * (1.0 - lam);
     sc = mix(sc, uGround, 0.16 * smoothstep(0.55, 1.0, f2) * clamp(dot(wdir, vec2(0.4, 0.9)), 0.0, 1.0));
     col = mix(col, sc, edge * smoothstep(0.0, 0.08, hitT.w));
   }
@@ -270,11 +289,11 @@ void main(){
 `;
 
 // ── the same field on the CPU, for the values the shader needs as constants ───────────────────
-function stonePsi(stones: StoneState[], x: number, y: number) {
+function stonePsi(stones: StoneState[], x: number, y: number, kS = 1) {
   let psi = y;
   for (const s of stones) {
     if (s.lift < 0.002) continue;
-    const r = s.r * (0.35 + 0.65 * s.lift), R = r * 2.4 + 18, k = s.k * s.lift;
+    const r = s.r * (0.35 + 0.65 * s.lift), R = r * 2.4 + 18, k = s.k * s.lift * kS;
     const d = Math.hypot(x - s.x, y - s.y);
     psi += d > R * 4.2 ? k * R : k * R * Math.tanh(d / R);
   }
@@ -329,6 +348,7 @@ export type Frame = {
   flow?: number;
   tilt?: number;
   dusk?: number;
+  kScale?: number;
   time: number;
 };
 
@@ -403,17 +423,18 @@ export class Ground {
     }
     for (const s of f.stones) if (!seen.has(s) && order.length < MAXS && (s.lift > 0.002)) { seen.add(s); order.push(s); }
     const n = order.length;
+    const kS = f.kScale ?? 1;
     for (let i = 0; i < n; i++) {
       const s = order[i];
       this.S.set([s.x, s.y, s.r, s.aspect], i * 4);
-      this.T.set([s.rot, s.k, s.rose, s.lift], i * 4);
+      this.T.set([s.rot, s.k * kS, s.rose, s.lift], i * 4);
       this.U.set([s.gloss, s.squar, s.tone, s.gw], i * 4);
     }
     // constants: the value of the field at each clearing
     const c = f.cap && f.cap.k > 0.001 ? f.cap : null;
-    const psiCap = c ? stonePsi(order, c.cx, c.cy) : 0;
+    const psiCap = c ? stonePsi(order, c.cx, c.cy, kS) : 0;
     const psiAt = (x: number, y: number) => {
-      let v = stonePsi(order, x, y);
+      let v = stonePsi(order, x, y, kS);
       if (c) { const M = 1 - c.k * (1 - smooth01(sdBox(c, x, y) / c.moat)); v = psiCap + (v - psiCap) * M; }
       return v;
     };

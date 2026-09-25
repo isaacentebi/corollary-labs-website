@@ -16,6 +16,7 @@ type Cfg = {
   stones?: SCfg[]; mstones?: { x: number; y: number; r: number }[];
   group?: boolean; clear?: string; hover?: string; hoverMode?: 'warm' | 'part'; drag?: boolean;
   far?: { n: number; seed: number }; dusk?: number; zoom?: number; tilt?: number; space?: number; moat?: number; pad?: number;
+  anchor?: string; labels?: string; bounded?: boolean; kScale?: number;
 };
 
 export function initBands(root: HTMLElement) {
@@ -67,6 +68,9 @@ function band(el: HTMLElement) {
   const all: Stone[] = [...stones, ...far];
 
   let cap: Cap | null = null;
+  const anchors = cfg.anchor ? [...document.querySelectorAll<HTMLElement>(cfg.anchor)] : [];
+  const labels = cfg.labels ? [...el.querySelectorAll<HTMLElement>(cfg.labels)] : [];
+  let hovered = -1;
   const clearEl = cfg.clear ? el.querySelector<HTMLElement>(cfg.clear) : null;
   const zoom = cfg.zoom ?? 1, tilt = cfg.tilt ?? 0;
   const V = () => ({ cam: [0, 0] as [number, number], zoom, tilt });
@@ -82,6 +86,7 @@ function band(el: HTMLElement) {
       const s = stones[i];
       const c = narrow ? { ...c0, ...cfg.mstones![i] } : c0;
       s.hx = c.x * W; s.hy = c.y * H; s.hr = c.r * unit;
+      if (anchors[i]) { const a = anchors[i].getBoundingClientRect(); s.hy = a.top + a.height / 2 - r.top - H / 2; s.hr = c.r * Math.min(W, 520); }
       s.tx = s.hx; s.ty = s.hy; s.tr = s.hr;
       if (s.lift === 0) { s.x = s.tx; s.y = s.ty; s.r = s.tr; }
     });
@@ -119,6 +124,20 @@ function band(el: HTMLElement) {
     }
   }
 
+  // dragged stones stay inside the band and off the heading's clearing
+  function keepIn(s: BS, x: number, y: number): [number, number] {
+    const m = s.hr * Math.max(s.aspect, 1 / s.aspect) * 1.2;
+    x = Math.min(W / 2 - m, Math.max(-W / 2 + m, x)); y = Math.min(H / 2 - m, Math.max(-H / 2 + m, y));
+    if (cap) {
+      const ex = cap.hx + m + 16, ey = cap.hy + m + 16, dx = x - cap.cx, dy = y - cap.cy;
+      if (Math.abs(dx) < ex && Math.abs(dy) < ey) {
+        const px = ex - Math.abs(dx), py = ey - Math.abs(dy);
+        if (px < py) x = cap.cx + Math.sign(dx || 1) * ex; else y = cap.cy + Math.sign(dy || 1) * ey;
+      }
+    }
+    return [x, y];
+  }
+
   // cursor
   const mouse = { x: 0, y: 0, tx: 0, ty: 0, s: 0, ts: 0 };
   let dragging: BS | null = null, dragOff = [0, 0];
@@ -134,7 +153,7 @@ function band(el: HTMLElement) {
     mouse.tx = x; mouse.ty = y;
     if (mouse.ts === 0) { mouse.x = x; mouse.y = y; }
     mouse.ts = dragging ? 0 : 1;
-    if (dragging) { dragging.tx = x - dragOff[0]; dragging.ty = y - dragOff[1]; }
+    if (dragging) { const [cx, cy] = keepIn(dragging, x - dragOff[0], y - dragOff[1]); dragging.tx = cx; dragging.ty = cy; }
     if (cfg.drag) el.classList.toggle('is-grab', !!dragging || !!hit(x, y));
     kick();
   });
@@ -163,13 +182,19 @@ function band(el: HTMLElement) {
       const s = stones[i]; if (!s) return;
       const b = base[i];
       const on = () => {
-        s.trose = 1; s.tr = s.hr * 1.12;
-        if (cfg.hoverMode === 'part') stones.forEach((o, j) => { if (j !== i) { const d = o.hx - s.hx; o.tx = o.hx + Math.sign(d || 1) * Math.max(0, 1 - Math.abs(d) / (W * 0.5)) * unit * 0.14; } });
+        hovered = i;
+        s.trose = (b.rose ?? 0) > 0.5 ? 1 : 0.3; s.tr = s.hr * 1.12;
+        if (cfg.hoverMode === 'part') stones.forEach((o, j) => {
+          if (j === i) return;
+          if (anchors.length) { const d = o.hy - s.hy; o.ty = o.hy + Math.sign(d || 1) * Math.max(0, 1 - Math.abs(d) / 400) * 26; }
+          else { const d = o.hx - s.hx; o.tx = o.hx + Math.sign(d || 1) * Math.max(0, 1 - Math.abs(d) / (W * 0.5)) * unit * 0.14; }
+        });
         kick();
       };
       const off = () => {
+        if (hovered === i) hovered = -1;
         s.trose = b.rose ?? 0; s.tr = s.hr;
-        if (cfg.hoverMode === 'part') stones.forEach((o) => { if (o !== dragging) o.tx = o.hx; });
+        if (cfg.hoverMode === 'part') stones.forEach((o) => { if (o !== dragging) { o.tx = o.hx; o.ty = o.hy; } });
         kick();
       };
       h.addEventListener('pointerenter', on); h.addEventListener('pointerleave', off);
@@ -186,15 +211,24 @@ function band(el: HTMLElement) {
     mouse.s += (mouse.ts - mouse.s) * (1 - Math.exp(-3 * dt));
     step(all, dt, { instant: reduced, gap: 6 });
     open = Math.min(1, open + dt / 1.6);
-    if (groups.length && cfg.group) groups[0].tint = Math.max(...stones.map((s) => s.rose));
+    if (groups.length && cfg.group) {
+      const want = hovered >= 0 || dragging || base.some((b) => (b.rose ?? 0) > 0.5) ? 1 : 0;
+      groups[0].tint += (want - groups[0].tint) * (1 - Math.exp(-4 * dt));
+    }
+    labels.forEach((lb, i) => {
+      const s = stones[i]; if (!s) return;
+      const on = hovered === i || dragging === s || (cfg.drag && hit(mouse.tx, mouse.ty) === s && mouse.ts > 0);
+      lb.classList.toggle('on', !!on);
+      lb.style.transform = `translate3d(${(W / 2 + s.x + s.r * Math.max(s.aspect, 1 / s.aspect) + 12).toFixed(1)}px, ${(H / 2 + s.y - 10).toFixed(1)}px, 0)`;
+    });
     const t = (now - t0) / 1000;
     ground.draw({
       ...V(), space: cfg.space ?? (W < 720 ? 9.5 : 13), time: reduced ? 0 : t, flow: reduced ? 0 : t * 2, dusk: cfg.dusk ?? 0,
-      stones: all, groups, cap: cap ? { ...cap, k: ease(open) } : null,
+      kScale: cfg.kScale ?? 1, stones: all, groups, cap: cap ? { ...cap, k: ease(open) } : null,
       mouse: reduced ? null : { x: mouse.x, y: mouse.y, s: mouse.s * 0.85, R: 60 / zoom },
     });
     const moving = all.some((s) => Math.abs(s.vx) + Math.abs(s.vy) > 0.02 || Math.abs(s.lift - s.tlift) > 0.002 || Math.abs(s.rose - s.trose) > 0.002 || Math.abs(s.r - s.tr) > 0.05)
-      || Math.abs(mouse.s - mouse.ts) > 0.002 || Math.hypot(mouse.tx - mouse.x, mouse.ty - mouse.y) > 0.3 || open < 1 || !!dragging;
+      || Math.abs(mouse.s - mouse.ts) > 0.002 || Math.hypot(mouse.tx - mouse.x, mouse.ty - mouse.y) > 0.3 || open < 1 || !!dragging || (groups[0] && Math.abs(groups[0].tint - Math.round(groups[0].tint)) > 0.01);
     // the lines drift slowly while the band is in view (not under reduced motion)
     if (visible && (moving || !reduced)) kick();
   }

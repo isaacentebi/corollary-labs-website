@@ -31,7 +31,10 @@ let navQueued = false;
 const navCheck = () => {
   navQueued = false;
   if (!nav) return;
-  nav.classList.toggle('is-scrolled', window.scrollY > 24);
+  // transparent over a live ground; backed only when text runs under it
+  let overGround = false;
+  document.querySelectorAll<HTMLElement>('.field__stick, .band').forEach((el) => { const r = el.getBoundingClientRect(); if (r.top < 8 && r.bottom > 64) overGround = true; });
+  nav.classList.toggle('is-scrolled', window.scrollY > 24 && !overGround);
   let dark = false;
   document.querySelectorAll<HTMLElement>('[data-dark]').forEach((el) => { const r = el.getBoundingClientRect(); if (r.top < 30 && r.bottom > 30) dark = true; });
   nav.classList.toggle('on-dark', dark);

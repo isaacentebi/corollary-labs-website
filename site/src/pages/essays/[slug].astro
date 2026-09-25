@@ -13,23 +13,10 @@ export async function getStaticPaths() {
 const { entry, next, index } = Astro.props;
 const { Content, remarkPluginFrontmatter: fm } = await render(entry);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-// each essay gets its own small arrangement of stones to the right of the title
-const sets = [
-  [{ x: 0.3, y: -0.04, r: 0.15, sq: 0.55, a: 1.3 }, { x: 0.41, y: 0.1, r: 0.07, tone: 1, gloss: 0.85 }, { x: 0.37, y: -0.22, r: 0.045, rose: 1, gloss: 0.85 }],
-  [{ x: 0.34, y: 0.02, r: 0.14 }, { x: 0.24, y: -0.14, r: 0.05, rose: 1, gloss: 0.85 }, { x: 0.43, y: -0.16, r: 0.03, tone: 1 }],
-  [{ x: 0.28, y: 0.06, r: 0.08, tone: 1, gloss: 0.7 }, { x: 0.38, y: -0.08, r: 0.16, sq: 0.6, a: 1.25 }, { x: 0.45, y: 0.16, r: 0.05 }],
-];
-const msets = [
-  [{ x: 0.1, y: -0.27, r: 0.12 }, { x: 0.32, y: -0.22, r: 0.08 }, { x: 0.3, y: -0.33, r: 0.045 }],
-  [{ x: 0.24, y: -0.26, r: 0.13 }, { x: 0.02, y: -0.3, r: 0.055 }],
-  [{ x: -0.06, y: -0.27, r: 0.09 }, { x: 0.18, y: -0.3, r: 0.11 }, { x: 0.37, y: -0.22, r: 0.065 }],
-];
-const stones = sets[index % sets.length];
-const mstones = msets[index % msets.length];
 ---
 <Base page="essay" title={entry.data.title} description={entry.data.dek}>
   <article class="essay">
-    <header class="essay-head band" data-band={JSON.stringify({ stones, mstones, group: true, drag: true, clear: '[data-essay-title]' })}>
+    <header class="essay-head">
       <div class="essay-head__in wrap">
         <div class="essay-head__block" data-essay-title>
           <p class="essay-head__meta"><a href={u('essays/')}>Essays</a><span aria-hidden="true">·</span><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time><span aria-hidden="true">·</span><span>{fm.minutesRead} min</span></p>
@@ -37,7 +24,6 @@ const mstones = msets[index % msets.length];
           <p class="essay-head__dek">{entry.data.dek}</p>
         </div>
       </div>
-      <div class="band__edge"></div>
     </header>
 
     <div class="essay-body wrap">
