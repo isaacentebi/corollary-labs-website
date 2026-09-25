@@ -3,9 +3,10 @@
 .prose .prose__lede { grid-column: 1 / span 10; font-size: clamp(26px, 3.2vw, 46px); line-height: 1.14; letter-spacing: -0.012em; margin-bottom: 1.1em; color: var(--chalk); }
 
 .team { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gut); }
-.person { border-top: 1px solid var(--slate); padding-top: 18px; outline-offset: 6px; }
+.person { border-top: 1px solid var(--slate); padding-top: 18px; outline-offset: 6px; margin-top: calc((3 - var(--i)) * 3.2vw); }
+/* the cards step up along the site's axis */
 .person__g { width: 100%; aspect-ratio: 1; background: var(--night-2); padding: 18%; margin-bottom: 18px; }
-.person__n { color: var(--cad); }
+.person__n { color: var(--haze); }
 .person__name { margin: 8px 0 4px; font-size: 26px; font-weight: 720; font-stretch: 118%; letter-spacing: -0.02em; line-height: 1.1; }
 .person__role { margin: 0 0 12px; }
 .person__bio { margin: 0; font-size: 15px; line-height: 1.5; }
@@ -16,10 +17,11 @@
 .contact dt { color: var(--haze); }
 .contact dd { margin: 0; font-size: clamp(22px, 2.6vw, 36px); font-weight: 560; font-stretch: 110%; letter-spacing: -0.015em; }
 .contact__mail { color: var(--chalk); }
-.contact__mail:hover { color: var(--cad); }
+.contact__mail:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 6px; }
 
 @media (max-width: 900px) {
   .team { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .person { margin-top: calc(((var(--i) + 1) % 2) * 8vw); }
 }
 @media (max-width: 760px) {
   .page { padding-top: 150px; }
@@ -30,5 +32,6 @@
 }
 @media (max-width: 480px) {
   .team { grid-template-columns: 1fr; }
+  .person { margin-top: 0; margin-left: calc((3 - var(--i)) * 14px); }
   .person__g { width: 60%; }
 }

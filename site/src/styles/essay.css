@@ -17,14 +17,14 @@
 }
 .es__body h2::before {
   content: attr(data-section); display: block; margin-bottom: 10px;
-  font-size: 11px; font-weight: 560; font-stretch: 118%; letter-spacing: 0.14em; color: var(--cad);
+  font-size: 11px; font-weight: 560; font-stretch: 118%; letter-spacing: 0.14em; color: var(--haze);
 }
 .es__body ul, .es__body ol { padding-left: 1.2em; margin: 0 0 1.3em; }
 .es__body li { margin-bottom: 0.4em; }
-.es__body li::marker { color: var(--cad); }
+.es__body li::marker { color: var(--pewter); }
 .es__body a { text-decoration: underline; text-decoration-color: var(--pewter); text-underline-offset: 3px; }
 .es__body .pullquote {
-  margin: 1.8em 0; padding: 0 0 0 28px; border-left: 3px solid var(--cad);
+  margin: 1.8em 0; padding: 0 0 0 28px; border-left: 1px solid var(--chalk);
   font-size: clamp(24px, 2.4vw, 32px); line-height: 1.22; font-weight: 520; font-stretch: 108%; color: var(--chalk); letter-spacing: -0.01em;
 }
 .es__body .pullquote p { margin: 0; }
@@ -32,18 +32,18 @@
 .note-ref {
   display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; margin: 0 2px;
   font-size: 10px; font-weight: 700; line-height: 1; vertical-align: 0.35em;
-  background: var(--cad); color: var(--night); text-decoration: none !important;
+  background: var(--chalk); color: var(--night); text-decoration: none !important;
 }
 .sidenote {
   font-size: 13.5px; line-height: 1.5; color: var(--haze);
   display: grid; grid-template-columns: 22px 1fr; gap: 4px;
   margin: -0.4em 0 1.2em; padding: 10px 0 0; border-top: 1px solid var(--slate);
 }
-.sidenote__n { color: var(--cad); font-weight: 700; }
+.sidenote__n { color: var(--chalk); font-weight: 700; }
 .sidenote p { margin: 0; }
 @media (min-width: 1100px) {
-  .sidenote { float: right; clear: right; width: 240px; margin: 0.3em calc(-1 * clamp(0px, 26vw, 360px) + 20px) 1em 0; position: relative; }
-  .es__body > p { max-width: 36em; }
+  .es__body { padding-right: calc(min(100%, 1180px) - 36em); }
+  .sidenote { float: right; clear: right; width: 230px; margin: 0.35em -280px 1em 0; position: relative; }
 }
 
 .term { border-bottom: 1px dashed var(--haze); cursor: help; position: relative; }
@@ -58,7 +58,7 @@
 .fig__plate { background: var(--night-2); aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; }
 .fig__plate .glyph { width: 46%; }
 .fig figcaption { display: flex; gap: 14px; align-items: baseline; margin-top: 12px; font-size: 14px; color: var(--haze); line-height: 1.45; }
-.fig figcaption .t-label { color: var(--cad); flex: none; }
+.fig figcaption .t-label { color: var(--chalk); flex: none; }
 
 .es__end { max-width: 1180px; margin: clamp(64px, 9vw, 120px) auto 0; }
 .es__next {

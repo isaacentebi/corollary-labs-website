@@ -10,8 +10,8 @@ const people = [1, 2, 3, 4];
       <h1 class="display">Team</h1>
     </header>
     <ol class="team">
-      {people.map((n) => (
-        <li class="person" data-glyph-host tabindex="0">
+      {people.map((n, i) => (
+        <li class="person" data-glyph-host tabindex="0" style={`--i:${i}`}>
           <Glyph seed={`person-${n}`} class="person__g" />
           <span class="t-label person__n">0{n}</span>
           <p class="person__name">[Name]</p>

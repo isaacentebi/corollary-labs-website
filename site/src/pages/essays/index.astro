@@ -1,12 +1,10 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Glyph from '../../components/Glyph.astro';
+import EssayList from '../../components/EssayList.astro';
 import { getCollection, render } from 'astro:content';
-import { url, fmtDate } from '../../config/site';
-import '../../styles/home.css';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
-const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
+const rows = await Promise.all(essays.map(async (e) => ({ e, min: (await render(e)).remarkPluginFrontmatter.minutesRead as number })));
 ---
 <Base page="essays" title="Essays">
   <section class="page">
@@ -14,28 +12,6 @@ const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e
       <h1 class="display">Essays</h1>
       <span class="t-label ph">{String(rows.length).padStart(2, '0')}</span>
     </header>
-    <ol class="rows">
-      {rows.map(({ e, fm }) => (
-        <li>
-          <a class="row row--idx" href={url(`essays/${e.id}/`)} data-glyph-host>
-            <Glyph seed={e.id} class="row__g" />
-            <time class="row__d t-label" datetime={e.data.date.toISOString()}>{fmtDate(e.data.date)} · {fm.minutesRead} min</time>
-            <span class="row__m">
-              <span class="row__t">{e.data.title}</span>
-              <span class="row__k">{e.data.dek}</span>
-            </span>
-          </a>
-        </li>
-      ))}
-    </ol>
+    <EssayList rows={rows} big />
   </section>
 </Base>
-
-<style>
-  .row--idx { grid-template-columns: 110px 170px minmax(0, 1fr); padding: 34px 0; }
-  .row--idx :global(.row__g) { width: 96px; height: 96px; }
-  @media (max-width: 760px) {
-    .row--idx { grid-template-columns: 60px minmax(0, 1fr); padding: 24px 0; }
-    .row--idx :global(.row__g) { width: 56px; height: 56px; }
-  }
-</style>

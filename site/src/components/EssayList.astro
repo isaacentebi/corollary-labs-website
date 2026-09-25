@@ -1,0 +1,52 @@
+---
+// Essays on a tilted grid: each row steps along the rising axis; a hairline runs through the steps.
+import Glyph from './Glyph.astro';
+import { url, fmtDate } from '../config/site';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props { rows: { e: CollectionEntry<'essays'>; min: number }[]; big?: boolean }
+const { rows, big = false } = Astro.props;
+---
+<div class:list={['elist', { 'elist--big': big }]} style={`--n:${rows.length}`}>
+  <svg class="elist__axis" aria-hidden="true" preserveAspectRatio="none"><line x1="100%" y1="0" x2="0" y2="100%" /></svg>
+  <ol>
+    {rows.map(({ e, min }, i) => (
+      <li style={`--i:${i}`}>
+        <a class="erow" href={url(`essays/${e.id}/`)} data-glyph-host>
+          <Glyph seed={e.id} class="erow__g" />
+          <span class="erow__meta t-label"><time datetime={e.data.date.toISOString()}>{fmtDate(e.data.date)}</time><span>{min} min</span></span>
+          <span class="erow__m">
+            <span class="erow__t">{e.data.title}</span>
+            <span class="erow__k">{e.data.dek}</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style is:global>
+  .elist { position: relative; --step: clamp(20px, 8vw, 132px); }
+  .elist ol { list-style: none; margin: 0; padding: 0; }
+  .elist li { margin-left: calc((var(--n) - 1 - var(--i)) * var(--step)); border-top: 1px solid var(--slate); }
+  .elist li:last-child { border-bottom: 1px solid var(--slate); }
+  .elist__axis { position: absolute; left: 0; top: 0; height: 100%; width: calc((var(--n) - 1) * var(--step)); overflow: visible; pointer-events: none; }
+  .elist__axis line { stroke: var(--pewter); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .erow { display: grid; grid-template-columns: 72px 128px minmax(0, 1fr); gap: 12px var(--gut); align-items: center; padding: 24px 0 24px 0; }
+  .erow__g { width: 60px; height: 60px; }
+  .erow__meta { display: grid; gap: 4px; color: var(--pewter); }
+  .erow__m { display: grid; gap: 6px; }
+  .erow__t { font-size: clamp(22px, 2.3vw, 32px); font-weight: 650; font-stretch: 108%; letter-spacing: -0.015em; line-height: 1.08; transition: font-stretch 0.5s var(--ease); }
+  .erow__k { color: var(--haze); font-size: 15px; line-height: 1.45; max-width: 60ch; }
+  .erow:hover .erow__t, .erow:focus-visible .erow__t { font-stretch: 125%; }
+  .elist--big .erow { grid-template-columns: 104px 150px minmax(0, 1fr); padding: 36px 0; }
+  .elist--big .erow__g { width: 92px; height: 92px; }
+  .elist--big .erow__t { font-size: clamp(26px, 3vw, 44px); }
+  @media (max-width: 760px) {
+    .elist { --step: 16px; }
+    .erow, .elist--big .erow { grid-template-columns: 52px minmax(0, 1fr); gap: 8px 14px; align-items: start; padding: 22px 0; }
+    .erow__g, .elist--big .erow__g { width: 46px; height: 46px; grid-row: span 2; }
+    .erow__meta { grid-column: 2; display: flex; gap: 14px; }
+    .erow__m { grid-column: 2; }
+  }
+</style>

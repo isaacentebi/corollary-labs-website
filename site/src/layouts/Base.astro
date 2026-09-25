@@ -25,13 +25,21 @@ const nav = [
     <meta property="og:description" content={description} />
     <meta name="theme-color" content="#0c1128" />
     <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
+    <script is:inline>
+      (function () {
+        try {
+          if (sessionStorage.getItem('tk.veil') && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('veil-arrive');
+          sessionStorage.removeItem('tk.veil');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
     <header class="hd">
       <a class="brand" href={url()} aria-label={`${site.name}, home`}>
         <Mark />
-        <span class="brand__word">{site.name}</span>
+        {page !== 'home' && <span class="brand__word">{site.name}</span>}
       </a>
       <nav class="nav t-label" aria-label="Site">
         {nav.map((n) => (
@@ -49,5 +57,25 @@ const nav = [
       </nav>
       <a class="lk" href={`mailto:${site.email}`}>{site.email}</a>
     </footer>
+    <div class="veil" aria-hidden="true"><i style="--y:-60vmax"></i><i style="--y:0vmax"></i><i style="--y:60vmax"></i><b></b></div>
+    <script>
+      // Page change: three planes slide in along the site's axis behind a cadmium bar, and slide out on arrival.
+      const veil = document.querySelector<HTMLElement>('.veil');
+      const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      document.addEventListener('click', (e) => {
+        if (rm || !veil || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const a = (e.target as Element).closest?.('a');
+        if (!a || a.target || a.hasAttribute('download')) return;
+        const u = new URL(a.href, location.href);
+        if (!/^https?:$/.test(u.protocol) || u.origin !== location.origin) return;
+        if (u.pathname === location.pathname) return;
+        e.preventDefault();
+        try { sessionStorage.setItem('tk.veil', '1'); } catch {}
+        veil.classList.add('is-in');
+        setTimeout(() => { location.href = u.href; }, 540);
+      });
+      window.addEventListener('pageshow', (e) => { if (e.persisted) veil?.classList.remove('is-in'); });
+      setTimeout(() => document.documentElement.classList.remove('veil-arrive'), 1200);
+    </script>
   </body>
 </html>

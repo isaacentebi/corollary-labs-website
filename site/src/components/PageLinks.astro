@@ -1,0 +1,47 @@
+---
+// About / Team / Contact as three planes in tension on the site's axis. Hovering one brings it nearer
+// level, and the cadmium bar (the agent, the only accent) arrives along the axis and rests on its edge.
+import { url } from '../config/site';
+---
+<nav class="plinks" aria-label="Pages">
+  <span class="plinks__line" aria-hidden="true"></span>
+  <a class="pl pl--a" href={url('about/')}><span>About</span></a>
+  <a class="pl pl--b" href={url('team/')}><span>Team</span></a>
+  <a class="pl pl--c" href={url('contact/')}><span>Contact</span></a>
+</nav>
+
+<style is:global>
+  .plinks {
+    --a: -28deg;
+    position: relative; height: clamp(420px, 40vw, 600px); margin-top: clamp(64px, 9vw, 140px);
+  }
+  .pl {
+    position: absolute; display: flex; align-items: center; transform-origin: 0 50%;
+    transform: rotate(var(--a)); transition: transform 0.8s var(--ease), opacity 0.4s;
+    font-weight: 800; font-stretch: 116%; letter-spacing: -0.035em; line-height: 1;
+  }
+  .pl span { padding-left: 0.28em; transition: font-stretch 0.6s var(--ease); }
+  /* the agent: waits off the plane along the axis, comes to rest on the plane's upper edge */
+  .pl::after {
+    content: ''; position: absolute; right: 9%; bottom: 100%; width: 22%; height: max(4px, 0.5vw); background: var(--cad);
+    transform: translateX(46vw); opacity: 0; transition: transform 0.75s var(--ease), opacity 0.25s;
+  }
+  .pl:hover::after, .pl:focus-visible::after { transform: none; opacity: 1; }
+  .pl--a { left: 3%; top: 62%; width: 44%; height: 9.2vw; background: var(--chalk); color: var(--night); font-size: 6.3vw; }
+  .pl--b { left: 40%; top: 82%; width: 29%; height: 6.4vw; background: var(--slate); color: var(--chalk); font-size: 4.2vw; }
+  .pl--c { left: 58%; top: 40%; width: 30%; height: 6vw; background: var(--haze); color: var(--night); font-size: 3.9vw; }
+  .pl:hover, .pl:focus-visible { transform: rotate(calc(var(--a) * 0.4)); }
+  .pl:hover span, .pl:focus-visible span { font-stretch: 125%; }
+  .pl:focus-visible { outline-color: var(--chalk); outline-offset: 4px; }
+  .plinks:has(.pl:hover, .pl:focus-visible) .pl:not(:hover):not(:focus-visible) { opacity: 0.6; }
+  .plinks__line { position: absolute; left: 30%; top: -6%; width: 1px; height: 112%; background: var(--pewter); transform: rotate(28deg); opacity: 0.8; }
+
+  @media (max-width: 760px) {
+    .plinks { --a: -22deg; height: 470px; }
+    .pl--a { left: 0; top: 34%; width: 86%; height: 62px; font-size: 42px; }
+    .pl--b { left: 10%; top: 62%; width: 62%; height: 48px; font-size: 31px; }
+    .pl--c { left: 28%; top: 90%; width: 64%; height: 46px; font-size: 29px; }
+    .plinks__line { left: 52%; }
+    .pl::after { height: 4px; }
+  }
+</style>

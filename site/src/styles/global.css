@@ -1,4 +1,4 @@
-/* Corollary Labs — Tektonik (supre). Night ground, chalk planes, one cadmium agent. */
+/* Corollary Labs — Tektonik (supre). Night ground, chalk planes; cadmium is the agent and nothing else. */
 :root {
   --night: #0c1128;
   --night-2: #121a3a;
@@ -16,7 +16,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: clip; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: clip; background: var(--night); }
 body {
   margin: 0;
   background: var(--night);
@@ -28,13 +28,18 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+/* paper grain: static, one layer, no blending */
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.93 0 0 0 0 0.91 0 0 0 0 0.88 0 0 0 1.6 -0.55'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 a { color: inherit; text-decoration: none; }
 img, svg, canvas { display: block; max-width: 100%; }
-::selection { background: var(--cad); color: var(--night); }
-:focus-visible { outline: 2px solid var(--cad); outline-offset: 3px; }
+::selection { background: var(--chalk); color: var(--night); }
+:focus-visible { outline: 1px solid var(--chalk); outline-offset: 4px; }
 
 .u-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.skip { position: absolute; left: var(--gut); top: -60px; z-index: 50; background: var(--cad); color: var(--night); padding: 8px 12px; }
+.skip { position: absolute; left: var(--gut); top: -60px; z-index: 50; background: var(--chalk); color: var(--night); padding: 8px 12px; }
 .skip:focus { top: 12px; }
 
 .t-label {
@@ -54,16 +59,16 @@ img, svg, canvas { display: block; max-width: 100%; }
 /* ---------- header ---------- */
 .hd {
   position: absolute; inset: 0 0 auto 0; z-index: 20;
-  display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px;
+  display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 14px 24px;
   padding: calc(var(--gut) * 0.8) var(--gut);
   pointer-events: none;
 }
 .hd > * { pointer-events: auto; }
 .brand { display: inline-flex; align-items: center; gap: 12px; }
 .brand__word { font-size: 15px; font-weight: 680; font-stretch: 116%; letter-spacing: 0.005em; white-space: nowrap; }
-.nav { display: flex; gap: clamp(14px, 2.4vw, 32px); padding-top: 9px; color: var(--haze); }
+.nav { display: flex; flex-wrap: wrap; gap: 10px clamp(16px, 2.4vw, 32px); padding-top: 11px; color: var(--haze); }
 .nav a[aria-current='page'] { color: var(--chalk); }
-.nav a[aria-current='page']::before { content: ''; position: absolute; left: -13px; top: 50%; width: 5px; height: 5px; background: var(--cad); transform: translateY(-50%) rotate(var(--diag)); }
+.nav a[aria-current='page']::after { content: ''; position: absolute; left: 0; right: 0.14em; bottom: -7px; height: 1px; background: var(--chalk); }
 
 /* mark: three planes that re-order on hover */
 .mark { width: 36px; height: 36px; overflow: visible; }
@@ -86,7 +91,7 @@ img, svg, canvas { display: block; max-width: 100%; }
 
 /* ---------- shared page frame ---------- */
 .page { padding: calc(var(--gut) * 4 + 40px) var(--gut) clamp(64px, 10vw, 140px); min-height: 70vh; }
-.page__head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; margin-bottom: clamp(40px, 7vw, 96px); }
+.page__head { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; margin-bottom: clamp(40px, 7vw, 96px); }
 .display {
   margin: 0;
   font-weight: 780;
@@ -95,8 +100,35 @@ img, svg, canvas { display: block; max-width: 100%; }
   line-height: 0.88;
   letter-spacing: -0.035em;
 }
-.page__glyph { width: clamp(120px, 20vw, 260px); }
+.page__glyph { width: clamp(110px, 18vw, 240px); }
+
+/* ---------- page change: planes along the axis ---------- */
+.veil { position: fixed; inset: 0; z-index: 100; pointer-events: none; visibility: hidden; overflow: hidden; }
+.veil i, .veil b { position: absolute; left: 50%; top: 50%; }
+.veil i { width: 320vmax; height: 62vmax; margin: -31vmax 0 0 -160vmax; transform: rotate(var(--diag)) translate(320vmax, var(--y)); }
+.veil i:nth-child(1) { background: var(--slate); }
+.veil i:nth-child(2) { background: var(--night-2); }
+.veil i:nth-child(3) { background: #1b2349; }
+.veil b { width: 24vmax; height: 1.1vmax; margin: -0.55vmax 0 0 -12vmax; background: var(--cad); transform: rotate(var(--diag)) translate(140vmax, 0); }
+.veil.is-in { visibility: visible; pointer-events: auto; }
+.veil.is-in i { animation: veil-in 0.5s cubic-bezier(0.7, 0, 0.2, 1) forwards; }
+.veil.is-in i:nth-child(2) { animation-delay: 0.05s; }
+.veil.is-in i:nth-child(3) { animation-delay: 0.1s; }
+.veil.is-in b { animation: veil-agent 0.55s cubic-bezier(0.5, 0, 0.3, 1) forwards; }
+.veil-arrive .veil { visibility: visible; }
+.veil-arrive .veil i { transform: rotate(var(--diag)) translate(0, var(--y)); animation: veil-out 0.65s cubic-bezier(0.6, 0, 0.15, 1) 0.05s forwards; }
+.veil-arrive .veil i:nth-child(2) { animation-delay: 0.11s; }
+.veil-arrive .veil i:nth-child(3) { animation-delay: 0.17s; }
+@keyframes veil-in { from { transform: rotate(var(--diag)) translate(320vmax, var(--y)); } to { transform: rotate(var(--diag)) translate(0, var(--y)); } }
+@keyframes veil-out { from { transform: rotate(var(--diag)) translate(0, var(--y)); } to { transform: rotate(var(--diag)) translate(-320vmax, var(--y)); } }
+@keyframes veil-agent { from { transform: rotate(var(--diag)) translate(140vmax, 0); } to { transform: rotate(var(--diag)) translate(-140vmax, 0); } }
+
+@media (max-width: 760px) {
+  .page { padding-top: 150px; }
+  .nav { gap: 10px 18px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  .veil { display: none; }
 }

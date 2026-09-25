@@ -1,16 +1,18 @@
 ---
 import Base from '../layouts/Base.astro';
-import Glyph from '../components/Glyph.astro';
-import { getCollection } from 'astro:content';
-import { site, url, fmtDate } from '../config/site';
+import EssayList from '../components/EssayList.astro';
+import PageLinks from '../components/PageLinks.astro';
+import { getCollection, render } from 'astro:content';
+import { url } from '../config/site';
 import '../styles/home.css';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const rows = await Promise.all(essays.map(async (e) => ({ e, min: (await render(e)).remarkPluginFrontmatter.minutesRead as number })));
 const captions = [
   '[One sentence — a firm as it is arranged today]',
   '[One sentence — an agent arrives and the arrangement comes apart]',
   '[One sentence — the same parts reassemble around the agent]',
-  '[One sentence — the change travels from firm to firm]',
+  '[One sentence — the change travels from firm to firm, weaker at each step]',
 ];
 ---
 <Base page="home">
@@ -18,19 +20,19 @@ const captions = [
     <div class="stage" data-stage data-state="0">
       <canvas data-tektonik aria-hidden="true"></canvas>
 
-      <div class="hero">
-        <h1 class="hero__title"><span>Corollary</span><span>Labs</span></h1>
-        <p class="hero__statement ph">[Statement — one or two lines]</p>
-      </div>
+      <h1 class="u-sr">Corollary Labs</h1>
 
-      <ol class="caps" aria-label="Story">
-        {captions.map((c, i) => (
-          <li class="cap" data-i={i}>
-            <span class="cap__n t-label">0{i + 1}</span>
-            <span class="cap__t ph">{c}</span>
-          </li>
-        ))}
-      </ol>
+      <div class="caps">
+        <p class="cap cap--lead ph">[Statement — one or two lines]</p>
+        <ol class="caps__list" aria-label="Story">
+          {captions.map((c, i) => (
+            <li class="cap" data-i={i}>
+              <span class="cap__n t-label">0{i + 1}</span>
+              <span class="cap__t ph">{c}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
 
       <div class="rail" aria-hidden="true"><i></i><b></b><b></b><b></b><b></b></div>
     </div>
@@ -48,28 +50,10 @@ const captions = [
         <h2 class="t-label">Essays</h2>
         <a class="t-label lk" href={url('essays/')}>All essays →</a>
       </div>
-      <ol class="rows">
-        {essays.map((e) => (
-          <li>
-            <a class="row" href={url(`essays/${e.id}/`)} data-glyph-host>
-              <Glyph seed={e.id} class="row__g" />
-              <time class="row__d t-label" datetime={e.data.date.toISOString()}>{fmtDate(e.data.date)}</time>
-              <span class="row__m">
-                <span class="row__t">{e.data.title}</span>
-                <span class="row__k">{e.data.dek}</span>
-              </span>
-            </a>
-          </li>
-        ))}
-      </ol>
+      <EssayList rows={rows} />
     </div>
 
-    <nav class="steps" aria-label="Pages">
-      <a class="step lk" href={url('about/')} style="--i:0">About</a>
-      <a class="step lk" href={url('team/')} style="--i:1">Team</a>
-      <a class="step lk" href={url('contact/')} style="--i:2">Contact</a>
-      <span class="steps__rule" aria-hidden="true"></span>
-    </nav>
+    <PageLinks />
   </section>
 </Base>
 
