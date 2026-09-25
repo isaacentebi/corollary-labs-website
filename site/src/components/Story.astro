@@ -1,19 +1,14 @@
 ---
-// The home page is one story on one stage, told at three zoom levels:
-//   field (every node is a firm) → dive into one node → the statement beside the firm, figs 1–4 → pull back → diffusion, fig 5
-//   → the whole lattice lifts into 3D and changes shape (homotopy coda).
-// scripts/story.ts drives everything from one scroll progress.
-import { site } from '../config/site';
-// Captions: placeholders until the copy is written (the founder removed all copy as slop).
-export const figs: { n: number; title: string; lines: string[] }[] = [1, 2, 3, 4, 5].map((n) => ({ n, title: '[Title]', lines: ['[Caption — line 1]', '[Caption — line 2]'] }));
+// Approach figure: one sticky stage, one scroll progress (scripts/story.ts), four labelled beats.
+//   01 the organisation → 02 an agent enters → 03 it reorganises → 04 the change spreads (the firm shrinks back into
+//   its node, the reorganisation diffuses through the field, and the lattice lifts into the torus).
+export const beats = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
 ---
-<section class="story" data-story aria-labelledby="hero-title">
-  <h1 class="u-sr" id="hero-title">{site.name}</h1>
+<div class="story" data-story>
   <div class="story__stage" data-stage>
-    <canvas class="field story__layer" data-field="hero" aria-hidden="true"></canvas>
     <canvas class="field story__layer" data-field="diffuse" aria-hidden="true"></canvas>
     <svg class="story__diagram story__layer" viewBox="0 0 1200 700" data-diagram role="img"
-      aria-label={figs.map((f) => `Figure ${f.n}, ${f.title}. ${f.lines.join(' ')}`).join(' ')}>
+      aria-label="The organisation: inputs pass through three people to one output, each instructed by a coordination centre. An agent enters at one step. The organisation reorganises: coordination becomes small agents between the steps, people move to the edges, new outputs appear. The change spreads from firm to firm.">
       <defs>
         <filter id="boil" filterUnits="userSpaceOnUse" x="0" y="0" width="1200" height="700">
           <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="1" data-boil />
@@ -23,17 +18,11 @@ export const figs: { n: number; title: string; lines: string[] }[] = [1, 2, 3, 4
       <g data-dg><g filter="url(#boil)" data-ink></g></g>
     </svg>
     <canvas class="story__layer story__surface" data-surface aria-hidden="true"></canvas>
-    <p class="story__statement">
-      {site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span>
-    </p>
-    <div class="story__caption" aria-hidden="true">
-      {figs.map((f, i) => (
-        <div class="story__fig" data-fig={i}>
-          <p class="story__n">FIG. {f.n} — {f.title.toUpperCase()}</p>
-          {f.lines.map((l) => <p class="story__line">{l.toUpperCase()}</p>)}
-        </div>
+    <ol class="legend" aria-label="Approach, in four steps">
+      <li class="legend__head t-label" aria-hidden="true">Approach</li>
+      {beats.map((b, i) => (
+        <li><button class="legend__beat" type="button" data-beat={i}><span class="legend__n">{String(i + 1).padStart(2, '0')}</span><span class="legend__t">{b}</span></button></li>
       ))}
-    </div>
-    <span class="story__cue t-label" aria-hidden="true" data-hero-scroll>↓</span>
+    </ol>
   </div>
-</section>
+</div>

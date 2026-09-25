@@ -1,8 +1,112 @@
 ---
+// Home, in company order: what we are (hero on the live field) → capabilities → approach (the firm diagram,
+// its diffusion and the torus, as one short scroll figure) → research → company → contact.
 import Base from '../layouts/Base.astro';
 import Story from '../components/Story.astro';
+import { site } from '../config/site';
+import { getCollection } from 'astro:content';
 import '../styles/landing.css';
+
+const capabilities = [
+  { t: 'Agent deployment.', d: 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.' },
+  { t: 'Model fine-tuning.', d: 'Models adapted and evaluated on your data for the specific tasks your agents perform.' },
+  { t: 'Systems integration.', d: 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.' },
+  { t: 'Evaluation and governance.', d: 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.' },
+];
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
+const pad = (n: number) => String(n).padStart(2, '0');
 ---
 <Base page="home">
-  <Story />
+  <section class="hero" data-hero aria-labelledby="hero-title">
+    <canvas class="field hero__field" data-field="hero" aria-hidden="true"></canvas>
+    <div class="hero__copy o-container">
+      <h1 class="hero__name" id="hero-title" data-hero-name>{site.name}</h1>
+      <p class="hero__headline">We deploy AI agents inside organisations and rebuild the operations around them.</p>
+      <p class="hero__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
+      <div class="hero__actions">
+        <a class="btn -primary" href={site.contactHref}>Contact us</a>
+        <a class="btn" href="#approach">Our approach</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec o-container" id="capabilities" aria-labelledby="cap-title">
+    <header class="sec__head">
+      <h2 class="sec__title t-label" id="cap-title">Capabilities</h2>
+      <div class="rule" data-reveal="rule"></div>
+    </header>
+    <ol class="caps" data-reveal="rows">
+      {capabilities.map((c, i) => (
+        <li class="caps__row">
+          <span class="caps__n t-label">{pad(i + 1)}</span>
+          <h3 class="caps__t">{c.t}</h3>
+          <p class="caps__d">{c.d}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="sec -approach" id="approach" aria-labelledby="approach-title">
+    <header class="sec__head o-container">
+      <h2 class="sec__title t-label" id="approach-title">Approach</h2>
+      <div class="rule" data-reveal="rule"></div>
+      <p class="sec__intro" data-reveal="lines">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+    </header>
+    <Story />
+    <ol class="principles o-container" data-reveal="rows">
+      <li class="principles__row"><span class="principles__n t-label">01</span><h3 class="principles__t">Workflow first.</h3><p class="principles__d">We map how work is actually done before choosing a model.</p></li>
+      <li class="principles__row"><span class="principles__n t-label">02</span><h3 class="principles__t">Design the reorganisation.</h3><p class="principles__d">Roles, handoffs and controls change when agents arrive. We plan that change.</p></li>
+      <li class="principles__row"><span class="principles__n t-label">03</span><h3 class="principles__t">Measure in production.</h3><p class="principles__d">Every deployment reports on accuracy, cost and time saved.</p></li>
+    </ol>
+  </section>
+
+  <section class="sec o-container" id="research" aria-labelledby="research-title">
+    <header class="sec__head">
+      <h2 class="sec__title t-label" id="research-title">Research</h2>
+      <div class="rule" data-reveal="rule"></div>
+      <p class="sec__intro" data-reveal="lines">Essays on agents, organisations and how new technology spreads.</p>
+    </header>
+    <ol class="research" data-reveal="rows">
+      {essays.map((e) => (
+        <li>
+          <a class="research__row" href={`/essays/${e.id}/`} data-shuffle-hover>
+            <time class="research__date t-label" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+            <span class="research__title" data-shuffle-target>{e.data.title}</span>
+            <span class="research__arrow" aria-hidden="true">→</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+    <a class="more link" href="/essays/">All research →</a>
+  </section>
+
+  <section class="sec o-container" id="company" aria-labelledby="company-title">
+    <header class="sec__head">
+      <h2 class="sec__title t-label" id="company-title">Company</h2>
+      <div class="rule" data-reveal="rule"></div>
+    </header>
+    <div class="company">
+      <div class="company__about">
+        <h3 class="company__label t-label">About</h3>
+        <p class="company__text" data-reveal="lines">{site.name} is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
+      </div>
+      <div class="company__team">
+        <h3 class="company__label t-label">Team</h3>
+        <ul class="team" data-reveal="rows">
+          {[1, 2, 3, 4].map(() => <li class="team__row ph"><span>[Name]</span><span class="t-label">[Role]</span></li>)}
+        </ul>
+        <a class="more link" href="/about/">About the company →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec o-container contact" id="contact" aria-labelledby="contact-title">
+    <header class="sec__head">
+      <h2 class="sec__title t-label" id="contact-title">Contact</h2>
+      <div class="rule" data-reveal="rule"></div>
+    </header>
+    <p class="contact__line" data-reveal="lines">Deploying agents in your organisation? Talk to us.</p>
+    <p class="contact__email">{site.emailIsPlaceholder ? <span class="ph">{site.email}</span> : <a class="link" href={`mailto:${site.email}`}>{site.email}</a>}</p>
+  </section>
 </Base>

@@ -23,6 +23,7 @@ export class HomotopySurface {
   io?: IntersectionObserver; ro?: ResizeObserver;
   proj = new Float32Array(); depth = new Float32Array();
   static reduced = false;
+  enabled = true;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d')!;
@@ -58,7 +59,7 @@ export class HomotopySurface {
   setProgress(h: number) { this.target = h; if (HomotopySurface.reduced) { this.hp = 0.4; this.draw(); } }
 
   start() {
-    if (this.running || HomotopySurface.reduced) return;
+    if (this.running || HomotopySurface.reduced || !this.enabled) return;
     this.running = true; this.last = performance.now();
     const loop = (now: number) => {
       if (!this.running) return;

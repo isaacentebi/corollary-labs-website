@@ -25,6 +25,7 @@ export interface FieldOptions {
   wordLayout?: import('./wordmask').WordLayout;
   wordBase?: number; // resting visibility of the word
   global?: boolean; // listen to the pointer on window (for a fixed full-screen stage behind content)
+  sleepAfter?: number; // seconds of stillness after which the loop stops (0 = never); pointer/click wakes it
 }
 
 const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -61,6 +62,7 @@ export class DiffusionField {
   cols = 0; rows = 0; sp = 26;
   tx: Float32Array = new Float32Array(); ty: Float32Array = new Float32Array(); hex: Uint32Array = new Uint32Array(); hexFresh: Uint8Array = new Uint8Array();
   pulses: Array<{ x: number; y: number; t0: number }> = []; pulseB: Float32Array = new Float32Array();
+  enabled = true; // the owner can hold the loop off while the canvas is hidden
   reveal = 0; sweep = -1; // intro: full name at `reveal`, dissolving left→right behind `sweep` (px)
 
   constructor(canvas: HTMLCanvasElement, opts: FieldOptions = {}) {
@@ -68,7 +70,7 @@ export class DiffusionField {
     this.ctx = canvas.getContext('2d', { alpha: true })!;
     this.o = {
       mode: 'auto', spacing: 26, seeds: [[0.18, 0.62], [0.52, 0.3], [0.8, 0.72]], autoSpeed: 0.012, autoMax: 0.24,
-      staticT: 0.35, curve: false, lattice: 4, seed: 7, pointer: true, label: false, curveRect: null, word: false, wordLayout: {}, wordBase: 0.2, global: false, ...opts,
+      staticT: 0.35, curve: false, lattice: 4, seed: 7, pointer: true, label: false, curveRect: null, word: false, wordLayout: {}, wordBase: 0.2, global: false, sleepAfter: 0, ...opts,
     } as Required<FieldOptions>;
     this.colors = { ink: css('--ink'), ink3: css('--ink-3'), rule: css('--rule'), signal: css('--signal'), paper: css('--paper'), ink2: css('--ink-2') };
     this.build();
@@ -92,6 +94,7 @@ export class DiffusionField {
     this.px = nx; this.py = ny;
     this.pEnergy = Math.min(1, this.pEnergy + (isFinite(d) ? d / 400 : 0));
     this.idle = 0;
+    if (!this.running && this.visible) this.start();
     if (this.o.word && isFinite(d)) this.addHeat(nx, ny, Math.min(0.5, 0.06 + d / 120));
   };
   idle = 99;
@@ -302,8 +305,8 @@ export class DiffusionField {
   setProgress(t: number) { this.target = t; if (DiffusionField.reduced) { this.t = this.o.staticT; this.draw(); } else if (!this.running && this.visible) this.start(); }
 
   start() {
-    if (this.running || DiffusionField.reduced) return;
-    this.running = true; this.last = performance.now();
+    if (this.running || DiffusionField.reduced || !this.enabled) return;
+    this.running = true; this.last = performance.now(); this.idle = 0;
     const loop = (now: number) => {
       if (!this.running) return;
       const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now;
@@ -326,6 +329,10 @@ export class DiffusionField {
         this.drawWord(dt);
       }
       this.onFrame?.(this);
+      if (!this.o.word) this.idle += dt;
+      // render on demand: once nothing is moving, stop drawing until the pointer, a click or the scroll wakes it
+      const settled = Math.abs(this.target - this.t) < 1e-3 && (this.o.mode !== 'auto' || this.target >= this.o.autoMax);
+      if (this.o.sleepAfter > 0 && this.idle > this.o.sleepAfter && settled && !this.pulses.length && this.kick < 0.01 && this.pEnergy < 0.02 && this.reveal === 0) { this.running = false; return; }
       this.raf = requestAnimationFrame(loop);
     };
     this.raf = requestAnimationFrame(loop);

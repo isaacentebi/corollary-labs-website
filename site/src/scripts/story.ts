@@ -1,14 +1,12 @@
-// The home story — one stage, one scroll progress p ∈ [0,1], three zoom levels.
+// The Approach figure — one sticky stage, one scroll progress p ∈ [0,1], four labelled beats.
 //
-//   0.00–0.06  HERO        the diffusion field; the name lives in it (cursor reveals, clicks seed)
-//   0.06–0.15  DIVE        the camera falls into one node; it resolves into the firm
-//   0.15–0.62  FIGS 1–4    the firm: people and control → automation enters → what it needs → reorganisation
-//                          (throughput dots flow input → output the whole time; only the machinery changes)
-//   0.62–0.70  PULL BACK   the recomposed firm shrinks back into its node; the field returns around it
-//   0.70–0.84  FIG 5       diffusion: the same reorganisation spreads node to node through the field
+//   0.00–0.58  01–03       the firm: the organisation → an agent enters → it reorganises (figs 1–4 of the diagram;
+//                          throughput dots flow input → output the whole time; only the machinery changes)
+//   0.58–0.66  04 PULL BACK the recomposed firm shrinks back into its node; the field returns around it
+//   0.66–0.84  04 SPREAD    diffusion: the same reorganisation spreads node to node through the field
 //   0.84–0.88  LIFT        the lattice is seen from above, then tilts into 3D
 //   0.88–1.00  CODA        homotopy: the sheet twists, tears and re-glues into a torus
-import { gsap, ScrollTrigger, onDispose, reduced } from './core';
+import { gsap, ScrollTrigger, onDispose, reduced, lenis } from './core';
 import { DiffusionField } from './field';
 import { HomotopySurface } from './surface';
 
@@ -20,7 +18,7 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const mobile = () => innerWidth < 700;
 const css = (n: string) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-const P = { dive: [0.06, 0.15], figs: [0.15, 0.62], back: [0.62, 0.7], diff: [0.7, 0.84], lift: [0.84, 0.88], coda: [0.88, 1] } as const;
+const P = { figs: [0, 0.58], back: [0.58, 0.66], diff: [0.66, 0.84], lift: [0.84, 0.88], coda: [0.88, 1] } as const;
 
 // ── the diagram (see storyboard/index.html). One change per figure; state is animated by a timeline and rendered every
 //    frame. Geometry is written along the flow (u) and across it (v); phones turn the flow vertical.
@@ -279,121 +277,94 @@ function makeDiagram(root: SVGGElement, small = false) {
   return { S, tl, render, home, figStarts, boundaryCenter: () => { const bb = box(wall()); return { x: bb.x + bb.w / 2, y: bb.y + bb.h / 2, r: Math.max(bb.w, bb.h) / 2 }; } };
 }
 
-export function initStory(introDone: Promise<void>, arrived: boolean) {
+export function initStory() {
   const sec = document.querySelector<HTMLElement>('[data-story]');
   if (!sec) return;
   const RM = reduced();
-  const cA = sec.querySelector<HTMLCanvasElement>('[data-field="hero"]')!;
   const cB = sec.querySelector<HTMLCanvasElement>('[data-field="diffuse"]')!;
   const svg = sec.querySelector<SVGSVGElement>('[data-diagram]')!;
   const dg = svg.querySelector<SVGGElement>('[data-dg]')!;
   const inkG = svg.querySelector<SVGGElement>('[data-ink]')!;
   const cS = sec.querySelector<HTMLCanvasElement>('[data-surface]')!;
-  const figs = [...sec.querySelectorAll<HTMLElement>('[data-fig]')];
-  const cue = sec.querySelector<HTMLElement>('[data-hero-scroll]');
-  const stmt = sec.querySelector<HTMLElement>('.story__statement');
+  const beats = [...sec.querySelectorAll<HTMLButtonElement>('[data-beat]')];
   svg.setAttribute('viewBox', mobile() ? '295 -20 500 690' : '175 140 830 420'); // crop to the firm
 
-  const opts = { spacing: mobile() ? 20 : 26, seed: 11 };
-  const A = new DiffusionField(cA, { ...opts, mode: 'progress', staticT: 0.34, word: true, global: true, seeds: [[0.14, 0.34], [0.62, 0.2], [0.86, 0.58], [0.4, 0.82]] });
-  (window as any).__heroField = A;
-  // the firm we dive into: the node nearest the centre-left of the screen
-  const focus = A.nearest(A.w * 0.46, A.h * 0.5);
-  const B = new DiffusionField(cB, { ...opts, mode: 'progress', staticT: 0.5, pointer: true, seeds: [[focus.x / A.w, focus.y / A.h]] });
-  const surf = new HomotopySurface(cS);
   const D = makeDiagram(inkG, mobile());
   const F = D.home; // where the firm sits in the diagram
-  onDispose(() => { A.destroy(); B.destroy(); surf.destroy(); if ((window as any).__heroField === A) delete (window as any).__heroField; });
-
-  const setFig = (k: number) => figs.forEach((f, i) => f.classList.toggle('is-active', i === k));
-
-  if (RM) {
-    D.tl.progress(1); D.render();
-    cB.style.opacity = '0'; cS.style.opacity = '0'; svg.style.opacity = '1'; if (stmt) stmt.style.opacity = '1';
-    figs.forEach((f) => f.classList.add('is-active'));
-    return;
-  }
-
-  if (arrived) {
-    A.reveal = 1; A.sweep = -1;
-    const box = { x: -260 };
-    gsap.to(box, { x: innerWidth + 260, duration: 1.6, delay: 0.7, ease: 'power2.inOut', onUpdate: () => { A.sweep = box.x; }, onComplete: () => { A.reveal = 0; A.sweep = -1; } });
-  }
-
   // map a diagram point (viewBox units) to stage pixels and back
   const toScreen = (x: number, y: number) => { const m = svg.getScreenCTM()!, r = svg.getBoundingClientRect(); const pt = new DOMPoint(x, y).matrixTransform(m); return { x: pt.x - r.left, y: pt.y - r.top, k: m.a }; };
   const toSvg = (x: number, y: number) => { const m = svg.getScreenCTM()!.inverse(), r = svg.getBoundingClientRect(); const pt = new DOMPoint(x + r.left, y + r.top).matrixTransform(m); return { x: pt.x, y: pt.y }; };
 
-  let p = 0, curFig = -2;
+  // the field the firm pulls back into: seeded at the firm's own node
+  const home0 = toScreen(F.x, F.y), sr = cB.getBoundingClientRect();
+  const B = new DiffusionField(cB, { mode: 'progress', spacing: mobile() ? 20 : 26, seed: 11, staticT: 0.5, pointer: true, seeds: [[home0.x / Math.max(1, sr.width), home0.y / Math.max(1, sr.height)]] });
+  const focus = B.nearest(home0.x, home0.y);
+  const surf = new HomotopySurface(cS);
+  B.enabled = false; surf.enabled = false; B.stop(); surf.stop();
+  onDispose(() => { B.destroy(); surf.destroy(); });
+
+  let curBeat = -2;
+  const setBeat = (k: number) => beats.forEach((b, i) => { b.classList.toggle('is-active', i === k); b.classList.toggle('is-past', i < k); b.setAttribute('aria-current', i === k ? 'step' : 'false'); });
+
+  if (RM) {
+    D.tl.progress(1); D.render();
+    cB.style.opacity = '0'; cS.style.opacity = '0'; svg.style.opacity = '1';
+    beats.forEach((b) => b.classList.add('is-active'));
+    return;
+  }
+
+  let p = 0, onStage = false;
   const apply = () => {
-    // HERO → DIVE
-    const dive = sm(seg(p, P.dive[0], P.dive[1]));
     const back = sm(seg(p, P.back[0], P.back[1]));
-    const inFirm = p >= P.dive[0] && p < P.back[1];
-    A.wordMul = 1 - sm(seg(p, 0.01, 0.05));
-    A.setProgress(0.06 + sm(seg(p, 0, P.dive[0])) * 0.06);
+    const inFirm = p < P.back[1];
     const bc = D.boundaryCenter();
-    // field A: zoom into the focus node, carrying it to where the firm's boundary will sit
     const bcs = toScreen(F.x, F.y);
-    A.camFocus = [focus.x, focus.y];
-    A.camTo = [lerp(focus.x, bcs.x, dive), lerp(focus.y, bcs.y, dive)];
-    A.camScale = lerp(1, 9, dive * dive);
-    cA.style.opacity = String(p < P.back[0] ? 1 - sm(seg(dive, 0.45, 0.9)) : 0);
-    // diagram: grows out of the node on the way in, shrinks back into it on the way out
+    // diagram: full size through beats 01–03, then shrinks back into its node
     const nodeSvg = toSvg(focus.x, focus.y);
     const s0 = 3 / Math.max(1, bcs.k * F.r);
-    let s = 1, tx = 0, ty = 0, dop = 0;
-    if (p < P.back[0]) { const e = dive; s = lerp(s0, 1, e * e); tx = lerp(nodeSvg.x - F.x, 0, e); ty = lerp(nodeSvg.y - F.y, 0, e); dop = sm(seg(e, 0.02, 0.3)); }
-    else { const e = back; s = lerp(1, s0 * (F.r / bc.r), e * e * 0.999 + 0.001 * e); tx = lerp(0, nodeSvg.x - bc.x, e); ty = lerp(0, nodeSvg.y - bc.y, e); dop = 1 - sm(seg(e, 0.35, 0.8)); }
+    let s = 1, tx = 0, ty = 0, dop = 1;
+    if (p >= P.back[0]) { const e = back; s = lerp(1, s0 * (F.r / bc.r), e * e * 0.999 + 0.001 * e); tx = lerp(0, nodeSvg.x - bc.x, e); ty = lerp(0, nodeSvg.y - bc.y, e); dop = 1 - sm(seg(e, 0.35, 0.8)); }
     const ox = p < P.back[0] ? F.x : bc.x, oy = p < P.back[0] ? F.y : bc.y;
     dg.setAttribute('transform', `translate(${(ox + tx).toFixed(2)} ${(oy + ty).toFixed(2)}) scale(${s.toFixed(4)}) translate(${-ox} ${-oy})`);
     svg.style.opacity = String(inFirm ? dop : 0);
-    // the statement sits beside the firm while it is on screen
-    if (stmt) stmt.style.opacity = String(inFirm ? sm(seg(dive, 0.55, 1)) * (1 - sm(seg(back, 0, 0.35))) : 0);
-    // figs 1–4 time
-    D.tl.progress(seg(p, P.dive[0] + 0.02, P.figs[1]));
-    if (p < P.back[0]) D.S.fa = Math.max(D.S.fa, sm(seg(dive, 0, 0.25))); // the node's outline is the firm's boundary from the start
+    D.tl.progress(seg(p, P.figs[0], P.figs[1] - 0.03));
     // field B: returns around the node, then the recomposition spreads from it
-    A.running && !(p < P.back[0]) && A.stop();
-    if (p < P.back[0] && !A.running && A.visible) A.start();
-    const bIn = p >= P.back[0];
+    const bIn = p >= P.back[0] && p < P.lift[1];
     B.camFocus = [focus.x, focus.y]; B.camTo = [focus.x, focus.y];
     B.camScale = lerp(9, 1, back);
-    B.setProgress(0.0 + sm(seg(p, P.diff[0], P.diff[1])) * 1.0);
-    const lift = seg(p, P.lift[0], P.lift[1]);
-    cB.style.opacity = String(bIn ? sm(seg(back, 0.3, 0.8)) * (1 - sm(seg(p, P.lift[0] + 0.012, P.lift[1]))) : 0);
-    if (bIn && !B.running) B.start(); if (!bIn && B.running) B.stop();
+    B.setProgress(sm(seg(p, P.diff[0], P.diff[1])));
+    cB.style.opacity = String(p >= P.back[0] ? sm(seg(back, 0.3, 0.8)) * (1 - sm(seg(p, P.lift[0] + 0.012, P.lift[1]))) : 0);
+    B.enabled = bIn && onStage; if (B.enabled && !B.running) B.start(); if (!B.enabled && B.running) B.stop();
     // coda: the lattice seen from above tilts into 3D and deforms
-    cS.style.opacity = String(sm(seg(p, P.lift[0] - 0.008, P.lift[0] + 0.022))); // surface is fully in before the field lets go
+    cS.style.opacity = String(sm(seg(p, P.lift[0] - 0.008, P.lift[0] + 0.022)));
     surf.tilt = sm(seg(p, P.lift[1], P.coda[0] + 0.03));
+    // desktop: as the sheet tilts into the torus it slides right, clear of the legend
+    cS.style.transform = mobile() ? '' : `translateX(${(surf.tilt * 15).toFixed(2)}vw)`;
     surf.setProgress(sm(seg(p, P.coda[0], P.coda[1] - 0.02)));
-    if (p >= P.lift[0]) { if (!surf.running) surf.start(); } else if (surf.running) surf.stop();
-    // captions
-    let k = -1;
-    if (p >= P.figs[0] - 0.01 && p < P.figs[1]) { const t = D.tl.time(); k = D.figStarts.filter((s0) => t >= s0).length - 1; } // switches on the figure's first change
-    else if (p >= P.back[1] - 0.01 && p < P.lift[0]) k = 4;
-    if (k !== curFig) { curFig = k; setFig(k); }
+    surf.enabled = p >= P.lift[0] - 0.01 && onStage; if (surf.enabled && !surf.running) surf.start(); if (!surf.enabled && surf.running) surf.stop();
+    // legend: 01 the organisation · 02 an agent enters (figs 2–3) · 03 it reorganises · 04 the change spreads
+    const t = D.tl.time();
+    const k = p >= P.back[0] ? 3 : t >= D.figStarts[3] ? 2 : t >= D.figStarts[1] ? 1 : 0;
+    if (k !== curBeat) { curBeat = k; setBeat(k); }
   };
 
-  const st = ScrollTrigger.create({ trigger: sec, start: 'top top', end: 'bottom bottom', onUpdate: (s) => { p = s.progress; apply(); } });
+  const st = ScrollTrigger.create({ trigger: sec, start: mobile() ? 'top 35%' : 'top 45%', end: 'bottom bottom', onUpdate: (self) => { p = self.progress; apply(); } });
   onDispose(() => st.kill());
-  // the diagram's own frame loop: throughput never stops
-  const tick = () => { if (svg.style.opacity !== '0') D.render(); };
+  // the legend is also a control: each beat scrolls the figure to where that beat begins
+  const beatP = [0.005, seg(D.figStarts[1] + 0.05, 0, D.tl.duration()) * (P.figs[1] - 0.03), seg(D.figStarts[3] + 0.05, 0, D.tl.duration()) * (P.figs[1] - 0.03), P.diff[1] - 0.02];
+  beats.forEach((b, i) => {
+    const go = () => { const y = st.start + (st.end - st.start) * beatP[i]; lenis ? lenis.scrollTo(y, { duration: 1.2 }) : scrollTo({ top: y, behavior: 'smooth' }); };
+    b.addEventListener('click', go);
+  });
+  // render on demand: the diagram's own frame loop and its ink boil only run while the stage is on screen
+  const io = new IntersectionObserver((e) => { onStage = e[0].isIntersecting; apply(); }, { rootMargin: '5% 0px' });
+  io.observe(sec.querySelector('[data-stage]')!);
+  onDispose(() => io.disconnect());
+  const tick = () => { if (onStage && svg.style.opacity !== '0') D.render(); };
   gsap.ticker.add(tick);
   onDispose(() => gsap.ticker.remove(tick));
-  // boil: re-seed the displacement noise so lines tremble like plotted ink
   const turb = svg.querySelector('[data-boil]'); let seed = 1;
-  const iv = window.setInterval(() => { if (turb && svg.style.opacity !== '0') turb.setAttribute('seed', String((seed = (seed % 6) + 1))); }, 140);
+  const iv = window.setInterval(() => { if (onStage && turb && svg.style.opacity !== '0') turb.setAttribute('seed', String((seed = (seed % 6) + 1))); }, 140);
   onDispose(() => clearInterval(iv));
   D.render(); apply();
-
-  if (cue) {
-    gsap.set(cue, { opacity: 0 });
-    introDone.then(() => {
-      gsap.to(cue, { opacity: 1, duration: 0.6, delay: 1.4 });
-      gsap.to(cue, { y: 6, duration: 1.1, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 2 });
-    });
-    const hide = ScrollTrigger.create({ trigger: sec, start: 'top top', end: '+=160', onUpdate: (s) => { cue.style.visibility = s.progress > 0.5 ? 'hidden' : 'visible'; } });
-    onDispose(() => hide.kill());
-  }
 }

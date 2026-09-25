@@ -9,6 +9,7 @@ import '../styles/tokens.css';
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
 import Preloader from '../components/Preloader.astro';
 import { site } from '../config/site';
 
@@ -42,6 +43,7 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
   <body id="top">
     <Preloader />
     <a class="skip-link" href="#main">Skip to content</a>
+    <Header />
     <main id="main" data-page-root data-page={page}>
       <slot />
     </main>

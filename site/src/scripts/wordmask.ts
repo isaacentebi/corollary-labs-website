@@ -4,22 +4,23 @@ import { site } from '../config/site';
 
 export const loadWordFonts = () => Promise.all([document.fonts.load('400 100px "Instrument Serif"'), Promise.resolve()]).catch(() => {});
 
-export interface WordLayout { text?: string; wFrac?: number; hFrac?: number; baseFrac?: number }
+export interface WordLayout { text?: string; wFrac?: number; hFrac?: number; baseFrac?: number; box?: { x: number; base: number; size: number } }
 export function sampleWord(w: number, h: number, L: WordLayout = {}) {
   const c = document.createElement('canvas'); c.width = Math.round(w); c.height = Math.round(h);
   const g = c.getContext('2d')!;
   const mobile = w < 700;
   // phones: stack the name so it can be large
-  const lines = (L.text ?? (mobile ? site.name.replace(' ', '\n') : site.name)).split('\n');
+  const lines = (L.text ?? (mobile && !L.box ? site.name.replace(' ', '\n') : site.name)).split('\n');
   let S = 100;
   g.font = `400 ${S}px "Instrument Serif"`;
   const ratio = Math.max(...lines.map((t) => g.measureText(t).width)) / S;
   const lh = 0.92;
-  S = Math.min((w * (L.wFrac ?? (mobile ? 0.86 : 0.8))) / ratio, (h * (L.hFrac ?? (mobile ? 0.5 : 0.36))) / (1 + (lines.length - 1) * lh));
+  if (!L.box) S = Math.min((w * (L.wFrac ?? (mobile ? 0.86 : 0.8))) / ratio, (h * (L.hFrac ?? (mobile ? 0.5 : 0.36))) / (1 + (lines.length - 1) * lh));
+  if (L.box) S = L.box.size;
   g.font = `400 ${S}px "Instrument Serif"`;
   const ww = Math.max(...lines.map((t) => g.measureText(t).width));
-  const x0 = (w - ww) / 2;
-  const base = h * (L.baseFrac ?? (mobile ? 0.5 : 0.58)) - ((lines.length - 1) * lh * S) / 2;
+  const x0 = L.box ? L.box.x : (w - ww) / 2;
+  const base = L.box ? L.box.base : h * (L.baseFrac ?? (mobile ? 0.5 : 0.58)) - ((lines.length - 1) * lh * S) / 2;
   g.fillStyle = '#000';
   lines.forEach((t, i) => g.fillText(t, x0, base + i * lh * S));
   const tw = 0;

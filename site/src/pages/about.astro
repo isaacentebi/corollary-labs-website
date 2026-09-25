@@ -7,14 +7,15 @@ import '../styles/about.css';
 
 const P = (t: string) => `[${t}]`;
 const colophon = [
-  { k: 'Entity', v: `${site.name} is a company.` },
+  { k: 'Entity', v: `${site.name} is an AI company.` },
   { k: 'Founded', v: P('Year') },
   { k: 'Location', v: P('City') },
-  { k: 'Contact', v: site.email, href: `mailto:${site.email}` },
+  { k: 'Contact', v: site.email, href: site.emailIsPlaceholder ? undefined : `mailto:${site.email}` },
+  { k: 'Team', v: 'Team →', href: '/team/' },
 ];
 const ph = (s: string) => s.startsWith('[');
 ---
-<Base page="about" title="About" description="[Meta description]">
+<Base page="about" title="About" description="Corollary Labs deploys AI agents inside organisations and rebuilds the operations around them.">
   <article class="about o-container" aria-labelledby="about-title">
     <header class="about-band">
       <canvas class="field about-band__field" data-field="index" data-word="About" aria-hidden="true"></canvas>
@@ -24,7 +25,7 @@ const ph = (s: string) => s.startsWith('[');
     <div class="rule" data-reveal="rule"></div>
 
     <p class="about-statement" data-reveal="lines">
-      {site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span>
+      {site.name} is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span>
     </p>
 
     <figure class="about-fig">

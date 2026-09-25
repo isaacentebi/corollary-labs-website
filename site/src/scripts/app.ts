@@ -37,13 +37,12 @@ async function initPage() {
   bindHoverShuffle();
   initFooter();
 
-  const wasFirst = firstLoad;
   let introDone: Promise<void> = Promise.resolve();
   if (firstLoad) introDone = runPreloader();
   else document.querySelector('[data-preloader]')?.remove();
   firstLoad = false;
 
-  if (page === 'home') initHome(introDone, !wasFirst);
+  if (page === 'home') initHome(introDone);
   else if (page === 'essay') initEssay(introDone);
   else if (page === 'index' || page === 'about' || page === 'team') initIndex(introDone); // both open on a field band with a word in it
 
