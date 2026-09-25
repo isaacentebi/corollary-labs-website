@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { company, site, research, contact } from '../config/site';
 import { u } from '../lib/url';
-const palettes = ['blossom', 'emerald', 'silver', 'amber'];
+const stills = ['plate-column', 'plate-ignite', 'plate-combine', 'plate-dawn'];
 ---
 <Base page="company" title={company.title} description={`${company.about}`}>
   <section id="about" class="about wrap" data-light="company" data-tone-section="day" aria-labelledby="about-h">
@@ -22,7 +22,7 @@ const palettes = ['blossom', 'emerald', 'silver', 'amber'];
     <ul class="team__list">
       {company.team.map((m, i) => (
         <li class="member" data-reveal data-d={String(i)}>
-          <canvas class="member__plate" data-plate="volume" data-palette={palettes[i % palettes.length]} aria-hidden="true"></canvas>
+          <canvas class="member__plate" data-plate={stills[i % stills.length]} aria-hidden="true"></canvas>
           <span class="member__name ph">{m.name}</span>
           <span class="member__role faint">{m.role}</span>
         </li>

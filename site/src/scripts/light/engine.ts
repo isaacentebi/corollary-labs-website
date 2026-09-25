@@ -74,6 +74,15 @@ export class LightField {
     return true;
   }
 
+  // draw one still at an exact size (for plates): no easing, no loop
+  still(w: number, h: number, params: Float32Array) {
+    this.w = w; this.h = h;
+    this.canvas.width = w; this.canvas.height = h;
+    this.gl?.viewport(0, 0, w, h);
+    this.cur.set(params); this.tgt.set(params);
+    this.draw();
+  }
+
   get aspect() { return this.w / Math.max(1, this.h); }
 
   setNodes(n: Float32Array) { this.nodes = n; this.request(); }

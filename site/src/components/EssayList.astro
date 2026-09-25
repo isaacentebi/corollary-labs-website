@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { u } from '../lib/url';
-import { plateFor, fmtDate } from '../lib/plates';
+import { plateFor, DATE_PH } from '../lib/plates';
 interface Props { essays: CollectionEntry<'essays'>[]; size?: 'small' | 'large' }
 const { essays, size = 'small' } = Astro.props;
 ---
@@ -11,8 +11,8 @@ const { essays, size = 'small' } = Astro.props;
     return (
       <li data-reveal data-d={String(i % 3)}>
         <a class="essay-row" href={u(`/research/${e.id}/`)}>
-          <canvas class="essay-row__plate" data-plate={pl.kind} data-palette={pl.palette} aria-hidden="true"></canvas>
-          <span class="essay-row__meta faint"><time datetime={e.data.date.toISOString()}>{fmtDate(e.data.date)}</time></span>
+          <canvas class="essay-row__plate" data-plate={pl} aria-hidden="true"></canvas>
+          <span class="essay-row__meta faint">{DATE_PH}</span>
           <span class="essay-row__title">{e.data.title}</span>
           <span class="essay-row__dek muted">{e.data.dek}</span>
           <span class="essay-row__arrow arrow" aria-hidden="true">→</span>

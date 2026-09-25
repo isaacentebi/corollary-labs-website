@@ -11,8 +11,8 @@ const deform = ideas.find((i) => i.key === 'deform')!;
 <Base page="home" intro>
   <section class="hero wrap" data-light="hero" data-tone-section="day" aria-labelledby="hero-h">
     <div class="hero__text">
-      <p class="hero__name label" data-reveal>{site.name}</p>
-      <h1 id="hero-h" class="hero__headline" data-reveal data-d="1">{hero.headline}</h1>
+      <p class="hero__name label">{site.name}</p>
+      <h1 id="hero-h" class="hero__headline">{hero.headline}</h1>
       <p class="hero__sub muted" data-reveal data-d="2">{hero.sub}</p>
       <div class="hero__actions" data-reveal data-d="3">
         <a class="btn" href={u('/contact/')}>{hero.primary}</a>
@@ -119,7 +119,7 @@ const deform = ideas.find((i) => i.key === 'deform')!;
   .moment__more { justify-self: start; margin-top: 8px; font-weight: 480; }
   @media (max-width: 759px) {
     .moment { min-height: 180vh; }
-    .moment__text { top: 50svh; max-width: none; }
+    .moment__text { top: 57svh; max-width: none; }
     .moment__line { font-size: 1.3rem; }
   }
 

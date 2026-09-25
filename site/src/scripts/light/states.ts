@@ -172,7 +172,7 @@ export const states: Record<string, StateFn> = {
     else s = deform(Math.min(1, (p - 0.52) / 0.36), me, ignited(me));
     // the evening lifts toward dawn as the moment ends
     const lift = sm(0.9, 1.0, p);
-    if (lift > 0) s = mixS(s, { ...dawn(0.85, me), paint: 0, emitCore: 0, halo: 0, seam: 0, field: 0 }, lift);
+    if (lift > 0) s = mixS(s, { ...dawn(0.85, me), wallBot: C.silverLow, paint: 0, emitCore: 0, halo: 0, seam: 0, field: 0 }, lift);
     return s;
   },
 

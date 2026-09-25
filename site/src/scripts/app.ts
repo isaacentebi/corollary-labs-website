@@ -17,7 +17,7 @@ function navTone() {
   let tone = root.dataset.tone || 'day';
   if (field) {
     const c = field.cur; // wallTop, wallMid are the first two parameters
-    const top = lumOf(c, 0), wall = (top + lumOf(c, 3)) / 2;
+    const top = lumOf(c, 0), wall = (top + lumOf(c, 3) + lumOf(c, 6)) / 3;
     tone = top < 0.55 ? 'dusk' : 'day';
     // the nav gets a plain tint of the wall behind it, fading out by ~80px
     root.style.setProperty('--nav-tint', `rgb(${Math.round(c[0] * 255)} ${Math.round(c[1] * 255)} ${Math.round(c[2] * 255)})`);

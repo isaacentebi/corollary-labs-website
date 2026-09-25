@@ -1,16 +1,11 @@
 ---
-// Essay figure: a still plate from the site's light, with a caption.
+// Essay figure: a still frame from the rooms, with a caption.
 interface Props { kind?: string; n?: number; caption?: string }
 const { kind = 'org', n, caption } = Astro.props;
-const map: Record<string, [string, string]> = {
-  org: ['volume', 'blossom'],
-  gap: ['crossing', 'cross'],
-  dissolve: ['fold', 'sunset'],
-  horizon: ['horizon', 'dusk'],
-};
-const [plate, palette] = map[kind] ?? map.org;
+const map: Record<string, string> = { org: 'plate-ignite', gap: 'plate-combine', dissolve: 'plate-cut', horizon: 'plate-diffuse' };
+const plate = map[kind] ?? 'plate-ignite';
 ---
 <figure class="fig">
-  <canvas class="fig__plate" data-plate={plate} data-palette={palette} aria-hidden="true"></canvas>
+  <canvas class="fig__plate" data-plate={plate} aria-hidden="true"></canvas>
   {caption && <figcaption><span class="fig__n">Fig. {n}</span> {caption}</figcaption>}
 </figure>

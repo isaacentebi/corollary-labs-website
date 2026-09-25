@@ -3,12 +3,12 @@
   --paper: #eeebe6;
   --paper-2: #e6e2dc;
   --ink: #16151b;
-  --ink-2: rgba(22, 21, 27, 0.68);
-  --ink-3: rgba(22, 21, 27, 0.46);
+  --ink-2: rgba(22, 21, 27, 0.74);
+  --ink-3: rgba(22, 21, 27, 0.64);
   --rule: rgba(22, 21, 27, 0.14);
   --lit: #f5f3ff;
-  --lit-2: rgba(245, 243, 255, 0.74);
-  --lit-3: rgba(245, 243, 255, 0.5);
+  --lit-2: rgba(245, 243, 255, 0.9);
+  --lit-3: rgba(245, 243, 255, 0.72);
   --lit-rule: rgba(245, 243, 255, 0.2);
   --blue: #1f3bd6;
   --sans: 'Albert Sans', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
@@ -96,12 +96,12 @@ a:hover .arrow { transform: translateX(3px); }
 [data-tone-section='dusk'] .btn { background: var(--lit); color: var(--ink); }
 
 /* ---------- text arrives the way eyes adjust in a lit room: out of blur, not from a distance */
-html.js [data-reveal] { opacity: 0; filter: blur(8px); transform: translateY(8px); transition: opacity 1.2s var(--ease), filter 1.3s var(--ease), transform 1.3s var(--ease); }
+html.js [data-reveal] { opacity: 0; filter: blur(5px); transform: translateY(6px); transition: opacity 0.6s var(--ease), filter 0.6s var(--ease), transform 0.7s var(--ease); }
 html.js [data-reveal].in { opacity: 1; filter: blur(0); transform: none; }
-html.js [data-reveal][data-d='1'] { transition-delay: 0.12s; }
-html.js [data-reveal][data-d='2'] { transition-delay: 0.24s; }
-html.js [data-reveal][data-d='3'] { transition-delay: 0.36s; }
-html.js [data-reveal][data-d='4'] { transition-delay: 0.48s; }
+html.js [data-reveal][data-d='1'] { transition-delay: 0.06s; }
+html.js [data-reveal][data-d='2'] { transition-delay: 0.12s; }
+html.js [data-reveal][data-d='3'] { transition-delay: 0.18s; }
+html.js [data-reveal][data-d='4'] { transition-delay: 0.24s; }
 
 /* ---------- navigation */
 .nav {
