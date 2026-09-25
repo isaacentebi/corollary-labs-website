@@ -13,6 +13,6 @@ clone-workspace/*/02-extraction/fragments/*.dom.html
 # reference-site captures stay local (not ours to publish)
 clone-workspace/locomotive/
 clone-workspace/superdark/
-research/
+/research/
 deploy/
 .claude/worktrees/

@@ -13,6 +13,7 @@ const OUT = path.join(ROOT, 'deploy/out');
 const NODE_MODULES = path.join(ROOT, 'site/node_modules');
 const VERSIONS = [
   { key: '', name: 'Plotter', group: 'Versions', note: 'The original: plotter drawing, paper and green' },
+  { key: 'light', name: 'Light', group: 'Versions', note: 'Light and Space: one field of light, horizon and lens' },
   { key: 'organic', name: 'Organic', group: 'Versions', note: 'A firm as a cell under a lens, refined and label-free' },
   { key: 'proof', name: 'Proof', group: 'Versions', note: 'A live mathematics paper with string diagrams' },
   { key: 'wild', name: 'Tableau', group: 'Versions', note: 'The economy as one input–output table on black' },
