@@ -1,6 +1,6 @@
 // The sheet: routing between regions as a continuous deformation, and the state fed to the renderer.
 // The renderer draws only when something changes (scroll, pointer, a transition, a click ring) and stops once settled.
-import { createRenderer, type Frame } from './gl';
+import { createRenderer, type Frame, type BandFrame } from './gl';
 
 const root = document.documentElement;
 const BASE = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
@@ -40,6 +40,8 @@ if (R) root.classList.add('gl-on');
 
 // ---------------------------------------------------------------- band + latent title
 let band: HTMLElement | null = null;
+let story: HTMLElement | null = null;
+let storyBand: HTMLElement | null = null;
 let maskKey = '';
 const maskCanvas = document.createElement('canvas');
 
@@ -48,8 +50,15 @@ function stretchKeyword(pct: number) {
   return k.reduce((best, c) => (Math.abs(c[0] - pct) < Math.abs(best[0] - pct) ? c : best))[1];
 }
 
+function findBands() {
+  // [0] the band that carries the title (or the page's first band), [1] the approach figure
+  const title = leaf.querySelector<HTMLElement>('[data-latent]');
+  band = title?.closest<HTMLElement>('[data-band]') || leaf.querySelector<HTMLElement>('[data-band]:not([data-state="story"])');
+  story = leaf.querySelector<HTMLElement>('[data-story]');
+  storyBand = story?.querySelector<HTMLElement>('[data-band]') || null;
+}
+
 function buildMask() {
-  band = leaf.querySelector<HTMLElement>('[data-band]');
   const title = band?.querySelector<HTMLElement>('[data-latent]');
   if (!band || !title || !R) { R?.setMask(null); maskKey = ''; kick(); return; }
   // draw nothing until the display face is in: the title must never be set in a fallback font
@@ -109,59 +118,66 @@ folds.forEach((f, i) => {
 });
 
 // ---------------------------------------------------------------- page states
-let homeP = 0;
-let meter: HTMLElement | null = null;
-let hero: HTMLElement | null = null;
+let storyP = 0;
+let pickedBeat = 3;   // with motion off, the legend picks the beat shown (the whole story by default)
+let storyMeter: HTMLElement | null = null;
+const BEAT_AT = [0, 0.4, 0.66, 1];          // the state each beat settles on (motion off, and legend jumps)
+const BEAT_SCROLL = [0.02, 0.36, 0.62, 1];  // where a legend jump scrolls to, as progress through the figure
 
 const titleRO = new ResizeObserver(() => buildMask());
 function pageInit() {
   titleRO.disconnect();
-  hero = leaf.querySelector('[data-hero]');
-  meter = leaf.querySelector('[data-meter]');
+  findBands();
+  storyMeter = leaf.querySelector('[data-story-meter]');
   maskKey = '';
   buildMask();
   const t = leaf.querySelector('[data-latent]'); if (t) titleRO.observe(t);
 }
 
-function homeProgress() {
-  if (!hero || still) return 0;
-  const r = hero.getBoundingClientRect();
-  const stage = hero.firstElementChild as HTMLElement;
+// progress through the pinned approach figure: 0 when its stage reaches the top, 1 when it is released
+function storyProgress() {
+  if (!story) return 0;
+  if (still) return BEAT_AT[pickedBeat];
+  const r = story.getBoundingClientRect();
+  const stage = storyBand!;
   const run = r.height - stage.offsetHeight;
-  return run > 0 ? clamp(-r.top / run) : 0;
+  return run > 0 ? clamp((stripH0() - r.top) / run) : 0;
 }
+const stripH0 = () => (isPhone() ? stripH : 0);
+const beatOf = (p: number) => (p < 0.2 ? 0 : p < 0.5 ? 1 : p < 0.8 ? 2 : 3);
 
-const HOME_AGENTS = [
-  { y: 0.12, tx: 0.16, t0: 0.0 },
-  { y: 0.5, tx: 0.3, t0: 0.07 },
-  { y: 0.1, tx: 0.62, t0: 0.14 },
-  { y: 0.42, tx: 0.8, t0: 0.21 },
-  { y: 0.66, tx: 0.52, t0: 0.28 },
-];
+// the organisation: seven points in the figure's free area; the agent enters from the left and settles among them
+const ORG = [[0.08, 0.2], [0.38, 0.1], [0.74, 0.22], [0.16, 0.72], [0.56, 0.56], [0.92, 0.66], [0.7, 0.92]];
+const AGENT = [0.4, 0.4];
 
-// Home, four continuous states: rest (plain, the name in rose) → points enter and ring the sheet → fronts spread and
-// merge → settled: the whole sheet has shifted to rose, faint rings remain at the five points, and the name is lilac.
-function bandState(w: number, h: number) {
-  const state = band?.dataset.state || 'rest';
+function bandState(el: HTMLElement, w: number, h: number): { agents: number[][]; front: number[] } {
+  const state = el.dataset.state || 'rest';
   const phone = isPhone();
   const m = Math.min(w, h);
   let agents: number[][] = [];
   let front = [0, 0, 100];
-  if (state === 'home') {
-    if (still) {
-      agents = [[w * 0.8, h * (phone ? 0.78 : 0.66), 1.6, m * 0.09 + 18]];
-      front = [m * 0.1, 1.5, 30];
-    } else {
-      const p = homeP;
-      agents = HOME_AGENTS.map((a) => {
-        const k = clamp((p - a.t0) / 0.26);
-        const x = lerp(-40, a.tx * w, easeOut(k));
-        const amp = k <= 0 ? 0 : lerp(2.2, 0.28, smooth(0.62, 1, p)) * smooth(0, 0.3, k);
-        return [x, a.y * h, amp, m * 0.07 + 24];
-      });
-      const R0 = Math.hypot(w, h) * 0.95;
-      front = [smooth(0.3, 0.95, p) * R0, 3.5 * smooth(0.22, 0.36, p), phone ? 70 : 130];
-    }
+  if (state === 'story') {
+    // the figure's free area: right of the legend on wide screens, above it on phones
+    const ax = phone ? [0.1 * w, 0.9 * w] : [0.4 * w, 0.95 * w];
+    const ay = phone ? [0.1 * h, 0.58 * h] : [0.14 * h, 0.86 * h];
+    const X = (f: number) => lerp(ax[0], ax[1], f), Y = (f: number) => lerp(ay[0], ay[1], f);
+    const p = storyP;
+    const enter = smooth(0.14, 0.4, p);          // 02 an agent enters
+    const reorg = smooth(0.44, 0.66, p);         // 03 the points around it move
+    const spread = smooth(0.7, 0.98, p);         // 04 a front crosses the sheet
+    const relax = lerp(1, 0.3, smooth(0.8, 1, p));
+    const gx = X(AGENT[0]), gy = Y(AGENT[1]);
+    const sig = m * 0.075 + 22;
+    agents = ORG.map(([fx, fy]) => {
+      const x = X(fx), y = Y(fy);
+      return [lerp(x, lerp(x, gx, 0.3), reorg), lerp(y, lerp(y, gy, 0.3), reorg), 0.005 + 1.5 * reorg * relax, sig * 0.8];
+    });
+    agents.push([lerp(-30, gx, easeOut(enter)), gy, enter > 0 ? 0.005 + 2.2 * smooth(0, 0.6, enter) * relax : 0, -sig]);
+    front = [spread * Math.hypot(w, h) * 1.05, 3.5 * smooth(0.66, 0.74, p), phone ? 60 : 110];
+  } else if (state === 'hero') {
+    // one agent already at work in the open sheet above the name; the pointer bends the sheet around it
+    agents = [[w * (phone ? 0.74 : 0.8), h * (phone ? 0.2 : 0.24), 2.2, -(m * (phone ? 0.1 : 0.09) + 20)]];
+    front = [m * (phone ? 0.16 : 0.15), 3.5, phone ? 26 : 40];
   } else if (state === 'front') {
     agents = [[w * 0.72, -w * 0.9, 0, 1]];
     front = [w * 0.9 + h * 0.18, 3.5, phone ? 40 : 70];
@@ -169,7 +185,7 @@ function bandState(w: number, h: number) {
     agents = [[-w * 0.15, h * 1.2, 0, 1]];
     front = [w * 0.5, 3.5, 110];
   } else if (state === 'agent') {
-    agents = [[w * (phone ? 0.86 : 0.93), h * 0.2, 2.4, m * (phone ? 0.1 : 0.12) + 20]];
+    agents = [[w * (phone ? 0.86 : 0.93), h * 0.2, 2.4, -(m * (phone ? 0.1 : 0.12) + 20)]];
     front = [m * (phone ? 0.18 : 0.22), 3.5, phone ? 30 : 50];
   } else if (state === 'four') {
     agents = [0, 1, 2, 3].map((i) => [w * (0.56 + i * 0.12), h * (0.26 + 0.07 * Math.sin(i * 2.1)), 2, m * 0.07 + 12]);
@@ -180,6 +196,17 @@ function bandState(w: number, h: number) {
   }
   return { agents, front };
 }
+
+// legend: jump to a beat (scrolls through the figure; with motion off, shows that beat)
+document.addEventListener('click', (e) => {
+  const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-beat-to]');
+  if (!b || !story) return;
+  const i = +(b.dataset.beatTo || 0);
+  if (still) { pickedBeat = i; kick(); return; }
+  const r = story.getBoundingClientRect();
+  const run = r.height - storyBand!.offsetHeight;
+  window.scrollTo({ top: window.scrollY + r.top - stripH0() + BEAT_SCROLL[i] * run, behavior: 'smooth' });
+});
 
 // ---------------------------------------------------------------- render on demand
 let wave = [0, 0, 180];
@@ -205,9 +232,14 @@ function foldWidthPx() {
 
 function frame(now: number) {
   if (document.hidden) { running = false; return; }
-  if (hero) {
-    homeP = homeProgress();
-    meter?.parentElement!.style.setProperty('--p', homeP.toFixed(3));
+  if (story) {
+    storyP = storyProgress();
+    storyMeter?.parentElement!.style.setProperty('--p', storyP.toFixed(3));
+    const beat = String(beatOf(storyP));
+    if (story.dataset.beat !== beat) {
+      story.dataset.beat = beat;
+      story.querySelectorAll('[data-beat-to]').forEach((b) => { if ((b as HTMLElement).dataset.beatTo === beat) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
+    }
   }
   if (!R) { running = false; return; }
 
@@ -227,17 +259,16 @@ function frame(now: number) {
   const recent = now - cursor.last < 1400 ? 1 : 0.5;
   cursor.s = lerp(cursor.s, still ? 0 : cursor.ts * recent, 0.08);
 
-  let bandRect: number[] | null = null;
-  let st = { agents: [] as number[][], front: [0, 0, 100] };
   let dimTarget = 0.28;
-  if (band && band.isConnected) {
-    const b = band.getBoundingClientRect();
-    if (b.bottom > 0 && b.top < H) {
-      bandRect = [b.left, b.top, b.width, b.height];
-      st = bandState(band.offsetWidth, band.offsetHeight);
-      if (b.bottom > H * 0.35) dimTarget = 1;
-    }
-  }
+  let curAmp = 0;
+  const bands = [band, storyBand].map((el): BandFrame | null => {
+    if (!el || !el.isConnected) return null;
+    const b = el.getBoundingClientRect();
+    if (b.bottom <= 0 || b.top >= H) return null;
+    if (b.bottom > H * 0.35) dimTarget = 1;
+    if (el.dataset.state === 'hero' && !still) curAmp = 1.5;
+    return { rect: [b.left, b.top, b.width, b.height], ...bandState(el, el.offsetWidth, el.offsetHeight) };
+  });
   if (transitioning) dimTarget = 1;
   dim = still ? dimTarget : lerp(dim, dimTarget, 0.12);
   snap = false;
@@ -248,12 +279,12 @@ function frame(now: number) {
 
   const f: Frame = {
     bounds, comps: comps.slice(), strip: phone ? stripH : 1e5, dim,
-    band: bandRect, agents: st.agents, front: st.front,
+    bands, curAmp,
     cursor: [cursor.x, cursor.y, cursor.s], wave, ripples: rip,
     pitch: phone ? 8 : 9, intro, clip: transitioning ? bandClip : [-1e5, 1e5],
   };
   // draw only if something visible changed; stop the loop once it has been quiet for a few frames
-  const sig = JSON.stringify([bounds.map(Math.round), comps.map((c) => c.toFixed(3)), bandRect?.map(Math.round), st.agents.map((a) => a.map((v) => v.toFixed(1))), st.front.map((v) => v.toFixed(1)), Math.round(cursor.x), Math.round(cursor.y), cursor.s.toFixed(3), dim.toFixed(3), wave.map((v) => v.toFixed(1)), intro.toFixed(3), W, H]);
+  const sig = JSON.stringify([bounds.map(Math.round), comps.map((c) => c.toFixed(3)), bands.map((b) => b && [b.rect.map(Math.round), b.agents.map((a) => a.map((v) => v.toFixed(2))), b.front.map((v) => v.toFixed(1))]), Math.round(cursor.x), Math.round(cursor.y), cursor.s.toFixed(3), dim.toFixed(3), wave.map((v) => v.toFixed(1)), intro.toFixed(3), W, H]);
   const live = rip.length > 0 || transitioning;
   if (sig !== lastSig || live) { R.draw(f); lastSig = sig; quiet = 0; } else quiet++;
   if (quiet > 6 && !live) { running = false; return; }
@@ -304,12 +335,11 @@ async function go(href: string, push = true) {
 
   // a frozen copy of the page being left, so both regions can move at the same time
   let ghost: HTMLElement | null = null;
-  const st0 = leaf.querySelector<HTMLElement>('.hero__stage');
-  const stOff = st0 ? st0.getBoundingClientRect().top - (st0.parentElement as HTMLElement).getBoundingClientRect().top : 0;
+  // pinned stages keep where they are on screen (sticky does not apply inside the frozen copy)
+  const stOffs = [...leaf.querySelectorAll<HTMLElement>('[data-sticky]')].map((el) => el.getBoundingClientRect().top - (el.parentElement as HTMLElement).getBoundingClientRect().top);
   if (!still && from !== to) {
     ghost = leaf.cloneNode(true) as HTMLElement;
-    const gst = ghost.querySelector<HTMLElement>('.hero__stage');
-    if (gst) { gst.style.position = 'relative'; gst.style.top = `${stOff}px`; }
+    ghost.querySelectorAll<HTMLElement>('[data-sticky]').forEach((el, i) => { el.style.position = 'relative'; el.style.top = `${stOffs[i] || 0}px`; });
     ghost.removeAttribute('id'); ghost.setAttribute('aria-hidden', 'true'); ghost.inert = true;
     ghost.classList.add('ghost');
     Object.assign(ghost.style, { left: `${before.left}px`, top: `${before.top}px`, width: `${before.width}px` });

@@ -10,15 +10,19 @@ export interface Frame {
   comps: number[];       // 5 values, 0 = open, 1 = folded
   strip: number;         // folds only apply above this y (phones: the top strip); desktop: huge
   dim: number;           // strength of the folds (1 at the top of a page, lower while reading)
-  band: number[] | null; // x, y, w, h of the band (css px)
-  agents: number[][];    // [x, y, amp (pitches), sigma px] in band px
-  front: number[];       // radius px, amplitude (pitches), half-width px
+  bands: (BandFrame | null)[]; // [0]: the band that carries the title (and the mask); [1]: the approach figure
   cursor: number[];      // x, y, strength
+  curAmp: number;        // how far the pointer bends the title band (pitches); 0 outside the home hero
   wave: number[];        // x, amplitude (pitches), width
   ripples: number[][];   // [x, y, age s, amp]
   pitch: number;
   intro: number;         // 0..1: progress of the short sweep on first load
-  clip: number[];        // x-range the band may draw in (the opening page during a transition)
+  clip: number[];        // x-range the bands may draw in (the opening page during a transition)
+}
+export interface BandFrame {
+  rect: number[];        // x, y, w, h (css px)
+  agents: number[][];    // [x, y, amp (pitches), sigma px] in band px; sigma < 0 marks an agent (accent point)
+  front: number[];       // radius px, amplitude (pitches), half-width px
 }
 
 const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
@@ -27,9 +31,9 @@ const FRAG = `
 precision highp float;
 uniform vec2 u_res; uniform float u_dpr; uniform float u_p;
 uniform float u_b[6]; uniform float u_comp[5]; uniform float u_strip; uniform float u_dim;
-uniform vec4 u_band; uniform float u_hasBand; uniform sampler2D u_mask; uniform float u_hasMask;
-uniform vec4 u_ag[6]; uniform float u_nag;
-uniform vec3 u_front;
+uniform vec4 u_band0; uniform vec4 u_band1; uniform vec2 u_hasBand; uniform sampler2D u_mask; uniform float u_hasMask;
+uniform vec4 u_ag[16]; uniform vec2 u_nag;
+uniform vec3 u_front0; uniform vec3 u_front1; uniform float u_curAmp;
 uniform vec3 u_cur; uniform vec3 u_wave; uniform vec4 u_rip[4]; uniform float u_intro; uniform vec2 u_clip;
 uniform vec3 u_ground; uniform vec3 u_ink; uniform vec3 u_acc;
 
@@ -70,26 +74,39 @@ void main() {
   c *= 1.0 - step(-1e4, u_clip.x) * step(u_clip.x, x) * step(x, u_clip.y);
   float Df = c * ((y - u_res.y * 0.5) * ang + u_p * 0.8 * sin(y * 0.008 + phs));
 
-  // the band
-  vec2 bl = frag - u_band.xy;
-  float inBand = step(0.0, bl.x) * step(0.0, bl.y) * step(bl.x, u_band.z) * step(bl.y, u_band.w) * u_hasBand * step(u_clip.x, x) * step(x, u_clip.y);
-  float Db = 0.0; float dmin = 1e5; float dots = 0.0; float halo = 0.0;
-  for (int i = 0; i < 6; i++) {
-    if (float(i) >= u_nag) break;
+  // the bands: [0] carries the title, [1] the approach figure. Each has its own points and its own front.
+  float clipK = step(u_clip.x, x) * step(x, u_clip.y);
+  vec2 bl0 = frag - u_band0.xy;
+  vec2 bl1 = frag - u_band1.xy;
+  float in0 = step(0.0, bl0.x) * step(0.0, bl0.y) * step(bl0.x, u_band0.z) * step(bl0.y, u_band0.w) * u_hasBand.x * clipK;
+  float in1 = step(0.0, bl1.x) * step(0.0, bl1.y) * step(bl1.x, u_band1.z) * step(bl1.y, u_band1.w) * u_hasBand.y * clipK;
+  float inBand = max(in0, in1);
+  float D0 = 0.0; float D1 = 0.0; float dmin0 = 1e5; float dmin1 = 1e5;
+  float dots = 0.0; float halo = 0.0; float afill = 0.0;
+  for (int i = 0; i < 16; i++) {
+    bool second = i >= 8;
+    float li = second ? float(i) - 8.0 : float(i);
+    if (li >= (second ? u_nag.y : u_nag.x)) continue;
     vec4 a = u_ag[i];
-    float r = length(bl - a.xy);
-    Db += a.z * u_p * exp(-r * r / (a.w * a.w));
-    dmin = min(dmin, r);
-    float on = step(0.01, a.z);
-    dots = max(dots, (1.0 - smoothstep(3.6, 4.8, r)) * on);
-    halo = max(halo, (1.0 - smoothstep(6.5, 7.7, r)) * on);
+    float r = length((second ? bl1 : bl0) - a.xy);
+    float sg = abs(a.w);
+    float d = a.z * u_p * exp(-r * r / (sg * sg));
+    if (second) { D1 += d; dmin1 = min(dmin1, r); } else { D0 += d; dmin0 = min(dmin0, r); }
+    float on = step(0.001, a.z) * (second ? in1 : in0);
+    float isA = step(a.w, 0.0);
+    dots = max(dots, (1.0 - smoothstep(mix(3.6, 7.0, isA), mix(4.8, 8.0, isA), r)) * on);
+    halo = max(halo, (1.0 - smoothstep(mix(6.5, 9.6, isA), mix(7.7, 10.6, isA), r)) * on);
+    afill = max(afill, (1.0 - smoothstep(4.6, 5.6, r)) * on * isA);
   }
-  float fr = (1.0 - smoothstep(-u_front.z, u_front.z, dmin - u_front.x)) * step(0.01, u_front.y);
-  Db += u_front.y * u_p * fr;
+  float fr0 = (1.0 - smoothstep(-u_front0.z, u_front0.z, dmin0 - u_front0.x)) * step(0.01, u_front0.y);
+  float fr1 = (1.0 - smoothstep(-u_front1.z, u_front1.z, dmin1 - u_front1.x)) * step(0.01, u_front1.y);
+  float Db = (D0 + u_front0.y * u_p * fr0) * in0 + (D1 + u_front1.y * u_p * fr1) * in1;
 
   // pointer, click rings, the wave that runs along the moving seam, the settle-in on load
   float Dx = 0.0;
   vec2 dc = frag - u_cur.xy;
+  // on the home hero the pointer bends the sheet a little: a lens of contour rings follows it
+  Dx += u_curAmp * u_cur.z * u_p * exp(-dot(dc, dc) / 6400.0) * in0;
   for (int i = 0; i < 4; i++) {
     vec4 rp = u_rip[i];
     if (rp.w > 0.0) {
@@ -104,13 +121,13 @@ void main() {
   float iq = (x - mix(-0.15, 1.15, u_intro) * u_res.x) / 70.0;
   Dx += sin(3.14159 * u_intro) * u_p * 0.5 * exp(-iq * iq);
 
-  float D = Df + Db * inBand + Dx;
+  float D = Df + Db + Dx;
   float t = fringe(D);
 
   // the title is written into the sheet. Rings and the pointer do not reach inside the letters: a letter is rose on
   // the undisturbed sheet and lilac once the front has shifted it, so it always reads, and it inverts with the sheet.
-  float m = u_hasMask > 0.5 ? texture2D(u_mask, bl / u_band.zw).r * inBand : 0.0;
-  t = mix(t, 1.0 - smoothstep(0.35, 0.65, fr), m);
+  float m = u_hasMask > 0.5 ? texture2D(u_mask, bl0 / u_band0.zw).r * in0 : 0.0;
+  t = mix(t, 1.0 - smoothstep(0.35, 0.65, fr0), m);
 
   // folds are quieter than the band, and quieter still while reading
   float strength = mix(1.0, 0.72 * u_dim, c * (1.0 - inBand));
@@ -124,8 +141,9 @@ void main() {
   // the pointer: a thin contour ring
   float cr = abs(length(dc) - 36.0);
   col = mix(col, u_acc * 0.85, (1.0 - smoothstep(0.4, 1.2, cr)) * u_cur.z);
-  col = mix(col, u_ground, halo * inBand);
-  col = mix(col, u_ink, dots * inBand);
+  col = mix(col, u_ground, halo);
+  col = mix(col, u_ink, dots);
+  col = mix(col, u_acc, afill);
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -149,7 +167,7 @@ export function createRenderer(canvas: HTMLCanvasElement) {
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U: Record<string, WebGLUniformLocation | null> = {};
-  for (const n of ['u_res', 'u_dpr', 'u_p', 'u_b', 'u_comp', 'u_strip', 'u_dim', 'u_band', 'u_hasBand', 'u_mask', 'u_hasMask', 'u_ag', 'u_nag', 'u_front', 'u_cur', 'u_wave', 'u_rip', 'u_intro', 'u_clip', 'u_ground', 'u_ink', 'u_acc'])
+  for (const n of ['u_res', 'u_dpr', 'u_p', 'u_b', 'u_comp', 'u_strip', 'u_dim', 'u_band0', 'u_band1', 'u_hasBand', 'u_mask', 'u_hasMask', 'u_ag', 'u_nag', 'u_front0', 'u_front1', 'u_curAmp', 'u_cur', 'u_wave', 'u_rip', 'u_intro', 'u_clip', 'u_ground', 'u_ink', 'u_acc'])
     U[n] = gl.getUniformLocation(prog, n);
 
   const cs = getComputedStyle(document.documentElement);
@@ -187,13 +205,19 @@ export function createRenderer(canvas: HTMLCanvasElement) {
     const g = gl!;
     g.uniform2f(U.u_res, W, H); g.uniform1f(U.u_dpr, dpr); g.uniform1f(U.u_p, f.pitch);
     g.uniform1fv(U.u_b, f.bounds); g.uniform1fv(U.u_comp, f.comps); g.uniform1f(U.u_strip, f.strip); g.uniform1f(U.u_dim, f.dim);
-    const b = f.band || [0, 0, 1, 1];
-    g.uniform4f(U.u_band, b[0], b[1], Math.max(1, b[2]), Math.max(1, b[3]));
-    g.uniform1f(U.u_hasBand, f.band ? 1 : 0);
+    const nag = [0, 0];
+    const ag = new Float32Array(64);
+    [0, 1].forEach((k) => {
+      const bf = f.bands[k];
+      const r = bf ? bf.rect : [0, 0, 1, 1];
+      g.uniform4f(k ? U.u_band1 : U.u_band0, r[0], r[1], Math.max(1, r[2]), Math.max(1, r[3]));
+      g.uniform3fv(k ? U.u_front1 : U.u_front0, bf ? bf.front : [0, 0, 100]);
+      if (bf) bf.agents.slice(0, 8).forEach((a, i) => { ag.set([a[0], a[1], a[2], Math.abs(a[3]) < 1 ? Math.sign(a[3] || 1) : a[3]], (k * 8 + i) * 4); nag[k] = i + 1; });
+    });
+    g.uniform2f(U.u_hasBand, f.bands[0] ? 1 : 0, f.bands[1] ? 1 : 0);
     g.uniform1f(U.u_hasMask, hasMask);
-    const ag = new Float32Array(24); f.agents.slice(0, 6).forEach((a, i) => ag.set([a[0], a[1], a[2], Math.max(1, a[3])], i * 4));
-    g.uniform4fv(U.u_ag, ag); g.uniform1f(U.u_nag, Math.min(6, f.agents.length));
-    g.uniform3fv(U.u_front, f.front);
+    g.uniform4fv(U.u_ag, ag); g.uniform2f(U.u_nag, nag[0], nag[1]);
+    g.uniform1f(U.u_curAmp, f.curAmp);
     g.uniform3fv(U.u_cur, f.cursor); g.uniform3fv(U.u_wave, f.wave);
     const rp = new Float32Array(16); f.ripples.slice(0, 4).forEach((r, i) => rp.set(r, i * 4));
     g.uniform4fv(U.u_rip, rp);

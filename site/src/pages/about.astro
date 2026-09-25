@@ -1,22 +1,24 @@
 ---
 import Sheet from '../layouts/Sheet.astro';
 import Band from '../components/Band.astro';
-import { site } from '../config/site';
+import TeamList from '../components/TeamList.astro';
+import { site, copy, url } from '../config/site';
 ---
-<Sheet active="about" page="about" title="About">
-  <Band lines={['About']} state="agent" fit={3.5} />
+<Sheet active="company" page="about" title="About">
+  <Band lines={['Company']} state="agent" fit={5.2} />
   <section class="page">
-    <p class="statement ph">[About — one paragraph]</p>
-    <div class="cols">
-      <p class="ph">[Paragraph]</p>
-      <p class="ph">[Paragraph]</p>
-    </div>
+    <h2 class="kicker kicker--page">About</h2>
+    <p class="statement">{copy.about} <span class="ph">[About — founding story and team, one paragraph]</span></p>
     <dl class="colophon">
       <div><dt>Company</dt><dd>{site.name}</dd></div>
-      <div><dt>Entity</dt><dd class="ph">[Entity]</dd></div>
       <div><dt>Founded</dt><dd class="ph">[Year]</dd></div>
       <div><dt>Location</dt><dd class="ph">[City]</dd></div>
-      <div><dt>Contact</dt><dd><a href="mailto:">{site.email}</a></dd></div>
+      <div><dt>Contact</dt><dd>{site.email}</dd></div>
     </dl>
+    <div class="sec__head sec__head--page">
+      <h2 class="kicker">Team</h2>
+      <a class="more" href={url('team/')}>Team →</a>
+    </div>
+    <TeamList />
   </section>
 </Sheet>

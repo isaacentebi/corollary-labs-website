@@ -1,27 +1,13 @@
 ---
 import Sheet from '../layouts/Sheet.astro';
 import Band from '../components/Band.astro';
-import Rings from '../components/Rings.astro';
-const people = [
-  { dx: 6, dy: 2, hx: -9, hy: 6 },
-  { dx: -14, dy: 7, hx: 6, hy: -4 },
-  { dx: 3, dy: -19, hx: -10, hy: 9 },
-  { dx: -26, dy: -4, hx: 8, hy: 3 },
-];
+import TeamList from '../components/TeamList.astro';
+import { url } from '../config/site';
 ---
-<Sheet active="team" page="team" title="Team">
+<Sheet active="company" page="team" title="Team">
   <Band lines={['Team']} state="four" fit={3.15} />
   <section class="page">
-    <p class="lede ph">[Team — one line]</p>
-    <ul class="people">
-      {people.map((o) => (
-        <li class="person">
-          <Rings cls="person__disc" dx={o.dx} dy={o.dy} hx={o.hx} hy={o.hy} />
-          <p class="person__name ph">[Name]</p>
-          <p class="person__role ph">[Role]</p>
-          <p class="person__bio ph">[Two sentences]</p>
-        </li>
-      ))}
-    </ul>
+    <TeamList bios />
+    <p class="page__next"><a class="more" href={url('about/')}>About the company →</a></p>
   </section>
 </Sheet>

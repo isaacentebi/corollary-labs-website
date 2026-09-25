@@ -1,0 +1,19 @@
+---
+import Sheet from '../layouts/Sheet.astro';
+import Band from '../components/Band.astro';
+import Story from '../components/Story.astro';
+import Principles from '../components/Principles.astro';
+import { copy } from '../config/site';
+---
+<Sheet active="approach" page="approach" title="Approach">
+  <Band lines={['Approach']} state="agent" fit={5.4} />
+  <section class="approach">
+    <div class="sec sec--flush sec--page">
+      <p class="sec__intro">{copy.approachIntro}</p>
+    </div>
+    <Story />
+    <div class="sec sec--after">
+      <Principles />
+    </div>
+  </section>
+</Sheet>

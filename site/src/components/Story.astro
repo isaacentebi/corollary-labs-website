@@ -1,0 +1,17 @@
+---
+// The approach, as one figure on the sheet. Four beats, driven by scrolling through a short pinned stage
+// (or, with motion off, by the legend): the organisation (points on a plain sheet) → an agent enters (the sheet
+// deforms around it) → it reorganises (the points move; each move shows as rings) → the change spreads (a front
+// crosses the whole sheet). The legend buttons jump to a beat.
+import { copy } from '../config/site';
+---
+<div class="story" data-story data-beat="0">
+  <div class="story__stage band" data-band data-state="story" data-sticky>
+    <ol class="legend" aria-label="Approach, in four steps">
+      {copy.legend.map((l, i) => (
+        <li><button type="button" data-beat-to={i}><span class="legend__n">{String(i + 1).padStart(2, '0')}</span><span class="legend__t">{l}</span></button></li>
+      ))}
+    </ol>
+    <div class="story__meter" aria-hidden="true"><i data-story-meter></i></div>
+  </div>
+</div>

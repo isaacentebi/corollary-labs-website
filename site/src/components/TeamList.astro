@@ -1,0 +1,22 @@
+---
+// Four people as ring plates (two ring systems, one displaced), with name and role placeholders.
+import Rings from './Rings.astro';
+interface Props { bios?: boolean }
+const { bios = false } = Astro.props;
+const people = [
+  { dx: 6, dy: 2, hx: -9, hy: 6 },
+  { dx: -14, dy: 7, hx: 6, hy: -4 },
+  { dx: 3, dy: -19, hx: -10, hy: 9 },
+  { dx: -26, dy: -4, hx: 8, hy: 3 },
+];
+---
+<ul class="people">
+  {people.map((o) => (
+    <li class="person">
+      <Rings cls="person__disc" dx={o.dx} dy={o.dy} hx={o.hx} hy={o.hy} />
+      <p class="person__name ph">[Name]</p>
+      <p class="person__role ph">[Role]</p>
+      {bios && <p class="person__bio ph">[Two sentences]</p>}
+    </li>
+  ))}
+</ul>

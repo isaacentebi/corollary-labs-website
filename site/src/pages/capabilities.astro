@@ -1,0 +1,13 @@
+---
+import Sheet from '../layouts/Sheet.astro';
+import Band from '../components/Band.astro';
+import Capabilities from '../components/Capabilities.astro';
+import { url } from '../config/site';
+---
+<Sheet active="capabilities" page="capabilities" title="Capabilities">
+  <Band lines={['Capabilities']} state="four" fit={6.9} />
+  <section class="page">
+    <Capabilities big />
+    <p class="page__next"><a class="more" href={url('approach/')}>Approach →</a></p>
+  </section>
+</Sheet>

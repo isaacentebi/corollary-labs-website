@@ -7,7 +7,7 @@ import '@fontsource-variable/newsreader/wght-italic.css';
 import '../styles/global.css';
 import anybodyLatin from '@fontsource-variable/anybody/files/anybody-latin-wdth-normal.woff2?url';
 import Mark from '../components/Mark.astro';
-import { site, regions, indexOf, url, type RegionKey } from '../config/site';
+import { site, regions, footerNav, indexOf, url, type RegionKey } from '../config/site';
 
 interface Props { title?: string; description?: string; active: RegionKey | null; page: string }
 const { title, description = site.description, active, page } = Astro.props;
@@ -57,11 +57,11 @@ const place = (i: number) =>
       <footer class="foot">
         <a class="foot__name" href={url('')}><Mark size={20} />{site.name}</a>
         <nav class="foot__nav" aria-label="Footer">
-          {regions.slice(1).map((r) => <a href={r.href}>{r.label}</a>)}
+          {footerNav.map((r) => <a href={r.href}>{r.label}</a>)}
         </nav>
-        <a class="foot__mail" href="mailto:">{site.email}</a>
+        <span class="foot__mail">{site.email}</span>
         <button class="motion motion--foot" type="button" data-motion aria-pressed="true">Motion <b>on</b></button>
-        <span class="foot__year">© 2026</span>
+        <span class="foot__year">© 2026 {site.name}</span>
       </footer>
     </main>
     <script>

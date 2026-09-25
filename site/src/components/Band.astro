@@ -2,7 +2,7 @@
 // The open window onto the sheet at the top of a page. The WebGL layer draws the title into the sheet;
 // the real h1 stays in the DOM (visible without WebGL, and under forced colours).
 // `fit` is the width of the longest line in ems at the title's width setting, so CSS alone can size it to fit.
-interface Props { lines: string[]; state: 'front' | 'agent' | 'four' | 'rest' | 'plate' | 'lost'; short?: boolean; fit?: number }
+interface Props { lines: string[]; state: 'front' | 'agent' | 'four' | 'rest' | 'plate' | 'lost' | 'hero' | 'story'; short?: boolean; fit?: number }
 const { lines, state, short = false, fit = 5.6 } = Astro.props;
 ---
 <header class:list={['band', { 'band--short': short }]} data-band data-state={state} style={`--fit:${fit}`}>

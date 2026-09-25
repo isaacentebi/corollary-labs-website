@@ -1,0 +1,15 @@
+---
+// The four capabilities as ruled rows. Pointing at one stretches its name along the width axis, like a region opening.
+import { copy } from '../config/site';
+interface Props { big?: boolean }
+const { big = false } = Astro.props;
+---
+<ol class:list={['caps', { 'caps--big': big }]}>
+  {copy.capabilities.map((c, i) => (
+    <li class="cap">
+      <span class="cap__n">{String(i + 1).padStart(2, '0')}</span>
+      <h3 class="cap__t">{c.title}</h3>
+      <p class="cap__b">{c.body}</p>
+    </li>
+  ))}
+</ol>

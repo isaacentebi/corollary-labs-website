@@ -1,0 +1,12 @@
+---
+import { copy } from '../config/site';
+---
+<ol class="principles">
+  {copy.principles.map((p, i) => (
+    <li>
+      <span class="cap__n">{String(i + 1).padStart(2, '0')}</span>
+      <h3 class="principle__t">{p.title}</h3>
+      <p class="principle__b">{p.body}</p>
+    </li>
+  ))}
+</ol>

@@ -14,9 +14,9 @@ const { entry, next } = Astro.props;
 const { Content, remarkPluginFrontmatter: fm } = await render(entry);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 ---
-<Sheet active="essays" page="essay" title={entry.data.title} description={entry.data.dek}>
+<Sheet active={null} page="essay" title={entry.data.title} description={entry.data.dek}>
   <Band lines={[]} state="plate" short>
-    <a class="band__back" href={url('essays/')}>Essays</a>
+    <a class="band__back" href={url('essays/')}>Research</a>
   </Band>
   <article class="essay">
     <header class="essay__head">
@@ -29,7 +29,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
     </div>
     {next && next.id !== entry.id && (
       <a class="next" href={url(`essays/${next.id}/`)}>
-        <span class="kicker">Next essay</span>
+        <span class="kicker">Next</span>
         <span class="next__title">{next.data.title}</span>
       </a>
     )}
