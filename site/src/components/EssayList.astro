@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { u } from '../lib/url';
-import { plateFor, DATE_PH } from '../lib/plates';
+import { plateFor, plateSrc, DATE_PH } from '../lib/plates';
 interface Props { essays: CollectionEntry<'essays'>[]; size?: 'small' | 'large' }
 const { essays, size = 'small' } = Astro.props;
 ---
@@ -11,7 +11,7 @@ const { essays, size = 'small' } = Astro.props;
     return (
       <li data-reveal data-d={String(i % 3)}>
         <a class="essay-row" href={u(`/research/${e.id}/`)}>
-          <canvas class="essay-row__plate" data-plate={pl} aria-hidden="true"></canvas>
+          <img class="essay-row__plate" src={plateSrc(pl)} alt="" loading="lazy" decoding="async" width="1200" height="800" />
           <span class="essay-row__meta faint">{DATE_PH}</span>
           <span class="essay-row__title">{e.data.title}</span>
           <span class="essay-row__dek muted">{e.data.dek}</span>
@@ -28,7 +28,7 @@ const { essays, size = 'small' } = Astro.props;
     display: grid; grid-template-columns: 84px 7.5em minmax(0, 1.1fr) minmax(0, 1fr) 24px; gap: 8px 28px; align-items: center;
     padding: 18px 0; border-bottom: 1px solid var(--rule); position: relative;
   }
-  .essay-row__plate { width: 84px; height: 60px; border-radius: 2px; background: var(--paper-2); transition: transform 0.8s var(--ease), filter 0.8s var(--ease); }
+  .essay-row__plate { width: 84px; height: 60px; border-radius: 2px; object-fit: cover; display: block; background: var(--paper-2); transition: transform 0.8s var(--ease), filter 0.8s var(--ease); }
   .essay-row__meta { font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
   .essay-row__title { font-size: var(--fs-h3); font-weight: 360; line-height: 1.2; letter-spacing: -0.01em; }
   .essay-row__dek { font-size: 0.98rem; line-height: 1.45; }

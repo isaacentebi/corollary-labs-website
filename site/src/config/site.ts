@@ -12,12 +12,14 @@ export const site = {
 };
 
 export const nav = [
+  { href: '/#what-we-do', label: 'What we do' },
   { href: '/thinking/', label: 'How we think' },
   { href: '/company/', label: 'Company' },
   { href: '/contact/', label: 'Contact' },
 ];
 
 export const footerNav = [
+  { href: '/#what-we-do', label: 'What we do' },
   { href: '/thinking/', label: 'How we think' },
   { href: '/research/', label: 'Research' },
   { href: '/company/#about', label: 'About' },
@@ -27,7 +29,7 @@ export const footerNav = [
 
 export const hero = {
   headline: 'We deploy AI agents inside organisations, then help each organisation reorganise around them.',
-  sub: 'We build the agents, adapt the models and connect them to the systems where work happens. We also study how this change spreads through the economy.',
+  sub: 'We build the agents, adapt the models and connect them to the systems where work happens. We also study how AI adoption spreads through the economy.',
   primary: 'Contact',
   secondary: 'How we think',
 };
@@ -80,8 +82,9 @@ export const ideas = [
     key: 'deform',
     title: 'Continuous deformation',
     line: 'Roles, handoffs and controls change shape while the organisation keeps working. Where a change can’t be gradual, it is made as a cut and a re-join.',
+    homeLine: 'Some changes happen gradually; some have to be made in one step.',
     body: [
-      'We identify those changes early and plan them.',
+      '[Placeholder: how we plan changes that cannot be gradual.]',
     ],
   },
   {
@@ -90,7 +93,7 @@ export const ideas = [
     line: 'The change spreads from firm to firm, unevenly, through the economy.',
     body: [
       'Adoption moves between firms through suppliers, customers, competitors and people, at different speeds in different places.',
-      'We study that spread, and publish what we find.',
+      '[Placeholder: what we publish on how adoption spreads.]',
     ],
   },
 ];
@@ -102,6 +105,7 @@ export const practice = {
     { name: 'Design the reorganisation', text: 'We plan how roles, handoffs and controls change when agents arrive.' },
     { name: 'Measure in production', text: 'Each deployment is set up to report on accuracy, cost and time.' },
   ],
+  engagements: '[Engagements: sectors, length, data handling]',
 };
 
 export const research = {
@@ -112,7 +116,7 @@ export const research = {
 
 export const company = {
   title: 'Company',
-  about: 'Corollary Labs is an AI company.',
+  about: 'Corollary Labs deploys AI agents inside organisations and helps them reorganise around them.',
   aboutMore: '[About: founding story, one paragraph.]',
   team: [
     { name: '[Name]', role: '[Role]' },

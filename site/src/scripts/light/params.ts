@@ -1,24 +1,25 @@
 // The light's parameters: one flat vector, so any two states can be interpolated (every change is a
-// continuous deformation of the same field). wallTop must stay first: the navigation reads it.
+// continuous deformation of the same field). The first four colours are read by the page to decide
+// text and navigation tone: wallTop, wallMid, groundTop, groundBot.
 
 export type Vec = number[];
 export interface Params {
-  wallTop: Vec; wallMid: Vec; wallBot: Vec;
-  horizon: number; horizonSoft: number; horizonGlow: Vec; horizonGlowAmt: number; horizonGlowW: number;
+  wallTop: Vec; wallMid: Vec; groundTop: Vec; groundBot: Vec;
+  horizon: number; horizonSoft: number;
+  glowCol: Vec; glowAmt: number; glowW: number; glowX: number; glowSpread: number;
+  lineCol: Vec; lineAmt: number; groundGlow: number;
   roomLight: number; vignette: number; grain: number;
-  // the volume: its shape, the painted light inside it, the glass body, light added from within
-  volC: Vec; volR: Vec; volN: number; volSoft: number; dissolve: number; pour: number;
-  paint: number; coreCol: Vec; edgeCol: Vec; coreSize: number; topFade: number;
-  volBody: number; glassTint: Vec; litDir: Vec; lit: number; litCol: Vec; sheen: number;
-  emitRim: number; rimCol: Vec; ringPos: number; ringW: number; emitCore: number; halo: number; haloCol: Vec;
+  volC: Vec; volR: Vec; volN: number; volSoft: number;
+  lens: number; lensMag: number; frost: number; tint: Vec; rimAmt: number; rimLineCol: Vec;
+  paint: number; coreCol: Vec; edgeCol: Vec; coreSize: number;
+  emitCore: number; emitRim: number; ringPos: number; ringW: number; rimCol: Vec;
+  halo: number; haloCol: Vec; litDir: Vec; lit: number; litCol: Vec;
   beamIn: number; beamInW: number; beamInCol: Vec; beamFrom: number; beamOut: number; beamOutW: number; beamOutCol: Vec;
-  // new combinations: two fields of light meeting inside the volume, and what forms between them
-  mixAmt: number; mixW: number; mixShift: number; mixAngle: number; mixMid: number; mixL: Vec; mixR: Vec; mixM: Vec;
-  // deformation and the cut
   warp: number; warpFreq: number; warpPhase: number; bend: number;
   cutAmt: number; cutAngle: number; cutOffset: number; seam: number;
-  // diffusion
-  field: number; fieldProg: number; fieldHaze: number;
+  planeAmt: number; plane0: Vec; plane1: Vec; plane2: Vec; plane3: Vec;
+  planeCol0: Vec; planeCol1: Vec; planeCol2: Vec; planeCol3: Vec; planeRefl: Vec;
+  field: number; fieldProg: number;
 }
 export type State = Partial<Params>;
 
@@ -27,19 +28,24 @@ export const hex = (h: string): Vec => {
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
 };
 
+const W = hex('#ffffff');
 export const DEFAULTS: Params = {
-  wallTop: hex('#e9e6e1'), wallMid: hex('#e4e0da'), wallBot: hex('#dcd7d0'),
-  horizon: -0.1, horizonSoft: 0.2, horizonGlow: hex('#ffffff'), horizonGlowAmt: 0, horizonGlowW: 0.08,
-  roomLight: 0.2, vignette: 0.15, grain: 0.012,
-  volC: [0, 0], volR: [0.1, 0.3], volN: 2.6, volSoft: 0.02, dissolve: 0.4, pour: 0,
-  paint: 0, coreCol: hex('#ffffff'), edgeCol: hex('#ffffff'), coreSize: 0.95, topFade: 0,
-  volBody: 0, glassTint: hex('#ffffff'), litDir: [-1, 0.05], lit: 0, litCol: hex('#ffffff'), sheen: 0,
-  emitRim: 0, rimCol: hex('#ffffff'), ringPos: 0.75, ringW: 0.2, emitCore: 0, halo: 0, haloCol: hex('#ffffff'),
-  beamIn: 0, beamInW: 0.08, beamInCol: hex('#ffffff'), beamFrom: -2, beamOut: 0, beamOutW: 0.08, beamOutCol: hex('#ffffff'),
-  mixAmt: 0, mixW: 0.2, mixShift: 0, mixAngle: 0.35, mixMid: 0, mixL: hex('#ff0000'), mixR: hex('#0000ff'), mixM: hex('#ff00ff'),
+  wallTop: hex('#d9dde0'), wallMid: hex('#e4e6e8'), groundTop: hex('#1a1a1e'), groundBot: hex('#0b0b0d'),
+  horizon: -0.6, horizonSoft: 0.002,
+  glowCol: W, glowAmt: 0, glowW: 0.1, glowX: 0, glowSpread: 3,
+  lineCol: W, lineAmt: 0, groundGlow: 0.3,
+  roomLight: 0.1, vignette: 0.15, grain: 0.02,
+  volC: [0, 0], volR: [0.12, 0.12], volN: 2, volSoft: 0,
+  lens: 0, lensMag: 0.7, frost: 0.15, tint: W, rimAmt: 0, rimLineCol: W,
+  paint: 0, coreCol: W, edgeCol: W, coreSize: 0.8,
+  emitCore: 0, emitRim: 0, ringPos: 0.8, ringW: 0.15, rimCol: W,
+  halo: 0, haloCol: W, litDir: [-1, 0.05], lit: 0, litCol: W,
+  beamIn: 0, beamInW: 0.06, beamInCol: W, beamFrom: -2, beamOut: 0, beamOutW: 0.07, beamOutCol: W,
   warp: 0, warpFreq: 1.6, warpPhase: 0, bend: 0,
-  cutAmt: 0, cutAngle: 1.12, cutOffset: 0, seam: 0,
-  field: 0, fieldProg: 0, fieldHaze: 0,
+  cutAmt: 0, cutAngle: 1.5708, cutOffset: 0, seam: 0,
+  planeAmt: 0, plane0: [0, 0, 0.1, 0.3], plane1: [0, 0, 0.1, 0.3], plane2: [0, 0, 0.1, 0.3], plane3: [0, 0, 0.1, 0.3],
+  planeCol0: W, planeCol1: W, planeCol2: W, planeCol3: W, planeRefl: W,
+  field: 0, fieldProg: 0,
 };
 
 export const KEYS = Object.keys(DEFAULTS) as (keyof Params)[];

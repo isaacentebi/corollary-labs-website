@@ -1,11 +1,12 @@
 ---
-// Essay figure: a still frame from the rooms, with a caption.
+// Essay figure: a still study, with a caption.
+import { plateSrc } from '../lib/plates';
 interface Props { kind?: string; n?: number; caption?: string }
 const { kind = 'org', n, caption } = Astro.props;
-const map: Record<string, string> = { org: 'plate-ignite', gap: 'plate-combine', dissolve: 'plate-cut', horizon: 'plate-diffuse' };
-const plate = map[kind] ?? 'plate-ignite';
+const map: Record<string, string> = { org: 'lens', gap: 'planes', dissolve: 'strata', horizon: 'field' };
+const plate = map[kind] ?? 'lens';
 ---
 <figure class="fig">
-  <canvas class="fig__plate" data-plate={plate} aria-hidden="true"></canvas>
+  <img class="fig__plate" src={plateSrc(plate)} alt="" loading="lazy" width="1200" height="800" />
   {caption && <figcaption><span class="fig__n">Fig. {n}</span> {caption}</figcaption>}
 </figure>

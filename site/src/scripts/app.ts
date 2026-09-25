@@ -1,34 +1,65 @@
 import { mountScene } from './light/scene';
-import { paintPlates } from './plates';
+import { KEYS, SIZES } from './light/params';
 
 const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const field = mountScene();
-paintPlates();
 
 // ---- the navigation and the text follow the light behind them
 const nav = document.querySelector<HTMLElement>('[data-nav]');
 const toned = [...document.querySelectorAll<HTMLElement>('[data-tone-section]')];
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const sstep = (a: number, b: number, x: number) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
-const lumOf = (c: Float32Array, o: number) => 0.2126 * c[o] + 0.7152 * c[o + 1] + 0.0722 * c[o + 2];
+// relative luminance of the field at a height on screen (the same gradient the shader draws, without
+// its horizontal variation), so text is judged against the light actually behind it
+const OFF: Record<string, number> = {};
+{ let o = 0; KEYS.forEach((k, i) => { OFF[k] = o; o += SIZES[i]; }); }
+const L = (v: number) => Math.pow(Math.max(v, 0), 2.2);
+function fieldAt(c: Float32Array, yPx: number): number[] {
+  const y = 0.5 - yPx / window.innerHeight;
+  const g = (k: string, j = 0) => c[OFF[k] + j];
+  const h = g('horizon');
+  const out = [0, 0, 0];
+  for (let ch = 0; ch < 3; ch++) {
+    let v: number;
+    if (y > h) {
+      const t = Math.pow(sstep(h, 0.6, y), 0.7);
+      v = L(g('wallMid', ch)) + (L(g('wallTop', ch)) - L(g('wallMid', ch))) * t;
+      v += L(g('glowCol', ch)) * g('glowAmt') * Math.exp(-(y - h) / Math.max(g('glowW'), 1e-3)) * 0.8;
+    } else {
+      const t = sstep(h, -0.6, y);
+      v = L(g('groundTop', ch)) + (L(g('groundBot', ch)) - L(g('groundTop', ch))) * t;
+      v += L(g('glowCol', ch)) * g('glowAmt') * g('groundGlow') * Math.exp(-(h - y) / Math.max(g('glowW') * 0.35, 1e-3)) * 0.7;
+    }
+    out[ch] = Math.min(v, 0.88);
+  }
+  return out;
+}
+const lumAt = (c: Float32Array, yPx: number) => { const f = fieldAt(c, yPx); return 0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2]; };
+// dark ink (#16151b) and near-white text have equal contrast against a background of about 0.19
+const FLIP = 0.19;
+const footer = document.querySelector<HTMLElement>('.footer');
 function navTone() {
   let tone = root.dataset.tone || 'day';
   if (field) {
-    const c = field.cur; // wallTop, wallMid are the first two parameters
-    const top = lumOf(c, 0), wall = (top + lumOf(c, 3) + lumOf(c, 6)) / 3;
-    tone = top < 0.55 ? 'dusk' : 'day';
-    // the nav gets a plain tint of the wall behind it, fading out by ~80px
-    root.style.setProperty('--nav-tint', `rgb(${Math.round(c[0] * 255)} ${Math.round(c[1] * 255)} ${Math.round(c[2] * 255)})`);
-    // a section's text shows only where the light behind it can carry it (dark text on a light wall,
+    const c = field.cur;
+    tone = lumAt(c, 30) < FLIP ? 'dusk' : 'day';
+    // a section's text shows only where the light behind it can carry it (dark text on a light field,
     // light text on a dark one), so text and light always change at the same point
     const vh = window.innerHeight;
     for (const s of toned) {
       const r = s.getBoundingClientRect();
       if (r.bottom < -50 || r.top > vh + 50) continue;
-      const o = s.dataset.toneSection === 'dusk' ? 1 - sstep(0.5, 0.64, wall) : sstep(0.44, 0.6, wall);
+      const probe = (s.querySelector<HTMLElement>('[data-tone-probe]') ?? s).getBoundingClientRect();
+      const yc = Math.min(vh - 1, Math.max(0, (Math.max(probe.top, 0) + Math.min(probe.bottom, vh)) / 2));
+      const lum = lumAt(c, yc);
+      const o = s.dataset.toneSection === 'dusk' ? 1 - sstep(FLIP - 0.06, FLIP + 0.06, lum) : sstep(FLIP - 0.06, FLIP + 0.06, lum);
       s.style.opacity = o > 0.995 ? '' : o.toFixed(3);
+    }
+    if (footer) {
+      const r = footer.getBoundingClientRect();
+      if (r.top < vh) footer.dataset.ft = lumAt(c, Math.min(vh - 1, Math.max(0, (r.top + Math.min(r.bottom, vh)) / 2))) < FLIP ? 'dark' : 'light';
     }
   } else {
     for (const s of toned) {
@@ -37,8 +68,21 @@ function navTone() {
     }
   }
   if (root.dataset.navTone !== tone) root.dataset.navTone = tone;
-  nav?.classList.toggle('is-scrolled', window.scrollY > 8);
+  // the navigation steps out of the way while reading down, and returns when scrolling up (over a
+  // fade of the field's own colour, so nothing collides with it)
+  const y = window.scrollY;
+  if (!root.classList.contains('menu-open')) {
+    if (y > 120 && y > lastY + 4) nav?.classList.add('is-away');
+    else if (y < lastY - 4 || y <= 120) nav?.classList.remove('is-away');
+  }
+  lastY = y;
+  nav?.classList.toggle('is-scrolled', y > 8);
+  if (field) {
+    const f = fieldAt(field.cur, 12).map((v) => Math.round(Math.pow(v, 1 / 2.2) * 255));
+    root.style.setProperty('--nav-tint', `${f[0]} ${f[1]} ${f[2]}`);
+  }
 }
+let lastY = window.scrollY;
 if (field) field.onFrame = navTone;
 navTone();
 window.addEventListener('scroll', navTone, { passive: true });
@@ -53,12 +97,12 @@ function fadeRooms() {
   for (const t of roomTexts) {
     const r = t.closest('section')!.getBoundingClientRect();
     const idea = t.classList.contains('idea__text');
-    const inn = clamp01((vh * 0.55 - r.top) / (vh * 0.2));
+    const inn = idea ? clamp01((vh * 0.55 - r.top) / (vh * 0.2)) : clamp01((vh * 0.3 - r.top) / (vh * 0.15));
     // an idea's text fades as the end of its section starts to push it up
     const outAt = window.innerWidth < 760 ? 0.7 : 0.8;
     const out = idea ? clamp01((r.bottom - vh * outAt) / (vh * 0.18)) : clamp01((r.bottom - vh * 0.5) / (vh * 0.2));
     t.style.opacity = Math.min(inn, out).toFixed(3);
-    const k = (vh * 0.5 - r.top) / r.height > 0.55 ? 1 : 0;
+    const k = (vh * 0.5 - r.top) / r.height > 0.46 ? 1 : 0;
     momentLines.forEach((l) => l.classList.toggle('is-on', +l.dataset.momentLine! === k));
   }
 }
@@ -86,9 +130,20 @@ toggle?.addEventListener('click', () => {
   }
   toggle.querySelector('.nav__toggle-label')!.textContent = open ? 'Close' : 'Menu';
   root.classList.toggle('menu-open', open);
+  // everything behind the menu is out of reach while it is open
+  for (const el of document.querySelectorAll<HTMLElement>('main, .footer, .nav__brand')) el.inert = open;
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') { toggle.click(); toggle.focus(); }
+  if (!toggle || toggle.getAttribute('aria-expanded') !== 'true') return;
+  if (e.key === 'Escape') { toggle.click(); toggle.focus(); return; }
+  if (e.key === 'Tab') {
+    // Tab loops between the menu's links and the Close button
+    const items = [...menu!.querySelectorAll<HTMLElement>('a'), toggle];
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    const next = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : (i === items.length - 1 || i < 0 ? 0 : i + 1);
+    e.preventDefault();
+    items[next].focus();
+  }
 });
 
 // ---- text arrives as the light reaches it

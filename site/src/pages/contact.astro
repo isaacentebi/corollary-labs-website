@@ -3,20 +3,25 @@ import Base from '../layouts/Base.astro';
 import { contact, site } from '../config/site';
 ---
 <Base page="contact" title={contact.title} description={contact.line}>
+  <!-- twilight, every light on: the words sit in the band of light over the horizon -->
   <section class="c wrap" data-light="contact" data-tone-section="day" aria-labelledby="c-h">
-    <h1 id="c-h" class="label" data-reveal>{contact.title}</h1>
-    <p class="c__line" data-reveal data-d="1">{contact.line}</p>
-    <p class="c__email" data-reveal data-d="2"><span class="ph">{site.email}</span></p>
-    <dl class="c__meta" data-reveal data-d="3">
-      <div><dt class="faint">Location</dt><dd class="ph">{site.location}</dd></div>
-    </dl>
+    <div class="c__text" data-tone-probe>
+      <h1 id="c-h" class="label">{contact.title}</h1>
+      <p class="c__line">{contact.line}</p>
+      <p class="c__email">{site.email}</p>
+      <dl class="c__meta">
+        <div><dt>Location</dt><dd>{site.location}</dd></div>
+      </dl>
+    </div>
   </section>
 </Base>
 
 <style>
-  .c { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 22px; padding-top: 80px; padding-bottom: 8vh; }
+  .c { min-height: 100svh; display: flex; justify-content: center; text-align: center; padding-top: 30svh; }
+  .c__text { display: grid; gap: 16px; justify-items: center; height: max-content; }
   .c__line { font-size: var(--fs-display); font-weight: 300; line-height: 1.06; letter-spacing: -0.024em; max-width: 14em; text-wrap: balance; }
-  .c__email { font-size: var(--fs-h3); font-weight: 350; }
-  .c__meta { margin: 18px 0 0; font-size: var(--fs-small); }
+  .c__email { font-size: var(--fs-h3); font-weight: 350; color: var(--ink-2); }
+  .c__meta { margin: 6px 0 0; font-size: var(--fs-small); color: var(--ink-2); }
   .c__meta dd { margin: 2px 0 0; }
+  @media (max-width: 759px) { .c { padding-top: 13svh; } .c__line { font-size: 1.8rem; } }
 </style>

@@ -28,7 +28,7 @@ export class LightField {
   constructor(canvas: HTMLCanvasElement, opts: { scale?: number } = {}) {
     this.canvas = canvas;
     this.scale = opts.scale ?? Math.min(window.devicePixelRatio || 1, 1.5);
-    const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false, preserveDrawingBuffer: true, powerPreference: 'low-power' });
+    const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'low-power' });
     this.gl = gl;
     if (!gl) return;
     const sh = (type: number, src: string) => {
@@ -147,7 +147,8 @@ export class LightField {
       if (l) {
         if (n === 1) gl.uniform1f(l, this.cur[o]);
         else if (n === 2) gl.uniform2f(l, this.cur[o], this.cur[o + 1]);
-        else gl.uniform3f(l, this.cur[o], this.cur[o + 1], this.cur[o + 2]);
+        else if (n === 3) gl.uniform3f(l, this.cur[o], this.cur[o + 1], this.cur[o + 2]);
+        else gl.uniform4f(l, this.cur[o], this.cur[o + 1], this.cur[o + 2], this.cur[o + 3]);
       }
       o += n;
     }

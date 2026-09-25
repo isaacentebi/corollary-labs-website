@@ -7,7 +7,7 @@
 .essay-head__dek { font-family: var(--serif); font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.5rem); line-height: 1.4; color: var(--ink-2); font-style: italic; font-weight: 350; text-wrap: pretty; }
 .essay-head__meta { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: var(--fs-small); }
 .essay-head__flag { color: var(--ink-3); }
-.essay-head__plate { width: 100%; height: clamp(160px, 26vw, 360px); margin-top: 28px; border-radius: 2px; }
+.essay-head__plate { width: 100%; height: clamp(160px, 26vw, 360px); margin-top: 28px; border-radius: 2px; object-fit: cover; display: block; }
 
 .essay-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 700px) minmax(0, 1fr); column-gap: 48px; padding-bottom: 12vh; }
 .essay-body { grid-column: 2; font-family: var(--serif); font-size: 1.24rem; line-height: 1.62; font-weight: 380; color: #201f26; }
@@ -22,7 +22,7 @@
 .essay-body h2::before { content: attr(data-section); display: block; font-size: var(--fs-label); letter-spacing: 0.14em; color: var(--ink-3); font-weight: 560; margin-bottom: 10px; }
 .essay-body ul { padding-left: 1.2em; list-style: none; }
 .essay-body li { position: relative; margin-top: 0.4em; }
-.essay-body li::before { content: ''; position: absolute; left: -1.05em; top: 0.72em; width: 6px; height: 6px; border-radius: 2px; background: linear-gradient(135deg, #ffb28a, #c3a6ec); }
+.essay-body li::before { content: ''; position: absolute; left: -1.05em; top: 0.72em; width: 6px; height: 6px; border-radius: 2px; object-fit: cover; display: block; background: linear-gradient(135deg, #ffb28a, #c3a6ec); }
 .essay-body .pullquote { margin: 1.8em 0; padding: 0.2em 0 0.2em 1.1em; border-left: 1px solid #c3a6ec; font-size: 1.5rem; line-height: 1.35; font-style: italic; color: var(--ink); }
 .essay-body .pullquote p { margin: 0; }
 .essay-body a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgba(22, 21, 27, 0.3); }
@@ -35,7 +35,7 @@
 }
 
 .fig { margin: 2.2em 0; }
-.fig__plate { width: 100%; height: clamp(180px, 30vw, 380px); border-radius: 2px; }
+.fig__plate { width: 100%; height: clamp(180px, 30vw, 380px); border-radius: 2px; object-fit: cover; display: block; }
 .fig figcaption { font-family: var(--sans); font-size: var(--fs-small); color: var(--ink-2); margin-top: 12px; line-height: 1.5; }
 .fig__n { color: var(--ink); font-weight: 560; margin-right: 0.4em; }
 
@@ -45,7 +45,7 @@
 
 .essay-next { padding-bottom: 6vh; }
 .next { display: grid; grid-template-columns: 180px minmax(0, 1fr); grid-template-rows: auto auto 1fr; column-gap: 28px; row-gap: 8px; max-width: 900px; margin-inline: auto; padding: 28px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
-.next__plate { grid-row: 1 / span 3; width: 180px; height: 124px; border-radius: 2px; transition: filter 0.6s var(--ease); }
+.next__plate { grid-row: 1 / span 3; width: 180px; height: 124px; border-radius: 2px; object-fit: cover; display: block; transition: filter 0.6s var(--ease); }
 .next:hover .next__plate { filter: saturate(1.25) brightness(1.05); }
 .next__title { font-size: var(--fs-h3); font-weight: 360; letter-spacing: -0.01em; }
 
