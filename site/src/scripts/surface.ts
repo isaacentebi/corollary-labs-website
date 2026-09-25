@@ -206,7 +206,7 @@ export class HomotopySurface {
     const DA = [1, 0.72, 0.45, 0.24], DW = [1.1, 0.85, 0.65, 0.5], FA = [0.13, 0.5, 1];
     // the sheet carries the diffusion's adopted colour (pale jade), one layer only
     ctx.strokeStyle = c.signal;
-    for (let q = 0; q < 12; q++) { ctx.globalAlpha = 0.5 * DA[(q / 3) | 0] * FA[q % 3]; ctx.lineWidth = DW[(q / 3) | 0]; ctx.stroke(buckets[q]); }
+    for (let q = 0; q < 12; q++) { ctx.globalAlpha = 0.5 * (q < 6 ? 1.2 : 1) * DA[(q / 3) | 0] * FA[q % 3]; ctx.lineWidth = DW[(q / 3) | 0]; ctx.stroke(buckets[q]); }
     // the re-formed surface deepens to full jade, with a soft glow pass on the near side
     ctx.strokeStyle = c.glow;
     for (let q = 0; q < 6; q++) { ctx.globalAlpha = 0.22 * DA[(q / 3) | 0] * FA[q % 3]; ctx.lineWidth = DW[(q / 3) | 0] * 3.4; ctx.stroke(gBuckets[q]); }
@@ -223,7 +223,7 @@ export class HomotopySurface {
       path.moveTo(P[k * 2] + r, P[k * 2 + 1]); path.arc(P[k * 2], P[k * 2 + 1], r, 0, TAU);
     }
     ctx.fillStyle = c.signal;
-    [0.14, 0.4, 0.7, 0.2, 0.5, 1].forEach((a, i) => { ctx.globalAlpha = a; ctx.fill(vp[i]); });
+    [0.14, 0.4, 0.84, 0.2, 0.5, 1].forEach((a, i) => { ctx.globalAlpha = a; ctx.fill(vp[i]); });
     ctx.globalAlpha = 1;
   }
 }

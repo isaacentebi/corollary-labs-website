@@ -62,7 +62,8 @@ const polySlice = (pts: Pt[], d0: number, d1: number, n = 14): Pt[] => Array.fro
 const trimC = (pts: Pt[], ra: number, rb: number, n = 20) => { const L = polyLen(pts); return polySlice(pts, ra, Math.max(ra + 0.1, L - rb), n); };
 
 function makeDiagram(root: SVGGElement, small = false) {
-  const el = (tag: string, attrs: Record<string, string | number> = {}, parent: Element = root) => {
+  let host: Element = root; // everything after the boundary goes into a detail group that can fade as a whole
+  const el = (tag: string, attrs: Record<string, string | number> = {}, parent: Element = host) => {
     const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v)); parent.appendChild(e); return e;
   };
   const signal = css('--signal'), ink3 = css('--ink-3');
@@ -150,6 +151,7 @@ function makeDiagram(root: SVGGElement, small = false) {
   const fillWarm = el('path', { class: 'dg-fill', fill: 'url(#dg-warm)' }, gFill);
   const fillJade = el('path', { class: 'dg-fill', fill: 'url(#dg-jade)' }, gFill);
   const form = el('path', { class: 'dg-form' }, gForm);
+  const gDetail = el('g', {}); host = gDetail;
   const title = el('g', { class: 'dg-chip' }); el('rect', { width: 84, height: 30, rx: 15 }, title); const titleT = el('text', { x: 42, y: 20, 'text-anchor': 'middle', class: 'dg-label -strong' }, title); titleT.textContent = 'FIRM';
 
   const wire = (cls = 'dg-link') => el('path', { class: cls, pathLength: 1 }) as SVGPathElement;
@@ -183,7 +185,8 @@ function makeDiagram(root: SVGGElement, small = false) {
     C: label('OUTPUT C', M(END, OUTV.C), { dx: 0, dy: -16, a: 'end' }, { dx: 12, dy: 6, a: 'start' }),
   };
   const g3Mid = lerpPt(ANCH[1], ST[1], 0.5);
-  const goal3T = label('GOAL', g3Mid, { dx: 14, dy: 6, a: 'start' }, { dx: 0, dy: -12, a: 'middle' }, 'dg-label -small -signal');
+  // phones: the arrow is short and horizontal, so GOAL sits to its left, clear of the COORDINATION pill
+  const goal3T = label('GOAL', g3Mid, { dx: 14, dy: 6, a: 'start' }, { dx: ST[1].x - g3Mid.x - AGENT_R - 10, dy: 5, a: 'end' }, 'dg-label -small -signal');
 
   const gDots = el('g', {});
   type Dot = { s: number; route: Out | 'back'; i: number; el: SVGCircleElement };
@@ -334,7 +337,8 @@ function makeDiagram(root: SVGGElement, small = false) {
   tl.to({}, { duration: 0.01 }, F + 1.75);
   // captions switch where each figure's change becomes visible: the agent settling, coordination collapsing
   const figStarts = [0, 1.45, F + 0.15];
-  return { S, tl, render, home, figStarts, boundaryCenter: () => { const bb = box(wall()); return { x: bb.x + bb.w / 2, y: bb.y + bb.h / 2, r: Math.max(bb.w, bb.h) / 2 }; } };
+  const setDetail = (a: number) => { gDetail.style.opacity = a >= 0.999 ? '' : a.toFixed(3); };
+  return { S, tl, render, home, figStarts, setDetail, boundaryCenter: () => { const bb = box(wall()); return { x: bb.x + bb.w / 2, y: bb.y + bb.h / 2, r: Math.max(bb.w, bb.h) / 2 }; } };
 }
 
 export function initStory(introDone: Promise<void>, arrived: boolean) {
@@ -410,6 +414,10 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
     else { const e = back; s = lerp(1, sEnd * (F.r / bc.r), 1 - (1 - e) ** 2.2); tx = markSvg.x - bc.x; ty = markSvg.y - bc.y; dop = 1 - sm(seg(e, 0.72, 0.98)); }
     const ox = p < P.back[0] ? F.x : bc.x, oy = p < P.back[0] ? F.y : bc.y;
     dg.setAttribute('transform', `translate(${(ox + tx).toFixed(2)} ${(oy + ty).toFixed(2)}) scale(${s.toFixed(4)}) translate(${-ox} ${-oy})`);
+    // once the firm is smaller than ~120px on screen its internals fade and it reads as the marked node
+    const wPx = s * bc.r * 2 * bcs.k, detail = p < P.back[0] ? 1 : sm(seg(wPx, 60, 125));
+    D.setDetail(detail);
+    if (p >= P.back[0]) dop = Math.min(dop, sm(seg(wPx, 20, 60)));
     svg.style.opacity = String(inFirm ? dop : 0);
     if (stmt) { const so = inFirm ? sm(seg(dive, 0.55, 1)) * (1 - sm(seg(back, 0, 0.35))) : 0; stmt.style.opacity = String(so); stmt.style.filter = so < 0.99 ? `blur(${((1 - so) * 8).toFixed(1)}px)` : ''; }
     D.tl.progress(seg(p, P.dive[0] + 0.02, P.figs[1]));
@@ -421,7 +429,7 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
     B.camScale = lerp(9, 1, es);
     // adoption is a pure function of scroll: it only grows as you scroll down
     B.setProgress(sm(seg(p, P.diff[0], P.diff[1])));
-    B.markA = sm(seg(back, 0.62, 0.95)) * (1 - sm(seg(p, P.lift[0] - 0.01, P.lift[0] + 0.01)));
+    B.markA = (1 - sm(seg(wPx, 40, 110))) * (1 - sm(seg(p, P.lift[0] - 0.01, P.lift[0] + 0.01)));
     cB.style.opacity = String(bIn ? sm(seg(back, 0, 0.35)) * (1 - sm(seg(p, P.lift[0] + 0.004, P.lift[0] + 0.016))) : 0);
     if (bIn && !B.running) B.start(); if (!bIn && B.running) B.stop();
     cS.style.opacity = String(sm(seg(p, P.lift[0] - 0.004, P.lift[0] + 0.012)));

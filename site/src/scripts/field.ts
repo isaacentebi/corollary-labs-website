@@ -64,7 +64,7 @@ export class DiffusionField {
   cols = 0; rows = 0; sp = 26;
   tx: Float32Array = new Float32Array(); ty: Float32Array = new Float32Array(); hex: Uint32Array = new Uint32Array(); hexFresh: Uint8Array = new Uint8Array();
   pulses: Array<{ x: number; y: number; t0: number }> = []; pulseB: Float32Array = new Float32Array();
-  mark = -1; markA = 0; // a highlighted node (index) and its opacity
+  mark = -1; markA = 0; markNb?: number[]; // a highlighted node (index) and its opacity
   reveal = 0; sweep = -1; // intro: full name at `reveal`, dissolving left→right behind `sweep` (px)
 
   constructor(canvas: HTMLCanvasElement, opts: FieldOptions = {}) {
@@ -519,6 +519,14 @@ export class DiffusionField {
     // 3a) the marked node (the firm the story dived into): a jade ring that holds its screen size
     if (this.mark >= 0 && this.markA > 0.01) {
       const x = pos[this.mark * 2], y = pos[this.mark * 2 + 1], cs = Math.max(1, this.camScale), mr = 11 / cs;
+      // a few links run into the marked node, so it sits inside the network rather than on top of it
+      if (!this.markNb || this.markNb[0] === this.mark) {
+        const d = Array.from({ length: n }, (_, k) => [(nx[k] - nx[this.mark]) ** 2 + (ny[k] - ny[this.mark]) ** 2, k]).sort((a, b) => a[0] - b[0]);
+        this.markNb = d.slice(1, 5).map((q) => q[1]);
+      }
+      ctx.strokeStyle = colors.signal; ctx.lineWidth = 1.1 / Math.sqrt(cs); ctx.globalAlpha = 0.5 * this.markA; ctx.beginPath();
+      for (const k of this.markNb) { const bx = pos[k * 2], by = pos[k * 2 + 1], dx = bx - x, dy = by - y, dd = Math.hypot(dx, dy) || 1; ctx.moveTo(x + (dx / dd) * mr, y + (dy / dd) * mr); ctx.quadraticCurveTo((x + bx) / 2 - dy * 0.08, (y + by) / 2 + dx * 0.08, bx, by); }
+      ctx.stroke();
       ctx.globalAlpha = 0.55 * this.markA; ctx.drawImage(glow, x - mr * 2.6, y - mr * 2.6, mr * 5.2, mr * 5.2);
       ctx.globalAlpha = this.markA; ctx.fillStyle = colors.paper; ctx.beginPath(); ctx.arc(x, y, mr, 0, 6.2832); ctx.fill();
       ctx.strokeStyle = colors.signal; ctx.lineWidth = 1.4 / cs; ctx.stroke();

@@ -222,15 +222,23 @@ html[data-page='home'].is-over-hero:not(.menu-open) .c-header { opacity: 0; poin
 @media (hover: none), (max-width: 699px) {
   .c-footer__list a, .rail-card__back, .rail-card__home, .c-preloader__skip, .pill { display: inline-flex; align-items: center; min-height: 44px; }
   .c-preloader__skip { padding: 0 0.6rem; }
+  .rail-toc__head { min-height: 44px; align-items: center; }
+  .rail-toc__list a { min-height: 44px; align-content: center; }
 }
 @media (hover: none) {
-  .home-essay:hover::before, .index-row:hover::before { opacity: 0; }
+  html .home-essay:hover::before, html .index-row:hover::before, html .home-essay:focus-visible::before, html .index-row:focus-visible::before { opacity: 0; transform: scale(0.98); }
   .home-link:hover .home-link__label { transform: none; color: inherit; }
   .home-link:hover .home-link__dot { transform: scale(0.35); opacity: 0.25; }
   .pill:hover { box-shadow: 0 0 0 1px var(--rule), 0 8px 24px -14px rgba(42, 42, 46, 0.25); color: inherit; }
   .pill:hover i { transform: none; }
-  .home-essay:active::before, .index-row:active::before { opacity: 1; transform: none; }
+  html .home-essay:active::before, html .index-row:active::before { opacity: 1; transform: none; }
 }
 /* home: the big About / Team / Contact links replace the footer index (Back to top and Contact stay) */
-html[data-page='home'] .c-footer__menu.-main > .c-footer__title, html[data-page='home'] .c-footer__menu.-main > .c-footer__list:not(.-b) { display: none; }
+html[data-page='home'] .c-footer__menu.-main > .c-footer__list:not(.-b) { display: none; }
+html[data-page='home'] .c-footer__menu.-main > .c-footer__title { color: transparent; }
 html[data-page='home'] .c-footer__menu.-main > .c-footer__list.-b { grid-column: 1 / -1; }
+@media (max-width: 699px) {
+  /* phones: Back to top sits on the same rule as the Contact column */
+  html[data-page='home'] .c-footer__menu.-main { grid-column: 1 / 3; grid-template-columns: minmax(0, 1fr); }
+  html[data-page='home'] .c-footer__menu.-contact { grid-column: 3 / 5; }
+}

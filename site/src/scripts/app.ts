@@ -122,4 +122,8 @@ function boot() {
   });
 }
 
+// a tapped row must not come back highlighted (bfcache / Back): drop any lingering focus
+addEventListener('pageshow', () => (document.activeElement as HTMLElement | null)?.blur?.());
+document.addEventListener('astro:after-swap', () => (document.activeElement as HTMLElement | null)?.blur?.());
+
 boot();
