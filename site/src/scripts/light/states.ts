@@ -43,10 +43,12 @@ const night = (e: Env, h = fieldHorizon(e)): State => ({
   lineCol: C.amber, lineAmt: 0.55, groundGlow: 0.25, roomLight: 0.02, vignette: 0.24, grain: 0.028,
 });
 // silver, for reading (Ando's anodised aluminium): an almost even field
+// (the light is the "ground" here, with the horizon above the top of the screen, so arriving from a
+// dark scene the silver rises as a band of light)
 const silver = (): State => ({
-  wallTop: C.silverHi, wallMid: C.silver, groundTop: C.silverLow, groundBot: C.silverLow,
-  horizon: -0.62, horizonSoft: 0, glowCol: C.gold, glowAmt: 0, glowW: 0.1, glowX: 0, glowSpread: 3,
-  lineCol: C.amber, lineAmt: 0, groundGlow: 0, roomLight: 0.03, vignette: 0.08, grain: 0.018,
+  wallTop: C.silverHi, wallMid: C.silverHi, groundTop: C.silverHi, groundBot: C.silver,
+  horizon: 0.62, horizonSoft: 0, glowCol: C.gold, glowAmt: 0, glowW: 0.1, glowX: 0, glowSpread: 3,
+  lineCol: C.goldPale, lineAmt: 0, groundGlow: 0, roomLight: 0.03, vignette: 0.08, grain: 0.018,
 });
 // twilight with every light on (Contact): the diffusion horizon, finished
 const twilight = (e: Env): State => ({
@@ -116,7 +118,8 @@ function deform(p: number, e: Env): State {
   const bendK = sm(0.05, 0.5, p), cut = sm(0.52, 0.6, p), rejoin = sm(0.7, 0.9, p);
   const y = e.m ? 0.18 : 0.08;
   return {
-    ...night(e, -0.62), glowAmt: 0, lineAmt: 0,
+    // all ground (the horizon is above the top), so arriving from the bright planes the dark rises
+    ...night(e, 0.62), groundTop: C.emberDeep, groundBot: C.night, glowAmt: 0, lineAmt: 0,
     volC: [e.m ? 0 : 0.02, y], volR: [e.a * 0.5 * 0.94, e.m ? 0.012 : 0.009], volN: 8, volSoft: 0,
     paint: 1, coreCol: C.goldPale, edgeCol: C.hot, coreSize: 0.9, emitCore: 0.5, halo: 1.2, haloCol: C.ember, rimAmt: 0,
     warp: 0.0, bend: 0.9 * bendK * (1 - 0.35 * rejoin),
@@ -140,14 +143,14 @@ function moment(p: number, e: Env): State {
   const c: Vec = e.m ? [0, h + 0.02] : [e.a * 0.5 * 0.38, h + 0.02];
   const R0: Vec = e.m ? [0.11, 0.11] : [0.15, 0.15];
   const ex = sm(0.02, 0.2, p), pl = sm(0.18, 0.38, p);
-  const flat = sm(0.42, 0.58, p), cut = sm(0.56, 0.62, p), rejoin = sm(0.66, 0.76, p), run = sm(0.74, 0.98, p);
+  const flat = sm(0.42, 0.58, p), flatY = sm(0.4, 0.48, p), cut = sm(0.56, 0.62, p), rejoin = sm(0.66, 0.76, p), run = sm(0.74, 0.98, p);
   const band: Vec = [e.a * 0.5 * 0.94, 0.007];
   return {
     ...night(e, h), glowAmt: lerp(0.35, 0.6, run),
-    ...lensLook(), volC: lerpV(c, [0, h + 0.004], flat), volR: lerpV(R0, band, flat), volN: lerp(2, 8, flat),
+    ...lensLook(), volC: lerpV(c, [0, h + 0.004], flat), volR: [lerp(R0[0], band[0], flat), lerp(R0[1], band[1], flatY)], volN: lerp(2, 8, flatY),
     lens: 1 - flat, lit: 0.45 * (1 - ex), litCol: C.amber,
     emitRim: 0.9 * ex * (1 - 0.6 * pl) * (1 - flat), rimCol: C.amber, ringPos: 0.8, ringW: 0.12,
-    emitCore: 0.9 * pl * (1 - run), coreCol: C.amber, halo: 0.8 * (1 - run), haloCol: C.hot, rimAmt: 0.7 * (1 - flat),
+    emitCore: 0.9 * pl * (1 - run), coreCol: C.amber, halo: 0.8 * (1 - run) * (1 - 0.6 * flatY * (1 - flat)), haloCol: C.hot, rimAmt: 0.7 * (1 - flatY),
     paint: flat * (1 - run), edgeCol: C.hot, coreSize: 0.9,
     beamIn: 0.45 * (1 - ex * 0.5) * (1 - pl * 0.6) * (1 - flat), beamInW: lerp(0.04, 0.003, pl), beamInCol: C.amber, beamFrom: -2,
     beamOut: 0.45 * (1 - flat), beamOutW: 0.05, beamOutCol: C.coolLight,
@@ -165,6 +168,6 @@ export const states: Record<string, StateFn> = {
   io, auto, combine, deform, diffuse, dawn, moment,
   research: () => silver(),
   read: () => ({ ...silver(), vignette: 0.05, grain: 0.014 }),
-  company: () => ({ ...silver(), horizon: -0.34, groundTop: C.silverLow, groundBot: C.silver, lineAmt: 0.35, lineCol: C.amber }),
+  company: () => silver(),
   contact: (p, e) => twilight(e),
 };

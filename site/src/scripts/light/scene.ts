@@ -48,8 +48,21 @@ export function mountScene() {
   { let o = 0; KEYS.forEach((k, i) => { offs[k] = [o, SIZES[i]]; o += SIZES[i]; }); }
   const SHAPE = ['volC', 'volR', 'volN', 'lensMag', 'warp', 'warpPhase', 'bend', 'cutAngle', 'cutOffset', 'cutAmt'];
   const VIS = ['lens', 'paint', 'emitCore', 'emitRim', 'halo', 'rimAmt', 'lit', 'beamIn', 'beamOut', 'seam', 'volBody'];
+  const SKY = ['wallTop', 'wallMid'], GROUND = ['groundTop', 'groundBot', 'glowCol', 'lineCol', 'field', 'planeAmt'];
   function blend(out: Float32Array, a: Float32Array, b: Float32Array, t: number) {
     mixInto(out, a, b, t);
+    // When the horizon travels, the region that grows takes its new colour at once and the region
+    // that shrinks keeps its old one: the light rises (or falls) as a band with a razor edge, instead
+    // of the whole screen cross-fading through grey.
+    const [ho] = offs.horizon;
+    if (Math.abs(a[ho] - b[ho]) > 0.15) {
+      const rising = b[ho] > a[ho];
+      const fast = smooth(0, 0.3, t), slow = smooth(0.7, 1, t);
+      for (const k of SKY) { const [o, n] = offs[k]; const tt = rising ? slow : fast; for (let j = 0; j < n; j++) out[o + j] = a[o + j] + (b[o + j] - a[o + j]) * tt; }
+      for (const k of GROUND) { const [o, n] = offs[k]; const tt = rising ? fast : slow; for (let j = 0; j < n; j++) out[o + j] = a[o + j] + (b[o + j] - a[o + j]) * tt; }
+      const [lo] = offs.lineAmt;
+      out[lo] = Math.max(out[lo], 0.8 * (1 - Math.abs(2 * t - 1)));
+    }
     const [ro, rn] = offs.volR, [co] = offs.volC;
     const dR = Math.abs(a[ro] - b[ro]) + Math.abs(a[ro + 1] - b[ro + 1]);
     const dC = Math.abs(a[co] - b[co]) + Math.abs(a[co + 1] - b[co + 1]);
