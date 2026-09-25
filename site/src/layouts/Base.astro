@@ -1,50 +1,37 @@
 ---
-import '@fontsource/instrument-serif/400.css';
-import '@fontsource/instrument-serif/400-italic.css';
-import '@fontsource-variable/inter-tight/wght.css';
-import '@fontsource-variable/inter-tight/wght-italic.css';
-import '@fontsource/space-mono/400.css';
-import '@fontsource/space-mono/700.css';
-import '../styles/tokens.css';
 import '../styles/global.css';
-import { ClientRouter } from 'astro:transitions';
+import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import Preloader from '../components/Preloader.astro';
 import { site } from '../config/site';
+import { u } from '../lib/url';
 
-interface Props { title?: string; description?: string; page: 'home' | 'index' | 'essay' | 'about' | 'team' }
-const { title, description = site.description, page } = Astro.props;
+interface Props { title?: string; description?: string; page: string; field?: 'fixed' | 'none'; tone?: 'day' | 'dusk'; intro?: boolean; shift?: 'right' }
+const { title, description = site.description, page, field = 'fixed', tone = 'day', intro = false, shift } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 ---
 <!doctype html>
-<html lang="en" data-page={page} transition:animate="none">
+<html lang="en" data-page={page} data-tone={tone}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#e7e3dd" />
+    <link rel="icon" href={u('/favicon.svg')} type="image/svg+xml" />
+    <link rel="preload" href={u('/fonts/albert-sans.woff2')} as="font" type="font/woff2" crossorigin />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta name="theme-color" content="#fafaf8" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <ClientRouter fallback="swap" />
+    <link rel="stylesheet" href={u('/fonts/fonts.css')} />
     <script is:inline>
-      (function () {
-        var d = document.documentElement;
-        d.classList.add('js');
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('rm');
-        try { if (sessionStorage.getItem('corollary.intro')) d.classList.add('intro-seen'); } catch (e) {}
-        // failsafe: never leave content hidden if the motion layer fails to boot
-        window.__motionFailsafe = setTimeout(function () { d.classList.add('motion-fail'); }, 5000);
-      })();
+      document.documentElement.classList.add('js');
+      try { if (sessionStorage.getItem('cl-visited')) document.documentElement.classList.add('returning'); sessionStorage.setItem('cl-visited', '1'); } catch (e) {}
     </script>
   </head>
-  <body id="top">
-    <Preloader />
-    <a class="skip-link" href="#main">Skip to content</a>
-    <Header />
-    <main id="main" data-page-root data-page={page}>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    {field === 'fixed' && <canvas class="field" data-field data-intro={intro ? 'on' : undefined} data-shift={shift} aria-hidden="true"></canvas>}
+    <Nav current={page} />
+    <main id="main">
       <slot />
     </main>
     <Footer />

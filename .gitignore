@@ -16,3 +16,6 @@ clone-workspace/superdark/
 research/
 deploy/
 .claude/worktrees/
+
+# node_modules symlink in a worktree
+site/node_modules

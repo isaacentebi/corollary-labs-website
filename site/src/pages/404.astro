@@ -1,0 +1,14 @@
+---
+import Base from '../layouts/Base.astro';
+import { u } from '../lib/url';
+---
+<Base page="404" title="Not found">
+  <section class="nf wrap" data-light="research" data-tone-section="day">
+    <h1 class="nf__title">This page does not exist.</h1>
+    <a class="link" href={u('/')}>Home <span class="arrow" aria-hidden="true">→</span></a>
+  </section>
+</Base>
+<style>
+  .nf { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; gap: 20px; }
+  .nf__title { font-size: var(--fs-h2); font-weight: 300; }
+</style>

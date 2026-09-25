@@ -1,112 +1,148 @@
 ---
-// Home, in company order: what we are (hero on the live field) → capabilities → approach (the firm diagram,
-// its diffusion and the torus, as one short scroll figure) → research → company → contact.
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import { site } from '../config/site';
+import EssayList from '../components/EssayList.astro';
+import { hero, work, ideas, research, company, contact, site } from '../config/site';
+import { u } from '../lib/url';
 import { getCollection } from 'astro:content';
-import '../styles/landing.css';
-
-const capabilities = [
-  { t: 'Agent deployment.', d: 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.' },
-  { t: 'Model fine-tuning.', d: 'Models adapted and evaluated on your data for the specific tasks your agents perform.' },
-  { t: 'Systems integration.', d: 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.' },
-  { t: 'Evaluation and governance.', d: 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.' },
-];
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
-const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
-const pad = (n: number) => String(n).padStart(2, '0');
 ---
-<Base page="home">
-  <section class="hero" data-hero aria-labelledby="hero-title">
-    <canvas class="field hero__field" data-field="hero" aria-hidden="true"></canvas>
-    <div class="hero__copy o-container">
-      <h1 class="hero__name" id="hero-title" data-hero-name>{site.name}</h1>
-      <p class="hero__headline">We deploy AI agents inside organisations and rebuild the operations around them.</p>
-      <p class="hero__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
-      <div class="hero__actions">
-        <a class="btn -primary" href={site.contactHref}>Contact us</a>
-        <a class="btn" href="#approach">Our approach</a>
+<Base page="home" intro>
+  <section class="hero wrap" data-light="hero" data-tone-section="day" aria-labelledby="hero-h">
+    <div class="hero__text">
+      <h1 class="hero__name label" data-reveal>{site.name}</h1>
+      <p id="hero-h" class="hero__headline" data-reveal data-d="1">{hero.headline}</p>
+      <p class="hero__sub muted" data-reveal data-d="2">{hero.sub}</p>
+      <div class="hero__actions" data-reveal data-d="3">
+        <a class="btn" href={u('/contact/')}>{hero.primary}</a>
+        <a class="link" href={u('/thinking/')}>{hero.secondary} <span class="arrow" aria-hidden="true">→</span></a>
       </div>
     </div>
   </section>
 
-  <section class="sec o-container" id="capabilities" aria-labelledby="cap-title">
-    <header class="sec__head">
-      <h2 class="sec__title t-label" id="cap-title">Capabilities</h2>
-      <div class="rule" data-reveal="rule"></div>
-    </header>
-    <ol class="caps" data-reveal="rows">
-      {capabilities.map((c, i) => (
-        <li class="caps__row">
-          <span class="caps__n t-label">{pad(i + 1)}</span>
-          <h3 class="caps__t">{c.t}</h3>
-          <p class="caps__d">{c.d}</p>
-        </li>
-      ))}
-    </ol>
-  </section>
-
-  <section class="sec -approach" id="approach" aria-labelledby="approach-title">
-    <header class="sec__head o-container">
-      <h2 class="sec__title t-label" id="approach-title">Approach</h2>
-      <div class="rule" data-reveal="rule"></div>
-      <p class="sec__intro" data-reveal="lines">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
-    </header>
-    <Story />
-    <ol class="principles o-container" data-reveal="rows">
-      <li class="principles__row"><span class="principles__n t-label">01</span><h3 class="principles__t">Workflow first.</h3><p class="principles__d">We map how work is actually done before choosing a model.</p></li>
-      <li class="principles__row"><span class="principles__n t-label">02</span><h3 class="principles__t">Design the reorganisation.</h3><p class="principles__d">Roles, handoffs and controls change when agents arrive. We plan that change.</p></li>
-      <li class="principles__row"><span class="principles__n t-label">03</span><h3 class="principles__t">Measure in production.</h3><p class="principles__d">Every deployment reports on accuracy, cost and time saved.</p></li>
-    </ol>
-  </section>
-
-  <section class="sec o-container" id="research" aria-labelledby="research-title">
-    <header class="sec__head">
-      <h2 class="sec__title t-label" id="research-title">Research</h2>
-      <div class="rule" data-reveal="rule"></div>
-      <p class="sec__intro" data-reveal="lines">Essays on agents, organisations and how new technology spreads.</p>
-    </header>
-    <ol class="research" data-reveal="rows">
-      {essays.map((e) => (
-        <li>
-          <a class="research__row" href={`/essays/${e.id}/`} data-shuffle-hover>
-            <time class="research__date t-label" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
-            <span class="research__title" data-shuffle-target>{e.data.title}</span>
-            <span class="research__arrow" aria-hidden="true">→</span>
-          </a>
-        </li>
-      ))}
-    </ol>
-    <a class="more link" href="/essays/">All research →</a>
-  </section>
-
-  <section class="sec o-container" id="company" aria-labelledby="company-title">
-    <header class="sec__head">
-      <h2 class="sec__title t-label" id="company-title">Company</h2>
-      <div class="rule" data-reveal="rule"></div>
-    </header>
-    <div class="company">
-      <div class="company__about">
-        <h3 class="company__label t-label">About</h3>
-        <p class="company__text" data-reveal="lines">{site.name} is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
-      </div>
-      <div class="company__team">
-        <h3 class="company__label t-label">Team</h3>
-        <ul class="team" data-reveal="rows">
-          {[1, 2, 3, 4].map(() => <li class="team__row ph"><span>[Name]</span><span class="t-label">[Role]</span></li>)}
-        </ul>
-        <a class="more link" href="/about/">About the company →</a>
-      </div>
+  <section class="work wrap" data-light="work" data-tone-section="day" aria-labelledby="work-h">
+    <div class="work__inner">
+      <h2 id="work-h" class="label" data-reveal>{work.title}</h2>
+      <ol class="work__list">
+        {work.items.map((it, i) => (
+          <li class="work__item" data-reveal data-d={String(i % 4)}>
+            <span class="work__n faint">{String(i + 1).padStart(2, '0')}</span>
+            <h3 class="work__name">{it.name}</h3>
+            <p class="work__text muted">{it.text}</p>
+          </li>
+        ))}
+      </ol>
+      <p class="work__research" data-reveal>{work.research} <a class="link" href={u('/research/')}>{research.title} <span class="arrow" aria-hidden="true">→</span></a></p>
     </div>
   </section>
 
-  <section class="sec o-container contact" id="contact" aria-labelledby="contact-title">
-    <header class="sec__head">
-      <h2 class="sec__title t-label" id="contact-title">Contact</h2>
-      <div class="rule" data-reveal="rule"></div>
-    </header>
-    <p class="contact__line" data-reveal="lines">Deploying agents in your organisation? Talk to us.</p>
-    <p class="contact__email">{site.emailIsPlaceholder ? <span class="ph">{site.email}</span> : <a class="link" href={`mailto:${site.email}`}>{site.email}</a>}</p>
+  <div class="rooms" aria-label="How we think">
+    {ideas.map((idea, i) => (
+      <section class={`room room--${idea.key}`} data-light={idea.key} data-tone-section="dusk" aria-labelledby={`room-${idea.key}`}>
+        <div class="room__text wrap" data-room-text>
+          <p class="room__kicker label">How we think <span class="room__n">{String(i + 1).padStart(2, '0')} / {String(ideas.length).padStart(2, '0')}</span></p>
+          <h2 id={`room-${idea.key}`} class="room__title">{idea.title}</h2>
+          <p class="room__line">{idea.line}</p>
+          {i === ideas.length - 1 && (
+            <a class="room__more link" href={u('/thinking/')}>How we think <span class="arrow" aria-hidden="true">→</span></a>
+          )}
+        </div>
+      </section>
+    ))}
+  </div>
+  <div class="dawn" data-light="dawn" data-tone-section="dusk" aria-hidden="true"></div>
+
+  <section class="research-teaser wrap" data-light="research" data-tone-section="day" aria-labelledby="research-h">
+    <div class="section-head">
+      <h2 id="research-h" class="label" data-reveal>{research.title}</h2>
+      <p class="section-head__intro" data-reveal data-d="1">{research.intro}</p>
+    </div>
+    <EssayList essays={essays} />
+    <a class="section-more link" href={u('/research/')} data-reveal>{research.all} <span class="arrow" aria-hidden="true">→</span></a>
+  </section>
+
+  <section class="company-teaser wrap" data-light="company" data-tone-section="day" aria-labelledby="company-h">
+    <div class="section-head">
+      <h2 id="company-h" class="label" data-reveal>{company.title}</h2>
+      <p class="section-head__intro" data-reveal data-d="1">{company.about} <span class="ph">{company.aboutMore}</span></p>
+    </div>
+    <ul class="team-mini" data-reveal>
+      {company.team.map((m) => <li><span class="ph">{m.name}</span><span class="faint">{m.role}</span></li>)}
+    </ul>
+    <a class="section-more link" href={u('/company/')} data-reveal>{company.more} <span class="arrow" aria-hidden="true">→</span></a>
+  </section>
+
+  <section class="contact-block wrap" data-light="contact" data-tone-section="day" aria-labelledby="contact-h">
+    <h2 id="contact-h" class="label" data-reveal>{contact.title}</h2>
+    <p class="contact-block__line" data-reveal data-d="1">{contact.line}</p>
+    <p class="contact-block__email" data-reveal data-d="2"><span class="ph">{site.email}</span></p>
   </section>
 </Base>
+
+<style>
+  /* hero: the company in plain words on the left; the light on the right (top on phones) */
+  .hero { min-height: 100svh; display: flex; align-items: center; padding-top: 68px; }
+  .hero__text { max-width: min(50vw, 800px); display: grid; gap: 22px; }
+  .hero__name { color: var(--ink-2); }
+  .hero__headline { font-size: var(--fs-display); font-weight: 300; line-height: 1.04; letter-spacing: -0.022em; text-wrap: balance; }
+  .hero__sub { font-size: var(--fs-lede); max-width: 36em; line-height: 1.5; text-wrap: pretty; }
+  .hero__actions { display: flex; align-items: center; gap: 28px; margin-top: 8px; font-weight: 480; }
+  @media (max-width: 759px) {
+    .hero { align-items: flex-end; padding-bottom: 44px; padding-top: 50svh; min-height: 100svh; }
+    .hero__text { max-width: none; gap: 16px; }
+    .hero__headline { font-size: clamp(1.75rem, 7.4vw, 2.3rem); }
+    .hero__sub { font-size: 1rem; }
+  }
+
+  /* what we do: a list beside the column of light */
+  .work { min-height: 150vh; display: flex; align-items: center; padding-block: 18vh; }
+  .work__inner { margin-left: auto; width: min(52%, 720px); }
+  .work__list { margin-top: 28px; border-top: 1px solid var(--rule); }
+  .work__item { display: grid; grid-template-columns: 3.2em 11em 1fr; gap: 8px 20px; padding: 26px 0 28px; border-bottom: 1px solid var(--rule); align-items: baseline; }
+  .work__n { font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
+  .work__name { font-size: var(--fs-h3); font-weight: 380; }
+  .work__text { font-size: 1.02rem; line-height: 1.5; }
+  .work__research { margin-top: 30px; font-size: 1.02rem; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; }
+  .work__research .link { color: var(--ink); }
+  @media (max-width: 1100px) { .work__item { grid-template-columns: 2.6em 1fr; } .work__text { grid-column: 2; } }
+  @media (max-width: 759px) {
+    .work { padding-top: 46vh; padding-bottom: 12vh; min-height: 0; }
+    .work__inner { width: 100%; }
+  }
+
+  /* the rooms: tall sections; the light does the work, one plain line stays in view */
+  .room { min-height: 170vh; position: relative; }
+  .room--io { min-height: 190vh; }
+  .room--auto { min-height: 230vh; }
+  .room--deform { min-height: 230vh; }
+  .room--diffuse { min-height: 220vh; }
+  .room__text { position: sticky; top: calc(100vh - 36vh); padding-bottom: 8vh; display: grid; gap: 10px; max-width: 46rem; will-change: opacity, filter; }
+  .room__kicker { color: var(--lit-3); display: flex; gap: 1.2em; }
+  .room__n { font-variant-numeric: tabular-nums; letter-spacing: 0.08em; }
+  .room__title { font-size: 1rem; font-weight: 500; letter-spacing: 0; color: var(--lit-2); margin-top: 6px; }
+  .room__line { font-size: var(--fs-h2); font-weight: 300; line-height: 1.12; letter-spacing: -0.018em; text-wrap: balance; }
+  .room__more { margin-top: 10px; font-weight: 480; justify-self: start; }
+  .dawn { height: 70vh; }
+  @media (max-width: 759px) {
+    .room { min-height: 160vh; }
+    .room--auto, .room--deform, .room--diffuse { min-height: 200vh; }
+    .room__text { top: calc(100svh - 40svh); }
+    .room__line { font-size: 1.45rem; }
+    .dawn { height: 50vh; }
+  }
+
+  .section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 16px 40px; align-items: baseline; margin-bottom: 36px; }
+  .section-head__intro { font-size: var(--fs-h3); font-weight: 320; line-height: 1.25; letter-spacing: -0.01em; max-width: 30em; text-wrap: pretty; }
+  .section-more { margin-top: 30px; font-weight: 480; }
+  @media (max-width: 759px) { .section-head { grid-template-columns: 1fr; } }
+
+  .research-teaser { padding-top: 30vh; padding-bottom: 18vh; }
+  .company-teaser { padding-top: 14vh; padding-bottom: 22vh; min-height: 90vh; }
+  .company-teaser .section-head__intro { max-width: 24em; }
+  .team-mini { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; border-top: 1px solid var(--rule); padding-top: 18px; max-width: min(60%, 820px); }
+  .team-mini li { display: grid; gap: 2px; font-size: var(--fs-small); }
+  @media (max-width: 759px) { .team-mini { grid-template-columns: 1fr 1fr; max-width: none; } .company-teaser { padding-top: 40vh; } }
+
+  .contact-block { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 20px; padding-block: 16vh 8vh; }
+  .contact-block__line { font-size: var(--fs-h2); font-weight: 300; line-height: 1.12; letter-spacing: -0.018em; max-width: 18em; text-wrap: balance; }
+  .contact-block__email { font-size: var(--fs-lede); }
+</style>

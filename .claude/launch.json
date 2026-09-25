@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "corollary-dev", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "site", "run", "dev", "--", "--port", "4321"], "port": 4321 }
+    { "name": "corollary-dev", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "site", "run", "dev", "--", "--port", "4321"], "port": 4321 },
+    { "name": "light-dev", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "site", "run", "dev", "--", "--port", "4360", "--host"], "port": 4360, "url": "http://localhost:4360" }
   ]
 }

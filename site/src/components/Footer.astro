@@ -1,25 +1,19 @@
 ---
-import { site } from '../config/site';
-const path = Astro.url.pathname;
-const cur = (h: string) => (!h.includes('#') && path.startsWith(h) ? 'page' : undefined);
+import Mark from './Mark.astro';
+import { footerNav, site } from '../config/site';
+import { u } from '../lib/url';
+const year = new Date().getFullYear();
 ---
-<footer class="c-footer" data-footer>
-  <nav class="c-footer__menus" aria-label="Site">
-    <div class="c-footer__menu -main">
-      <ul class="c-footer__list" data-reveal="lines">
-        {site.footerNav.slice(0, 3).map((n) => <li><a href={n.href} aria-current={cur(n.href)}>{n.label}</a></li>)}
-      </ul>
-      <ul class="c-footer__list -b" data-reveal="lines">
-        {site.footerNav.slice(3).map((n) => <li><a href={n.href} aria-current={cur(n.href)}>{n.label}</a></li>)}
-      </ul>
-    </div>
-    <div class="c-footer__menu -contact">
-      <p class="c-footer__title" data-reveal="scramble">Email</p>
-      <ul class="c-footer__list" data-reveal="lines">
-        <li>{site.emailIsPlaceholder ? <span class="c-footer__email">{site.email}</span> : <a href={`mailto:${site.email}`}>{site.email}</a>}</li>
-      </ul>
-    </div>
-  </nav>
-  <p class="c-footer__big" data-reveal="lines">{site.name}</p>
-  <p class="c-footer__copy">©{site.year} {site.name}</p>
+<footer class="footer" data-tone-section="day">
+  <div class="footer__row">
+    <a class="footer__brand" href={u('/')}><Mark size={16} /><span>{site.name}</span></a>
+    <nav class="footer__nav" aria-label="Footer">
+      {footerNav.map((l) => <a href={u(l.href)}>{l.label}</a>)}
+    </nav>
+  </div>
+  <div class="footer__row footer__meta">
+    <span>{site.email}</span>
+    <span>{site.location}</span>
+    <span>© {year} {site.name}</span>
+  </div>
 </footer>

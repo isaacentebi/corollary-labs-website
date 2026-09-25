@@ -1,0 +1,29 @@
+---
+import Mark from './Mark.astro';
+import { nav, site } from '../config/site';
+import { u } from '../lib/url';
+interface Props { current: string }
+const { current } = Astro.props;
+const isCurrent = (href: string) => href.replaceAll('/', '') === current;
+---
+<header class="nav" data-nav>
+  <a class="nav__brand" href={u('/')} aria-label={`${site.name}, home`}>
+    <Mark size={20} />
+    <span class="nav__name">{site.name}</span>
+  </a>
+  <nav class="nav__links" aria-label="Main">
+    {nav.map((l) => (
+      <a href={u(l.href)} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a>
+    ))}
+  </nav>
+  <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="menu" data-menu-toggle>
+    <span class="nav__toggle-label">Menu</span>
+  </button>
+  <div class="menu" id="menu" data-menu hidden>
+    <nav aria-label="Main (mobile)">
+      <a href={u('/')}>Home</a>
+      {nav.map((l) => <a href={u(l.href)} aria-current={isCurrent(l.href) ? 'page' : undefined}>{l.label}</a>)}
+      <a href={u('/research/')}>Research</a>
+    </nav>
+  </div>
+</header>

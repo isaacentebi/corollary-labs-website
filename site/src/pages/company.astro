@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import { company, site, research, contact } from '../config/site';
+import { u } from '../lib/url';
+const palettes = ['blossom', 'emerald', 'silver', 'sunset'];
+---
+<Base page="company" title={company.title} description={`${company.about}`}>
+  <section id="about" class="about wrap" data-light="company" data-tone-section="day" aria-labelledby="about-h">
+    <p class="label faint" data-reveal>{company.title}</p>
+    <h1 id="about-h" class="about__title" data-reveal data-d="1">{company.about}</h1>
+    <p class="about__text ph" data-reveal data-d="2">{company.aboutMore}</p>
+    <dl class="facts" data-reveal data-d="3">
+      <div><dt class="faint">Founded</dt><dd class="ph">{site.founded}</dd></div>
+      <div><dt class="faint">Location</dt><dd class="ph">{site.location}</dd></div>
+      <div><dt class="faint">Entity</dt><dd class="ph">{site.entity}</dd></div>
+      <div><dt class="faint">Email</dt><dd class="ph">{site.email}</dd></div>
+    </dl>
+  </section>
+
+  <section id="team" class="team wrap" data-light="read" data-tone-section="day" aria-labelledby="team-h">
+    <h2 id="team-h" class="label" data-reveal>Team</h2>
+    <ul class="team__list">
+      {company.team.map((m, i) => (
+        <li class="member" data-reveal data-d={String(i)}>
+          <canvas class="member__plate" data-plate="volume" data-palette={palettes[i % palettes.length]} aria-hidden="true"></canvas>
+          <span class="member__name ph">{m.name}</span>
+          <span class="member__role faint">{m.role}</span>
+        </li>
+      ))}
+    </ul>
+    <div class="team__next" data-reveal>
+      <a class="link" href={u('/research/')}>{research.title} <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn" href={u('/contact/')}>{contact.title}</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .about { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; gap: 22px; padding-top: 100px; padding-bottom: 10vh; }
+  .about__title { font-size: var(--fs-display); font-weight: 300; line-height: 1.05; letter-spacing: -0.025em; max-width: 12em; }
+  .about__text { font-size: var(--fs-lede); max-width: 30em; }
+  .facts { margin: 24px 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 12rem)); gap: 16px 28px; border-top: 1px solid var(--rule); padding-top: 18px; font-size: var(--fs-small); }
+  .facts dd { margin: 4px 0 0; font-size: 1rem; }
+  .team { padding-top: 18vh; padding-bottom: 16vh; }
+  .team__list { margin-top: 28px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 24px; }
+  .member { display: grid; gap: 4px; }
+  .member__plate { width: 100%; aspect-ratio: 4 / 5; border-radius: 2px; margin-bottom: 12px; }
+  .member__name { font-size: 1.1rem; }
+  .team__next { margin-top: 72px; display: flex; gap: 32px; align-items: center; font-weight: 480; }
+  @media (max-width: 759px) {
+    .about { justify-content: flex-end; }
+    .facts { grid-template-columns: 1fr 1fr; }
+    .team__list { grid-template-columns: 1fr 1fr; gap: 28px 16px; }
+  }
+</style>
