@@ -1,13 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
-import { hero, work, practice, ideas, research, company, contact, site } from '../config/site';
+import Email from '../components/Email.astro';
+import { hero, work, practice, ideas, research, company, contact } from '../config/site';
 import { u } from '../lib/url';
 const auto = ideas.find((i) => i.key === 'auto')!;
 const deform = ideas.find((i) => i.key === 'deform')!;
 ---
-<Base page="home" intro>
-  <!-- the first screen: the company in plain words, inside the light -->
-  <section class="hero wrap" data-light="hero" data-tone-section="day" aria-labelledby="hero-h">
+<Base page="home" intro tone="dusk">
+  <!-- the first screen: the company in plain words, over a field of light radiating from one line -->
+  <section class="hero wrap" data-light="hero" data-tone-section="dusk" aria-labelledby="hero-h">
     <div class="hero__text" data-tone-probe>
       <h1 id="hero-h" class="hero__headline">{hero.headline}</h1>
       <p class="hero__sub">{hero.sub}</p>
@@ -18,14 +19,13 @@ const deform = ideas.find((i) => i.key === 'deform')!;
     </div>
   </section>
 
-  <!-- below the horizon: what we do and how we work -->
   <section id="what-we-do" class="work wrap" data-light="work" data-tone-section="dusk" aria-labelledby="work-h">
     <div class="work__grid" data-tone-probe>
       <div class="work__col">
-        <h2 id="work-h" class="label" data-reveal>{work.title}</h2>
+        <h2 id="work-h" class="label">{work.title}</h2>
         <ul class="work__list">
-          {work.items.map((it, i) => (
-            <li class="work__item" data-reveal data-d={String(i % 4)}>
+          {work.items.map((it) => (
+            <li class="work__item">
               <h3 class="work__name">{it.name}</h3>
               <p class="work__text">{it.text}</p>
             </li>
@@ -33,110 +33,98 @@ const deform = ideas.find((i) => i.key === 'deform')!;
         </ul>
       </div>
       <div class="work__col">
-        <h2 class="label" data-reveal>{practice.title}</h2>
+        <h2 class="label">{practice.title}</h2>
         <ul class="work__list">
-          {practice.items.map((it, i) => (
-            <li class="work__item" data-reveal data-d={String(i % 4)}>
+          {practice.items.map((it) => (
+            <li class="work__item">
               <h3 class="work__name">{it.name}</h3>
               <p class="work__text">{it.text}</p>
             </li>
           ))}
         </ul>
-        <p class="work__ph" data-reveal>{practice.engagements}</p>
+        <p class="work__ph">{practice.engagements}</p>
       </div>
     </div>
   </section>
 
-  <!-- one light moment carries the thinking -->
-  <section class="moment" data-light="moment" data-tone-section="dusk" aria-labelledby="moment-h">
-    <div class="moment__track">
-      <div class="moment__text wrap" data-tone-probe>
-        <h2 id="moment-h" class="label moment__kicker">How we think</h2>
-        <div class="moment__lines">
-          <p class="moment__line is-on" data-moment-line="0">{auto.line}</p>
-          <p class="moment__line" data-moment-line="1">{deform.homeLine}</p>
-        </div>
-        <a class="moment__more link" href={u('/thinking/')}>{hero.secondary} <span class="arrow" aria-hidden="true">→</span></a>
-      </div>
+  <!-- one moment carries the thinking: the disc on the line fills; then the line bends, is cut, re-joined -->
+  <section class="moment wrap" data-light="moment" data-tone-section="dusk" aria-labelledby="moment-h">
+    <div class="moment__text" data-tone-probe>
+      <h2 id="moment-h" class="label">How we think</h2>
+      <p class="moment__line">{auto.line}</p>
+      <p class="moment__line moment__line--2">{deform.homeLine}</p>
+      <a class="moment__more link" href={u('/thinking/')}>{hero.secondary} <span class="arrow" aria-hidden="true">→</span></a>
     </div>
   </section>
 
-  <section class="company-teaser wrap" data-light="company" data-tone-section="day" aria-labelledby="company-h">
+  <section class="rows wrap" data-light="company" data-tone-section="day" aria-label="Company and research">
     <div class="row" data-tone-probe>
-      <h2 id="company-h" class="label" data-reveal>{company.title}</h2>
-      <div data-reveal data-d="1">
+      <h2 class="label">{company.title}</h2>
+      <div>
         <p class="row__lead"><span class="ph">{company.aboutMore}</span></p>
-        <ul class="team-mini">
-          {company.team.map((m) => <li><span class="ph">{m.name}</span><span class="ph">{m.role}</span></li>)}
-        </ul>
         <a class="row__more link" href={u('/company/')}>{company.more} <span class="arrow" aria-hidden="true">→</span></a>
       </div>
     </div>
-    <div class="row row--research">
-      <h2 class="label" data-reveal>{research.title}</h2>
-      <p class="row__line" data-reveal data-d="1">{research.intro} <a class="link" href={u('/research/')}>{research.all} <span class="arrow" aria-hidden="true">→</span></a></p>
+    <div class="row">
+      <h2 class="label">{research.title}</h2>
+      <p class="row__line">{research.intro} <a class="link" href={u('/research/')}>{research.all} <span class="arrow" aria-hidden="true">→</span></a></p>
     </div>
   </section>
 
-  <section class="contact-block wrap" data-light="contact" data-tone-section="day" aria-labelledby="contact-h">
+  <section class="contact-block wrap" data-light="contact" data-tone-section="dusk" aria-labelledby="contact-h">
     <div class="contact-block__text" data-tone-probe>
-      <h2 id="contact-h" class="label" data-reveal>{contact.title}</h2>
-      <p class="contact-block__line" data-reveal data-d="1">{contact.line}</p>
-      <p class="contact-block__email" data-reveal data-d="2">{site.email}</p>
+      <h2 id="contact-h" class="label">{contact.title}</h2>
+      <p class="contact-block__line">{contact.line}</p>
+      <p class="contact-block__email"><Email /></p>
     </div>
   </section>
 </Base>
 
 <style>
-  .hero { min-height: 100svh; display: flex; align-items: flex-start; padding-top: 22vh; }
+  .hero { min-height: 100svh; display: flex; align-items: flex-start; padding-top: 19vh; }
   .hero__text { max-width: min(52vw, 820px); display: grid; gap: 22px; }
   .hero__headline { font-size: var(--fs-display); font-weight: 300; line-height: 1.04; letter-spacing: -0.022em; text-wrap: balance; }
   .hero__sub { font-size: var(--fs-lede); max-width: 36em; line-height: 1.5; text-wrap: pretty; color: var(--ink-2); }
   .hero__actions { display: flex; align-items: center; gap: 28px; margin-top: 8px; font-weight: 480; }
   @media (max-width: 759px) {
-    .hero { padding-top: 34svh; padding-bottom: 20svh; }
+    .hero { padding-top: 22svh; padding-bottom: 26svh; }
     .hero__text { max-width: none; gap: 14px; }
     .hero__headline { font-size: clamp(1.7rem, 7.4vw, 2.3rem); line-height: 1.06; }
     .hero__sub { font-size: 1rem; line-height: 1.45; }
   }
 
-  .work { padding-block: 16vh 12vh; }
+  .work { padding-block: 10vh 10vh; }
   .work__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px clamp(32px, 6vw, 96px); }
-  .work__list { margin-top: 20px; border-top: 1px solid var(--rule); }
-  .work__item { display: grid; grid-template-columns: 12em 1fr; gap: 4px 22px; padding: 18px 0 20px; border-bottom: 1px solid var(--rule); align-items: baseline; }
-  .work__name { font-size: 1.12rem; font-weight: 420; letter-spacing: -0.005em; }
+  .work__list { margin-top: 18px; border-top: 1px solid var(--rule); }
+  .work__item { display: grid; grid-template-columns: 11em 1fr; gap: 4px 22px; padding: 16px 0 18px; border-bottom: 1px solid var(--rule); align-items: baseline; }
+  .work__name { font-size: 1.1rem; font-weight: 420; letter-spacing: -0.005em; }
   .work__text { font-size: 0.98rem; line-height: 1.5; color: var(--ink-2); }
-  .work__ph { margin-top: 18px; font-size: 0.98rem; color: var(--ink-3); }
+  .work__ph { margin-top: 16px; font-size: 0.98rem; color: var(--ink-3); }
   @media (max-width: 1180px) { .work__item { grid-template-columns: 1fr; } }
-  @media (max-width: 759px) { .work { padding-block: 12vh 8vh; } .work__grid { grid-template-columns: 1fr; } }
+  @media (max-width: 759px) { .work { padding-block: 8vh 6vh; } .work__grid { grid-template-columns: 1fr; } }
 
-  /* the moment: short; its words sit high in the dark, the light below them on the horizon */
-  .moment { min-height: 120vh; position: relative; }
-  .moment__track { position: absolute; inset: 0 0 -20vh 0; pointer-events: none; }
-  .moment__text { position: sticky; top: 16vh; display: grid; gap: 12px; max-width: min(52vw, 44rem); pointer-events: auto; }
-  .moment__lines { display: grid; }
-  .moment__line { grid-area: 1 / 1; font-size: var(--fs-h2); font-weight: 300; line-height: 1.12; letter-spacing: -0.018em; text-wrap: balance; opacity: 0; transition: opacity 0.5s var(--ease); }
-  .moment__line.is-on { opacity: 1; }
-  .moment__more { justify-self: start; margin-top: 8px; font-weight: 480; }
+  /* the moment: one screen; the words sit top-left, the light works across the middle */
+  .moment { min-height: 110vh; padding-top: 14vh; }
+  .moment__text { position: sticky; top: 14vh; display: grid; gap: 12px; max-width: min(44vw, 40rem); }
+  .moment__line { font-size: clamp(1.35rem, 0.9rem + 1.2vw, 2.1rem); font-weight: 300; line-height: 1.16; letter-spacing: -0.015em; text-wrap: pretty; }
+  .moment__line--2 { color: var(--ink-2); }
+  .moment__more { justify-self: start; margin-top: 6px; font-weight: 480; }
   @media (max-width: 759px) {
-    .moment__text { top: 54svh; max-width: none; }
-    .moment__line { font-size: 1.45rem; }
+    .moment { min-height: 110vh; padding-top: 56svh; }
+    .moment__text { top: 56svh; max-width: none; }
+    .moment__line { font-size: 1.3rem; }
   }
 
-  .company-teaser { padding-block: 14vh 8vh; }
-  .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 14px 40px; align-items: baseline; padding-block: 22px; border-top: 1px solid var(--rule); }
-  .row__lead { font-size: var(--fs-lede); }
-  .row__line { font-size: var(--fs-lede); display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: baseline; }
+  .rows { padding-block: 12vh 8vh; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px 40px; align-items: baseline; padding-block: 20px; border-top: 1px solid var(--rule); }
+  .row__lead, .row__line { font-size: var(--fs-lede); }
+  .row__line { display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: baseline; }
   .row__line .link { font-size: 1rem; font-weight: 480; }
-  .row__more { margin-top: 18px; font-weight: 480; display: inline-flex; }
-  .team-mini { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
-  .team-mini li { display: grid; gap: 2px; font-size: var(--fs-small); }
-  @media (max-width: 759px) { .row { grid-template-columns: 1fr; } .team-mini { grid-template-columns: 1fr 1fr; } }
+  .row__more { margin-top: 14px; font-weight: 480; display: inline-flex; }
+  @media (max-width: 759px) { .row { grid-template-columns: 1fr; } }
 
-  /* contact: the words sit in the band of light over the horizon */
-  .contact-block { min-height: 92svh; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; padding-top: 40svh; }
-  .contact-block__text { display: grid; gap: 16px; justify-items: center; }
+  .contact-block { display: flex; justify-content: center; text-align: center; padding-block: 18vh 16vh; }
+  .contact-block__text { display: grid; gap: 14px; justify-items: center; }
   .contact-block__line { font-size: var(--fs-h2); font-weight: 300; line-height: 1.12; letter-spacing: -0.018em; max-width: 18em; text-wrap: balance; }
   .contact-block__email { font-size: var(--fs-lede); color: var(--ink-2); }
-  @media (max-width: 759px) { .contact-block { padding-top: 9svh; min-height: 84svh; } .contact-block__line { font-size: 1.5rem; } }
 </style>

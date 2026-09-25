@@ -1,11 +1,11 @@
 // Binds the light to the page: each [data-light] section names a state; scroll position picks the state
 // and its local progress; neighbouring states are blended across each boundary so the light never cuts.
 import { LightField } from './engine';
-import { states, fieldHorizon, type Env } from './states';
-import { layoutField } from './diffusion';
-import { pack, mixInto, LENGTH, smooth, clamp, KEYS, SIZES } from './params';
+import { states, type Env } from './states';
+import { layoutBands } from './diffusion';
+import { pack, mixInto, LENGTH, smooth, clamp } from './params';
 
-const KEY_P: Record<string, number> = { io: 0.8, auto: 1, combine: 1, deform: 0.62, diffuse: 1, dawn: 1, moment: 0.36 };
+const KEY_P: Record<string, number> = { io: 0.8, auto: 0.95, combine: 1, deform: 0.5, diffuse: 0.7, moment: 0.4 };
 const STORE = 'cl-light';
 
 export function mountScene() {
@@ -19,7 +19,7 @@ export function mountScene() {
 
   const sections = [...document.querySelectorAll<HTMLElement>('[data-light]')];
   let tops: number[] = [], bottoms: number[] = [];
-  const env: Env = { a: 1.6, m: false, ox: 0, nodeSeed: [0, -0.2, 0.02] };
+  const env: Env = { a: 1.6, m: false, ox: 0 };
   const A = new Float32Array(LENGTH), B = new Float32Array(LENGTH), OUT = new Float32Array(LENGTH);
   let lastIndex = -1;
 
@@ -34,45 +34,8 @@ export function mountScene() {
     const w = canvas!.clientWidth, h = canvas!.clientHeight;
     env.a = w / Math.max(1, h);
     env.m = w < 760;
-    const shift = canvas!.dataset.shift;
-    env.ox = env.m ? 0 : shift === 'right' ? env.a * 0.5 * 0.42 : 0;
-    const fl = layoutField(env.a, fieldHorizon(env), 0);
-    field.setNodes(fl.nodes);
-    env.nodeSeed = [fl.seed[0], fl.seed[1], fl.seed[2]];
-  }
-
-  // Between two scenes whose volumes are different objects (a lens and a band, say), the volume does
-  // not morph from one into the other: it fades out, changes shape while invisible, and fades in.
-  // Within a scene the shape still deforms continuously.
-  const offs: Record<string, [number, number]> = {};
-  { let o = 0; KEYS.forEach((k, i) => { offs[k] = [o, SIZES[i]]; o += SIZES[i]; }); }
-  const SHAPE = ['volC', 'volR', 'volN', 'lensMag', 'warp', 'warpPhase', 'bend', 'cutAngle', 'cutOffset', 'cutAmt'];
-  const VIS = ['lens', 'paint', 'emitCore', 'emitRim', 'halo', 'rimAmt', 'lit', 'beamIn', 'beamOut', 'seam', 'volBody'];
-  const SKY = ['wallTop', 'wallMid'], GROUND = ['groundTop', 'groundBot', 'glowCol', 'lineCol', 'field', 'planeAmt'];
-  function blend(out: Float32Array, a: Float32Array, b: Float32Array, t: number) {
-    mixInto(out, a, b, t);
-    // When the horizon travels, the region that grows takes its new colour at once and the region
-    // that shrinks keeps its old one: the light rises (or falls) as a band with a razor edge, instead
-    // of the whole screen cross-fading through grey.
-    const [ho] = offs.horizon;
-    if (Math.abs(a[ho] - b[ho]) > 0.15) {
-      const rising = b[ho] > a[ho];
-      const fast = smooth(0, 0.3, t), slow = smooth(0.7, 1, t);
-      for (const k of SKY) { const [o, n] = offs[k]; const tt = rising ? slow : fast; for (let j = 0; j < n; j++) out[o + j] = a[o + j] + (b[o + j] - a[o + j]) * tt; }
-      for (const k of GROUND) { const [o, n] = offs[k]; const tt = rising ? fast : slow; for (let j = 0; j < n; j++) out[o + j] = a[o + j] + (b[o + j] - a[o + j]) * tt; }
-      const [lo] = offs.lineAmt;
-      out[lo] = Math.max(out[lo], 0.8 * (1 - Math.abs(2 * t - 1)));
-    }
-    const [ro, rn] = offs.volR, [co] = offs.volC;
-    const dR = Math.abs(a[ro] - b[ro]) + Math.abs(a[ro + 1] - b[ro + 1]);
-    const dC = Math.abs(a[co] - b[co]) + Math.abs(a[co + 1] - b[co + 1]);
-    if (dR + dC < 0.08) return out;
-    const src = t < 0.5 ? a : b;
-    for (const k of SHAPE) { const o = offs[k]; if (!o) continue; for (let j = 0; j < o[1]; j++) out[o[0] + j] = src[o[0] + j]; }
-    const fade = Math.abs(2 * t - 1);
-    for (const k of VIS) { const o = offs[k]; if (!o) continue; out[o[0]] = src[o[0]] * fade; }
-    void rn;
-    return out;
+    const bl = layoutBands(env.a, env.m ? 0 : env.a * 0.5 * 0.36);
+    field.setBands(bl.bands, bl.hues);
   }
 
   const stateAt = (i: number, p: number, out: Float32Array) => {
@@ -90,17 +53,17 @@ export function mountScene() {
     for (let k = 0; k < sections.length; k++) if (focus < bottoms[k]) { i = k; break; }
     const span = Math.max(1, bottoms[i] - tops[i]);
     const p = clamp((focus - tops[i]) / span);
-    const Z = reduced ? 1 : Math.min(vh * 0.22, span * 0.4);
+    const Z = reduced ? 1 : Math.min(vh * 0.3, span * 0.4);
     stateAt(i, p, A);
     let result = A;
     if (i > 0 && focus - tops[i] < Z) {
       const pb = clamp((focus - tops[i - 1]) / Math.max(1, bottoms[i - 1] - tops[i - 1]));
       stateAt(i - 1, pb, B);
-      result = blend(OUT, B, A, smooth(-Z, Z, focus - tops[i]));
+      result = mixInto(OUT, B, A, smooth(-Z, Z, focus - tops[i]));
     } else if (i < sections.length - 1 && bottoms[i] - focus < Z) {
       const pn = clamp((focus - tops[i + 1]) / Math.max(1, bottoms[i + 1] - tops[i + 1]));
       stateAt(i + 1, pn, B);
-      result = blend(OUT, A, B, smooth(-Z, Z, focus - bottoms[i]));
+      result = mixInto(OUT, A, B, smooth(-Z, Z, focus - bottoms[i]));
     }
     // reduced motion: each section shows one still state, and the light snaps between them at the
     // boundary (never fading through the page colour)
@@ -110,7 +73,7 @@ export function mountScene() {
     document.documentElement.dataset.section = sections[i].dataset.light;
   }
 
-  // pointer: only the thin-film sheen follows the viewer
+  // pointer: not used by the frontal scenes (kept for the uniform)
   window.addEventListener('pointermove', (ev) => {
     if (reduced || ev.pointerType !== 'mouse') return;
     const h = window.innerHeight;

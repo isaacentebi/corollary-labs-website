@@ -1,25 +1,17 @@
 // The light's parameters: one flat vector, so any two states can be interpolated (every change is a
-// continuous deformation of the same field). The first four colours are read by the page to decide
-// text and navigation tone: wallTop, wallMid, groundTop, groundBot.
+// continuous deformation of the same field). app.ts reads it to judge the light behind text.
 
 export type Vec = number[];
 export interface Params {
-  wallTop: Vec; wallMid: Vec; groundTop: Vec; groundBot: Vec;
-  horizon: number; horizonSoft: number;
-  glowCol: Vec; glowAmt: number; glowW: number; glowX: number; glowSpread: number;
-  lineCol: Vec; lineAmt: number; groundGlow: number;
-  roomLight: number; vignette: number; grain: number;
-  volC: Vec; volR: Vec; volN: number; volSoft: number;
-  lens: number; lensMag: number; frost: number; tint: Vec; rimAmt: number; rimLineCol: Vec;
-  paint: number; coreCol: Vec; edgeCol: Vec; coreSize: number;
-  emitCore: number; emitRim: number; ringPos: number; ringW: number; rimCol: Vec;
-  halo: number; haloCol: Vec; litDir: Vec; lit: number; litCol: Vec;
-  beamIn: number; beamInW: number; beamInCol: Vec; beamFrom: number; beamOut: number; beamOutW: number; beamOutCol: Vec;
-  warp: number; warpFreq: number; warpPhase: number; bend: number;
-  cutAmt: number; cutAngle: number; cutOffset: number; seam: number;
-  planeAmt: number; plane0: Vec; plane1: Vec; plane2: Vec; plane3: Vec;
-  planeCol0: Vec; planeCol1: Vec; planeCol2: Vec; planeCol3: Vec; planeRefl: Vec;
-  field: number; fieldProg: number;
+  fieldTop: Vec; fieldBot: Vec; fieldGlowCol: Vec; fieldGlowAmt: number; fieldGlowC: Vec; fieldGlowR: Vec;
+  vignette: number; grain: number;
+  lineX: number; lineTop: number; lineBot: number; lineAmt: number; lineW: number; lineColL: Vec; lineColR: Vec; lineSplitY: number;
+  glowUp: Vec; glowDn: Vec; lineGlowAmt: number; lineGlowW: number;
+  bend: number; bendPhase: number; cutX: number; cutGap: number; poolAmt: number; weld: number;
+  lensC: Vec; lensR: number; lensAmt: number; lensMag: number; menY: number; fillAmt: number; fillCol: Vec;
+  lensGlow: number; lensTint: Vec;
+  mixAmt: number; blob0: Vec; blob1: Vec; blob2: Vec; blobCol0: Vec; blobCol1: Vec; blobCol2: Vec;
+  bandAmt: number; bandProg: number; bandAll: number; bandBase: Vec;
 }
 export type State = Partial<Params>;
 
@@ -30,22 +22,14 @@ export const hex = (h: string): Vec => {
 
 const W = hex('#ffffff');
 export const DEFAULTS: Params = {
-  wallTop: hex('#d9dde0'), wallMid: hex('#e4e6e8'), groundTop: hex('#1a1a1e'), groundBot: hex('#0b0b0d'),
-  horizon: -0.6, horizonSoft: 0.002,
-  glowCol: W, glowAmt: 0, glowW: 0.1, glowX: 0, glowSpread: 3,
-  lineCol: W, lineAmt: 0, groundGlow: 0.3,
-  roomLight: 0.1, vignette: 0.15, grain: 0.02,
-  volC: [0, 0], volR: [0.12, 0.12], volN: 2, volSoft: 0,
-  lens: 0, lensMag: 0.7, frost: 0.15, tint: W, rimAmt: 0, rimLineCol: W,
-  paint: 0, coreCol: W, edgeCol: W, coreSize: 0.8,
-  emitCore: 0, emitRim: 0, ringPos: 0.8, ringW: 0.15, rimCol: W,
-  halo: 0, haloCol: W, litDir: [-1, 0.05], lit: 0, litCol: W,
-  beamIn: 0, beamInW: 0.06, beamInCol: W, beamFrom: -2, beamOut: 0, beamOutW: 0.07, beamOutCol: W,
-  warp: 0, warpFreq: 1.6, warpPhase: 0, bend: 0,
-  cutAmt: 0, cutAngle: 1.5708, cutOffset: 0, seam: 0,
-  planeAmt: 0, plane0: [0, 0, 0.1, 0.3], plane1: [0, 0, 0.1, 0.3], plane2: [0, 0, 0.1, 0.3], plane3: [0, 0, 0.1, 0.3],
-  planeCol0: W, planeCol1: W, planeCol2: W, planeCol3: W, planeRefl: W,
-  field: 0, fieldProg: 0,
+  fieldTop: hex('#0c1622'), fieldBot: hex('#140f2a'), fieldGlowCol: W, fieldGlowAmt: 0, fieldGlowC: [0, 0], fieldGlowR: [1, 0.5],
+  vignette: 0.12, grain: 0.02,
+  lineX: 0.3, lineTop: 0.7, lineBot: -0.7, lineAmt: 0, lineW: 1.4, lineColL: W, lineColR: W, lineSplitY: 0,
+  glowUp: W, glowDn: W, lineGlowAmt: 0, lineGlowW: 0.12,
+  bend: 0, bendPhase: 0.6, cutX: 0, cutGap: 0, poolAmt: 0, weld: 0,
+  lensC: [0, 0], lensR: 0.2, lensAmt: 0, lensMag: 0.75, menY: -0.2, fillAmt: 0, fillCol: W, lensGlow: 0, lensTint: W,
+  mixAmt: 0, blob0: [0, 0, 0.2, 0.3], blob1: [0, 0, 0.2, 0.3], blob2: [0, 0, 0.2, 0.3], blobCol0: W, blobCol1: W, blobCol2: W,
+  bandAmt: 0, bandProg: 0, bandAll: 0, bandBase: hex('#1b1b20'),
 };
 
 export const KEYS = Object.keys(DEFAULTS) as (keyof Params)[];

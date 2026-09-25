@@ -1,6 +1,6 @@
 // WebGL field. Draws only when its parameters, size or pointer change; eases toward a target and stops
 // once it has arrived.
-import { vert, frag, NODE_COUNT } from './shader';
+import { vert, frag, BAND_COUNT } from './shader';
 import { KEYS, SIZES, LENGTH, pack, DEFAULTS, type State } from './params';
 
 export class LightField {
@@ -11,12 +11,14 @@ export class LightField {
   uRes: WebGLUniformLocation | null = null;
   uPointer: WebGLUniformLocation | null = null;
   uSeed: WebGLUniformLocation | null = null;
-  uNodes: WebGLUniformLocation | null = null;
+  uBands: WebGLUniformLocation | null = null;
+  uBandHue: WebGLUniformLocation | null = null;
   cur = new Float32Array(LENGTH);
   tgt = new Float32Array(LENGTH);
   pointer = [0, 0];
   pointerTgt = [0, 0];
-  nodes = new Float32Array(NODE_COUNT * 4);
+  bands = new Float32Array(BAND_COUNT * 4);
+  bandHues = new Float32Array(BAND_COUNT * 3);
   tau = 0.28; // seconds, easing time constant
   scale: number;
   raf = 0;
@@ -55,7 +57,8 @@ export class LightField {
     this.uRes = gl.getUniformLocation(prog, 'uRes');
     this.uPointer = gl.getUniformLocation(prog, 'uPointer');
     this.uSeed = gl.getUniformLocation(prog, 'uSeed');
-    this.uNodes = gl.getUniformLocation(prog, 'uNodes[0]');
+    this.uBands = gl.getUniformLocation(prog, 'uBands[0]');
+    this.uBandHue = gl.getUniformLocation(prog, 'uBandHue[0]');
     pack(DEFAULTS, this.cur);
     pack(DEFAULTS, this.tgt);
     this.ok = true;
@@ -74,18 +77,9 @@ export class LightField {
     return true;
   }
 
-  // draw one still at an exact size (for plates): no easing, no loop
-  still(w: number, h: number, params: Float32Array) {
-    this.w = w; this.h = h;
-    this.canvas.width = w; this.canvas.height = h;
-    this.gl?.viewport(0, 0, w, h);
-    this.cur.set(params); this.tgt.set(params);
-    this.draw();
-  }
-
   get aspect() { return this.w / Math.max(1, this.h); }
 
-  setNodes(n: Float32Array) { this.nodes = n; this.request(); }
+  setBands(b: Float32Array, h: Float32Array) { this.bands = b; this.bandHues = h; this.request(); }
   setTarget(s: State | Float32Array) { if (s instanceof Float32Array) this.tgt.set(s); else pack(s, this.tgt); this.request(); }
   snap() { this.cur.set(this.tgt); this.pointer = [...this.pointerTgt]; this.draw(); }
   setPointer(x: number, y: number) { this.pointerTgt = [x, y]; this.request(); }
@@ -154,7 +148,8 @@ export class LightField {
     }
     gl.uniform2f(this.uRes, this.w, this.h);
     gl.uniform2f(this.uPointer, this.pointer[0], this.pointer[1]);
-    gl.uniform4fv(this.uNodes, this.nodes);
+    gl.uniform4fv(this.uBands, this.bands);
+    gl.uniform3fv(this.uBandHue, this.bandHues);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 

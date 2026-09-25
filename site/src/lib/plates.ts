@@ -1,7 +1,7 @@
 // Each essay keeps one plate (a still study rendered to WebP by scripts/make-plates.mjs), chosen from
 // its id, so it has the same image everywhere.
 import { u } from './url';
-const STUDIES = ['strata', 'lens', 'panel', 'field', 'planes'] as const;
+const STUDIES = ['line', 'meniscus', 'voile', 'bands', 'cut'] as const;
 export function plateFor(id: string) {
   let h = 2166136261;
   for (const c of id) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }

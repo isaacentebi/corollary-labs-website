@@ -4,7 +4,7 @@
   --paper-2: #e6e2dc;
   --ink: #16151b;
   --ink-2: rgba(22, 21, 27, 0.74);
-  --ink-3: rgba(22, 21, 27, 0.72);
+  --ink-3: rgba(22, 21, 27, 0.8);
   --rule: rgba(22, 21, 27, 0.14);
   --lit: #f5f3ff;
   --lit-2: rgba(245, 243, 255, 0.9);
@@ -31,7 +31,7 @@
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-behavior: auto; }
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--field, var(--page-bg, var(--paper)));
   color: var(--ink);
   font-family: var(--sans);
   font-size: var(--fs-body);
@@ -63,14 +63,17 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 .field.is-on { opacity: 1; }
 .field.is-swapping { opacity: 0; transition-duration: 0.2s; }
-html.no-gl body { background: linear-gradient(180deg, #f4f2ee 0%, #eeebe6 60%, #d9d4cc 100%) fixed; }
-html.no-gl [data-tone-section='dusk'] { background: linear-gradient(180deg, #5a5cb4 0%, #2a3bb4 70%, #0a0f2c 100%); }
+/* without WebGL (or without JS) each section carries its own on-palette ground */
+html.no-gl [data-tone-section='dusk'], html:not(.js) [data-tone-section='dusk'] { background: linear-gradient(180deg, #0b1522, #130f29); color: var(--lit); --rule: var(--lit-rule); --ink-2: var(--lit-2); --ink-3: var(--lit-3); }
+html.no-gl [data-tone-section='day'], html:not(.js) [data-tone-section='day'] { background: linear-gradient(180deg, #e3e8ec, #d5dce2); }
 main, .footer { position: relative; z-index: 1; }
 
 /* sections set their own text colour; the light behind them decides it */
-[data-tone-section='dusk'] { color: var(--lit); --rule: var(--lit-rule); --ink-2: var(--lit-2); --ink-3: var(--lit-3); }
+/* text colour switches with the light behind it (set in app.ts); before the first frame, dark sections start light */
+[data-ink='light'], html.js [data-tone-section='dusk']:not([data-ink='dark']) { color: var(--lit); --rule: var(--lit-rule); --ink-2: var(--lit-2); --ink-3: var(--lit-3); }
+[data-ink='dark'] { color: var(--ink); }
 /* small labels on the dark field are solid white */
-[data-tone-section='dusk'] .label { color: #ffffff; }
+[data-ink='light'] .label, html.js [data-tone-section='dusk']:not([data-ink='dark']) .label { color: #ffffff; }
 
 /* ---------- type helpers */
 .label {
@@ -97,7 +100,7 @@ a:hover .arrow { transform: translateX(3px); }
   box-shadow: 0 0 0 0 rgba(255, 140, 90, 0); transition: box-shadow 0.6s var(--ease), background 0.3s;
 }
 .btn:hover { box-shadow: 0 10px 40px -8px rgba(255, 130, 80, 0.55); }
-[data-tone-section='dusk'] .btn { background: var(--lit); color: var(--ink); }
+[data-ink='light'] .btn, html.js [data-tone-section='dusk']:not([data-ink='dark']) .btn { background: var(--lit); color: var(--ink); }
 
 /* ---------- text arrives the way eyes adjust in a lit room: out of blur, not from a distance */
 html.js [data-reveal] { opacity: 0; filter: blur(5px); transform: translateY(6px); transition: opacity 0.6s var(--ease), filter 0.6s var(--ease), transform 0.7s var(--ease); }
@@ -116,9 +119,10 @@ html.js [data-reveal][data-d='4'] { transition-delay: 0.24s; }
 html[data-nav-tone='dusk'] .nav { color: var(--lit); }
 .nav { transition: color 0.5s var(--ease), transform 0.45s var(--ease); }
 .nav.is-away { transform: translateY(-110%); }
+.nav:focus-within { transform: none; }
 .nav::before {
   content: ''; position: absolute; inset: 0 0 -24px; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 0.3s;
-  background: linear-gradient(rgb(var(--nav-tint, 238 235 230) / 0.94) 55%, rgb(var(--nav-tint, 238 235 230) / 0));
+  background: linear-gradient(var(--field, var(--page-bg)) 50%, transparent);
 }
 .nav.is-scrolled::before { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .nav { transition: none; } }
@@ -151,7 +155,7 @@ html.menu-open { overflow: hidden; }
 .footer__brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 520; }
 .footer__nav { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-right: auto; margin-left: clamp(0px, 8vw, 140px); }
 .footer__nav a:hover { text-decoration: underline; text-underline-offset: 4px; }
-.footer[data-ft='dark'] { color: var(--lit); --rule: var(--lit-rule); --ink-2: var(--lit-2); --ink-3: var(--lit-3); }
+
 .footer__meta { color: var(--ink-2); justify-content: flex-start; gap: 10px 36px; padding-right: 240px; }
 @media (max-width: 759px) {
   .footer { padding-bottom: 96px; }

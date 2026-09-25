@@ -40,7 +40,7 @@ export const work = {
     { name: 'Agents', text: 'We build agents that carry out defined work inside an organisation’s existing systems.' },
     { name: 'Models', text: 'We adapt and evaluate models for the specific tasks those agents perform.' },
     { name: 'Integration', text: 'We connect agents to ERP, CRM, data warehouses and internal tools.' },
-    { name: 'Reorganisation', text: 'We help the organisation change its roles, handoffs and controls around the agents.' },
+    { name: 'Reorganisation', text: 'We plan how roles, handoffs and controls change when agents arrive, and help the organisation make those changes.' },
   ],
 };
 
@@ -90,7 +90,7 @@ export const ideas = [
   {
     key: 'diffuse',
     title: 'Diffusion',
-    line: 'The change spreads from firm to firm, unevenly, through the economy.',
+    line: 'Adoption of AI agents spreads from firm to firm, unevenly, through the economy.',
     body: [
       'Adoption moves between firms through suppliers, customers, competitors and people, at different speeds in different places.',
       '[Placeholder: what we publish on how adoption spreads.]',
@@ -102,8 +102,7 @@ export const practice = {
   title: 'How we work',
   items: [
     { name: 'Start from the workflow', text: 'We map a workflow’s inputs, outputs and decisions before choosing a model.' },
-    { name: 'Design the reorganisation', text: 'We plan how roles, handoffs and controls change when agents arrive.' },
-    { name: 'Measure in production', text: 'Each deployment is set up to report on accuracy, cost and time.' },
+    { name: 'Measure in production', text: 'We set up every deployment to report on accuracy, cost and time.' },
   ],
   engagements: '[Engagements: sectors, length, data handling]',
 };

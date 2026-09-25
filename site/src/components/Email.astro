@@ -1,0 +1,9 @@
+---
+// The contact address from config. While it is still a [placeholder] it renders as plain text: never a
+// live mailto: to a placeholder.
+import { site } from '../config/site';
+interface Props { class?: string }
+const { class: cls = '' } = Astro.props;
+const real = !site.email.startsWith('[');
+---
+{real ? <a class={`email link ${cls}`} href={`mailto:${site.email}`}>{site.email}</a> : <span class={`email ${cls}`}>{site.email}</span>}

@@ -3,8 +3,8 @@
 import { plateSrc } from '../lib/plates';
 interface Props { kind?: string; n?: number; caption?: string }
 const { kind = 'org', n, caption } = Astro.props;
-const map: Record<string, string> = { org: 'lens', gap: 'planes', dissolve: 'strata', horizon: 'field' };
-const plate = map[kind] ?? 'lens';
+const map: Record<string, string> = { org: 'meniscus', gap: 'voile', dissolve: 'cut', horizon: 'bands' };
+const plate = map[kind] ?? 'meniscus';
 ---
 <figure class="fig">
   <img class="fig__plate" src={plateSrc(plate)} alt="" loading="lazy" width="1200" height="800" />
