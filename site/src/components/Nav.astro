@@ -1,0 +1,19 @@
+---
+// Main navigation: the mark and four links. Sits at the top of every page (over the title plate on home).
+import Mark from './Mark.astro';
+import { u } from '../config/site';
+const links = [
+  { label: 'Capabilities', href: u('#capabilities') },
+  { label: 'Approach', href: u('#approach') },
+  { label: 'Company', href: u('about/') },
+  { label: 'Contact', href: u('#contact') },
+];
+---
+<header class="nav" data-nav>
+  <Mark />
+  <nav aria-label="Main">
+    <ul class="nav__links">
+      {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+    </ul>
+  </nav>
+</header>

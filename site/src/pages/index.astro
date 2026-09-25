@@ -1,194 +1,148 @@
 ---
-// Home — laid out as a short paper: numbered sections, numbered statements, one live figure per section.
-// All written copy is a bracketed placeholder until the founder supplies it.
+// Home — a company page in the Proof design language: the live string-diagram plate under the hero, then
+// Capabilities, Approach (one interactive figure), Research, Company and Contact.
+// Copy is the temporary company copy from IA-BRIEF.md; anything not yet known stays a [bracketed] placeholder.
 import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
+import { getCollection } from 'astro:content';
+import { site, u } from '../config/site';
 import '../styles/home.css';
 
-// dependency graph of the statements (rail). x = column, uses = which statements a statement depends on.
-const nodes = [
-  { id: 'def-1-1', t: 'Def. 1.1', x: 0, uses: [] as string[] },
-  { id: 'rem-1-2', t: 'Rem. 1.2', x: 1, uses: ['def-1-1'] },
-  { id: 'def-2-1', t: 'Def. 2.1', x: 0, uses: ['def-1-1'] },
-  { id: 'rem-2-2', t: 'Rem. 2.2', x: 1, uses: ['def-2-1'] },
-  { id: 'rem-3-1', t: 'Rem. 3.1', x: 1, uses: ['def-1-1'] },
-  { id: 'thm-3-2', t: 'Thm. 3.2', x: 2, uses: [], ext: true },
-  { id: 'cor-3-3', t: 'Cor. 3.3', x: 1, uses: ['thm-3-2', 'rem-3-1', 'rem-1-2'] },
-  { id: 'rem-3-4', t: 'Rem. 3.4', x: 0, uses: ['cor-3-3', 'def-2-1'] },
-  { id: 'rem-4-1', t: 'Rem. 4.1', x: 0, uses: ['rem-3-4'] },
+const placeholderEmail = site.email.startsWith('[');
+const contactHref = placeholderEmail ? '#contact' : `mailto:${site.email}`;
+
+const capabilities = [
+  { t: 'Agent deployment', d: 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.' },
+  { t: 'Model fine-tuning', d: 'Models adapted and evaluated on your data for the specific tasks your agents perform.' },
+  { t: 'Systems integration', d: 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.' },
+  { t: 'Evaluation and governance', d: 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.' },
 ];
-const RY = 36, RX = 14;
-const pos = Object.fromEntries(nodes.map((n, i) => [n.id, { x: 7 + n.x * RX, y: 10 + i * RY }]));
-const railEdges = nodes.flatMap((n) => n.uses.map((u) => {
-  const a = pos[u], b = pos[n.id];
-  return `M${a.x} ${a.y} C${a.x} ${(a.y + b.y) / 2} ${b.x} ${(a.y + b.y) / 2} ${b.x} ${b.y}`;
-}));
-const markLoop = 'M42 21 H50 Q56 21 56 15 V9 Q56 4 50 4 H14 Q8 4 8 9 V15 Q8 21 14 21 H22';
+// one small string diagram per capability, drawn on the section's running wire (y = 24 in a 120 × 48 box)
+const glyphs = [
+  // an agent (solid box) on the wire
+  `<rect class="g-s" x="46" y="12" width="22" height="24"/>`,
+  // the agent takes a second input: the model, adapted (blue)
+  `<path class="g-w g-b" d="M14 6 H28 C38 6 38 18 46 18"/><rect class="g-s" x="46" y="12" width="22" height="24"/>`,
+  // the wire joins existing systems (open boxes) on either side
+  `<rect class="g-o" x="14" y="14" width="18" height="20"/><rect class="g-s" x="52" y="12" width="22" height="24"/><rect class="g-o" x="92" y="14" width="18" height="20"/>`,
+  // every action is observed: a copy of the wire goes to a record (blue)
+  `<rect class="g-s" x="30" y="12" width="22" height="24"/><circle class="g-d" cx="78" cy="24" r="3.4"/><path class="g-w g-b" d="M78 24 C86 24 86 42 96 42 H106"/><rect class="g-bx" x="106" y="36" width="12" height="12"/>`,
+];
+
+const principles = [
+  { t: 'Workflow first.', d: 'We map how work is actually done before choosing a model.' },
+  { t: 'Design the reorganisation.', d: 'Roles, handoffs and controls change when agents arrive. We plan that change.' },
+  { t: 'Measure in production.', d: 'Every deployment reports on accuracy, cost and time saved.' },
+];
+const beats = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
+
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const team = [1, 2, 3, 4];
 ---
-<Base page="home" mark={false}>
-  <!-- Title plate ─────────────────────────────────────────────── -->
+<Base page="home">
+  <!-- Hero: the company over the live plate ─────────────────────── -->
   <header class="plate0" data-hero>
     <canvas class="plate0__field" data-field aria-hidden="true"></canvas>
-    <a class="plate0__mark" href="#abstract" aria-label="Corollary Labs, skip to abstract">
-      <svg viewBox="0 0 64 40" aria-hidden="true">
-        <path d="M0 30 H22 M42 30 H64" fill="none" stroke="currentColor" stroke-width="3.2" />
-        <path d={markLoop} fill="none" stroke="currentColor" stroke-width="3.2" />
-        <rect x="22" y="15" width="20" height="23" fill="currentColor" />
-      </svg>
-    </a>
     <div class="plate0__text">
-      <h1 class="plate0__title"><span>Corollary</span> <span>Labs</span></h1>
-      <p class="plate0__sub ph">[Subtitle — one line]</p>
+      <h1 class="plate0__title">Corollary Labs</h1>
+      <p class="plate0__head">We deploy AI agents inside organisations and rebuild the operations around them.</p>
+      <p class="plate0__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
+      <p class="plate0__act">
+        <a class="btn" href={contactHref}>Contact us</a>
+        <a class="btn -line" href="#approach">Our approach</a>
+      </p>
     </div>
-    <p class="plate0__cap ph"><span class="sc">Fig. 0.</span> [Caption]</p>
   </header>
 
-  <div class="paper">
-    <!-- Rail: dependency graph ──────────────────────────────────── -->
-    <nav class="rail" data-rail aria-label="Statements">
-      <svg viewBox={`0 0 120 ${20 + (nodes.length - 1) * RY}`} width="120" height={20 + (nodes.length - 1) * RY}>
-        {railEdges.map((d) => <path d={d} class="rail__e" />)}
-        {nodes.map((n) => (
-          <a href={`#${n.id}`} data-node={n.id} class:list={['rail__n', { '-ext': n.ext }]}>
-            <rect x={pos[n.id].x - 4.5} y={pos[n.id].y - 4.5} width="9" height="9" />
-            <text x={48} y={pos[n.id].y + 4}><tspan class="rail__k">{n.t}</tspan></text>
-          </a>
-        ))}
-      </svg>
-    </nav>
+  <!-- 1 Capabilities ────────────────────────────────────────────── -->
+  <section class="blk" id="capabilities" aria-labelledby="h-cap">
+    <h2 class="blk__h" id="h-cap"><span class="blk__n">1</span>Capabilities</h2>
+    <ol class="caps">
+      {capabilities.map((c, i) => (
+        <li class="cap">
+          <span class="cap__gw"><svg class="cap__g" viewBox="0 0 120 48" width="120" height="48" aria-hidden="true" set:html={glyphs[i]} /></span>
+          <h3 class="cap__t">{c.t}</h3>
+          <p class="cap__d">{c.d}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
 
-    <!-- Front matter ────────────────────────────────────────────── -->
-    <section class="front" id="abstract" aria-label="Abstract">
-      <p class="front__by"><span>{site.name}</span> <span class="ph">[City]</span> <span class="ph">[Year]</span></p>
-      <h2 class="front__h">Abstract</h2>
-      <p class="front__abs ph">[Abstract — 3–4 sentences]</p>
-      <dl class="front__meta">
-        <div><dt>Keywords</dt><dd class="ph">[Keywords]</dd></div>
-        <div><dt>Classification</dt><dd class="ph">[Classification codes]</dd></div>
-      </dl>
-    </section>
-
-    <!-- §1 ───────────────────────────────────────────────────────── -->
-    <section class="sec" data-sec="1" aria-labelledby="s1">
-      <h2 class="sec__h" id="s1"><span class="sec__n">1</span> <span class="ph">[Section title]</span></h2>
-      <div class="sec__grid">
-        <div class="sec__text">
-          <div class="stmt" id="def-1-1" data-stmt data-state="0">
-            <p><span class="stmt__h">Definition 1.1</span> <span class="ph">[Definition — what a firm is]</span></p>
-            <p class="note ph">[Note — how to read the diagrams]</p>
-          </div>
-          <div class="stmt" id="rem-1-2" data-stmt data-state="1">
-            <p><span class="stmt__h">Remark 1.2</span> <span class="ph">[Remark — the firm as one box and as a diagram]</span></p>
-          </div>
-        </div>
-        <figure class="fig" aria-label="Figure 1">
-          <div class="fig__stick">
-            <svg class="dg" data-dg viewBox="0 56 640 290" role="img" aria-label="Figure 1"></svg>
-            <figcaption>
-              <span class="sc">Fig. 1.</span> <span class="ph">[Caption]</span>
-              <span class="fig__type" data-type></span>
-              <span class="legend" aria-label="Key">
-                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-firm" /></svg>firm</span>
-                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-open" /></svg>people</span>
-                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-solid" /></svg>agent</span>
-                <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-bnd" /></svg>boundary</span>
-                <span><svg viewBox="0 0 22 16" aria-hidden="true"><path d="M1 8 H21" class="lg-blue" /></svg>changed</span>
-              </span>
-            </figcaption>
-          </div>
-        </figure>
-      </div>
-    </section>
-
-    <!-- §2 ───────────────────────────────────────────────────────── -->
-    <section class="sec -wide -flip" data-sec="2" aria-labelledby="s2">
-      <h2 class="sec__h" id="s2"><span class="sec__n">2</span> <span class="ph">[Section title]</span></h2>
-      <div class="sec__grid">
-        <div class="sec__text">
-          <div class="stmt" id="def-2-1" data-stmt data-state="0">
-            <p><span class="stmt__h">Definition 2.1</span> <span class="ph">[Definition — automation]</span></p>
-          </div>
-          <div class="stmt -cont" data-state="1">
-            <p class="ph">[Paragraph — what changes in Figure 2]</p>
-          </div>
-          <div class="stmt" id="rem-2-2" data-stmt data-state="2">
-            <p><span class="stmt__h">Remark 2.2</span> <span class="ph">[Remark — plans and objectives]</span></p>
-          </div>
-        </div>
-        <figure class="fig" aria-label="Figure 2">
-          <div class="fig__stick">
-            <svg class="dg" data-dg viewBox="0 70 640 270" role="img" aria-label="Figure 2"></svg>
-            <figcaption><span class="sc">Fig. 2.</span> <span class="ph">[Caption]</span> <span class="fig__type" data-type></span></figcaption>
-          </div>
-        </figure>
-      </div>
-    </section>
-
-    <!-- §3 — full-bleed band ───────────────────────────────────── -->
-    <section class="sec -wide" data-sec="3" aria-labelledby="s3">
-      <h2 class="sec__h" id="s3"><span class="sec__n">3</span> <span class="ph">[Section title]</span></h2>
-      <div class="sec__grid">
-        <div class="sec__text">
-          <div class="stmt -cont" data-state="0">
-            <p class="ph">[Paragraph — what Figure 3 shows]</p>
-          </div>
-          <div class="stmt" id="rem-3-1" data-stmt data-state="1">
-            <p><span class="stmt__h">Remark 3.1</span> <span class="ph">[Remark — replacement]</span></p>
-          </div>
-          <div class="stmt -thm" id="thm-3-2" data-stmt data-state="2">
-            <p><span class="stmt__h">Theorem 3.2</span> <span class="ph">[Theorem 3.2]</span></p>
-          </div>
-          <div class="stmt -thm" id="cor-3-3" data-stmt data-state="2">
-            <p><span class="stmt__h">Corollary 3.3</span> <span class="ph">[Corollary 3.3 — the thesis]</span></p>
-            <p class="proof ph">[Proof]</p>
-          </div>
-          <div class="stmt" id="rem-3-4" data-stmt data-state="3">
-            <p><span class="stmt__h">Remark 3.4</span> <span class="ph">[Remark — reorganisation]</span></p>
-          </div>
-        </div>
-        <figure class="fig" aria-label="Figure 3">
-          <div class="fig__stick">
-            <svg class="dg" data-dg viewBox="-50 0 850 460" role="img" aria-label="Figure 3"></svg>
-            <figcaption><span class="sc">Fig. 3.</span> <span class="ph">[Caption]</span> <span class="fig__type" data-type></span></figcaption>
-          </div>
-        </figure>
-      </div>
-    </section>
-
-    <!-- §4 — inverted plate ─────────────────────────────────────── -->
-    <section class="sec -plate" data-sec="4" data-plate aria-labelledby="s4">
-      <h2 class="sec__h" id="s4"><span class="sec__n">4</span> <span class="ph">[Section title]</span></h2>
-      <div class="sec__grid">
-        <div class="sec__text">
-          <div class="stmt -cont" data-state="0">
-            <p class="ph">[Paragraph — what Figure 4 shows]</p>
-          </div>
-          <div class="stmt" id="rem-4-1" data-stmt data-state="0.12">
-            <p><span class="stmt__h">Remark 4.1</span> <span class="ph">[Remark — how a change spreads between firms]</span></p>
-          </div>
-          <div class="stmt -cont" data-state="0.55">
-            <p class="ph">[Paragraph]</p>
-          </div>
-        </div>
-        <figure class="fig -eco" aria-label="Figure 4">
-          <div class="fig__stick">
-            <svg class="eco" data-eco viewBox="0 0 1000 560" role="img" aria-label="Figure 4"></svg>
-            <figcaption><span class="sc">Fig. 4.</span> <span class="ph">[Caption]</span></figcaption>
-          </div>
-        </figure>
-      </div>
-    </section>
-
-    <!-- References ─────────────────────────────────────────────── -->
-    <section class="biblio" aria-labelledby="bib">
-      <h2 class="sec__h" id="bib">References</h2>
-      <ol class="biblio__list">
-        {[1, 2, 3].map((n) => (
-          <li id={`ref-${n}`}><span class="n">[{n}]</span><span class="ph">[Reference]</span></li>
+  <!-- 2 Approach: one interactive figure ────────────────────────── -->
+  <section class="blk ap" id="approach" data-ap aria-labelledby="h-ap">
+    <div class="blk__head">
+      <h2 class="blk__h" id="h-ap"><span class="blk__n">2</span>Approach</h2>
+      <p class="blk__intro">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+    </div>
+    <div class="ap__fig">
+      <ol class="ap__beats" aria-label="Figure steps">
+        {beats.map((b, i) => (
+          <li><button type="button" class="ap__beat" data-beat={i} aria-pressed={i === 0 ? 'true' : 'false'}><span class="ap__n">0{i + 1}</span><span class="ap__bt">{b}</span></button></li>
         ))}
       </ol>
-    </section>
-  </div>
+      <figure class="ap__stage">
+        <div class="ap__box">
+          <svg class="dg" data-dg viewBox="-50 0 850 460" role="img" aria-label="Diagram of an organisation's workflow"></svg>
+          <svg class="eco" data-eco viewBox="0 0 1000 560" role="img" aria-label="Diagram of many organisations and the connections between them"></svg>
+        </div>
+        <figcaption class="legend" aria-label="Key">
+          <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-open" /></svg>people</span>
+          <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-solid" /></svg>agent</span>
+          <span><svg viewBox="0 0 22 16" aria-hidden="true"><rect x="2" y="2" width="18" height="12" class="lg-bnd" /></svg>boundary</span>
+          <span><svg viewBox="0 0 22 16" aria-hidden="true"><path d="M1 8 H21" class="lg-blue" /></svg>changed</span>
+        </figcaption>
+      </figure>
+    </div>
+    <ol class="prin">
+      {principles.map((p, i) => (
+        <li class="prin__i"><span class="prin__n">{i + 1}</span><p><span class="prin__t">{p.t}</span> {p.d}</p></li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- 3 Research ─────────────────────────────────────────────────── -->
+  <section class="blk" id="research" aria-labelledby="h-rs">
+    <div class="blk__head">
+      <h2 class="blk__h" id="h-rs"><span class="blk__n">3</span>Research</h2>
+      <p class="blk__intro">Essays on agents, organisations and how new technology spreads.</p>
+    </div>
+    <ol class="rs">
+      {essays.map((e) => (
+        <li>
+          <a class="rs__row" href={u(`essays/${e.id}/`)}>
+            <time class="rs__date" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+            <span class="rs__main"><span class="rs__t">{e.data.title}</span><span class="rs__d">{e.data.dek}</span></span>
+          </a>
+        </li>
+      ))}
+    </ol>
+    <p class="more"><a href={u('essays/')}>All research →</a></p>
+  </section>
+
+  <!-- 4 Company ──────────────────────────────────────────────────── -->
+  <section class="blk" id="company" aria-labelledby="h-co">
+    <h2 class="blk__h" id="h-co"><span class="blk__n">4</span>Company</h2>
+    <div class="co">
+      <div class="co__about">
+        <h3 class="co__k">About</h3>
+        <p class="co__p">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
+      </div>
+      <div class="co__team">
+        <h3 class="co__k">Team</h3>
+        <ul class="co__list">
+          {team.map(() => <li class="ph">[Name — Role]</li>)}
+        </ul>
+        <p class="more"><a href={u('about/')}>About the company →</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 Contact: the inverted plate ─────────────────────────────── -->
+  <section class="blk ct" id="contact" aria-labelledby="h-ct">
+    <h2 class="blk__h" id="h-ct"><span class="blk__n">5</span>Contact</h2>
+    <p class="ct__line">Deploying agents in your organisation? Talk to us.</p>
+    <p class="ct__mail">{placeholderEmail ? <span>{site.email}</span> : <a href={`mailto:${site.email}`}>{site.email}</a>}</p>
+  </section>
 </Base>
 
 <script>

@@ -5,12 +5,12 @@ import '@fontsource/libertinus-serif/latin-600.css';
 import '@fontsource/libertinus-serif-display/latin-400.css';
 import '@fontsource/libertinus-mono/latin-400.css';
 import '../styles/global.css';
-import Mark from '../components/Mark.astro';
+import Nav from '../components/Nav.astro';
 import References from '../components/References.astro';
 import { site, u, MATH_FONT } from '../config/site';
 
-interface Props { title?: string; description?: string; page: 'home' | 'essays' | 'essay' | 'about' | 'team' | 'contact'; mark?: boolean }
-const { title, description = site.description, page, mark = true } = Astro.props;
+interface Props { title?: string; description?: string; page: 'home' | 'essays' | 'essay' | 'about' | 'team' | 'contact' }
+const { title, description = site.description, page } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 ---
 <!doctype html>
@@ -34,7 +34,7 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
   </head>
   <body id="top">
     <a class="skip" href="#main">Skip to content</a>
-    {mark && <Mark />}
+    <Nav />
     <main id="main">
       <slot />
     </main>

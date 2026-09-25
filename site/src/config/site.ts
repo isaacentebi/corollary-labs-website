@@ -3,7 +3,7 @@ export const site = {
   name: 'Corollary Labs',
   email: '[EMAIL]',
   year: 2026,
-  description: 'Corollary Labs',
+  description: 'Corollary Labs deploys AI agents inside organisations and rebuilds the operations around them.',
 } as const;
 
 /** Base-aware URL for internal links and assets: u('essays/') gives '/proof/essays/'. */

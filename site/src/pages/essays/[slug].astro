@@ -18,7 +18,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
 <Base page="essay" title={entry.data.title} description={entry.data.dek}>
   <article class="essay">
     <header class="essay__head">
-      <p class="essay__kicker"><a href={u('essays/')}>Essays</a> · {fmt(entry.data.date)} · {fm.minutesRead} min</p>
+      <p class="essay__kicker"><a href={u('essays/')}>Research</a> · {fmt(entry.data.date)} · {fm.minutesRead} min</p>
       <h1 class="essay__title">{entry.data.title}</h1>
       <p class="essay__by">{site.name}</p>
       {entry.data.placeholder && <p class="essay__flag ph">[Placeholder essay]</p>}
@@ -32,7 +32,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
     </div>
     {next && next.id !== entry.id && (
       <a class="essay__next" href={u(`essays/${next.id}/`)}>
-        <span class="essay__next-k">Next essay</span>
+        <span class="essay__next-k">Next</span>
         <span class="essay__next-t">{next.data.title}</span>
       </a>
     )}

@@ -1,8 +1,10 @@
 ---
-// About — statement, the logo drawn large, company details. Placeholders in [brackets].
+// About — the company, its team and its details. Placeholders in [brackets].
 import Base from '../layouts/Base.astro';
 import { site } from '../config/site';
 import '../styles/pages.css';
+
+const people = [1, 2, 3, 4];
 ---
 <Base page="about" title="About" description={`About — ${site.name}`}>
   <article class="page">
@@ -10,8 +12,24 @@ import '../styles/pages.css';
     <div class="rule"></div>
 
     <p class="statement">
-      <span class="ph">[Statement]</span>
+      Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span>
     </p>
+
+    <section class="team" id="team" aria-labelledby="team-h">
+      <h2 class="team__h" id="team-h">Team</h2>
+      <div class="fmblock -first">
+        {people.map(() => (
+          <div class="fm"><div class="fm__k ph">[Role]</div><div class="fm__v ph">[Name]</div></div>
+        ))}
+      </div>
+    </section>
+
+    <section class="fmblock" aria-label="Company details">
+      <div class="fm"><div class="fm__k">Company</div><div class="fm__v ph">[Legal entity]</div></div>
+      <div class="fm"><div class="fm__k">Founded</div><div class="fm__v ph">[Year]</div></div>
+      <div class="fm"><div class="fm__k">Location</div><div class="fm__v ph">[City]</div></div>
+      <div class="fm"><div class="fm__k">Contact</div><div class="fm__v">{site.email.startsWith('[') ? <span class="ph">{site.email}</span> : <a href={`mailto:${site.email}`}>{site.email}</a>}</div></div>
+    </section>
 
     <section class="markfig" aria-labelledby="mark-h">
       <div class="markfig__art">
@@ -28,13 +46,6 @@ import '../styles/pages.css';
         <h2 id="mark-h" class="fm__k">Logo</h2>
         <p class="ph">[Paragraph — the logo]</p>
       </div>
-    </section>
-
-    <section class="fmblock" aria-label="Company details">
-      <div class="fm"><div class="fm__k">Company</div><div class="fm__v ph">[Legal entity]</div></div>
-      <div class="fm"><div class="fm__k">Founded</div><div class="fm__v ph">[Year]</div></div>
-      <div class="fm"><div class="fm__k">Location</div><div class="fm__v ph">[City]</div></div>
-      <div class="fm"><div class="fm__k">Contact</div><div class="fm__v">{site.email.startsWith('[') ? <span class="ph">{site.email}</span> : <a href={`mailto:${site.email}`}>{site.email}</a>}</div></div>
     </section>
   </article>
 </Base>

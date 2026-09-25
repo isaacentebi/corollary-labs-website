@@ -165,24 +165,29 @@ export function initField(canvas: HTMLCanvasElement, opts: { reduced: boolean; o
     measure(); build(); draw();
   }
 
-  let raf = 0, visible = true, last = performance.now();
+  // on demand: the plate moves for a few seconds after load and while the pointer is on it, then stops
+  let raf = 0, visible = true, last = performance.now(), until = performance.now() + 5000;
   function loop(now: number) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     t += dt;
     ptr.x += (ptr.tx - ptr.x) * 0.12; ptr.y += (ptr.ty - ptr.y) * 0.12; ptr.a += (ptr.ta - ptr.a) * 0.06;
+    if (ptr.ta === 0 && ptr.a < 0.002) ptr.a = 0;
     draw();
-    raf = visible ? requestAnimationFrame(loop) : 0;
+    const busy = now < until || ptr.ta > 0 || ptr.a > 0;
+    raf = visible && busy ? requestAnimationFrame(loop) : 0;
   }
   const start = () => { if (!raf && !opts.reduced) { last = performance.now(); raf = requestAnimationFrame(loop); } };
+  const wake = (ms = 0) => { until = Math.max(until, performance.now() + ms); start(); };
 
   const onMove = (e: PointerEvent) => {
     const r = canvas.getBoundingClientRect();
     ptr.tx = e.clientX - r.left; ptr.ty = e.clientY - r.top;
     if (ptr.a < 0.01) { ptr.x = ptr.tx; ptr.y = ptr.ty; }
     ptr.ta = 1;
+    wake();
     if (opts.reduced) { ptr.x = ptr.tx; ptr.y = ptr.ty; ptr.a = 1; draw(); }
   };
-  const onLeave = () => { ptr.ta = 0; if (opts.reduced) { ptr.a = 0; draw(); } };
+  const onLeave = () => { ptr.ta = 0; wake(); if (opts.reduced) { ptr.a = 0; draw(); } };
   const host = canvas.parentElement!;
   host.addEventListener('pointermove', onMove);
   host.addEventListener('pointerdown', onMove);

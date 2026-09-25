@@ -1,5 +1,5 @@
 ---
-// Essays — set as a journal's table of contents.
+// Research — the essays, set as a journal's table of contents.
 import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
 import { u } from '../../config/site';
@@ -9,10 +9,10 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 ---
-<Base page="essays" title="Essays" description="Essays — Corollary Labs">
+<Base page="essays" title="Research" description="Research — Corollary Labs">
   <article class="page">
-    <p class="page__kicker">{essays.length} essays</p>
-    <h1 class="page__title">Essays</h1>
+    <h1 class="page__title">Research</h1>
+    <p class="page__lede">Essays on agents, organisations and how new technology spreads.</p>
     <div class="rule"></div>
     <ol class="toc">
       {rows.map(({ e, fm }, i) => (

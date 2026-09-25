@@ -34,3 +34,7 @@
 .markfig__text a { color: var(--blue); }
 @media (max-width: 800px) { .markfig { grid-template-columns: 1fr; } }
 .fmblock.-first { border-top: 0; margin-top: 2vh; }
+.page__lede { font-size: 1.12rem; max-width: 40rem; margin: 0 0 5vh; color: var(--ink-2); }
+/* About: the team, on the same page */
+.team { margin-top: 10vh; }
+.team__h { font: 400 clamp(40px, 5vw, 76px)/1 var(--display); letter-spacing: -0.012em; margin: 0 0 3vh; }
