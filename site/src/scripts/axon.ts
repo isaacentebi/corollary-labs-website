@@ -21,6 +21,14 @@ export const C = {
 
 // oriented solid used for ordering: a box (a, hu, hv) or a vertical cylinder (r)
 export type OB = { x: number; y: number; a: number; hu: number; hv: number; z0: number; z1: number; r?: number };
+const hexRGB = (h: string) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+export function mixHex(a: string, b: string, t: number) {
+  if (t >= 1) return b;
+  if (t <= 0) return a;
+  const A = hexRGB(a), B = hexRGB(b);
+  return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`;
+}
+
 export type Item = { c: number; ob?: OB; draw: (ctx: CanvasRenderingContext2D) => void };
 
 export function proj(cam: Cam, x: number, y: number, z: number): [number, number] {
@@ -38,12 +46,13 @@ export function close(cam: Cam, x: number, y: number, z: number) {
 }
 
 // world-space direction toward the viewer
-function viewDir(cam: Cam): [number, number, number] {
+export function viewDir(cam: Cam): [number, number, number] {
   return [cam.kz * Math.sin(cam.th), cam.kz * Math.cos(cam.th), cam.ky];
 }
 
 type BoxStyle = {
   lamp?: boolean;
+  mix?: number; // for lamp units: 1 = lamp, 0 = back to graphite (the new becomes normal)
   alpha?: number; // line alpha
   window?: boolean; // round window on +u end face
   rails?: boolean; // service lines along u on the top face
@@ -65,6 +74,7 @@ export function drawBox(ctx: CanvasRenderingContext2D, cam: Cam, x: number, y: n
   type Cn = [number, number, number]; // su, sv, z
   const P = (c: Cn) => proj(cam, x + ux * hu * c[0] + vx * hv * c[1], y + uy * hu * c[0] + vy * hv * c[1], c[2]);
   const la = st.alpha ?? 0.9;
+  const lm = st.lamp ? st.mix ?? 1 : 0;
   const faces: { cs: Cn[]; tone: number }[] = [];
   const dU = ux * V[0] + uy * V[1];
   const dV = vx * V[0] + vy * V[1];
@@ -86,7 +96,7 @@ export function drawBox(ctx: CanvasRenderingContext2D, cam: Cam, x: number, y: n
     pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
     ctx.closePath();
     if (!st.ghost) {
-      ctx.fillStyle = st.lamp ? C.lamp[f.tone] : C.face[f.tone];
+      ctx.fillStyle = st.lamp ? mixHex(C.face[f.tone], C.lamp[f.tone], lm) : C.face[f.tone];
       ctx.fill();
     } else if (!st.ghostA) {
       ctx.fillStyle = `rgba(${C.lampRGB},0.14)`;
@@ -95,7 +105,7 @@ export function drawBox(ctx: CanvasRenderingContext2D, cam: Cam, x: number, y: n
     if (st.ghost) {
       ctx.setLineDash([3, 3]);
       ctx.strokeStyle = st.ghostA ? `rgba(${C.line},${st.ghostA})` : `rgba(${C.lampRGB},0.95)`;
-    } else ctx.strokeStyle = st.lamp ? C.lampEdge : `rgba(${C.line},${la})`;
+    } else ctx.strokeStyle = st.lamp && lm > 0.5 ? C.lampEdge : `rgba(${C.line},${st.lamp ? la * (1 - 2 * lm) : la})`;
     ctx.beginPath();
     for (let i = 0; i < 4; i++) {
       const p = f.cs[i], q = f.cs[(i + 1) % 4];
@@ -138,7 +148,7 @@ export function drawBox(ctx: CanvasRenderingContext2D, cam: Cam, x: number, y: n
     if (st.ghost) {
       ctx.strokeStyle = st.ghostA ? `rgba(${C.line},${st.ghostA})` : `rgba(${C.lampRGB},0.9)`;
       ctx.stroke();
-    } else if (st.lamp) {
+    } else if (st.lamp && lm > 0.5) {
       ctx.fillStyle = C.night;
       ctx.fill();
     } else {

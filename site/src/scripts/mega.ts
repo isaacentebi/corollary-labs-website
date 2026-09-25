@@ -2,7 +2,7 @@
 // along beams and around cores. Everything is a function of one clock t, so scroll can run it forwards
 // and backwards. Units are never removed; they plug in, or unplug and re-seat elsewhere.
 
-import { type Cam, type Item, boxItem, cylItem, close, proj } from './axon';
+import { type Cam, type Item, boxItem, cylItem, close, proj, viewDir } from './axon';
 
 export const rng = (seed: number) => () => {
   seed |= 0;
@@ -225,7 +225,7 @@ export class Struct {
     return b.g0 < 0 ? 1 : ease(win(t, b.g0, b.g1));
   }
 
-  items(cam: Cam, t: number, now: number, out: Item[], opts: { lod?: boolean; fade?: number; cull?: [number, number]; glow?: (ci: number) => number; ghosts?: number[]; ghostA?: number; hover?: number } = {}) {
+  items(cam: Cam, t: number, now: number, out: Item[], opts: { lod?: boolean; fade?: number; cull?: [number, number]; glow?: (ci: number) => number; lit?: (ci: number) => number; ghosts?: { i: number; a: number }[]; hover?: number } = {}) {
     const lod = !!opts.lod;
     const la = this.alpha * (opts.fade ?? 1);
     const W = opts.cull;
@@ -267,20 +267,23 @@ export class Struct {
       }
     }
     // open sockets, drawn as faint dashed ghosts (the hovered one in lamp)
-    if (opts.ghosts) for (const i of opts.ghosts) {
-      const s = this.socks[i];
-      const hov = i === opts.hover;
-      out.push(boxItem(cam, s.x, s.y, s.z, s.z + CAP_H, s.a, CAP_L, CAP_W, { ghost: true, ghostA: hov ? 0 : opts.ghostA ?? 0.3, window: true }));
+    if (opts.ghosts) for (const g of opts.ghosts) {
+      const s = this.socks[g.i];
+      const hov = g.i === opts.hover;
+      out.push(boxItem(cam, s.x, s.y, s.z, s.z + CAP_H, s.a, CAP_L, CAP_W, { ghost: true, ghostA: hov ? 0 : g.a, window: true }));
     }
     // units
     for (let ci = 0; ci < this.caps.length; ci++) {
       const cap = this.caps[ci];
       const p = this.pose(cap, t, now);
       if (!p) continue;
-      const S = this.socks[cap.moves[cap.moves.length - 1].to];
+      const last = cap.moves[cap.moves.length - 1].to;
+      const S = this.socks[last];
       if (S.beam >= 0 && this.beamGrow(this.beams[S.beam], t, now) <= 0 && cap.moves.length === 1) continue;
+      // a visitor's unit is only drawn while the thing it hangs on stands (scrolling back can lower a core)
+      if (cap.user && !this.standing(last, t, now)) continue;
       if (!onScreen(p.x, p.y, p.z)) continue;
-      const it = boxItem(cam, p.x, p.y, p.z, p.z + CAP_H, p.a, CAP_L, CAP_W, { lamp: cap.agent, alpha: la, window: !lod, glow: opts.glow ? opts.glow(ci) : 0 });
+      const it = boxItem(cam, p.x, p.y, p.z, p.z + CAP_H, p.a, CAP_L, CAP_W, { lamp: cap.agent, mix: opts.lit ? opts.lit(ci) : 1, alpha: la, window: !lod, glow: opts.glow ? opts.glow(ci) : 0 });
       if (p.k < 1) {
         const d = it.draw;
         it.draw = (ctx) => {
@@ -291,6 +294,95 @@ export class Struct {
       }
       out.push(it);
     }
+  }
+
+  // does the socket's support stand at clock t (beam fully grown, core tall enough)?
+  standing(i: number, t: number, now: number) {
+    const s = this.socks[i];
+    if (s.beam >= 0) {
+      const b = this.beams[s.beam];
+      return this.beamGrow(b, t, now) >= 1 && this.coreH(b.core, t) >= b.z + BEAM_H + 0.3 && this.sockReady(i) <= t;
+    }
+    return this.coreH(s.core, t) >= s.z + CAP_H + 0.3;
+  }
+
+  // open for a visitor's unit: standing, never used by the script, not taken
+  openFor(i: number, t: number, now: number) {
+    return !this.scripted.has(i) && !this.userBusy.has(i) && this.standing(i, t, now);
+  }
+
+  // is a world point hidden from the camera by anything standing in front of it?
+  occluded(cam: Cam, P: [number, number, number], t: number, now: number) {
+    const V = viewDir(cam);
+    const px = P[0], py = P[1], pz = P[2];
+    const E = 0.03;
+    const zlo = (z0: number) => (z0 - pz) / V[2];
+    for (let i = 0; i < this.cores.length; i++) {
+      const c = this.cores[i];
+      const h = this.coreH(i, t);
+      if (h < 0.05) continue;
+      const dx = px - c.x, dy = py - c.y;
+      const A = V[0] * V[0] + V[1] * V[1], B = 2 * (dx * V[0] + dy * V[1]), Cq = dx * dx + dy * dy - c.r * c.r;
+      const disc = B * B - 4 * A * Cq;
+      if (disc < 0 || A < 1e-9) continue;
+      const q = Math.sqrt(disc);
+      const lo = Math.max((-B - q) / (2 * A), zlo(0), E);
+      const hi = Math.min((-B + q) / (2 * A), zlo(h));
+      if (hi > lo) return true;
+    }
+    const box = (x: number, y: number, a: number, hu: number, hv: number, z0: number, z1: number) => {
+      const ux = Math.cos(a), uy = Math.sin(a);
+      const dx = px - x, dy = py - y;
+      const axes = [
+        { d: dx * ux + dy * uy, v: V[0] * ux + V[1] * uy, e: hu },
+        { d: -dx * uy + dy * ux, v: -V[0] * uy + V[1] * ux, e: hv },
+      ];
+      let lo = Math.max(zlo(z0), E), hi = zlo(z1);
+      for (const ax of axes) {
+        if (Math.abs(ax.v) < 1e-9) {
+          if (Math.abs(ax.d) > ax.e) return false;
+          continue;
+        }
+        const a0 = (-ax.e - ax.d) / ax.v, a1 = (ax.e - ax.d) / ax.v;
+        lo = Math.max(lo, Math.min(a0, a1));
+        hi = Math.min(hi, Math.max(a0, a1));
+      }
+      return hi > lo;
+    };
+    for (const b of this.beams) {
+      const g = this.beamGrow(b, t, now);
+      if (g <= 0 || this.coreH(b.core, t) < b.z + BEAM_H + 0.3) continue;
+      const st = this.beamStart(b);
+      const L = b.len * g;
+      if (box(st[0] + (Math.cos(b.a) * L) / 2, st[1] + (Math.sin(b.a) * L) / 2, b.a, L / 2, BEAM_W, b.z, b.z + BEAM_H)) return true;
+    }
+    for (const cap of this.caps) {
+      const q = this.pose(cap, t, now);
+      if (!q) continue;
+      if (cap.user && !this.standing(cap.moves[cap.moves.length - 1].to, t, now)) continue;
+      if (box(q.x, q.y, q.a, CAP_L, CAP_W, q.z, q.z + CAP_H)) return true;
+    }
+    return false;
+  }
+
+  // can the camera see a unit placed at socket i (its top, or its window)?
+  sockVisible(cam: Cam, i: number, t: number, now: number) {
+    const s = this.socks[i];
+    const ux = Math.cos(s.a), uy = Math.sin(s.a);
+    const V = viewDir(cam);
+    const pts: [number, number, number][] = [
+      [s.x, s.y, s.z + CAP_H + 0.02],
+      [s.x + ux * CAP_L * 0.7, s.y + uy * CAP_L * 0.7, s.z + CAP_H + 0.02],
+    ];
+    if (ux * V[0] + uy * V[1] > 0) pts.push([s.x + ux * (CAP_L + 0.02), s.y + uy * (CAP_L + 0.02), s.z + CAP_H / 2]);
+    return pts.some((P) => !this.occluded(cam, P, t, now));
+  }
+
+  // a visitor's unit, animated in real time
+  plugReal(i: number, now: number, dur: number) {
+    this.userBusy.add(i);
+    this.caps.push({ agent: true, user: true, moves: [{ kind: 'plug', from: i, to: i, t0: now, t1: now + dur, real: true }] });
+    return this.caps.length - 1;
   }
 
   // world points that outline what stands at clock t (for a tight camera fit)

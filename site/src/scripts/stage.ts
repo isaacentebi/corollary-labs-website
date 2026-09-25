@@ -4,13 +4,19 @@
 //  p 0.56–0.97  pull back and flatten to a plan of the city; the change travels along the network
 import { type Cam, type Item, C, proj, depthSort } from './axon';
 import { Struct, clamp, ease, BEAM_H, CAP_L, CAP_H } from './mega';
-import { buildHero, buildCity, SPINE_Y, FRONT } from './city';
+import { buildHero, buildCity, SPINE_Y, FRONT, type Cluster } from './city';
 
 const PI = Math.PI;
 const win = (t: number, a: number, b: number) => clamp((t - a) / (b - a));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const LATCH = 750; // ms a unit stays lit after it latches
+const LATCH = 750; // ms a unit keeps its outline lit after it latches
 const PULSE = 1250;
+const NEW_MS = 3500; // how long a visitor's unit stays lamp-coloured before it becomes normal
+const FADE_MS = 1200;
+const MAX_LIT = 5; // at most this many of the visitor's units lit at once
+const MAX_USER_BEAMS = 3;
+const FRONT_V = 70; // world units per second for a front the visitor starts in the city
+const FRONT_MAX = 170;
 
 export function initStage(root: HTMLElement) {
   const canvas = root.querySelector<HTMLCanvasElement>('canvas')!;
@@ -25,7 +31,15 @@ export function initStage(root: HTMLElement) {
   let p = 0;
   let thUser = 0, thTarget = 0;
   let hover = -1;
+  let pointer: { x: number; y: number } | null = null;
   let raf = 0;
+  const sources: { x: number; y: number; t0: number }[] = [];
+  // branch extents by x, for fronts the visitor starts
+  const branchSpan = new Map<number, [number, number]>();
+  for (const b of branches) {
+    const cur = branchSpan.get(b.x) ?? [SPINE_Y, SPINE_Y];
+    branchSpan.set(b.x, [Math.min(cur[0], b.y1), Math.max(cur[1], b.y1)]);
+  }
   const pulses: { sock: number; cap: number; t0: number }[] = [];
 
   function size() {
@@ -51,7 +65,7 @@ export function initStage(root: HTMLElement) {
     const th = -0.62 + 0.32 * t + thUser;
     // fit what stands now (the frame widens as the structure grows)
     const k = ease(clamp(t * 1.15));
-    const cam: Cam = { cx: 0, cy: 0, wx: 5, wy: 5, wz: 6, s: 1, th, ky: 0.6, kz: 1 };
+    const cam: Cam = { cx: 0, cy: 0, wx: 5, wy: 5, wz: 6, s: 1, th, ky: mob ? 0.74 : 0.6, kz: mob ? 1.12 : 1 };
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
     for (const [x, y, z] of H.fitPoints(t)) {
       const [sx, sy] = proj(cam, x, y, z);
@@ -60,7 +74,7 @@ export function initStage(root: HTMLElement) {
     let s: number, area: { l: number; r: number; t: number; b: number };
     if (mob) {
       // portrait: fill the width, sit just above the name
-      area = { l: 10, r: W - 10, t: 76, b: Hh - 200 };
+      area = { l: 8, r: W - 8, t: 74, b: Hh - 196 };
       s = Math.min((area.r - area.l) / (x1 - x0), (area.b - area.t) / (y1 - y0));
     } else {
       area = { l: W * lerp(0.42, 0.34, k), r: W - 70, t: 100, b: Hh - 60 };
@@ -68,7 +82,7 @@ export function initStage(root: HTMLElement) {
     }
     cam.s = s;
     cam.cx = (area.l + area.r) / 2 - ((x0 + x1) / 2) * s;
-    cam.cy = mob ? area.b - y1 * s : (area.t + area.b) / 2 - ((y0 + y1) / 2) * s;
+    cam.cy = (area.t + area.b) / 2 - ((y0 + y1) / 2) * s;
     return cam;
   }
 
@@ -78,16 +92,16 @@ export function initStage(root: HTMLElement) {
     const mob = mobile();
     const e = ease(clamp(c / 0.6));
     // the plan: spine across the screen (down the screen on phones), seen from straight above
-    const thCity = mob ? -PI / 2 : 0;
+    const thCity = mob ? -PI / 2 + 0.14 : -0.14;
     const sEnd = mob ? Hh / 230 : Math.min(W / 250, Hh / 150);
     const s = Math.exp(lerp(Math.log(h.s), Math.log(sEnd), e));
     const f = (1 / s - 1 / h.s) / (1 / sEnd - 1 / h.s);
     // rotation (including the visitor's) eases back to the canonical plan angle
     let dth = thCity - h.th;
     dth = Math.atan2(Math.sin(dth), Math.cos(dth));
-    const cam: Cam = { ...h, s, th: h.th + dth * e, ky: lerp(0.6, 1, e), kz: lerp(1, 0.14, e) };
+    const cam: Cam = { ...h, s, th: h.th + dth * e, ky: lerp(h.ky, 0.84, e), kz: lerp(h.kz, 0.5, e) };
     const [hsx, hsy] = proj(h, 5, 5, 0);
-    const endX = mob ? W * 0.42 : W * 0.56, endY = mob ? Hh * 0.5 : Hh * 0.47;
+    const endX = mob ? W * 0.44 : W * 0.6, endY = mob ? Hh * 0.44 : Hh * 0.46;
     cam.wx = 5;
     cam.wy = lerp(5, mob ? SPINE_Y + 8 : SPINE_Y + 4, f);
     cam.wz = 0;
@@ -98,17 +112,13 @@ export function initStage(root: HTMLElement) {
 
   function userFree(t: number, now: number) {
     const out: number[] = [];
-    H.socks.forEach((s, i) => {
-      if (H.scripted.has(i) || H.userBusy.has(i)) return;
-      if (H.sockReady(i) > t) return;
-      if (s.beam >= 0) {
-        const b = H.beams[s.beam];
-        if (H.beamGrow(b, t, now) < 1) return;
-        if (H.coreH(b.core, t) < b.z + BEAM_H + 0.3) return;
-      } else if (H.coreH(s.core, t) < s.z + CAP_H + 0.3) return;
-      out.push(i);
-    });
+    H.socks.forEach((_, i) => { if (H.openFor(i, t, now)) out.push(i); });
     return out;
+  }
+
+  // open sockets a unit could be seen in from the current camera
+  function visibleFree(cam: Cam, t: number, now: number) {
+    return userFree(t, now).filter((i) => H.sockVisible(cam, i, t, now));
   }
 
   const sockScreen = (cam: Cam, i: number) => {
@@ -119,7 +129,7 @@ export function initStage(root: HTMLElement) {
   // nearest open socket to a point on screen; with no radius, any click on the drawing finds one
   function nearestSock(cam: Cam, t: number, now: number, x: number, y: number, radius = Infinity) {
     let best = -1, bd = radius * radius;
-    for (const i of userFree(t, now)) {
+    for (const i of visibleFree(cam, t, now)) {
       const [sx, sy] = sockScreen(cam, i);
       const d = (sx - x) ** 2 + (sy - y) ** 2;
       if (d < bd) { bd = d; best = i; }
@@ -128,7 +138,8 @@ export function initStage(root: HTMLElement) {
   }
 
   function grow(t: number, now: number) {
-    // new infrastructure when open sockets run low: a cantilever from a standing core
+    // new infrastructure when open sockets run low: a cantilever from a standing core (a few at most)
+    if (H.beams.filter((b) => b.real !== undefined).length >= MAX_USER_BEAMS) return false;
     const cand: [number, number, number][] = [];
     for (const ci of [cores.A, cores.B, cores.C, cores.D]) {
       const h = H.coreH(ci, t);
@@ -152,12 +163,113 @@ export function initStage(root: HTMLElement) {
   function plugAt(i: number) {
     const now = performance.now();
     const dur = rm.matches ? 0 : 1150;
-    H.userBusy.add(i);
-    H.caps.push({ agent: true, user: true, moves: [{ kind: 'plug', from: i, to: i, t0: now, t1: now + dur, real: true }] });
-    pulses.push({ sock: i, cap: H.caps.length - 1, t0: now + dur });
+    const ci = H.plugReal(i, now, dur);
+    pulses.push({ sock: i, cap: ci, t0: now + dur });
     const { t } = phase();
     if (userFree(t, now + 5000).length < 6) grow(t, now + dur * 0.5);
     invalidate();
+  }
+
+  // lamp for what is new: a visitor's unit fades back to graphite after a few seconds,
+  // sooner when newer ones push it past the limit
+  function litMap(S: Struct, now: number) {
+    const m = new Map<number, number>();
+    const users: { ci: number; t1: number }[] = [];
+    S.caps.forEach((c, ci) => { if (c.user) users.push({ ci, t1: c.moves[0].t1 }); });
+    users.sort((a, b) => b.t1 - a.t1);
+    users.forEach((u, rank) => {
+      let lit = 1 - clamp((now - u.t1 - NEW_MS) / FADE_MS);
+      if (rank >= MAX_LIT) lit = Math.min(lit, 1 - clamp((now - users[rank - MAX_LIT].t1) / 600));
+      if (now < u.t1) lit = 1;
+      m.set(u.ci, lit);
+    });
+    return m;
+  }
+  const fading = (S: Struct, now: number) => S.caps.some((c) => c.user && now < c.moves[0].t1 + NEW_MS + FADE_MS + 700);
+
+  // city: network distance from a point on a branch (bx, by) to a point on the network
+  function netDist(bx: number, by: number, x: number, y: number) {
+    if (Math.abs(x - bx) < 0.5) return Math.abs(y - by);
+    return Math.abs(by - SPINE_Y) + Math.abs(x - bx) + Math.abs(y - SPINE_Y);
+  }
+
+  // a click in the city: a unit into the nearest structure, and a front from there along the network
+  function cityClick(cam: Cam, c: number, x: number, y: number) {
+    const now = performance.now();
+    const all: { S: Struct; x: number; y: number; t: number; cl?: Cluster }[] = [{ S: H, x: 5, y: 5, t: phase().t }, ...clusters.map((cl) => ({ S: cl.S, x: cl.x, y: cl.y, t: c, cl }))];
+    let best = all[0], bd = Infinity;
+    for (const o of all) {
+      const [sx, sy] = proj(cam, o.x, o.y, 4);
+      const d = (sx - x) ** 2 + (sy - y) ** 2;
+      if (d < bd) { bd = d; best = o; }
+    }
+    const S = best.S;
+    let pick = -1, pd = Infinity;
+    S.socks.forEach((so, i) => {
+      if (!S.openFor(i, best.t, now) || !S.sockVisible(cam, i, best.t, now)) return;
+      const [sx, sy] = proj(cam, so.x, so.y, so.z);
+      const d = (sx - x) ** 2 + (sy - y) ** 2;
+      if (d < pd) { pd = d; pick = i; }
+    });
+    const dur = rm.matches ? 0 : 900;
+    if (pick >= 0) S.plugReal(pick, now, dur);
+    // the change travels outward from here; structures it reaches take a unit or two
+    const src = { x: best.x, y: best.y, t0: now + dur };
+    sources.push(src);
+    const rnd = (k: number) => (Math.sin(k * 12.9898 + now * 0.001) * 43758.5453) % 1;
+    clusters.forEach((cl, k) => {
+      if (cl.S === S) return;
+      const d = netDist(src.x, src.y, cl.x, cl.y);
+      if (d > FRONT_MAX - 10) return;
+      const at = src.t0 + (d / FRONT_V) * 1000;
+      const open: number[] = [];
+      cl.S.socks.forEach((_, i) => { if (cl.S.openFor(i, c, now)) open.push(i); });
+      for (let n = 0; n < Math.min(2, open.length); n++) {
+        const i = open[Math.floor(Math.abs(rnd(k * 7 + n)) * open.length)];
+        if (cl.S.userBusy.has(i)) continue;
+        cl.S.plugReal(i, at + n * 160, rm.matches ? 0 : 700);
+      }
+    });
+    invalidate();
+  }
+
+  function drawSources(cam: Cam, now: number) {
+    let live = false;
+    for (let k = sources.length - 1; k >= 0; k--) {
+      const src = sources[k];
+      const D = ((now - src.t0) / 1000) * FRONT_V;
+      if (D > FRONT_MAX + 40) { sources.splice(k, 1); continue; }
+      live = true;
+      if (D <= 0) continue;
+      const fade = 1 - clamp((D - FRONT_MAX) / 40);
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      const segs: [number, number, number, number][] = [];
+      // own branch, both ways
+      const sp = branchSpan.get(src.x) ?? [SPINE_Y, SPINE_Y];
+      segs.push([src.x, Math.max(sp[0], src.y - D), src.x, Math.min(sp[1], src.y + D)]);
+      // spine
+      const r = D - Math.abs(src.y - SPINE_Y);
+      if (r > 0) {
+        segs.push([src.x - r, SPINE_Y, src.x + r, SPINE_Y]);
+        for (const [bx, span] of branchSpan) {
+          if (Math.abs(bx - src.x) < 0.5) continue;
+          const rr = r - Math.abs(bx - src.x);
+          if (rr > 0) segs.push([bx, Math.max(span[0], SPINE_Y - rr), bx, Math.min(span[1], SPINE_Y + rr)]);
+        }
+      }
+      for (const [x0, y0, x1, y1] of segs) {
+        const P = proj(cam, x0, y0, 0), Q = proj(cam, x1, y1, 0);
+        ctx.moveTo(P[0], P[1]);
+        ctx.lineTo(Q[0], Q[1]);
+      }
+      ctx.strokeStyle = `rgba(${C.lampRGB},${0.85 * fade * (1 - 0.6 * clamp(D / FRONT_MAX))})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+    return live;
   }
 
   function pulsePath(sock: number, t: number): [number, number, number][] {
@@ -238,18 +350,18 @@ export function initStage(root: HTMLElement) {
     }
     const D = FRONT(c);
     if (D <= 0) return;
-    const glowOn = !rm.matches;
-    for (const pass of [0, 1]) {
+    const passes: [number, number, number][] = [
+      [1e9, 0.16, 1.2], // settled trail: faint
+      [34, 0.5, 1.6], // recent
+      [12, 1, 2.6], // head
+    ];
+    for (const [back, alpha, w] of passes) {
       ctx.save();
       ctx.lineCap = 'round';
-      if (pass === 1 && glowOn) {
-        ctx.shadowColor = `rgba(${C.lampRGB},0.9)`;
-        ctx.shadowBlur = 10;
-      }
       ctx.beginPath();
       for (const n of net) {
         const len = Math.hypot(n.x1 - n.x0, n.y1 - n.y0);
-        const a = pass === 0 ? 0 : Math.max(0, (D - 16 - n.d0) / len);
+        const a = Math.max(0, (D - back - n.d0) / len);
         const b = Math.min(1, (D - n.d0) / len);
         if (b <= a) continue;
         const P = proj(cam, lerp(n.x0, n.x1, a), lerp(n.y0, n.y1, a), 0);
@@ -257,8 +369,8 @@ export function initStage(root: HTMLElement) {
         ctx.moveTo(P[0], P[1]);
         ctx.lineTo(Q[0], Q[1]);
       }
-      ctx.strokeStyle = pass === 0 ? `rgba(${C.lampRGB},0.42)` : `rgba(${C.lampRGB},1)`;
-      ctx.lineWidth = pass === 0 ? 1.5 : 3;
+      ctx.strokeStyle = `rgba(${C.lampRGB},${alpha})`;
+      ctx.lineWidth = w;
       ctx.stroke();
       ctx.restore();
     }
@@ -280,6 +392,7 @@ export function initStage(root: HTMLElement) {
     ctx.fillRect(0, 0, W, Hh);
     drawGround(cam, c);
     if (c > 0) drawFront(cam, c);
+    if (sources.length && drawSources(cam, now)) busy = true;
 
     // lit units: a unit that has just latched, and its siblings while the pulse passes them
     const glow = new Map<number, number>();
@@ -300,11 +413,43 @@ export function initStage(root: HTMLElement) {
 
     const items: Item[] = [];
     const lod = cam.s < 7;
-    const ghosts = c === 0 ? userFree(t, now) : undefined;
-    H.items(cam, t, now, items, { lod, glow: (ci) => glow.get(ci) || 0, ghosts, ghostA: 0.34 - 0.16 * clamp(t * 4), hover });
+    let ghosts: { i: number; a: number }[] | undefined;
+    if (c === 0) {
+      const vis = visibleFree(cam, t, now).map((i) => ({ i, p: sockScreen(cam, i) }));
+      const base = 0.34 - 0.14 * clamp(t * 4);
+      // three or four spread across the drawing at rest
+      const rest: typeof vis = [];
+      while (rest.length < 4 && rest.length < vis.length) {
+        let bestV = vis[0], bd = -1;
+        for (const v of vis) {
+          if (rest.includes(v)) continue;
+          const d = rest.length ? Math.min(...rest.map((r) => Math.hypot(r.p[0] - v.p[0], r.p[1] - v.p[1]))) : v.i;
+          if (d > bd) { bd = d; bestV = v; }
+        }
+        rest.push(bestV);
+      }
+      ghosts = vis.map((v) => {
+        const near = pointer ? 1 - clamp((Math.hypot(v.p[0] - pointer.x, v.p[1] - pointer.y) - 60) / 140) : 0;
+        return { i: v.i, a: Math.max(rest.includes(v) ? base : 0, near * 0.42) };
+      }).filter((g) => g.a > 0.02 || g.i === hover);
+    }
+    const litH = litMap(H, now);
+    const hLit = 1 - clamp((c - 0.22) / 0.14); // our own units settle once the change has moved on
+    H.items(cam, t, now, items, { lod, glow: (ci) => glow.get(ci) || 0, lit: (ci) => litH.get(ci) ?? hLit, ghosts, hover });
     if (c > 0) {
       const fade = clamp(c / 0.25);
-      for (const cl of clusters) cl.S.items(cam, c, now, items, { lod, fade, cull: [W, Hh] });
+      for (const cl of clusters) {
+        const lm = cl.S.userBusy.size ? litMap(cl.S, now) : null;
+        const S = cl.S;
+        const lit = (ci: number) => {
+          const u = lm?.get(ci);
+          if (u !== undefined) return u;
+          const m = S.caps[ci].moves[0];
+          return 1 - clamp((c - m.t1 - 0.12) / 0.1);
+        };
+        cl.S.items(cam, c, now, items, { lod, fade, cull: [W, Hh], lit });
+        if (lm && (fading(cl.S, now) || cl.S.caps.some((cp) => cp.user && now < cp.moves[0].t1))) busy = true;
+      }
     }
     // full ordering while the drawing is close; centroid order is enough at city scale
     const ordered = lod ? items.sort((a, b) => a.c - b.c) : depthSort(items, cam);
@@ -351,6 +496,7 @@ export function initStage(root: HTMLElement) {
     }
     if (pulses.length) busy = true;
     for (const cap of H.caps) if (cap.user && now < cap.moves[0].t1) busy = true;
+    if (fading(H, now)) busy = true;
     for (const b of H.beams) if (b.real !== undefined && now < b.real + (b.realDur || 0)) busy = true;
     (window as any).__ms = performance.now() - tStart;
     if (busy) invalidate();
@@ -372,7 +518,7 @@ export function initStage(root: HTMLElement) {
       states.forEach((el, i) => el.classList.toggle('is-on', i === st));
       root.style.setProperty('--p', p.toFixed(4));
       root.classList.toggle('is-city', c > 0.05);
-      root.classList.toggle('is-open', c === 0);
+      root.classList.toggle('is-open', c === 0 || c > 0.3);
       if (c > 0) hover = -1;
       invalidate();
     }
@@ -392,6 +538,7 @@ export function initStage(root: HTMLElement) {
     if (e.target !== canvas) return;
     const r = canvas.getBoundingClientRect();
     const { t, c } = phase();
+    if (c > 0.3) { cityClick(camera(t, c), c, e.clientX - r.left, e.clientY - r.top); return; }
     if (c > 0) return;
     const i = nearestSock(camera(t, c), t, performance.now(), e.clientX - r.left, e.clientY - r.top);
     if (i >= 0) plugAt(i);
@@ -399,6 +546,7 @@ export function initStage(root: HTMLElement) {
   canvas.addEventListener('pointermove', (e) => {
     const r = canvas.getBoundingClientRect();
     const x = e.clientX - r.left, y = e.clientY - r.top;
+    pointer = e.pointerType === 'mouse' ? { x, y } : null;
     if (down) {
       const dx = e.clientX - down.x;
       if (!down.moved && Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(e.clientY - down.y)) {
@@ -413,14 +561,13 @@ export function initStage(root: HTMLElement) {
     }
     if (e.pointerType !== 'mouse') return;
     const { t, c } = phase();
-    const h = c > 0 ? -1 : nearestSock(camera(t, c), t, performance.now(), x, y);
-    if (h !== hover) {
-      hover = h;
-      invalidate();
-    }
+    hover = c > 0 ? -1 : nearestSock(camera(t, c), t, performance.now(), x, y);
+    if (c === 0) invalidate();
   });
   canvas.addEventListener('pointerleave', () => {
-    if (hover !== -1) { hover = -1; invalidate(); }
+    pointer = null;
+    hover = -1;
+    invalidate();
   });
   addEventListener('keydown', (e) => {
     if (document.activeElement !== canvas) return;
@@ -447,7 +594,8 @@ export function initStage(root: HTMLElement) {
   (window as any).__stage = {
     get p() { return p; },
     plug: () => { const { t } = phase(); const f = userFree(t, performance.now()); if (f.length) plugAt(f[0]); },
-    freeScreen: () => { const { t, c } = phase(); const cam = camera(t, c); return userFree(t, performance.now()).map((i) => sockScreen(cam, i)); },
+    freeScreen: () => { const { t, c } = phase(); const cam = camera(t, c); return visibleFree(cam, t, performance.now()).map((i) => sockScreen(cam, i)); },
+    project: (x: number, y: number, z: number) => { const { t, c } = phase(); return proj(camera(t, c), x, y, z); },
     H, clusters,
   };
 }

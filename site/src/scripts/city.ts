@@ -186,7 +186,6 @@ export function figureStruct(kind: string) {
   } else {
     const a = S.core(0, 0, 1.1, 12);
     S.beam(a, 0, 5, 2.5); S.beam(a, PI / 2, 5, 5); S.beam(a, PI, 5, 7.5); S.beam(a, -PI / 2, 5, 10);
-    S.coreSockets(a, [1, 4, 6.2, 8.7]);
   }
   for (const i of S.freeAt(-1)) {
     const x = r();
