@@ -2,18 +2,25 @@
 import Base from '../layouts/Base.astro';
 import Print from '../components/Print.astro';
 import { firstPrint } from '../lib/parts';
+import { url } from '../config/site';
+const people = [1, 2, 3, 4];
 ---
-<Base page="about" title="About" description="[About — meta description]">
+<Base page="about" title="About" description="Corollary Labs is an AI company.">
   <section class="page">
     <header class="cover">
       <Print parts={firstPrint()} state="after" class="cover__print" pad={4} />
       <h1 class="cover__title">About</h1>
     </header>
     <div class="page__body">
-      <p class="lede">[About — opening paragraph: who we are and what we work on]</p>
-      <p>[About — second paragraph: the questions we study]</p>
-      <p>[About — third paragraph: how we work, and with whom]</p>
-      <p>[About — fourth paragraph: where we are based; how to reach us]</p>
+      <p class="lede">Corollary Labs is an AI company. [About — founding story and team, one paragraph]</p>
+      <p>[Location] · [Founding year]</p>
+      <h2 class="label label--body" id="team">Team</h2>
+      <ul class="people people--plain">
+        {people.map((n) => (
+          <li><span class="who">[Name {n}]</span><span class="role">[Role]</span></li>
+        ))}
+      </ul>
+      <p><a class="more ov" href={url('team/')} data-text="Team →">Team →</a></p>
     </div>
   </section>
 </Base>

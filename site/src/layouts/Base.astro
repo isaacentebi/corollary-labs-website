@@ -7,10 +7,18 @@ interface Props { title?: string; description?: string; page?: string }
 const { title, description = site.description, page = 'page' } = Astro.props;
 const full = title ? `${title} — ${site.name}` : site.name;
 const nav = [
-  { label: 'Essays', href: url('essays/'), key: 'essays' },
-  { label: 'About', href: url('about/'), key: 'about' },
-  { label: 'Team', href: url('team/'), key: 'team' },
-  { label: 'Contact', href: url('contact/'), key: 'contact' },
+  { label: 'Capabilities', href: url('#capabilities'), keys: [] as string[] },
+  { label: 'Approach', href: url('#approach'), keys: [] },
+  { label: 'Company', href: url('about/'), keys: ['about', 'team'] },
+  { label: 'Contact', href: url('#contact'), keys: ['contact'] },
+];
+const footNav = [
+  { label: 'Capabilities', href: url('#capabilities') },
+  { label: 'Approach', href: url('#approach') },
+  { label: 'Research', href: url('essays/') },
+  { label: 'About', href: url('about/') },
+  { label: 'Team', href: url('team/') },
+  { label: 'Contact', href: url('#contact') },
 ];
 ---
 <!doctype html>
@@ -45,7 +53,7 @@ const nav = [
       <button class="top__menu" type="button" data-menu aria-expanded="false" aria-controls="site-nav"><span class="ov" data-text="Menu">Menu</span></button>
       <nav class="top__nav" id="site-nav" aria-label="Site">
         {nav.map((n) => (
-          <a href={n.href} class="ov" data-text={n.label} aria-current={page === n.key ? 'page' : undefined}>{n.label}</a>
+          <a href={n.href} class="ov" data-text={n.label} aria-current={n.keys.includes(page) ? 'page' : undefined}>{n.label}</a>
         ))}
       </nav>
     </header>
@@ -55,11 +63,9 @@ const nav = [
     <footer class="foot">
       <div class="foot__grid">
         <a class="brand brand--foot" href={url('')}><Mark size={22} /><span>{site.name}</span></a>
-        {page !== 'home' && (
-          <nav class="foot__nav" aria-label="Footer">
-            {nav.map((n) => <a href={n.href} class="ov" data-text={n.label}>{n.label}</a>)}
-          </nav>
-        )}
+        <nav class="foot__nav" aria-label="Footer">
+          {footNav.map((n) => <a href={n.href} class="ov" data-text={n.label}>{n.label}</a>)}
+        </nav>
         <p class="foot__meta"><span>{site.email}</span><span>© {site.year}</span></p>
       </div>
     </footer>
@@ -93,6 +99,8 @@ const nav = [
           label.dataset.text = label.textContent;
         };
         btn.addEventListener('click', () => set(top.dataset.open !== 'true'));
+        // anchors on the home page: close the menu as you go
+        top.querySelectorAll('.top__nav a').forEach((a) => a.addEventListener('click', () => set(false)));
         addEventListener('keydown', (e) => { if (e.key === 'Escape' && top.dataset.open === 'true') { set(false); btn.focus(); } });
       }
     </script>

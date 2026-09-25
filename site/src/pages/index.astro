@@ -3,48 +3,138 @@ import Base from '../layouts/Base.astro';
 import EssayList from '../components/EssayList.astro';
 import { getCollection } from 'astro:content';
 import Print from '../components/Print.astro';
-import { url } from '../config/site';
+import { site, url, contactHref } from '../config/site';
 import { teamPrint, compose } from '../lib/parts';
-const people = 4;
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const team = [1, 2, 3, 4];
+const teamParts = teamPrint(team.length).map((p, i) => ({ ...p, who: i >= 1 && i <= team.length ? String(i - 1) : undefined }));
+const who = (p: unknown) => (p as { who?: string }).who;
+
+// each capability is marked by one of the overprints in the palette: the agents' ink over
+// the organisation's
+const capabilities = [
+  { t: 'Agent deployment', d: 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.', inks: ['m'] },
+  { t: 'Model fine-tuning', d: 'Models adapted and evaluated on your data for the specific tasks your agents perform.', inks: ['y', 'm'] },
+  { t: 'Systems integration', d: 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.', inks: ['c', 'm'] },
+  { t: 'Evaluation and governance', d: 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.', inks: ['y', 'c', 'm'] },
+];
+const beats = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
+const principles = [
+  { t: 'Workflow first.', d: 'We map how work is actually done before choosing a model.' },
+  { t: 'Design the reorganisation.', d: 'Roles, handoffs and controls change when agents arrive. We plan that change.' },
+  { t: 'Measure in production.', d: 'Every deployment reports on accuracy, cost and time saved.' },
+];
+const pad2 = (n: number) => String(n).padStart(2, '0');
 ---
 <Base page="home">
-  <section class="hero" data-press>
-    <div class="stage" data-stage data-state="0">
-      <canvas tabindex="0" aria-label="Interactive figure: flat parts printed over one another in three inks. Click, tap or press Enter to print a part."></canvas>
-      <div class="hero__text" data-mask>
-        <h1 class="hero__statement">[Statement — one sentence]</h1>
-        <ol class="hero__states" aria-label="Figure states">
-          <li data-s="0"><span class="n">1</span><span>[Caption — the organisation]</span></li>
-          <li data-s="1"><span class="n">2</span><span>[Caption — an agent enters; the organisation rearranges]</span></li>
-          <li data-s="2"><span class="n">3</span><span>[Caption — the change spreads]</span></li>
-        </ol>
+  <!-- 1. The company, over its first print -->
+  <section class="hero" data-press="hero" aria-labelledby="h-name">
+    <div class="stage stage--hero" data-stage>
+      <canvas tabindex="0" aria-label="Interactive print: flat parts printed in yellow and cyan. You hold a part in pink; click, tap or press Enter to print it."></canvas>
+      <div class="hero__text" data-words>
+        <h1 class="hero__name" id="h-name">{site.name}</h1>
+        <p class="hero__headline">We deploy AI agents inside organisations and rebuild the operations around them.</p>
+        <div class="hero__foot" data-mask>
+          <p class="hero__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
+          <p class="hero__actions">
+            <a class="btn btn--primary" href={contactHref}>Contact us</a>
+            <a class="btn ov" href="#approach" data-text="Our approach">Our approach</a>
+          </p>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="block block--about" aria-labelledby="h-about">
-    <h2 class="label" id="h-about">About</h2>
-    <p class="lede">[About — one paragraph: who we are and what we work on, in plain terms. Three to four sentences.]</p>
-    <a class="more ov" href={url('about/')} data-text="Read more">Read more</a>
+  <!-- 2. Capabilities -->
+  <section class="block sec" id="capabilities" aria-labelledby="h-cap">
+    <h2 class="label" id="h-cap">Capabilities</h2>
+    <ol class="caps">
+      {capabilities.map((c, i) => (
+        <li class="cap">
+          <span class="cap__n">{pad2(i + 1)}</span>
+          <span class="swatch" aria-hidden="true">{c.inks.map((k) => <i class={`sw sw--${k}`} />)}</span>
+          <h3 class="cap__t">{c.t}</h3>
+          <p class="cap__d">{c.d}</p>
+        </li>
+      ))}
+    </ol>
   </section>
 
-  <section class="block block--essays" aria-labelledby="h-essays">
-    <h2 class="label" id="h-essays">Essays</h2>
-    <EssayList essays={essays} />
-    <a class="more ov" href={url('essays/')} data-text="All essays">All essays</a>
+  <!-- 3. Approach: the print → an agent → the sheet -->
+  <section class="approach sec" id="approach" data-press="story" aria-labelledby="h-app">
+    <div class="stage stage--story" data-stage data-state="0">
+      <canvas tabindex="0" aria-label="Figure: an organisation printed in yellow and cyan. An agent part in pink is bolted in, the parts turn about their bolts, and the view opens onto a sheet of prints where the pink passes from print to print. Click a print on the sheet to start the change there."></canvas>
+      <div class="story__text" data-mask>
+        <h2 class="label" id="h-app">Approach</h2>
+        <p class="story__intro">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+        <div class="story__fig" data-fig aria-hidden="true"></div>
+        <ol class="legend" aria-label="Figure steps">
+          {beats.map((b, i) => (
+            <li><button type="button" data-beat={i} aria-pressed={i === 0 ? 'true' : 'false'}><span class="n">{pad2(i + 1)}</span><span>{b}</span></button></li>
+          ))}
+        </ol>
+      </div>
+    </div>
+    <div class="block block--tight">
+      <ol class="principles">
+        {principles.map((p, i) => (
+          <li><span class="principles__n">{pad2(i + 1)}</span><h3>{p.t}</h3><p>{p.d}</p></li>
+        ))}
+      </ol>
+    </div>
   </section>
 
-  <nav class="block block--links" aria-label="Team and contact">
-    <ul class="pages">
-      <li><a href={url('team/')}><Print parts={teamPrint(people)} state="before" pad={3} /><span class="big reg" data-text="Team">Team</span></a></li>
-      <li><a href={url('contact/')}><Print parts={compose('contact', { base: 5, agents: 1 })} state="before" pad={3} /><span class="big reg" data-text="Contact">Contact</span></a></li>
-    </ul>
-  </nav>
+  <!-- 4. Research -->
+  <section class="block sec" id="research" aria-labelledby="h-res">
+    <h2 class="label" id="h-res">Research</h2>
+    <p class="lede lede--s">Essays on agents, organisations and how new technology spreads.</p>
+    <div class="block__wide"><EssayList essays={essays} /></div>
+    <a class="more ov" href={url('essays/')} data-text="All research →">All research →</a>
+  </section>
+
+  <!-- 5. Company -->
+  <section class="block sec" id="company" aria-labelledby="h-co">
+    <h2 class="label" id="h-co">Company</h2>
+    <div class="company">
+      <div class="company__about">
+        <h3 class="minor">About</h3>
+        <p class="lede">Corollary Labs is an AI company. [About — founding story and team, one paragraph]</p>
+      </div>
+      <div class="company__team">
+        <h3 class="minor">Team</h3>
+        <div class="company__grid">
+          <Print parts={teamParts} state="after" class="company__print" pad={4} tag={who} />
+          <ul class="team" data-people>
+            {team.map((n, i) => (
+              <li tabindex="0" data-who={i}><span class="who">[Name {n}]</span><span class="role">[Role]</span></li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <a class="more ov" href={url('about/')} data-text="About the company →">About the company →</a>
+    </div>
+  </section>
+
+  <!-- 6. Contact -->
+  <section class="block sec contact-block" id="contact" aria-labelledby="h-contact">
+    <h2 class="label" id="h-contact">Contact</h2>
+    <div class="contact-block__body">
+      <Print parts={compose('contact', { base: 5, agents: 1 })} state="after" class="contact-block__print" pad={3} />
+      <p class="contact-block__line">Deploying agents in your organisation? Talk to us.</p>
+      <p class="contact-block__email">{site.email}</p>
+    </div>
+  </section>
 
   <script>
-    import { initPress } from '../scripts/press';
-    const el = document.querySelector<HTMLElement>('[data-press]');
-    if (el) initPress(el);
+    import { initPress, type PressMode } from '../scripts/press';
+    document.querySelectorAll<HTMLElement>('[data-press]').forEach((el) => initPress(el, el.dataset.press as PressMode));
+    // the team: point at a person and their part is the one left printed
+    const print = document.querySelector<SVGElement>('.company__print');
+    document.querySelectorAll<HTMLElement>('[data-people] li').forEach((li) => {
+      const on = () => print?.setAttribute('data-hl', li.dataset.who!);
+      const off = () => print?.removeAttribute('data-hl');
+      li.addEventListener('pointerenter', on); li.addEventListener('pointerleave', off);
+      li.addEventListener('focus', on); li.addEventListener('blur', off);
+    });
   </script>
 </Base>

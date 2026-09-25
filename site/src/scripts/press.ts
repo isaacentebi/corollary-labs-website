@@ -4,11 +4,15 @@
 // colours appear that neither had (vermilion, indigo, near-black). The organisation answers by
 // turning its parts about their bolts; no part is taken away.
 //
-// Scroll: 1 one print → 2 an agent is bolted in, the print rearranges → 3 the view opens onto
-// a sheet of prints still in two inks, and the change passes from print to print.
-// Pointer: you hold a part. Near a hole it snaps and shows the bolt; click to print it there
-// (drag before letting go to turn it). On the sheet, a print starts the change again from
-// that print. Renders on demand only: scroll, pointer, resize, or while an animation runs.
+// Two modes share this engine.
+//   hero:  the first print alone. It is pressed on load (parts laid in, yellow, then cyan);
+//          you hold a part in the agents' ink and a click prints it.
+//   story: the Approach figure, in four beats set by a legend (and played once when it comes
+//          into view): 01 the organisation → 02 an agent is bolted in → 03 the print
+//          rearranges → 04 the view opens onto a sheet, and the change passes print to print.
+// Pointer: near a hole the held part snaps and shows the bolt; click to print it there (drag
+// before letting go to turn it). On the open sheet, a print starts the change again from that
+// print. Renders on demand only: pointer, resize, or while an animation runs.
 
 import { INK, RIM, compose, geo, rng, bounds, firstPrint as heroParts, type Part, type Shape, type Ink } from '../lib/parts';
 
@@ -68,11 +72,22 @@ function makePattern(ctx: CanvasRenderingContext2D, hex: string, seed: number): 
   return ctx.createPattern(c, 'repeat')!;
 }
 
-export function initPress(root: HTMLElement) {
+export type PressMode = 'hero' | 'story';
+/** The four beats of the story: agent progress A (0..1) and the opening of the sheet Z. */
+const BEATS: [number, number][] = [[0, 0], [0.46, 0], [1, 0], [1, 1]];
+
+export function initPress(root: HTMLElement, mode: PressMode = 'hero') {
+  const story = mode === 'story';
   const canvas = root.querySelector<HTMLCanvasElement>('canvas')!;
   const stage = root.querySelector<HTMLElement>('[data-stage]')!;
   const header = document.querySelector<HTMLElement>('.top');
   const textEl = root.querySelector<HTMLElement>('[data-mask]');
+  // on a phone the story's figure sits in its own slot between the words and the legend
+  const figEl = root.querySelector<HTMLElement>('[data-fig]');
+  let fig: { top: number; bottom: number } | null = null;
+  // on a phone the hero's print sits wholly above the words (its marks would cross the name)
+  const wordsEl = root.querySelector<HTMLElement>('[data-words]');
+  let wordsTop = 0;
   const ctx = canvas.getContext('2d', { alpha: true })!;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const touchOnly = matchMedia('(hover: none)').matches;
@@ -121,7 +136,10 @@ export function initPress(root: HTMLElement) {
   // ——— state ———
   let W = 0, H = 0, dpr = 1, z0 = 1, z1 = 1, wide = true;
   let f0 = [0, 0], f1 = [0, 0], c1 = [50, 50];
-  let p = 0, sheetStart = 0, intro = 0;
+  let sheetStart = 0, intro = 0;
+  // the story's two animated values, eased between beats
+  const tw = { A: 0, Z: 0, fA: 0, fZ: 0, tA: 0, tZ: 0, t0: 0, dur: 0 };
+  let beat = 0;
   let cam = { z: 1, tx: 0, ty: 0 };
   let pat: Record<Ink, CanvasPattern>;
   let mask = { x: 0, y: 0, w: 0, h: 0 }, headH = 0;
@@ -137,11 +155,18 @@ export function initPress(root: HTMLElement) {
 
   function measure() {
     const r = stage.getBoundingClientRect();
-    headH = header ? header.offsetHeight : 64;
+    headH = story ? 0 : header ? header.offsetHeight : 64;
     if (textEl) {
       const t = textEl.getBoundingClientRect(), pad = wide ? 24 : 12;
       mask = { x: t.left - r.left - pad, y: t.top - r.top - pad, w: t.width + pad * 2, h: t.height + pad * 2 };
       if (!wide) { mask.x = 0; mask.w = W; mask.h = H - mask.y; }
+    }
+    fig = null;
+    if (wordsEl) wordsTop = wordsEl.getBoundingClientRect().top - r.top;
+    if (figEl && !wide) {
+      const f = figEl.getBoundingClientRect();
+      fig = { top: f.top - r.top, bottom: f.bottom - r.top };
+      mask = { x: 0, y: 0, w: 0, h: 0 }; // the words sit outside the figure: nothing to clear
     }
   }
 
@@ -152,12 +177,16 @@ export function initPress(root: HTMLElement) {
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     measure();
     // one print, large, in the space the words leave
-    if (wide) {
+    if (wide && !story) {
+      // the hero: the print large on the right; the headline overprints its left edge
+      z0 = Math.min(W * 0.46, (H - headH) * 0.74) / 100;
+      f0 = [W * 0.665, headH + (H - headH) * 0.5];
+    } else if (wide) {
       z0 = Math.min(W * 0.44, H * 0.72) / 100;
       f0 = [W * 0.61, H * 0.52];
     } else {
       // the print and its marks, centred in the space between the header and the words
-      const top = headH + 6, bottom = mask.y + 4;
+      const top = fig ? fig.top : headH + 6, bottom = fig ? fig.bottom : wordsEl ? wordsTop - 6 : mask.y + 4;
       z0 = Math.min(W * 0.82, (bottom - top) / 1.14) / 100;
       const need = 114 * z0, slack = Math.max(0, bottom - top - need);
       f0 = [W * 0.5, top + slack * 0.4 + need / 2 - 4 * z0];
@@ -167,7 +196,7 @@ export function initPress(root: HTMLElement) {
     // the sheet: 4 × 3 cards beside the words (2 × 3 above them on a phone)
     const [c0, cN, r0, rN] = wide ? [-1, 2, -1, 1] : [0, 1, -1, 1];
     const rx0 = wide ? mask.x + mask.w + 8 : 22, rx1 = W - (wide ? 36 : 22);
-    const ry0 = headH + (wide ? 16 : 4), ry1 = wide ? H - 28 : mask.y - 2;
+    const ry0 = fig ? fig.top + 16 : headH + (wide ? 16 : 4), ry1 = fig ? fig.bottom - 4 : wide ? H - 28 : mask.y - 2;
     const cols = cN - c0 + 1, rows = rN - r0 + 1;
     z1 = Math.min((rx1 - rx0) / (cols * P), (ry1 - ry0) / (rows * P));
     f1 = [(rx0 + rx1) / 2, (ry0 + ry1) / 2];
@@ -185,19 +214,20 @@ export function initPress(root: HTMLElement) {
     request();
   }
 
-  function progress() {
-    const r = root.getBoundingClientRect();
-    let q = clamp(-r.top / Math.max(1, r.height - innerHeight));
-    if (reduce.matches) q = q < 0.2 ? 0 : q < 0.5 ? 0.36 : 1;
-    return q;
-  }
-
   function request() { if (!raf) raf = requestAnimationFrame(frame); }
   function frame(now: number) { raf = 0; if (draw(now)) request(); }
 
-  // scroll: 0.04–0.32 the agent is bolted in; 0.4–0.66 the view opens; then the sheet holds
-  const heroA = () => ease(seg(p, 0.04, 0.32));
-  const zoomOf = () => ease(seg(p, 0.4, 0.66));
+  // the hero never takes the agent or opens; the story follows its beats
+  const heroA = () => (story ? tw.A : 0);
+  const zoomOf = () => (story ? tw.Z : 0);
+  /** Go to a beat of the story, easing both values there. */
+  function go(b: number, dur = 1400) {
+    beat = b;
+    stage.dataset.state = String(b);
+    const [A, Z] = BEATS[b];
+    Object.assign(tw, { fA: tw.A, fZ: tw.Z, tA: A, tZ: Z, t0: performance.now(), dur: reduce.matches ? 0 : dur });
+    request();
+  }
   const INTRO = 1300;
 
   /** A part's current pose inside its print: position, angle, scale, opacity. */
@@ -211,18 +241,19 @@ export function initPress(root: HTMLElement) {
       const e = easeOut(k); sc = 1 + 0.35 * (1 - e); al = e;
     } else if (part.agent) {
       if (part.enter === 'slide') {
-        const k = ease(seg(a, 0, 0.42));
+        const k = ease(seg(a, 0, 0.3));
         if (k <= 0) return null;
         x += 150 * (1 - k); y -= 16 * (1 - k);
       } else {
         const l = part.lag ?? 0;
-        const k = hero ? seg(a, 0.1 + l * 0.4, 0.3 + l * 0.4) : seg(a, 0, 0.3);
+        const k = hero ? seg(a, 0.08 + l * 0.3, 0.26 + l * 0.3) : seg(a, 0, 0.3);
         if (k <= 0) return null;
         const e = easeOut(k); sc = 1 + 0.35 * (1 - e); al = e;
       }
     } else {
-      const s0 = hero ? 0.22 + (part.lag ?? 0) * 0.3 : 0.12 + (part.lag ?? 0) * 0.3;
-      const k = ease(seg(a, s0, s0 + (hero ? 0.48 : 0.55)));
+      // in the first print the agent is bolted in first (to 0.46), then the parts turn
+      const s0 = hero ? 0.48 + (part.lag ?? 0) * 0.2 : 0.12 + (part.lag ?? 0) * 0.3;
+      const k = ease(seg(a, s0, s0 + (hero ? 0.32 : 0.55)));
       x = lerp(part.px, part.px1, k); y = lerp(part.py, part.py1, k); th = lerp(part.th, part.th1, k);
     }
     for (const n of part.nudges) {
@@ -252,11 +283,16 @@ export function initPress(root: HTMLElement) {
 
   function draw(now: number): boolean {
     let busy = false;
+    if (story) {
+      const k = tw.dur ? clamp((now - tw.t0) / tw.dur) : 1;
+      const e = ease(k);
+      tw.A = lerp(tw.fA, tw.tA, e); tw.Z = lerp(tw.fZ, tw.tZ, e);
+      if (k < 1) busy = true;
+    }
     const hA = heroA(), zoom = zoomOf();
     const z = z0 * Math.pow(z1 / z0, zoom);
     const fwx = lerp(50, c1[0], zoom), fwy = lerp(50, c1[1], zoom);
     cam = { z, tx: lerp(f0[0], f1[0], zoom) - fwx * z, ty: lerp(f0[1], f1[1], zoom) - fwy * z };
-    stage.dataset.state = p < 0.2 ? '0' : p < 0.5 ? '1' : '2';
     // prints stand apart while the first one is close, and close up as the view opens, so the
     // neighbours arrive from beyond the frame in full ink
     const gap = lerp(1.9, 1, zoom);
@@ -382,7 +418,7 @@ export function initPress(root: HTMLElement) {
     } else ptr.snap = null;
 
     // a paper margin keeps the words clear once the sheet opens
-    const mk = wide ? clamp(zoom * 3) : 1;
+    const mk = wide ? clamp(zoom * 3) : mask.w ? 1 : 0;
     if (mk > 0) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.globalCompositeOperation = 'destination-out';
@@ -626,19 +662,33 @@ export function initPress(root: HTMLElement) {
     printAt(wx * cam.z + cam.tx, wy * cam.z + cam.ty);
   });
 
-  const onScroll = () => {
-    const q = progress();
-    if (q !== p) { p = q; request(); }
-  };
-  addEventListener('scroll', onScroll, { passive: true });
   new ResizeObserver(() => resize()).observe(stage);
-  reduce.addEventListener('change', () => { p = progress(); request(); });
-  p = progress();
-  if (p < 0.02 && !reduce.matches) {
+  reduce.addEventListener('change', () => request());
+  if (!story && !reduce.matches) {
+    // the opening press: parts laid in as bare metal, then the plates come down
     intro = performance.now() + 150;
     const hero = tiles.find((t) => t.hero)!;
     hero.jolt = intro + INTRO * 0.44;
   }
   resize();
   document.fonts?.ready.then(() => resize());
+
+  if (story) {
+    // the legend sets the beat; the figure plays through once when it first comes into view
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-beat]')];
+    const mark = () => buttons.forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.beat) === beat)));
+    let timers: number[] = [];
+    const stop = () => { timers.forEach(clearTimeout); timers = []; };
+    buttons.forEach((b) => b.addEventListener('click', () => { stop(); go(Number(b.dataset.beat), 1300); mark(); }));
+    go(0, 0); mark();
+    let played = false;
+    const play = () => {
+      played = true;
+      const steps: [number, number, number][] = [[900, 1, 1200], [2900, 2, 1500], [5200, 3, 1700]];
+      for (const [at, b, dur] of steps) timers.push(window.setTimeout(() => { go(b, dur); mark(); }, at));
+    };
+    new IntersectionObserver((es, io) => {
+      if (!played && es.some((e) => e.isIntersecting)) { play(); io.disconnect(); }
+    }, { threshold: 0.55 }).observe(stage);
+  }
 }

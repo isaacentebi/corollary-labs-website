@@ -92,3 +92,9 @@
   .essay__dek { font-size: 21px; }
   .essay__next .label, .essay__next .elist { grid-column: 1 / -1; }
 }
+
+/* phones: a hidden definition near the right edge must not widen the page */
+@media (max-width: 640px) {
+  .term:not(:hover):not(:focus) .term__def { display: none; }
+  .term__def { max-width: min(280px, calc(100vw - 2 * var(--gut))); }
+}
