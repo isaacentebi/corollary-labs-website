@@ -5,7 +5,7 @@
 //  4  one continuous pull-back: this organisation is one screen of a wall; the change travels
 //     screen to screen across the gutters; two screens keep their old state
 import { rng, type Response } from '../lib/fieldmath';
-import { Scene, COL, type Agent } from './field/scene';
+import { Scene, COL, formFrom, type Agent } from './field/scene';
 import { mountFace, motionOn, ease3, clamp01, type Frame } from './field/host';
 import { sound } from './sound';
 
@@ -24,42 +24,54 @@ function init(story: HTMLElement, el: HTMLElement) {
   const captions: string[] = JSON.parse(captionEls[0]?.dataset.captions || '[]');
   let p = 0;
   let main!: Agent, emitter!: Agent;
-  let entry = { u: 0.56, v: 0.44 };
+  let entry = { u: 0.58, v: 0.46 };
   let zEnd = 0.3, N = 3;
-  // ghost lamp (the entry point, before the agent enters)
+  // ghost lamp: where the agent will enter, before it has
   const ghost = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0, a: 0, ta: 0, hover: false, focus: false, last: 0 };
-  let sweep: { t0: number; pts: { x: number; y: number }[] } | null = null;
-  let pulseAt = -1, swept = false;
+  // the opening: needles power on left to right, then the ghost travels in along a contour
+  let opening: { t0: number; power: boolean; path: { x: number; y: number }[]; ghostAt: number } | null = null;
+  let opened = false, pulseAt = -1;
+  const pulses: { x: number; y: number; t: number; k: number }[] = [];
+  const GHOST_MS = 2100;
 
   const face = mountFace(el, (face) => ({
     build(W, H, small) {
       const sc = new Scene();
       N = 3;
       const gap = Math.round(Math.min(W, H) * (small ? 0.075 : 0.06));
-      const s = small ? 38 : W > 1250 ? 48 : 44;
+      const s = small ? 36 : W > 1250 ? 46 : 42;
       const c = (N - 1) / 2;
       const R = rng(9);
       for (let row = 0; row < N; row++) for (let col = 0; col < N; col++) {
         const home = row === c && col === c;
-        sc.addPanel((col - c) * (W + gap) - W / 2, (row - c) * (H + gap) - H / 2, W, H, s, row * N + col + 5, home ? -0.05 : (R() - 0.5) * 0.7);
+        const form = home ? { amp: small ? 0.12 : 0.2, wave: small ? 1.5 : 1.15, phase: 0.3, grow: 0.6, tilt: 0, spacing: small ? 7.5 : 5.5 } : formFrom(row * N + col + 5, (R() - 0.5) * 0.5);
+        sc.addPanel((col - c) * (W + gap) - W / 2, (row - c) * (H + gap) - H / 2, W, H, s, row * N + col + 5, 0, form);
       }
       const home = c * N + c;
       sc.build(Math.min(W, H));
       const wallW = N * W + (N - 1) * gap, wallH = N * H + (N - 1) * gap, m = small ? 10 : 16;
       zEnd = Math.min((W - 2 * m) / wallW, (H - 2 * m) / wallH);
 
-      main = sc.addAgent(home, entry.u, entry.v, { T: T.settle, c: 4.6, w: 170, z: 0.3, ring: true, reach: 1.15, lamp: false, lampAt: T.arrive });
-      emitter = sc.addAgent(home, entry.u, entry.v, { T: T.spread, rc: 13, w: 240, z: 0.3, ring: true, reach: 2.3, lamp: false, emitOnly: true });
+      main = sc.addAgent(home, entry.u, entry.v, { T: T.settle, c: 4.6, w: 170, z: 0.3, ring: true, reach: 1.2, lamp: false, lampAt: T.arrive });
+      emitter = sc.addAgent(home, entry.u, entry.v, { T: T.spread, rc: 12, w: 240, z: 0.3, ring: true, reach: 2.4, lamp: false, emitOnly: true });
       // each organisation answers in its own way
       const holdouts = new Set([2, 7]); // top-right, bottom-middle
       for (let i = 0; i < N * N; i++) {
         if (i === home || holdouts.has(i)) continue;
         const resp: Response = { hand: R() < 0.5 ? -1 : 1, spiral: 0.15 + R() * 0.75, gain: 1.7 + R() * 1.2, core: 0.1 + R() * 0.07 };
-        sc.addAgent(i, 0.28 + R() * 0.44, 0.28 + R() * 0.44, { T: Infinity, c: 22, rc: 13, w: 270, z: 0.3, ring: true, reach: 2.2, resp });
+        sc.addAgent(i, 0.28 + R() * 0.44, 0.28 + R() * 0.44, { T: Infinity, c: 20, rc: 12, w: 260, z: 0.3, ring: true, reach: 1.9, resp });
       }
       schedule(sc);
       ghost.x = ghost.tx = main.x; ghost.y = ghost.ty = main.y;
-      if (motionOn() && p < T.enterA && !swept) { swept = true; startSweep(sc, W, H); }
+      if (!opened) {
+        opened = true;
+        if (motionOn() && p < T.enterA) {
+          let seen = false;
+          try { seen = sessionStorage.getItem('cyber.opened') === '1'; sessionStorage.setItem('cyber.opened', '1'); } catch { /* ignore */ }
+          opening = { t0: performance.now(), power: !seen, path: contour(sc), ghostAt: seen ? 250 : 1500 };
+          ghost.a = 0;
+        } else ghost.a = 0.6;
+      } else if (opening) opening.path = contour(sc);
       return sc;
     },
     frame(now) {
@@ -67,41 +79,50 @@ function init(story: HTMLElement, el: HTMLElement) {
       const sc = face.scene;
       const t = ease3(clamp01((q - T.zoomA) / (T.zoomB - T.zoomA)));
       const z = Math.exp(Math.log(zEnd) * t);
-      // neighbouring screens power on as they come into view
+      // neighbouring screens power on as they come into view; screens not yet on are not computed
       sc.panels.forEach((pl, i) => {
-        if (i === main.panel) { pl.fade = 1; return; }
+        if (i === main.panel) { pl.fade = 1; pl.live = true; return; }
         const d = Math.hypot(pl.x + pl.w / 2, pl.y + pl.h / 2) / Math.max(pl.w, pl.h);
         pl.fade = ease3(clamp01((q - T.zoomA - 0.015 * d) / 0.13));
+        pl.live = pl.fade > 0.001;
       });
-      let busy = false;
-      // ambient sweep on load: the ghost glides in and pushes the field
-      if (sweep) {
-        const k = clamp01((now - sweep.t0) / 2100);
-        if (k <= 0) busy = true;
+      let busy = false, power: number | undefined;
+      for (let k = pulses.length - 1; k >= 0; k--) if (now - pulses[k].t > 1100) pulses.splice(k, 1);
+      if (pulses.length) busy = true;
+
+      if (opening) {
+        const ms = now - opening.t0;
+        if (!motionOn() || q >= T.enterA) { opening = null; ghost.a = 0.6; }
         else {
-          const e = ease3(k), pts = sweep.pts;
-          const seg = Math.min(pts.length - 2, Math.floor(e * (pts.length - 1)));
-          const f = e * (pts.length - 1) - seg;
-          const x = pts[seg].x + (pts[seg + 1].x - pts[seg].x) * f, y = pts[seg].y + (pts[seg + 1].y - pts[seg].y) * f;
-          const vx = (x - ghost.tx) / 16, vy = (y - ghost.ty) / 16;
-          if (k < 0.97 && motionOn() && q < T.enterA) { if (sc.push(x, y, vx * 0.9, vy * 0.9, sc.panels[0].s * 2.4)) face.kickSim(); }
-          ghost.tx = ghost.x = x; ghost.ty = ghost.y = y; ghost.ta = 0.9 * Math.min(1, k * 4);
-          if (k >= 1) { sweep = null; ghost.tx = main.x; ghost.ty = main.y; }
           busy = true;
+          if (opening.power && ms < 1900) power = ms / 1000;
+          const g = (ms - opening.ghostAt) / GHOST_MS;
+          if (g < 0) ghost.a = 0;
+          else {
+            const path = opening.path, e = ease3(clamp01(g));
+            const f = e * (path.length - 1), i0 = Math.min(path.length - 2, Math.floor(f)), fr = f - i0;
+            const x = path[i0].x + (path[i0 + 1].x - path[i0].x) * fr, y = path[i0].y + (path[i0 + 1].y - path[i0].y) * fr;
+            if (ghost.a === 0) pulses.push({ x, y, t: now, k: 0.7 });
+            const vx = (x - ghost.x) / 16, vy = (y - ghost.y) / 16;
+            if (g < 0.96 && ghost.a > 0 && sc.push(x, y, vx * 0.55, vy * 0.55, sc.panels[0].s * 2.1, [main.panel])) face.kickSim();
+            ghost.x = ghost.tx = x; ghost.y = ghost.ty = y;
+            ghost.a = ghost.ta = Math.max(0.02, Math.min(0.95, clamp01(g * 5) * 0.95));
+            if (g >= 1) { opening = null; ghost.ta = 0.6; pulses.push({ x: main.x, y: main.y, t: now, k: 1 }); sound.ping(); }
+          }
         }
       }
-      // ghost spring
-      if (!sweep) {
-        if (!ghost.hover && !ghost.focus) { ghost.tx = main.x; ghost.ty = main.y; ghost.ta = 0.55; }
+      // ghost spring (following the pointer, or resting on the entry point)
+      if (!opening) {
+        if (!ghost.hover && !ghost.focus) { ghost.tx = main.x; ghost.ty = main.y; ghost.ta = 0.6; }
         const dt = Math.min(0.05, (now - (ghost.last || now)) / 1000) || 0.016;
         const k = 170, c = 26;
         ghost.vx += (-k * (ghost.x - ghost.tx) - c * ghost.vx) * dt; ghost.vy += (-k * (ghost.y - ghost.ty) - c * ghost.vy) * dt;
         ghost.x += ghost.vx * dt; ghost.y += ghost.vy * dt;
         if (!motionOn()) { ghost.x = ghost.tx; ghost.y = ghost.ty; ghost.vx = ghost.vy = 0; }
         if (Math.abs(ghost.x - ghost.tx) + Math.abs(ghost.y - ghost.ty) + Math.abs(ghost.vx) + Math.abs(ghost.vy) > 0.4) busy = true;
+        ghost.a += (ghost.ta - ghost.a) * (motionOn() ? 0.2 : 1);
+        if (Math.abs(ghost.ta - ghost.a) > 0.01) busy = true;
       }
-      ghost.a += (ghost.ta - ghost.a) * (motionOn() ? 0.2 : 1);
-      if (Math.abs(ghost.ta - ghost.a) > 0.01) busy = true;
       ghost.last = now;
 
       // the entering lamp, its wake, arrival pulse and the lean towards it
@@ -115,23 +136,27 @@ function init(story: HTMLElement, el: HTMLElement) {
       sc.hidden = ep >= 1 ? new Set([main.needle]) : new Set();
       if (ep >= 1 && pulseAt < 0 && motionOn()) { pulseAt = now; sound.ping(); }
       if (ep < 1) pulseAt = -1;
-      return { q, cam: { z, ox: face.W / 2, oy: face.H / 2 }, wakes, lean, busy, lx, ly, ep, ringFade: 1 - ease3(clamp01((q - 0.93) / 0.07)) } as Frame & { lx: number; ly: number; ep: number };
+      return { q, cam: { z, ox: face.W / 2, oy: face.H / 2 }, wakes, lean, busy, power, lx, ly, ep, now, ringFade: 1 - ease3(clamp01((q - 0.93) / 0.07)) } as Frame & { lx: number; ly: number; ep: number; now: number };
     },
     extras(b, f0) {
-      const f = f0 as Frame & { lx: number; ly: number; ep: number };
+      const f = f0 as Frame & { lx: number; ly: number; ep: number; now: number };
       const { z, ox, oy } = f.cam, q = f.q, sc = face.scene;
       const X = (x: number) => ox + x * z, Y = (y: number) => oy + y * z;
       const s = sc.panels[main.panel].s * z, lampR = Math.max(2.8, 0.3 * s);
+      for (const pu of pulses) {
+        const t = clamp01((f.now - pu.t) / 1100);
+        b.push(2, X(pu.x), Y(pu.y), lampR + s * 2.4 * (1 - Math.pow(1 - t, 3)), 1.5, 0, COL.signal, 0.8 * pu.k * (1 - t));
+      }
       // ghost + crosshair
       const gA = ghost.a * (1 - clamp01(f.ep * 1.4));
-      if (gA > 0.01 && q < T.arrive) {
+      if (gA > 0.03 && q < T.arrive) {
         if ((ghost.hover || ghost.focus) && q < 0.02) {
           const pl = sc.panels[main.panel];
           b.push(3, X(ghost.x), Y(pl.y + pl.h / 2), 0.5, (pl.h * z) / 2, 0, COL.mark, 0.1, 0);
           b.push(3, X(pl.x + pl.w / 2), Y(ghost.y), (pl.w * z) / 2, 0.5, 0, COL.mark, 0.1, 0);
         }
         b.push(2, X(ghost.x), Y(ghost.y), lampR + 4, 1.5, 0, COL.signal, gA);
-        b.push(1, X(ghost.x), Y(ghost.y), 1.6, 0, 0, COL.signal, gA * 0.9);
+        b.push(1, X(ghost.x), Y(ghost.y), 1.8, 0, 0, COL.signal, gA * 0.9);
       }
       // the agent
       if (f.ep > 0) {
@@ -143,12 +168,12 @@ function init(story: HTMLElement, el: HTMLElement) {
         }
       }
     },
-    canPush: (f) => f.q < T.zoomA - 0.02,
+    canPush: (f) => f.q < T.zoomA - 0.02 && !opening,
     onPointer(ev, wx, wy, kind) {
       const q = motionOn() ? p : STOPS[stateOf(p)];
       const pl = face.scene.panels[main.panel];
       const inPanel = wx > pl.x && wx < pl.x + pl.w && wy > pl.y && wy < pl.y + pl.h;
-      if (kind === 'leave' || !inPanel || q >= T.enterA) { ghost.hover = false; el.classList.remove('is-aiming'); face.request(); return; }
+      if (kind === 'leave' || !inPanel || q >= T.enterA || opening) { ghost.hover = false; el.classList.remove('is-aiming'); face.request(); return; }
       const c = clampEntry((wx - pl.x) / pl.w, (wy - pl.y) / pl.h);
       const cell = face.scene.cell(main.panel, c.u, c.v);
       if (kind === 'move' && ev.pointerType !== 'touch') {
@@ -189,17 +214,18 @@ function init(story: HTMLElement, el: HTMLElement) {
     }
     wall.forEach((a) => (a.lampAt = a.T - 0.008));
   }
-  function startSweep(sc: Scene, W: number, H: number) {
+  // the streamline that leads to the entry point, traced back to the left edge
+  function contour(sc: Scene) {
     const pl = sc.panels[main.panel];
-    const pts = [
-      { x: pl.x - pl.s * 2, y: pl.y + H * 0.78 },
-      { x: pl.x + W * 0.2, y: pl.y + H * 0.66 },
-      { x: pl.x + W * 0.4, y: pl.y + H * 0.36 },
-      { x: main.x - W * 0.08, y: main.y - H * 0.02 },
-      { x: main.x, y: main.y },
-    ];
-    sweep = { t0: performance.now() + 650, pts };
-    ghost.x = ghost.tx = pts[0].x; ghost.y = ghost.ty = pts[0].y; ghost.a = 0;
+    const pts = [{ x: main.x, y: main.y }];
+    let x = main.x, y = main.y;
+    for (let k = 0; k < 600 && x > pl.x - pl.s * 0.6; k++) {
+      const a = sc.dirAt(main.panel, x, y);
+      x -= Math.cos(a) * 5; y -= Math.sin(a) * 5;
+      if (k % 4 === 3) pts.push({ x, y });
+    }
+    pts.push({ x, y });
+    return pts.reverse();
   }
 
   // keyboard: arrows move the entry point
@@ -309,8 +335,19 @@ function init(story: HTMLElement, el: HTMLElement) {
       captionEls.forEach((c) => { c.textContent = captions[st] ?? ''; });
     }
   }
+  // once the story has ended, the deck's scale becomes a section index
+  const deck = document.querySelector<HTMLElement>('.deck');
+  const idx = [...document.querySelectorAll<HTMLAnchorElement>('[data-index-link]')];
+  const secs = idx.map((a) => document.getElementById(a.dataset.indexLink || '')).filter(Boolean) as HTMLElement[];
+  const spy = () => {
+    let cur = '';
+    for (const sEl of secs) if (sEl.getBoundingClientRect().top < window.innerHeight * 0.55) cur = sEl.id;
+    idx.forEach((a) => { const on = a.dataset.indexLink === cur; a.classList.toggle('is-on', on); if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
+  };
   const onScroll = () => {
     const r = story.getBoundingClientRect();
+    deck?.classList.toggle('is-tail', r.bottom < window.innerHeight * 0.55);
+    spy();
     p = total() > 0 ? clamp01(-r.top / total()) : 0;
     syncDeck(); face.request();
     (window as unknown as { __cyber: object }).__cyber = { p, state: stateOf(p), renderer: el.dataset.renderer };

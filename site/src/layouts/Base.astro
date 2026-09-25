@@ -38,6 +38,9 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
     <a class="skip-link" href="#main">Skip to content</a>
     <Menu current={page} />
     <div class="shell">
+      <Deck current={page} home={home}>
+        <slot name="deck" />
+      </Deck>
       <div class="col">
         {!home && <MHead current={page}><slot name="mhead" /></MHead>}
         <main id="main">
@@ -45,9 +48,6 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
         </main>
         <Footer />
       </div>
-      <Deck current={page} statement={home} brandTag={home ? 'h1' : 'div'}>
-        <slot name="deck" />
-      </Deck>
     </div>
     <script>
       import '../scripts/controls';

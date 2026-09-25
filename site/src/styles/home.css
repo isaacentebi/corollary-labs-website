@@ -4,6 +4,23 @@
 .face--home { flex: 1 1 auto; min-height: 0; cursor: default; }
 .face--home.is-aiming { cursor: none; }
 .stage__foot { display: none; }
+
+/* the nameplate: printed on the housing under the face, like a maker's name under a grille */
+.nameplate { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; padding: 20px 4px 0 26px; }
+.nameplate__word { display: flex; align-items: center; gap: 0.28em; margin: 0; font-size: clamp(44px, 5.2vw, 80px); line-height: 0.9; font-weight: 600; letter-spacing: -0.048em; white-space: nowrap; }
+.nameplate__mark { width: 0.74em; height: 0.74em; flex: none; transform: translateY(0.04em); }
+.nameplate__statement { margin: 0 0 0.35em; max-width: 19em; font-size: 16px; line-height: 1.4; }
+
+/* after the story, the scale becomes a section index */
+.deck-index { display: none; }
+.deck-index ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.deck-index a { display: grid; grid-template-columns: 14px 26px 1fr; align-items: center; min-height: 40px; border-bottom: 1px solid var(--rule-2); text-decoration: none; font-size: 15px; color: var(--ink-2); }
+.deck-index a .mono { color: var(--ink-3); }
+.deck-index a.is-on { color: var(--ink); }
+.deck-index a.is-on .lamp { background: var(--signal); box-shadow: 0 0 0 3px rgba(242, 191, 27, 0.18); }
+.deck-index a:hover { color: var(--ink); }
+.deck.is-tail .scale--v, .deck.is-tail .caption { display: none; }
+.deck.is-tail .deck-index { display: block; animation: vt-in 0.3s ease both; }
 .caption { margin: 0; font-size: 13.5px; line-height: 1.42; min-height: 4.3em; max-width: 16em; }
 
 /* the story scale: a tuning scale; drag it, flick it, click a detent */
@@ -17,6 +34,7 @@
 .scale__stops { list-style: none; margin: 0; padding: 0; }
 .scale__stops li { position: absolute; display: flex; align-items: center; gap: 9px; cursor: pointer; color: var(--ink-3); }
 .scale__stops li.is-on { color: var(--ink); }
+.scale__stops li.is-on .mono { font-weight: 650; }
 .scale__stops li.is-on .lamp { background: var(--signal); box-shadow: 0 0 0 3px rgba(242, 191, 27, 0.18); }
 
 .scale--v { flex: 1 1 auto; min-height: 150px; max-height: 330px; cursor: ns-resize; }
@@ -41,12 +59,13 @@
   .story { height: 250svh; }
   .stage { top: 0; height: 100svh; height: 100dvh; }
   .face--home { margin: 0 16px; border-radius: 12px; }
+  .nameplate { display: none; }
   .stage__foot { display: block; padding: 8px 16px 52px; }
   .stage__foot .caption { min-height: 2.9em; max-width: 30em; font-size: 13px; margin-top: 2px; }
 }
 
 /* ---------- after the story ---------- */
-.tail { padding-top: clamp(64px, 7vw, 100px); display: grid; gap: clamp(72px, 8vw, 112px); }
+.tail { padding: clamp(64px, 7vw, 100px) 0 0 26px; display: grid; gap: clamp(72px, 8vw, 112px); }
 .t-block { display: grid; grid-template-columns: minmax(130px, 0.85fr) minmax(0, 3.15fr); gap: 24px; }
 .t-label { display: flex; align-items: center; gap: 10px; margin: 0; padding-top: 12px; color: var(--ink-2); align-self: start; }
 .t-more { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 18px; text-decoration: none; font-weight: 500; font-size: 15px; }
@@ -77,7 +96,7 @@
 .strip .t-more { margin-left: 22px; }
 
 @media (max-width: 899px) {
-  .tail { padding: 56px 16px 0; }
+  .tail { padding: 56px 24px 0; }
   .t-block { grid-template-columns: 1fr; gap: 16px; }
   .t-label { padding-top: 0; }
   .strip__bar { height: 60px; }

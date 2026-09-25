@@ -1,4 +1,4 @@
-.page { padding-top: clamp(44px, 6vw, 84px); display: grid; gap: clamp(56px, 7vw, 100px); }
+.page { padding: clamp(44px, 6vw, 84px) 0 0 26px; display: grid; gap: clamp(56px, 7vw, 100px); }
 .page-head { display: grid; gap: 20px; }
 .page-head__note { margin: 0; font-size: 17px; max-width: 30em; }
 .split { display: grid; grid-template-columns: minmax(130px, 0.85fr) minmax(0, 3.15fr); gap: 24px; }
@@ -12,7 +12,7 @@
 .spec dd { margin: 0; font-size: 17px; }
 .spec a { text-decoration: none; border-bottom: 1px solid var(--rule); }
 @media (max-width: 899px) {
-  .page { padding: 40px 16px 0; }
+  .page { padding: 40px 24px 0; }
   .split { grid-template-columns: 1fr; gap: 14px; }
   .t-label { padding-top: 0; }
   .spec div { grid-template-columns: 110px 1fr; }
@@ -86,7 +86,7 @@
 .essay-next__title { font-size: 24px; letter-spacing: -0.02em; font-weight: 500; }
 .essay-next__arrow { font-size: 22px; transition: transform 0.3s var(--spring); }
 .essay-next:hover .essay-next__arrow { transform: translateX(5px); }
-@media (max-width: 899px) { .essay { padding: 36px 16px 0; } }
+@media (max-width: 899px) { .essay { padding: 36px 24px 0; } }
 
 /* deck: reading gauge and contents */
 .deck-read { display: flex; align-items: center; gap: 16px; }

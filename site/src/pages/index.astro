@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Face from '../components/Face.astro';
 import MHead from '../components/MHead.astro';
+import Mark from '../components/Mark.astro';
 import Scale from '../components/Scale.astro';
 import { getCollection } from 'astro:content';
 import { url } from '../lib/url';
@@ -18,11 +19,14 @@ const captions = [
 ];
 ---
 <Base page="home" home>
-  <h1 class="visually-hidden">Corollary Labs</h1>
   <section class="story" data-story aria-label="Story">
     <div class="stage">
-      <MHead current="home" statement />
+      <MHead current="home" statement brandTag="h1" />
       <Face kind="home" interactive />
+      <div class="nameplate">
+        <h1 class="nameplate__word" aria-label="Corollary Labs"><Mark class="nameplate__mark" /><span aria-hidden="true">corollary labs</span></h1>
+        <p class="nameplate__statement ph">[Statement — one sentence]</p>
+      </div>
       <div class="stage__foot">
         <Scale stops={stops} orient="h" />
         <p class="caption ph" data-caption data-captions={JSON.stringify(captions)} aria-live="polite">{captions[0]}</p>
@@ -31,7 +35,7 @@ const captions = [
   </section>
 
   <div class="tail">
-    <section class="t-block" aria-labelledby="h-about">
+    <section class="t-block" id="about" aria-labelledby="h-about">
       <h2 class="t-label mono" id="h-about"><span class="lamp"></span>About</h2>
       <div>
         <p class="lede ph">[About — one paragraph, three or four sentences, on what the company studies and builds]</p>
@@ -39,7 +43,7 @@ const captions = [
       </div>
     </section>
 
-    <section class="t-block" aria-labelledby="h-essays">
+    <section class="t-block" id="essays" aria-labelledby="h-essays">
       <h2 class="t-label mono" id="h-essays"><span class="lamp"></span>Essays</h2>
       <div class="strip" style="--i:0">
         <div class="strip__bar" aria-hidden="true">
@@ -66,6 +70,13 @@ const captions = [
   <Fragment slot="deck">
     <Scale stops={stops} orient="v" />
     <p class="caption ph" data-caption data-captions={JSON.stringify(captions)}>{captions[0]}</p>
+    <nav class="deck-index" aria-label="On this page" data-index>
+      <ol>
+        <li><a href="#about" data-index-link="about"><span class="lamp"></span><span class="mono">01</span><span>About</span></a></li>
+        <li><a href="#essays" data-index-link="essays"><span class="lamp"></span><span class="mono">02</span><span>Essays</span></a></li>
+        <li><a href="#contact" data-index-link="contact"><span class="lamp"></span><span class="mono">03</span><span>Contact</span></a></li>
+      </ol>
+    </nav>
   </Fragment>
 
   <script>

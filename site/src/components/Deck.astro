@@ -3,14 +3,11 @@
 import Brand from './Brand.astro';
 import Selector from './Selector.astro';
 import Switch from './Switch.astro';
-interface Props { current: any; statement?: boolean; brandTag?: 'div' | 'h1' }
-const { current, statement = false, brandTag = 'div' } = Astro.props;
+interface Props { current: any; home?: boolean }
+const { current, home = false } = Astro.props;
 ---
-<aside class="deck" aria-label="Controls">
-  <div class="deck__head">
-    <Brand tag={brandTag} />
-    {statement && <p class="deck__statement ph">[Statement — one sentence]</p>}
-  </div>
+<aside class={`deck${home ? ' deck--home' : ''}`} aria-label="Controls">
+  {!home && <div class="deck__head"><Brand /></div>}
   <div class="deck__switches">
     <Switch kind="motion" />
     <Switch kind="sound" />

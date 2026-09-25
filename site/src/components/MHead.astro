@@ -5,9 +5,9 @@ import { angleOf } from '../config/site';
 interface Props { current: string; statement?: boolean; brandTag?: 'div' | 'h1' }
 const { current, statement = false, brandTag = 'div' } = Astro.props;
 ---
-<header class="mhead">
+<header class={`mhead${statement ? ' mhead--home' : ''}`}>
   <div class="mhead__row">
-    <Brand tag={brandTag} />
+    <Brand tag={brandTag} size={statement ? 'xl' : 'sm'} />
     <div class="mhead__right">
       <slot />
       <button class="knobbtn" type="button" data-menu-toggle aria-expanded="false" aria-controls="menu" style={`--a:${angleOf(current)}deg`}>

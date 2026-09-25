@@ -3,9 +3,10 @@
 import { Batch, makeRenderer } from '../gl/renderer';
 import { COL, Scene, type Cam, type Lean, type Wake } from './scene';
 
+const PERF: number[][] | null = new URLSearchParams(location.search).has('perf') ? ((window as unknown as { __perf: number[][] }).__perf = []) : null;
 export const motionOn = () => document.documentElement.getAttribute('data-motion') !== 'off';
 
-export interface Frame { q: number; cam: Cam; wakes?: Wake[]; lean?: Lean | null; busy?: boolean; needleAlpha?: number; ringFade?: number }
+export interface Frame { q: number; cam: Cam; wakes?: Wake[]; lean?: Lean | null; busy?: boolean; needleAlpha?: number; ringFade?: number; power?: number; band?: number }
 export interface Director {
   build(W: number, H: number, small: boolean): Scene;
   frame(now: number): Frame;
@@ -48,11 +49,15 @@ export function mountFace(el: HTMLElement, make: (face: Face) => Director): Face
     if (simming) simming = face.scene.simStep();
     const f = dir.frame(now);
     face.last = f;
-    face.scene.compute(f.q, { wakes: f.wakes, lean: f.lean });
+    const t0 = performance.now();
+    face.scene.compute(f.q, { wakes: f.wakes, lean: f.lean, power: f.power, band: f.band });
+    const t1 = performance.now();
     batch.reset();
     face.scene.emit(batch, f.cam, f.q, face.W, face.H, { needleAlpha: f.needleAlpha, ringFade: f.ringFade });
     dir.extras?.(batch, f, face.W, face.H);
+    const t2 = performance.now();
     r.draw(batch, COL.gap, COL.mark);
+    if (PERF) PERF.push([t1 - t0, t2 - t1, performance.now() - t2, batch.n]);
     if (simming || f.busy) face.request();
   }
 
@@ -80,6 +85,7 @@ export function mountFace(el: HTMLElement, make: (face: Face) => Director): Face
   new IntersectionObserver(([e]) => { inView = e.isIntersecting; if (inView) face.request(); }).observe(el);
   window.addEventListener('motionchange', () => { face.scene.dist.fill(0); face.scene.distV.fill(0); simming = false; face.request(); });
   layout();
+  queued = true; tick(performance.now());
   return face;
 }
 

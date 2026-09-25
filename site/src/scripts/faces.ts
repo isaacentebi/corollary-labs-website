@@ -7,14 +7,13 @@
 //  404      the field with nothing in it
 import { rng, type Response } from '../lib/fieldmath';
 import { Scene, COL } from './field/scene';
-import { mountFace, motionOn, ease3, clamp01, since } from './field/host';
+import { mountFace, motionOn, ease3, clamp01 } from './field/host';
 import { sound } from './sound';
 
 const el = document.querySelector<HTMLElement>('[data-face]:not([data-face="home"])');
 if (el) init(el, el.dataset.face || 'about');
 
 function init(el: HTMLElement, kind: string) {
-  const t0 = performance.now() + (kind === 'essay' ? 0 : 280);
   const pulses: { i: number; t: number }[] = [];
   let progress = 0;
   // essay: one lamp per section, placed where the section sits in the text
@@ -33,6 +32,7 @@ function init(el: HTMLElement, kind: string) {
         sc.build(H);
         const ang = [-58, -27, 4, 35].map((a) => ((a - 90) * Math.PI) / 180);
         ang.forEach((a, k) => { sc.bx[k] = Math.cos(a); sc.by[k] = Math.sin(a); });
+        sc.lum.fill(1);
         return sc;
       }
       const s = kind === 'essay' ? (small ? 19 : 22) : small ? 30 : 38;
@@ -54,9 +54,9 @@ function init(el: HTMLElement, kind: string) {
     },
     frame(now) {
       let q: number, busy = false;
+      // each page's face arrives already in its own settled state; only pointing at things moves it
       if (kind === 'essay') q = progress;
-      else if (!motionOn()) q = 1.2;
-      else { const t = since(now, t0, 1900); q = t * 1.2; busy = t < 1; }
+      else q = 1.2;
       for (let k = pulses.length - 1; k >= 0; k--) if (now - pulses[k].t > 900) pulses.splice(k, 1);
       if (pulses.length) busy = true;
       return { q, cam: { z: 1, ox: 0, oy: 0 }, busy, now } as never;
