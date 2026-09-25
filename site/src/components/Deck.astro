@@ -7,11 +7,11 @@ interface Props { current: any; home?: boolean }
 const { current, home = false } = Astro.props;
 ---
 <aside class={`deck${home ? ' deck--home' : ''}`} aria-label="Controls">
-  {!home && <div class="deck__head"><Brand /></div>}
+  <div class="deck__head"><Brand /></div>
+  <div class="deck__nav"><Selector current={current} home={home} /></div>
   <div class="deck__switches">
     <Switch kind="motion" />
     <Switch kind="sound" />
   </div>
-  <div class="deck__nav"><Selector current={current} /></div>
   <div class="deck__slot"><slot /></div>
 </aside>

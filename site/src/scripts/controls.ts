@@ -35,7 +35,8 @@ const go = (href: string, delay: number) => { window.setTimeout(() => { location
 document.querySelectorAll<HTMLElement>('[data-selector]').forEach((sel) => {
   const dial = sel.querySelector<HTMLElement>('[data-dial]')!;
   const links = [...sel.querySelectorAll<HTMLAnchorElement>('a[data-ang]')];
-  const home = Number(sel.dataset.currentAngle || 0);
+  let home = Number(sel.dataset.currentAngle || 0);
+  const zero = home;
   const angOf = (a: HTMLAnchorElement) => Number(a.dataset.ang);
   let a = home, v = 0, target = home, raf = 0, last = 0, detent = home;
 
@@ -62,14 +63,39 @@ document.querySelectorAll<HTMLElement>('[data-selector]').forEach((sel) => {
     set(d);
   };
 
+  let pointing = false, dragging = false, chosen: HTMLAnchorElement | null = null;
+  // on the home page the knob follows the section in view; at the top it rests at zero
+  if (sel.hasAttribute('data-spy')) {
+    const secs = links.map((l) => ({ l, el: document.getElementById(l.dataset.anchor || '') })).filter((x) => x.el) as { l: HTMLAnchorElement; el: HTMLElement }[];
+    const spy = () => {
+      let cur: HTMLAnchorElement | null = null;
+      for (const x of secs) if (x.el.getBoundingClientRect().top < window.innerHeight * 0.45) cur = x.l;
+      links.forEach((l) => l.classList.toggle('is-here', l === cur));
+      const next = cur ? angOf(cur) : zero;
+      if (next !== home) { home = next; if (!pointing && !dragging) toDetent(home); }
+    };
+    window.addEventListener('scroll', spy, { passive: true });
+    window.addEventListener('resize', spy);
+    spy();
+  }
+  const scrollToAnchor = (l: HTMLAnchorElement) => {
+    const t = document.getElementById(l.dataset.anchor || '');
+    if (!t) return false;
+    closeMenu();
+    t.scrollIntoView({ behavior: motionOn() ? 'smooth' : 'auto', block: 'start' });
+    history.replaceState(null, '', `#${t.id}`);
+    return true;
+  };
+
   links.forEach((l) => {
-    l.addEventListener('pointerenter', () => toDetent(angOf(l)));
+    l.addEventListener('pointerenter', () => { pointing = true; toDetent(angOf(l)); });
     l.addEventListener('focus', () => toDetent(angOf(l)));
-    l.addEventListener('pointerleave', () => toDetent(home));
+    l.addEventListener('pointerleave', () => { pointing = false; toDetent(home); });
     l.addEventListener('blur', () => toDetent(home));
     l.addEventListener('click', (e) => {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
       e.preventDefault();
+      if (l.dataset.anchor && scrollToAnchor(l)) { toDetent(angOf(l)); return; }
       if (angOf(l) === home && l.getAttribute('aria-current') === 'page') {
         toDetent(home); window.scrollTo({ top: 0, behavior: motionOn() ? 'smooth' : 'auto' });
         closeMenu(); return;
@@ -80,7 +106,6 @@ document.querySelectorAll<HTMLElement>('[data-selector]').forEach((sel) => {
   });
 
   // turn the knob: it resists between detents and snaps into them; navigate on release
-  let dragging = false, chosen: HTMLAnchorElement | null = null;
   const angleAt = (ev: PointerEvent) => {
     const r = dial.getBoundingClientRect();
     return (Math.atan2(ev.clientX - (r.left + r.width / 2), -(ev.clientY - (r.top + r.height / 2))) * 180) / Math.PI;
@@ -100,7 +125,8 @@ document.querySelectorAll<HTMLElement>('[data-selector]').forEach((sel) => {
   const end = () => {
     if (!dragging) return;
     dragging = false; sel.classList.remove('is-dragging');
-    if (chosen && angOf(chosen) !== home) { toDetent(angOf(chosen)); go(chosen.href, 200); }
+    if (chosen && chosen.dataset.anchor && scrollToAnchor(chosen)) toDetent(angOf(chosen));
+    else if (chosen && angOf(chosen) !== home) { toDetent(angOf(chosen)); go(chosen.href, 200); }
     else toDetent(home);
   };
   dial.addEventListener('pointerup', end);

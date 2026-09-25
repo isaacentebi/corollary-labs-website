@@ -3,6 +3,6 @@
 interface Props { kind: string; class?: string; label?: string; interactive?: boolean }
 const { kind, class: cls = '', label = '[Description of the display for screen readers]', interactive = false } = Astro.props;
 ---
-<div class={`face face--${kind} ${cls}`} data-face={kind} tabindex={interactive ? 0 : undefined} role={interactive ? 'application' : 'img'} aria-label={interactive ? 'Entry point: arrow keys move it' : label}>
+<div class={`face face--${kind} ${cls}`} data-face={kind} tabindex={interactive ? 0 : undefined} role={interactive ? 'application' : 'img'} aria-label={label}>
   <slot />
 </div>

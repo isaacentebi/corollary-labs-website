@@ -4,19 +4,34 @@ import Face from '../components/Face.astro';
 import { site } from '../config/site';
 import { url } from '../lib/url';
 import '../styles/pages.css';
+const team = [0, 1, 2, 3];
 ---
 <Base page="about" title="About">
-  <Face kind="about" class="face--band" />
+  <Face kind="about" class="face--band" label="The reorganised field, settled" />
   <div class="page">
     <header class="page-head">
+      <p class="mono page-head__kicker">Company</p>
       <h1 class="h-page">About</h1>
     </header>
     <section class="split">
-      <h2 class="t-label mono"><span class="lamp"></span>Company</h2>
+      <h2 class="t-label mono"><span class="lamp"></span>About</h2>
       <div class="prose-lg">
-        <p class="lede ph">[About — opening paragraph]</p>
-        <p class="ph">[About — second paragraph, on the questions the company works on]</p>
-        <p class="ph">[About — third paragraph, on how it works]</p>
+        <p class="lede">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
+      </div>
+    </section>
+    <section class="split">
+      <h2 class="t-label mono"><span class="lamp"></span>Team</h2>
+      <div>
+        <ul class="team team--short">
+          {team.map((i) => (
+            <li class="team__col">
+              <span class="team__n mono">{String(i + 1).padStart(2, '0')}</span>
+              <p class="team__name ph">[Name]</p>
+              <p class="team__role mono ph">[Role]</p>
+            </li>
+          ))}
+        </ul>
+        <a class="t-more" href={url('team/')}>Team <span aria-hidden="true">→</span></a>
       </div>
     </section>
     <section class="split">
@@ -25,7 +40,7 @@ import '../styles/pages.css';
         <div><dt class="mono">Entity</dt><dd class="ph">[Legal name]</dd></div>
         <div><dt class="mono">Founded</dt><dd class="ph">[Year]</dd></div>
         <div><dt class="mono">Location</dt><dd class="ph">[City]</dd></div>
-        <div><dt class="mono">Contact</dt><dd><a href={url('contact/')}>{site.email}</a></dd></div>
+        <div><dt class="mono">Email</dt><dd class={site.email.includes('@') ? '' : 'ph'}>{site.email}</dd></div>
       </dl>
     </section>
   </div>

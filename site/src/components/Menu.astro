@@ -2,12 +2,12 @@
 // Phone menu: the same selector and switches as the desktop deck, larger.
 import Selector from './Selector.astro';
 import Switch from './Switch.astro';
-interface Props { current: any }
-const { current } = Astro.props;
+interface Props { current: any; home?: boolean }
+const { current, home = false } = Astro.props;
 ---
 <div class="menu" id="menu" data-menu hidden>
   <div class="menu__panel" role="dialog" aria-label="Menu">
-    <Selector current={current} size="menu" />
+    <Selector current={current} home={home} size="menu" />
     <div class="menu__switches">
       <Switch kind="motion" />
       <Switch kind="sound" />

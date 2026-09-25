@@ -7,12 +7,12 @@ import '../../styles/pages.css';
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
 ---
-<Base page="essays" title="Essays">
+<Base page="essays" title="Research" description="Essays on agents, organisations and how new technology spreads.">
   <Face kind="essays" class="face--band" />
   <div class="page">
     <header class="page-head">
-      <h1 class="h-page">Essays</h1>
-      <p class="page-head__note ph">[One line on what the essays cover]</p>
+      <h1 class="h-page">Research</h1>
+      <p class="page-head__note">Essays on agents, organisations and how new technology spreads.</p>
     </header>
     <ol class="elist" data-count={essays.length}>
       {essays.map((e, i) => (

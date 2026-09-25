@@ -1,27 +1,33 @@
 ---
-// Site navigation as a rotary selector: five detents, one per page.
-// The labels are ordinary links; the knob points at the current page, follows hover
-// and focus, and can be turned by dragging (it resists between detents).
-import { pages, ANGLES, angleOf, type PageKey } from '../config/site';
+// Site navigation as a rotary selector: a zero position (home) and four detents, one per
+// nav item. The labels are ordinary links; the knob points at where you are (on the home
+// page it follows the section in view), follows hover and focus, and can be turned by
+// dragging (it resists between detents).
+import { nav, ANGLES, ZERO, angleOf, sectionOf } from '../config/site';
 import { url } from '../lib/url';
-interface Props { current: PageKey | 'essay' | '404'; size?: 'deck' | 'menu' }
-const { current, size = 'deck' } = Astro.props;
-const cur = current === 'essay' ? 'essays' : current;
+interface Props { current: string; home?: boolean; size?: 'deck' | 'menu' }
+const { current, home = false, size = 'deck' } = Astro.props;
+const cur = sectionOf(current);
 const curAng = angleOf(current);
-const items = pages.map((p, i) => {
+const items = nav.map((p, i) => {
   const a = ANGLES[i], rad = (a * Math.PI) / 180;
-  return { ...p, a, sx: Math.sin(rad).toFixed(4), sy: (-Math.cos(rad)).toFixed(4), tx: a < -10 ? '-100%' : a > 10 ? '0%' : '-50%' };
+  const href = home ? `#${p.anchor}` : url(p.path);
+  return { ...p, a, href, sx: Math.sin(rad).toFixed(4), sy: (-Math.cos(rad)).toFixed(4), tx: a < -10 ? '-100%' : a > 10 ? '0%' : '-50%' };
 });
+const zr = (ZERO * Math.PI) / 180;
 ---
-<nav class={`selector selector--${size}`} aria-label="Site" data-selector style={`--a:${curAng}deg`} data-current-angle={curAng}>
+<nav class={`selector selector--${size}`} aria-label="Main" data-selector data-spy={home ? '' : undefined} style={`--a:${curAng}deg`} data-current-angle={curAng}>
   <div class="selector__dial" data-dial aria-hidden="true">
     <span class="selector__pointer"></span>
   </div>
   <ul>
+    <li class="selector__zero" aria-hidden="true" style={`--ang:${ZERO}deg;--sx:${Math.sin(zr).toFixed(4)};--sy:${(-Math.cos(zr)).toFixed(4)}`}>
+      <span class="selector__tick"></span><span class="selector__dot"></span>
+    </li>
     {items.map((it) => (
       <li style={`--ang:${it.a}deg;--sx:${it.sx};--sy:${it.sy};--tx:${it.tx}`}>
         <span class="selector__tick" aria-hidden="true"></span>
-        <a href={url(it.path)} data-ang={it.a} aria-current={it.key === cur ? 'page' : undefined}><span>{it.label}</span></a>
+        <a href={it.href} data-ang={it.a} data-anchor={home ? it.anchor : undefined} aria-current={!home && it.key === cur ? 'page' : undefined}><span>{it.label}</span></a>
       </li>
     ))}
   </ul>

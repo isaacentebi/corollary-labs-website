@@ -36,13 +36,13 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    <Menu current={page} />
+    <Menu current={page} home={home} />
     <div class="shell">
       <Deck current={page} home={home}>
         <slot name="deck" />
       </Deck>
       <div class="col">
-        {!home && <MHead current={page}><slot name="mhead" /></MHead>}
+        <MHead current={page} statement={home} brandTag={home ? 'h1' : 'div'}><slot name="mhead" /></MHead>
         <main id="main">
           <slot />
         </main>

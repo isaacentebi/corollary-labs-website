@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Face from '../components/Face.astro';
-import { site } from '../config/site';
+import { site, hasEmail } from '../config/site';
 import '../styles/pages.css';
 ---
 <Base page="contact" title="Contact">
@@ -13,8 +13,8 @@ import '../styles/pages.css';
     <section class="split">
       <h2 class="t-label mono"><span class="lamp"></span>Write</h2>
       <div>
-        <p class="contact-big"><a href="#" data-ping="0">{site.email}</a></p>
-        <p class="ph">[One line on what to write about]</p>
+        <p class="contact-line">Deploying agents in your organisation? Talk to us.</p>
+        {hasEmail ? <p class="contact-big"><a href={`mailto:${site.email}`} data-ping="0">{site.email}</a></p> : <p class="contact-big ph" data-ping="0">{site.email}</p>}
       </div>
     </section>
     <section class="split">

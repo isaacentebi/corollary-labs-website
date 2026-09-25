@@ -1,30 +1,42 @@
-// The home instrument: one scroll, four states.
-//  1  equilibrium: push the needles and they return (a ghost lamp shows where the agent will enter)
-//  2  an agent enters along the flow; on arrival a pulse, and nearby needles lean towards it
-//  3  its set point moves the equilibrium: a damped front travels out, needles overshoot and settle
-//  4  one continuous pull-back: this organisation is one screen of a wall; the change travels
-//     screen to screen across the gutters; two screens keep their old state
+// The home instrument, in two places.
+//  hero      the organisation in equilibrium: push the needles and they return; a ghost lamp
+//            glides in and rests where an agent would enter (click or arrow keys move it)
+//  approach  the story, played by its legend (the tuning scale), never by the page scroll:
+//   01  the organisation: the equilibrium
+//   02  an agent enters along the flow; on arrival a pulse, and nearby needles lean towards it
+//   03  its set point moves the equilibrium: a damped front travels out, needles overshoot and settle
+//   04  one continuous pull-back: this organisation is one screen of a wall; the change travels
+//       screen to screen across the gutters; two screens keep their old state
+// The entry point chosen on the hero is where the agent enters in the approach figure.
 import { rng, type Response } from '../lib/fieldmath';
 import { Scene, COL, formFrom, type Agent } from './field/scene';
-import { mountFace, motionOn, ease3, clamp01, type Frame } from './field/host';
+import { mountFace, motionOn, ease3, clamp01, type Frame, type Face } from './field/host';
 import { sound } from './sound';
 
-const story = document.querySelector<HTMLElement>('[data-story]');
-const faceEl = document.querySelector<HTMLElement>('[data-face="home"]');
-const scaleEls = [...document.querySelectorAll<HTMLElement>('[data-scale]')];
-const captionEls = [...document.querySelectorAll<HTMLElement>('[data-caption]')];
-
 const T = { enterA: 0.07, arrive: 0.2, settle: 0.285, zoomA: 0.6, zoomB: 0.8, spread: 0.7 };
-export const STOPS = [0, 0.25, 0.56, 1];
+/** story positions of the four beats, and where their detents sit on the scale */
+const STOPS = [0, 0.25, 0.56, 1];
+const SHOWN = [0, 1 / 3, 2 / 3, 1];
 const stateOf = (q: number) => (q < 0.12 ? 0 : q < 0.4 ? 1 : q < 0.78 ? 2 : 3);
+const lerpMap = (x: number, from: number[], to: number[]) => {
+  for (let i = 1; i < from.length; i++) if (x <= from[i]) return to[i - 1] + ((x - from[i - 1]) / (from[i] - from[i - 1])) * (to[i] - to[i - 1]);
+  return to[to.length - 1];
+};
+const toShown = (p: number) => lerpMap(clamp01(p), STOPS, SHOWN);
+const fromShown = (x: number) => lerpMap(clamp01(x), SHOWN, STOPS);
 
-if (story && faceEl) init(story, faceEl);
+type Mode = 'hero' | 'approach';
+interface Story { face: Face; setEntry(u: number, v: number, kick: boolean): void; request(): void }
+const shared = { entry: { u: 0.58, v: 0.46 }, stories: [] as Story[] };
 
-function init(story: HTMLElement, el: HTMLElement) {
-  const captions: string[] = JSON.parse(captionEls[0]?.dataset.captions || '[]');
-  let p = 0;
+const heroEl = document.querySelector<HTMLElement>('[data-face="home"]');
+const figEl = document.querySelector<HTMLElement>('[data-face="approach"]');
+if (heroEl) mountStory(heroEl, 'hero', () => 0);
+if (figEl) initApproach(figEl);
+
+function mountStory(el: HTMLElement, mode: Mode, getP: () => number): Story {
+  const hero = mode === 'hero';
   let main!: Agent, emitter!: Agent;
-  let entry = { u: 0.58, v: 0.46 };
   let zEnd = 0.3, N = 3;
   // ghost lamp: where the agent will enter, before it has
   const ghost = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0, a: 0, ta: 0, hover: false, focus: false, last: 0 };
@@ -33,13 +45,14 @@ function init(story: HTMLElement, el: HTMLElement) {
   let opened = false, pulseAt = -1;
   const pulses: { x: number; y: number; t: number; k: number }[] = [];
   const GHOST_MS = 2100;
+  const qNow = () => (motionOn() ? getP() : STOPS[stateOf(getP())]);
 
   const face = mountFace(el, (face) => ({
     build(W, H, small) {
       const sc = new Scene();
       N = 3;
       const gap = Math.round(Math.min(W, H) * (small ? 0.075 : 0.06));
-      const s = small ? 36 : W > 1250 ? 46 : 42;
+      const s = small ? 34 : W > 1250 ? 46 : 42;
       const c = (N - 1) / 2;
       const R = rng(9);
       for (let row = 0; row < N; row++) for (let col = 0; col < N; col++) {
@@ -52,8 +65,9 @@ function init(story: HTMLElement, el: HTMLElement) {
       const wallW = N * W + (N - 1) * gap, wallH = N * H + (N - 1) * gap, m = small ? 10 : 16;
       zEnd = Math.min((W - 2 * m) / wallW, (H - 2 * m) / wallH);
 
-      main = sc.addAgent(home, entry.u, entry.v, { T: T.settle, c: 4.6, w: 170, z: 0.3, ring: true, reach: 1.2, lamp: false, lampAt: T.arrive });
-      emitter = sc.addAgent(home, entry.u, entry.v, { T: T.spread, rc: 12, w: 240, z: 0.3, ring: true, reach: 2.4, lamp: false, emitOnly: true });
+      const { u, v } = shared.entry;
+      main = sc.addAgent(home, u, v, { T: T.settle, c: 4.6, w: 170, z: 0.3, ring: true, reach: 1.2, lamp: false, lampAt: T.arrive });
+      emitter = sc.addAgent(home, u, v, { T: T.spread, rc: 12, w: 240, z: 0.3, ring: true, reach: 2.4, lamp: false, emitOnly: true });
       // each organisation answers in its own way
       const holdouts = new Set([2, 7]); // top-right, bottom-middle
       for (let i = 0; i < N * N; i++) {
@@ -63,9 +77,9 @@ function init(story: HTMLElement, el: HTMLElement) {
       }
       schedule(sc);
       ghost.x = ghost.tx = main.x; ghost.y = ghost.ty = main.y;
-      if (!opened) {
+      if (hero && !opened) {
         opened = true;
-        if (motionOn() && p < T.enterA) {
+        if (motionOn()) {
           let seen = false;
           try { seen = sessionStorage.getItem('cyber.opened') === '1'; sessionStorage.setItem('cyber.opened', '1'); } catch { /* ignore */ }
           opening = { t0: performance.now(), power: !seen, path: contour(sc), ghostAt: seen ? 250 : 1500 };
@@ -75,7 +89,7 @@ function init(story: HTMLElement, el: HTMLElement) {
       return sc;
     },
     frame(now) {
-      const q = motionOn() ? p : STOPS[stateOf(p)];
+      const q = qNow();
       const sc = face.scene;
       const t = ease3(clamp01((q - T.zoomA) / (T.zoomB - T.zoomA)));
       const z = Math.exp(Math.log(zEnd) * t);
@@ -92,7 +106,7 @@ function init(story: HTMLElement, el: HTMLElement) {
 
       if (opening) {
         const ms = now - opening.t0;
-        if (!motionOn() || q >= T.enterA) { opening = null; ghost.a = 0.6; }
+        if (!motionOn()) { opening = null; ghost.a = 0.6; }
         else {
           busy = true;
           if (opening.power && ms < 1900) power = ms / 1000;
@@ -112,7 +126,7 @@ function init(story: HTMLElement, el: HTMLElement) {
         }
       }
       // ghost spring (following the pointer, or resting on the entry point)
-      if (!opening) {
+      if (hero && !opening) {
         if (!ghost.hover && !ghost.focus) { ghost.tx = main.x; ghost.ty = main.y; ghost.ta = 0.6; }
         const dt = Math.min(0.05, (now - (ghost.last || now)) / 1000) || 0.016;
         const k = 170, c = 26;
@@ -148,9 +162,9 @@ function init(story: HTMLElement, el: HTMLElement) {
         b.push(2, X(pu.x), Y(pu.y), lampR + s * 2.4 * (1 - Math.pow(1 - t, 3)), 1.5, 0, COL.signal, 0.8 * pu.k * (1 - t));
       }
       // ghost + crosshair
-      const gA = ghost.a * (1 - clamp01(f.ep * 1.4));
-      if (gA > 0.03 && q < T.arrive) {
-        if ((ghost.hover || ghost.focus) && q < 0.02) {
+      const gA = hero ? ghost.a : 0;
+      if (gA > 0.03) {
+        if (ghost.hover || ghost.focus) {
           const pl = sc.panels[main.panel];
           b.push(3, X(ghost.x), Y(pl.y + pl.h / 2), 0.5, (pl.h * z) / 2, 0, COL.mark, 0.1, 0);
           b.push(3, X(pl.x + pl.w / 2), Y(ghost.y), (pl.w * z) / 2, 0.5, 0, COL.mark, 0.1, 0);
@@ -170,10 +184,10 @@ function init(story: HTMLElement, el: HTMLElement) {
     },
     canPush: (f) => f.q < T.zoomA - 0.02 && !opening,
     onPointer(ev, wx, wy, kind) {
-      const q = motionOn() ? p : STOPS[stateOf(p)];
+      if (!hero) return;
       const pl = face.scene.panels[main.panel];
       const inPanel = wx > pl.x && wx < pl.x + pl.w && wy > pl.y && wy < pl.y + pl.h;
-      if (kind === 'leave' || !inPanel || q >= T.enterA || opening) { ghost.hover = false; el.classList.remove('is-aiming'); face.request(); return; }
+      if (kind === 'leave' || !inPanel || opening) { ghost.hover = false; el.classList.remove('is-aiming'); face.request(); return; }
       const c = clampEntry((wx - pl.x) / pl.w, (wy - pl.y) / pl.h);
       const cell = face.scene.cell(main.panel, c.u, c.v);
       if (kind === 'move' && ev.pointerType !== 'touch') {
@@ -181,15 +195,15 @@ function init(story: HTMLElement, el: HTMLElement) {
         ghost.tx = pl.x + cell.u * pl.w; ghost.ty = pl.y + cell.v * pl.h;
         face.request();
       }
-      if (kind === 'click') setEntry(cell.u, cell.v, true);
+      if (kind === 'click') chooseEntry(cell.u, cell.v);
     },
   }));
 
   function clampEntry(u: number, v: number) { return { u: Math.min(0.86, Math.max(0.14, u)), v: Math.min(0.84, Math.max(0.16, v)) }; }
   function setEntry(u: number, v: number, kick: boolean) {
-    entry = clampEntry(u, v);
-    face.scene.moveAgent(main, entry.u, entry.v);
-    face.scene.moveAgent(emitter, entry.u, entry.v);
+    const e = clampEntry(u, v);
+    face.scene.moveAgent(main, e.u, e.v);
+    face.scene.moveAgent(emitter, e.u, e.v);
     schedule(face.scene);
     if (kick) { face.scene.kick(main.x, main.y, 5, face.scene.panels[0].s * 1.4); face.kickSim(); sound.tick(); }
     face.request();
@@ -228,80 +242,102 @@ function init(story: HTMLElement, el: HTMLElement) {
     return pts.reverse();
   }
 
-  // keyboard: arrows move the entry point
-  el.addEventListener('focus', () => { ghost.focus = true; ghost.ta = 0.95; face.request(); });
-  el.addEventListener('blur', () => { ghost.focus = false; face.request(); });
-  el.addEventListener('keydown', (ev) => {
-    const q = motionOn() ? p : STOPS[stateOf(p)];
-    if (q >= T.enterA) return;
-    const pl = face.scene.panels[main.panel];
-    const di = ev.key === 'ArrowLeft' ? -1 : ev.key === 'ArrowRight' ? 1 : 0, dj = ev.key === 'ArrowUp' ? -1 : ev.key === 'ArrowDown' ? 1 : 0;
-    if (!di && !dj) return;
-    ev.preventDefault();
-    setEntry(main.u + di / pl.cols, main.v + dj / pl.rows, true);
-    ghost.tx = main.x; ghost.ty = main.y;
-  });
+  if (hero) {
+    // keyboard: arrows move the entry point
+    el.addEventListener('focus', () => { ghost.focus = true; ghost.ta = 0.95; face.request(); });
+    el.addEventListener('blur', () => { ghost.focus = false; face.request(); });
+    el.addEventListener('keydown', (ev) => {
+      const pl = face.scene.panels[main.panel];
+      const di = ev.key === 'ArrowLeft' ? -1 : ev.key === 'ArrowRight' ? 1 : 0, dj = ev.key === 'ArrowUp' ? -1 : ev.key === 'ArrowDown' ? 1 : 0;
+      if (!di && !dj) return;
+      ev.preventDefault();
+      chooseEntry(main.u + di / pl.cols, main.v + dj / pl.rows);
+      ghost.tx = main.x; ghost.ty = main.y;
+    });
+  }
 
-  /* ---------- the story scale: drag with inertia, detents, keys ---------- */
-  const total = () => story.offsetHeight - window.innerHeight;
-  const topOf = () => story.getBoundingClientRect().top + window.scrollY;
-  const scrollToP = (q: number) => window.scrollTo({ top: topOf() + q * total(), behavior: 'auto' });
-  let glide = 0;
-  function glideTo(target: number) {
-    cancelAnimationFrame(glide);
-    if (!motionOn()) { scrollToP(target); return; }
-    let x = p, v = 0, last = performance.now();
-    const stepF = (now: number) => {
-      const dt = Math.min(0.04, (now - last) / 1000); last = now;
-      v += (-90 * (x - target) - 17 * v) * dt; x += v * dt;
-      scrollToP(Math.min(1, Math.max(0, x)));
-      if (Math.abs(x - target) > 0.0008 || Math.abs(v) > 0.002) glide = requestAnimationFrame(stepF);
-      else scrollToP(target);
-    };
-    glide = requestAnimationFrame(stepF);
+  const story: Story = { face, setEntry, request: () => face.request() };
+  shared.stories.push(story);
+  face.request();
+  return story;
+}
+
+/** The entry point is shared: choosing it on the hero moves it in the approach figure too. */
+function chooseEntry(u: number, v: number) {
+  shared.entry = { u, v };
+  shared.stories.forEach((s, i) => s.setEntry(u, v, i === 0));
+}
+
+/* ---------- the approach figure: played by its legend and tuning scale ---------- */
+function initApproach(el: HTMLElement) {
+  const fig = el.closest<HTMLElement>('[data-story]')!;
+  const scaleEls = [...fig.querySelectorAll<HTMLElement>('[data-scale]')];
+  let p = 0;
+  const story = mountStory(el, 'approach', () => p);
+
+  // p moves over time, never with the page scroll
+  let raf = 0, queue: { to: number; hold: number }[] = [], holdUntil = 0, last = 0;
+  const RATE = 1 / 9000; // story units per ms: the whole story in about nine seconds
+  function run(now: number) {
+    raf = 0;
+    if (now < holdUntil) { raf = requestAnimationFrame(run); return; }
+    const next = queue[0];
+    if (!next) return;
+    const d = next.to - p, stepMs = Math.min(40, now - (last || now)); last = now;
+    const dp = Math.sign(d) * Math.max(RATE * 0.3, RATE * Math.min(1, Math.abs(d) / 0.03 + 0.25)) * stepMs;
+    if (Math.abs(d) <= Math.abs(dp) || !motionOn()) {
+      p = next.to; queue.shift(); last = 0;
+      if (queue.length) holdUntil = now + next.hold;
+    } else p += dp;
+    sync(); story.request();
+    if (queue.length) raf = requestAnimationFrame(run);
   }
-  function coast(v0: number) {
-    // release with velocity: coast with friction, then settle into the nearest detent
-    cancelAnimationFrame(glide);
-    if (!motionOn() || Math.abs(v0) < 0.0004) { glideTo(nearestStop(p)); return; }
-    let x = p, v = v0, last = performance.now();
-    const stepF = (now: number) => {
-      const dt = now - last; last = now;
-      x += v * dt; v *= Math.pow(0.994, dt);
-      if (x <= 0 || x >= 1) { x = Math.min(1, Math.max(0, x)); v = 0; }
-      scrollToP(x);
-      if (Math.abs(v) > 0.00025) glide = requestAnimationFrame(stepF);
-      else glideTo(nearestStop(x));
-    };
-    glide = requestAnimationFrame(stepF);
+  function play(targets: { to: number; hold: number }[]) {
+    queue = targets; holdUntil = 0; last = 0;
+    if (!motionOn()) { p = targets[targets.length - 1]?.to ?? p; queue = []; sync(); story.request(); return; }
+    if (!raf) raf = requestAnimationFrame(run);
   }
-  const nearestStop = (x: number) => STOPS.reduce((b, s) => (Math.abs(s - x) < Math.abs(b - x) ? s : b), 0);
+  const stop = () => { queue = []; cancelAnimationFrame(raf); raf = 0; last = 0; };
+  const goBeat = (k: number) => {
+    const to = STOPS[k];
+    // going back: cut to the beat before, then play into it (the story runs forwards)
+    if (to < p - 0.001) { p = k === 0 ? 0 : Math.max(0, to - 0.1); sync(); story.request(); }
+    play([{ to, hold: 0 }]);
+    sound.tick();
+  };
+
+  // plays itself once, the first time it is in view (motion on only)
+  let played = false;
+  new IntersectionObserver((es) => {
+    for (const e of es) if (e.isIntersecting && !played && p === 0 && motionOn()) {
+      played = true;
+      setTimeout(() => play([{ to: STOPS[1], hold: 1300 }, { to: STOPS[2], hold: 1500 }, { to: STOPS[3], hold: 0 }]), 500);
+    }
+  }, { threshold: 0.55 }).observe(el);
 
   for (const sEl of scaleEls) {
     const track = sEl.querySelector<HTMLElement>('.scale__track')!;
     const fromPointer = (ev: PointerEvent) => {
       const r = track.getBoundingClientRect();
-      return clamp01(r.height > r.width ? (ev.clientY - r.top) / r.height : (ev.clientX - r.left) / r.width);
+      return fromShown(clamp01(r.height > r.width ? (ev.clientY - r.top) / r.height : (ev.clientX - r.left) / r.width));
     };
-    let drag = false, hist: { x: number; t: number }[] = [];
+    let drag = false;
     sEl.addEventListener('pointerdown', (ev) => {
-      const stop = (ev.target as HTMLElement).closest<HTMLElement>('[data-stop]');
-      cancelAnimationFrame(glide);
-      if (stop) { glideTo(Number(stop.dataset.stop)); sound.tick(); return; }
-      drag = true; hist = []; sEl.setPointerCapture(ev.pointerId); sEl.classList.add('is-dragging');
-      const x = fromPointer(ev); hist.push({ x, t: performance.now() }); scrollToP(x);
+      const stopEl = (ev.target as HTMLElement).closest<HTMLElement>('[data-stop]');
+      stop(); played = true;
+      if (stopEl) { goBeat(Number(stopEl.dataset.beat)); return; }
+      drag = true; sEl.setPointerCapture(ev.pointerId); sEl.classList.add('is-dragging');
+      p = fromPointer(ev); sync(); story.request();
     });
     sEl.addEventListener('pointermove', (ev) => {
       if (!drag) return;
-      const x = fromPointer(ev); hist.push({ x, t: performance.now() }); if (hist.length > 6) hist.shift();
-      scrollToP(x);
+      p = fromPointer(ev); sync(); story.request();
     });
     const end = () => {
       if (!drag) return;
       drag = false; sEl.classList.remove('is-dragging');
-      const a = hist[0], b = hist[hist.length - 1];
-      const v = a && b && b.t - a.t > 0 && performance.now() - b.t < 80 ? (b.x - a.x) / (b.t - a.t) : 0;
-      coast(v);
+      const k = STOPS.reduce((b, s, i) => (Math.abs(s - p) < Math.abs(STOPS[b] - p) ? i : b), 0);
+      play([{ to: STOPS[k], hold: 0 }]);
     };
     sEl.addEventListener('pointerup', end); sEl.addEventListener('pointercancel', end);
     sEl.addEventListener('keydown', (ev) => {
@@ -311,50 +347,27 @@ function init(story: HTMLElement, el: HTMLElement) {
       if (ev.key === 'ArrowUp' || ev.key === 'ArrowLeft' || ev.key === 'PageUp') to = Math.max(0, st - 1);
       if (ev.key === 'Home') to = 0;
       if (ev.key === 'End') to = 3;
-      if (to >= 0) { ev.preventDefault(); glideTo(STOPS[to]); }
+      if (to >= 0) { ev.preventDefault(); stop(); played = true; goBeat(to); }
     });
   }
-  window.addEventListener('wheel', () => cancelAnimationFrame(glide), { passive: true });
-  window.addEventListener('touchstart', () => cancelAnimationFrame(glide), { passive: true });
+  // the legend's beats are buttons too
+  fig.querySelectorAll<HTMLButtonElement>('[data-beat-btn]').forEach((b) => b.addEventListener('click', () => { stop(); played = true; goBeat(Number(b.dataset.beatBtn)); }));
 
-  /* ---------- deck ---------- */
   let lastState = -1;
-  function syncDeck() {
-    const st = stateOf(p);
+  function sync() {
+    const st = stateOf(p), x = toShown(p);
     for (const sEl of scaleEls) {
-      sEl.style.setProperty('--p', p.toFixed(4));
-      sEl.setAttribute('aria-valuenow', String(Math.round(p * 100)));
+      sEl.style.setProperty('--p', x.toFixed(4));
+      sEl.setAttribute('aria-valuenow', String(Math.round(x * 100)));
     }
     if (st !== lastState) {
       if (lastState >= 0) sound.detent();
       lastState = st;
-      for (const sEl of scaleEls) {
-        sEl.querySelectorAll('[data-stop]').forEach((li, i) => li.classList.toggle('is-on', i === st));
-        sEl.setAttribute('aria-valuetext', `State ${st + 1} of 4`);
-      }
-      captionEls.forEach((c) => { c.textContent = captions[st] ?? ''; });
+      fig.querySelectorAll('[data-beat]').forEach((li) => li.classList.toggle('is-on', Number((li as HTMLElement).dataset.beat) === st));
+      for (const sEl of scaleEls) { const li = sEl.querySelectorAll<HTMLElement>("[data-beat]")[st]; sEl.setAttribute("aria-valuetext", `${String(st + 1).padStart(2, "0")} ${li?.querySelector(".scale__label")?.textContent ?? ""}`); }
     }
+    (window as unknown as { __cyber: object }).__cyber = { p, state: st, renderer: el.dataset.renderer };
   }
-  // once the story has ended, the deck's scale becomes a section index
-  const deck = document.querySelector<HTMLElement>('.deck');
-  const idx = [...document.querySelectorAll<HTMLAnchorElement>('[data-index-link]')];
-  const secs = idx.map((a) => document.getElementById(a.dataset.indexLink || '')).filter(Boolean) as HTMLElement[];
-  const spy = () => {
-    let cur = '';
-    for (const sEl of secs) if (sEl.getBoundingClientRect().top < window.innerHeight * 0.55) cur = sEl.id;
-    idx.forEach((a) => { const on = a.dataset.indexLink === cur; a.classList.toggle('is-on', on); if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
-  };
-  const onScroll = () => {
-    const r = story.getBoundingClientRect();
-    deck?.classList.toggle('is-tail', r.bottom < window.innerHeight * 0.55);
-    spy();
-    p = total() > 0 ? clamp01(-r.top / total()) : 0;
-    syncDeck(); face.request();
-    (window as unknown as { __cyber: object }).__cyber = { p, state: stateOf(p), renderer: el.dataset.renderer };
-  };
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
-  window.addEventListener('motionchange', onScroll);
-  onScroll();
-  face.request();
+  window.addEventListener('motionchange', () => { stop(); sync(); story.request(); });
+  sync();
 }

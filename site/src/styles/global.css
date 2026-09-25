@@ -67,7 +67,8 @@ button { font: inherit; color: inherit; }
 .deck { position: sticky; top: 20px; height: calc(100svh - 40px); display: flex; flex-direction: column; gap: 24px; padding: 2px 0 68px; user-select: none; -webkit-user-select: none; view-transition-name: deck; }
 .deck__statement { margin: 12px 0 0; font-size: 15px; line-height: 1.4; max-width: 14em; }
 .deck__switches { display: grid; gap: 2px; }
-.deck__nav { margin-left: -2px; }
+.deck__nav { margin-left: -2px; margin-top: 4px; }
+.deck__head { margin-top: -6px; }
 .deck__slot { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 18px; }
 .mhead { display: none; }
 @media (max-width: 899px) {
@@ -105,6 +106,9 @@ button { font: inherit; color: inherit; }
 .selector ul { list-style: none; margin: 0; padding: 0; }
 .selector li { position: absolute; left: 50%; top: var(--top); width: 0; height: 0; }
 .selector__tick { position: absolute; left: -0.5px; top: 0; width: 1px; height: 6px; background: var(--ink-3); transform-origin: 50% 0; transform: rotate(calc(180deg + var(--ang))) translateY(calc(var(--knob) / 2 + 4px)); }
+.selector__zero .selector__tick { background: var(--ink-3); }
+.selector__dot { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); transform: translate(calc((var(--r) + 4px) * var(--sx)), calc((var(--r) + 4px) * var(--sy))); }
+.selector a.is-here { color: var(--ink); }
 .selector a { position: absolute; left: 0; top: 0; display: flex; align-items: center; min-height: 32px; white-space: nowrap; text-decoration: none; font-size: var(--fs); line-height: 1; font-weight: 500; color: var(--ink-2); padding: 0 4px; transform: translate(calc(var(--r) * var(--sx)), calc(var(--r) * var(--sy))) translate(var(--tx), -50%); transition: color 0.15s; }
 .selector--menu a { min-height: 44px; padding: 0 8px; }
 .selector a:hover, .selector a:focus-visible, .selector a[aria-current='page'] { color: var(--ink); }

@@ -3,6 +3,7 @@
 //  essay    one lamp per section; reading moves the front through the strip
 //  about    the reorganised field, settling as the page arrives
 //  team     four large gauges, one per person, each at its own angle
+//  caps     (home, Capabilities) the same four gauges, one per capability
 //  contact  one lamp; pointing at the address pings it
 //  404      the field with nothing in it
 import { rng, type Response } from '../lib/fieldmath';
@@ -10,8 +11,7 @@ import { Scene, COL } from './field/scene';
 import { mountFace, motionOn, ease3, clamp01 } from './field/host';
 import { sound } from './sound';
 
-const el = document.querySelector<HTMLElement>('[data-face]:not([data-face="home"])');
-if (el) init(el, el.dataset.face || 'about');
+document.querySelectorAll<HTMLElement>('[data-face]:not([data-face="home"]):not([data-face="approach"])').forEach((el) => init(el, el.dataset.face || 'about'));
 
 function init(el: HTMLElement, kind: string) {
   const pulses: { i: number; t: number }[] = [];
@@ -25,12 +25,12 @@ function init(el: HTMLElement, kind: string) {
   const face = mountFace(el, (face) => ({
     build(W, H, small) {
       const sc = new Scene();
-      if (kind === 'team') {
+      if (kind === 'team' || kind === 'caps') {
         const n = 4, s = Math.min(W / n, H * 0.92);
         const i = sc.addPanel(0, 0, W, H, s, 3);
         const p = sc.panels[i]; p.cols = n; p.rows = 1; p.s = Math.min(W / n, H);
         sc.build(H);
-        const ang = [-58, -27, 4, 35].map((a) => ((a - 90) * Math.PI) / 180);
+        const ang = (kind === 'caps' ? [-40, -8, 22, 52] : [-58, -27, 4, 35]).map((a) => ((a - 90) * Math.PI) / 180);
         ang.forEach((a, k) => { sc.bx[k] = Math.cos(a); sc.by[k] = Math.sin(a); });
         sc.lum.fill(1);
         return sc;
@@ -74,7 +74,7 @@ function init(el: HTMLElement, kind: string) {
 
   const ping = (i: number) => {
     const a = face.scene.agents[i];
-    if (kind === 'team') {
+    if (kind === 'team' || kind === 'caps') {
       face.scene.distV[i] += 16 * (R() < 0.5 ? -1 : 1); face.kickSim(); sound.tick(); return;
     }
     if (!a || !motionOn()) return;
@@ -82,7 +82,9 @@ function init(el: HTMLElement, kind: string) {
     face.scene.kick(a.x, a.y, 4, face.scene.panels[0].s * 1.3);
     face.kickSim(); sound.tick();
   };
-  document.querySelectorAll<HTMLElement>('[data-ping]').forEach((t) => {
+  // the things that ping this face: inside its scope, or anywhere on a page with one face
+  const scope: ParentNode = el.closest('[data-face-scope]') ?? document;
+  scope.querySelectorAll<HTMLElement>('[data-ping]').forEach((t) => {
     const i = Number(t.dataset.ping);
     t.addEventListener('pointerenter', () => ping(i));
     t.addEventListener('focus', () => ping(i));

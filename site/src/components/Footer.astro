@@ -1,20 +1,20 @@
 ---
 // The footer is the rating plate: what the instrument is, where it comes from.
 import Brand from './Brand.astro';
-import { site, pages } from '../config/site';
+import { site, footerNav } from '../config/site';
 import { url } from '../lib/url';
 ---
-<footer class="foot" id="contact">
+<footer class="foot">
   <div class="plate">
     <div class="plate__brand"><Brand size="lg" /></div>
     <dl class="plate__rows">
-      <div><dt class="mono">Contact</dt><dd><a href={url('contact/')}>{site.email}</a></dd></div>
+      <div><dt class="mono">Email</dt><dd class={site.email.includes('@') ? '' : 'ph'}>{site.email}</dd></div>
       <div><dt class="mono">Location</dt><dd class="ph">[City]</dd></div>
       <div><dt class="mono">Entity</dt><dd class="ph">[Legal name]</dd></div>
-      <div><dt class="mono">Year</dt><dd>{site.year}</dd></div>
+      <div><dt class="mono">©</dt><dd>{site.year} {site.name}</dd></div>
     </dl>
     <nav class="plate__nav" aria-label="Footer">
-      <ul>{pages.map((p) => <li><a href={url(p.path)}>{p.label}</a></li>)}</ul>
+      <ul>{footerNav.map((p) => <li><a href={url(p.path)}>{p.label}</a></li>)}</ul>
     </nav>
   </div>
 </footer>

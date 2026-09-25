@@ -22,7 +22,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
   <div class="essay-strip"><Face kind="essay" class="face--strip" label="[Description: reading progress through the essay]" /></div>
   <article class="essay">
     <header class="essay-head">
-      <p class="essay-head__meta mono"><a href={url('essays/')}>Essays</a><span aria-hidden="true">/</span><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time><span aria-hidden="true">/</span><span>{fm.minutesRead} min</span></p>
+      <p class="essay-head__meta mono"><a href={url('essays/')}>Research</a><span aria-hidden="true">/</span><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time><span aria-hidden="true">/</span><span>{fm.minutesRead} min</span></p>
       <h1 class="essay-head__title">{entry.data.title}</h1>
       <p class="essay-head__dek">{entry.data.dek}</p>
     </header>
@@ -32,7 +32,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
     <footer class="essay-end">
       {next && next.id !== entry.id && (
         <a class="essay-next" href={url(`essays/${next.id}/`)}>
-          <span class="mono">Next essay</span>
+          <span class="mono">Next in Research</span>
           <span class="essay-next__title">{next.data.title}</span>
           <span class="essay-next__arrow" aria-hidden="true">→</span>
         </a>

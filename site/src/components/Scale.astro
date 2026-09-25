@@ -1,14 +1,15 @@
 ---
-// The story scale: a tuning scale with four detents and lamps. Drag it, flick it, click a detent.
-interface Props { stops: number[]; orient: 'v' | 'h' }
-const { stops, orient } = Astro.props;
+// The story scale: a tuning scale with four detents and lamps; the detents carry the legend.
+// Drag it, click a detent, or use the arrow keys.
+interface Props { stops: number[]; orient: 'v' | 'h'; labels: string[]; class?: string }
+const { stops, orient, labels, class: cls = '' } = Astro.props;
 ---
-<div class={`scale scale--${orient}`} data-scale role="slider" tabindex="0" aria-label="Story position" aria-orientation={orient === 'v' ? 'vertical' : 'horizontal'} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="State 1 of 4">
+<div class={`scale scale--${orient} ${cls}`} data-scale role="slider" tabindex="0" aria-label="Approach, step" aria-orientation={orient === 'v' ? 'vertical' : 'horizontal'} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext={`01 ${labels[0]}`}>
   <div class="scale__track" aria-hidden="true">
-    {Array.from({ length: 25 }, (_, i) => <i class={i % 6 === 0 ? 'is-major' : ''} style={`--t:${i / 24}`}></i>)}
+    {Array.from({ length: 25 }, (_, i) => <i class={i % 8 === 0 ? 'is-major' : ''} style={`--t:${i / 24}`}></i>)}
     <span class="scale__thumb"></span>
   </div>
   <ol class="scale__stops" aria-hidden="true">
-    {stops.map((s, i) => <li style={`--at:${s}`} data-stop={s}><span class="lamp"></span><span class="mono">{String(i + 1).padStart(2, '0')}</span></li>)}
+    {stops.map((s, i) => <li style={`--at:${s}`} data-stop={s} data-beat={i}><span class="lamp"></span><span class="mono">{String(i + 1).padStart(2, '0')}</span><span class="scale__label">{labels[i]}</span></li>)}
   </ol>
 </div>
