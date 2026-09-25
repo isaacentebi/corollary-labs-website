@@ -6,8 +6,9 @@ export type Stone = StoneState & {
   id: string;
   vx: number; vy: number;
   tx: number; ty: number;       // target position
-  tr: number; tlift: number; trose: number; tk: number;
+  tr: number; tlift: number; trose: number; tk: number; tgw: number;
   solid: boolean;               // takes part in packing
+  hold?: boolean;               // position driven directly (dragged or travelling)
 };
 
 let uid = 0;
@@ -16,8 +17,9 @@ export function stone(o: Partial<Stone> & { x: number; y: number; r: number }): 
     id: o.id ?? `s${uid++}`,
     x: o.x, y: o.y, r: o.r,
     aspect: o.aspect ?? 1, rot: o.rot ?? 0, k: o.k ?? 1.9, rose: o.rose ?? 0, lift: o.lift ?? 0, seed: o.seed ?? Math.random(),
+    gloss: o.gloss ?? 0, squar: o.squar ?? 0, tone: o.tone ?? 0, gw: o.gw ?? 1,
     vx: 0, vy: 0, tx: o.tx ?? o.x, ty: o.ty ?? o.y,
-    tr: o.tr ?? o.r, tlift: o.tlift ?? 1, trose: o.trose ?? o.rose ?? 0, tk: o.tk ?? o.k ?? 1.9,
+    tr: o.tr ?? o.r, tlift: o.tlift ?? 1, trose: o.trose ?? o.rose ?? 0, tk: o.tk ?? o.k ?? 1.9, tgw: o.tgw ?? o.gw ?? 1,
     solid: o.solid ?? true,
   };
   return s;
@@ -28,13 +30,16 @@ const approach = (v: number, t: number, rate: number, dt: number) => v + (t - v)
 export function step(stones: Stone[], dt: number, opts: { stiff?: number; damp?: number; instant?: boolean; gap?: number } = {}) {
   const stiff = opts.stiff ?? 26, damp = opts.damp ?? 8.5, gap = opts.gap ?? 10;
   if (opts.instant) {
-    for (const s of stones) { s.x = s.tx; s.y = s.ty; s.vx = s.vy = 0; s.r = s.tr; s.lift = s.tlift; s.rose = s.trose; s.k = s.tk; }
+    for (const s of stones) { s.x = s.tx; s.y = s.ty; s.vx = s.vy = 0; s.r = s.tr; s.lift = s.tlift; s.rose = s.trose; s.k = s.tk; s.gw = s.tgw; }
     return;
   }
   dt = Math.min(dt, 1 / 30);
   for (const s of stones) {
+    s.gw = approach(s.gw, s.tgw, 3.5, dt);
+    if (s.hold) { s.vx = s.vy = 0; } else {
     s.vx += ((s.tx - s.x) * stiff - s.vx * damp) * dt;
     s.vy += ((s.ty - s.y) * stiff - s.vy * damp) * dt;
+    }
     s.r = approach(s.r, s.tr, 5, dt);
     s.lift = approach(s.lift, s.tlift, 3.2, dt);
     s.rose = approach(s.rose, s.trose, 2.4, dt);
@@ -55,7 +60,7 @@ export function step(stones: Stone[], dt: number, opts: { stiff?: number; damp?:
       }
     }
   }
-  for (const s of stones) { s.x += s.vx * dt; s.y += s.vy * dt; }
+  for (const s of stones) { if (!s.hold) { s.x += s.vx * dt; s.y += s.vy * dt; } }
 }
 
 // deterministic random

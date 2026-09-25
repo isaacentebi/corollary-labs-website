@@ -4,11 +4,12 @@ import { site, nav, u } from '../config/site';
 ---
 <footer class="foot">
   <div class="foot__in">
-    <a class="foot__home" href={u('/')}><Mark size={22} /><span>{site.name}</span></a>
-    <nav class="foot__links" aria-label="Footer">
-      <a href={u('/')}>Home</a>
-      {nav.map((l) => <a href={u(l.href)}>{l.label}</a>)}
+    <nav class="foot__big" aria-label="Pages">
+      {nav.map((l, i) => <a href={u(l.href)}><span class="mono">{String(i + 1).padStart(2, '0')}</span>{l.label}</a>)}
     </nav>
-    <p class="foot__meta"><span class="ph">{site.email}</span><span>© {site.year}</span></p>
+    <div class="foot__row">
+      <a class="foot__home" href={u('/')}><Mark size={22} /><span>{site.name}</span></a>
+      <p class="foot__meta"><span class="ph">{site.email}</span><span>© {site.year}</span></p>
+    </div>
   </div>
 </footer>

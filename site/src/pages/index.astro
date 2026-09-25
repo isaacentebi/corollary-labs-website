@@ -1,11 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
-import Pebble from '../components/Pebble.astro';
 import { getCollection } from 'astro:content';
 import { site, u } from '../config/site';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const pad = (n: number) => String(n).padStart(2, '0');
+// a thin strip of ground between sections: one small group you can pick apart
+const strip = {
+  stones: [{ x: 0.2, y: 0.03, r: 0.12, tone: 1, gloss: 0.8 }, { x: 0.27, y: -0.03, r: 0.2, sq: 0.6, a: 1.3 }, { x: 0.335, y: 0.05, r: 0.08, rose: 1, gloss: 0.85 }],
+  mstones: [{ x: 0.0, y: 0.03, r: 0.13 }, { x: 0.2, y: -0.03, r: 0.2 }, { x: 0.37, y: 0.05, r: 0.09 }],
+  group: true, drag: true, moat: 70, pad: 22,
+};
 ---
 <Base page="home">
   <section class="field" data-field aria-label={site.name}>
@@ -18,6 +24,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
       </div>
       <p class="field__ph field__ph--1 ph" data-ph="1">[Sentence]</p>
       <p class="field__ph field__ph--2 ph" data-ph="2">[Sentence]</p>
+      <p class="field__idx mono" data-idx aria-hidden="true">01/04 t 0.00</p>
       <div class="field__cue" data-cue aria-hidden="true"><i></i></div>
     </div>
   </section>
@@ -25,30 +32,25 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
   <section class="home-about wrap" data-reveal>
     <p class="label">About</p>
     <p class="home-about__text ph">[About — one paragraph]</p>
-    <a class="more" href={u('about/')}><span>About</span><Pebble size={34} seed={1} /></a>
   </section>
+
+  <div class="strip band" data-band={JSON.stringify(strip)} aria-hidden="true"></div>
 
   <section class="home-essays wrap" data-reveal>
     <div class="home-essays__head">
       <p class="label">Essays</p>
-      <a class="more more--small" href={u('essays/')}><span>All essays</span></a>
+      <a class="more" href={u('essays/')}>All essays</a>
     </div>
     <ol class="rows">
       {essays.map((e, i) => (
         <li>
           <a class="row" href={u(`essays/${e.id}/`)}>
-            <Pebble size={40} seed={i + 3} />
+            <span class="row__n mono">{pad(i + 1)}</span>
             <span class="row__title">{e.data.title}</span>
             <time class="row__date" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
           </a>
         </li>
       ))}
     </ol>
-  </section>
-
-  <section class="home-links wrap" data-reveal aria-label="Pages">
-    <a class="bigLink" href={u('about/')}><Pebble size={52} seed={7} /><span>About</span></a>
-    <a class="bigLink" href={u('team/')}><Pebble size={52} seed={8} /><span>Team</span></a>
-    <a class="bigLink" href={u('contact/')}><Pebble size={52} seed={9} /><span>Contact</span></a>
   </section>
 </Base>

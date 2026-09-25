@@ -6,7 +6,7 @@ import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import { site, u } from '../config/site';
 
-interface Props { title?: string; description?: string; page: 'home' | 'essays' | 'essay' | 'about' | 'team' | 'contact'; footer?: boolean }
+interface Props { title?: string; description?: string; page: 'home' | 'essays' | 'essay' | 'about' | 'team' | 'contact' | '404'; footer?: boolean }
 const { title, description = site.description, page, footer = true } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 ---
@@ -19,7 +19,7 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
     <meta name="description" content={description} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta name="theme-color" content="#E7E1EC" />
+    <meta name="theme-color" content="#DCD9E2" />
     <link rel="icon" href={u('favicon.svg')} type="image/svg+xml" />
     <script is:inline>
       (function () {

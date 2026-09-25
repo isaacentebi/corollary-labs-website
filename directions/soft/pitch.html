@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..500,100&family=Hanken+Grotesk:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  :root { --ground:#E7E1EC; --ground-3:#F2EEF4; --ink:#2C2435; --ink-2:#625871; --ink-3:#8E84A0; --rose:#E98A9E; --line:rgba(44,36,53,.13); }
+  :root { --ground:#DCD9E2; --ground-3:#E9E7EE; --ink:#231F2B; --ink-2:#494356; --ink-3:#5C5569; --rose:#B8385F; --line:rgba(35,31,43,.16); }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--ground); color:var(--ink); font:400 16px/1.6 'Hanken Grotesk',system-ui,sans-serif; }
   .w { max-width:1180px; margin:0 auto; padding:0 28px; }
@@ -47,17 +47,18 @@
 
 <section class="w">
   <h2>Concept</h2>
-  <p>The whole site is one raked ground, lit low from the upper left, in a lilac mist. Every line on it is a level set of a single function, rendered live in one shader; nothing is drawn as a diagram and nothing is labelled. When something is placed on the ground the lines never break: they part around it and close into rings. Headings rest in clearings the lines flow around.</p>
+  <p>The whole site is one raked ground, lit low from the upper left, in a cool mineral lilac. Every line on it is a level set of a single function, rendered live in one shader; nothing is drawn as a diagram and nothing is labelled. When something is placed on the ground the lines never break: they part around it and close into rings. Headings rest in clearings the lines flow around.</p>
   <p>Pale stones are what a company is made of. A small rose stone is the agent. It arrives along the lines, the row of pale stones re-forms into a ring around it, no stone leaves, and the enclosure the lines draw around the group changes shape without ever being cut (an isotopy of the level sets). Pull back: there are many groups on the same ground, and rose stones appear in the nearest first and spread outward. Reorganisation rather than replacement, continuous deformation, diffusion, and closed loops are carried by form and motion alone.</p>
-  <p>Minimal: one surface, a few stones, one accent. Soft: matte stones with contact shadows, a low sun, eased spring physics, blurred fades. Interaction: the cursor gently parts the lines; a click sets down a small rose stone and the ground reorganises around it.</p>
+  <p>Every group is enclosed by one visibly closed contour (the level set of a smooth minimum of distances to its stones, joined by bridges from its centre, so it can stretch but never split), with nested closed rings inside. A row gives an elongated contour; when the rose stone joins and the stones re-form around it, the same contour relaxes towards a round one. On the pull-back the camera tilts to three-quarter view and the ground goes to dusk; rose stones travel from group to group along the lines, nearest first. A faint mono layer gives the state, t, the number of stones and how many groups have been reached.</p>
+  <p>Minimal: one surface, a few stones, one accent. Soft: matte stones with contact shadows, a low sun, eased spring physics, blurred fades. Interaction: the cursor makes a wide, soft dip that lags behind it; a click sets down a small rose stone; on inner pages any stone can be picked up and dragged, and its contour stretches and settles on a spring.</p>
 </section>
 
 <section class="w">
   <h2>Structure</h2>
   <ol class="s">
-    <li><b>Home</b>. One sticky field over about 1.6 viewport heights of scroll, in four continuous states: the name resting in a clearing → three pale stones rise in a row → the rose stone arrives and the row becomes a ring → pull back to many groups, rose spreading. Then, straight away: <span class="muted">[About — one paragraph]</span>, the latest three essays, and large links to About / Team / Contact.</li>
-    <li><b>Essays</b>. The heading in a clearing, one stone per essay beside it; hovering an essay warms its stone. Essay pages: title in a clearing, reading column, sidenotes level with their references, figures as small live grounds.</li>
-    <li><b>About</b>, <b>Team</b> (one stone per person; hovering a person warms their stone), <b>Contact</b> (the address resting in a clearing between a pale stone and a rose one).</li>
+    <li><b>Home</b>. One sticky field over about 1.15 viewport heights of scroll, in four continuous states: the name resting in a clearing → four stones of different kinds rise in a row inside one contour → the rose stone arrives along the lines and the row re-forms around it → pull back, tilt and dusk, rose travelling between groups. About arrives while the dusk view is still sliding up; then a thin strip of live ground, the latest essays, and a footer with the four pages set large.</li>
+    <li><b>Essays</b>. The heading in a clearing; one stone per essay in a line inside one contour; hovering an essay warms its stone and the others make room. Essay pages: title in a clearing, reading column, sidenotes level with their references, figures as small live grounds you can rearrange.</li>
+    <li><b>About</b>: the same ground seen from very far away at dusk, many small groups, lines as texture. <b>Team</b>: one stone per person in one contour; drag a stone and the contour stretches with it. <b>Contact</b>: the address in a clearing between a slab and a rose stone. <b>404</b>: a clearing and one stone.</li>
   </ol>
   <p><b>Navigation.</b> A small mark and four words in the top corners, no bar. Plotter keeps navigation in the footer; here the founder asked that About, Team and Contact are reachable at once, and four quiet words in the corner cost nothing visually. The bottom-right corner stays empty for the version switcher.</p>
 </section>
@@ -66,38 +67,40 @@
   <h2>Key frames</h2>
   <div class="grid">
     <figure class="frame"><img src="frames/home-01-hero-d.jpg" alt="" /><figcaption>1 · the name resting in a clearing</figcaption></figure>
-    <figure class="frame"><img src="frames/home-02-row-d.jpg" alt="" /><figcaption>2 · a row of pale stones; one enclosure</figcaption></figure>
+    <figure class="frame"><img src="frames/home-02-row-d.jpg" alt="" /><figcaption>2 · a row; one closed contour, elongated</figcaption></figure>
     <figure class="frame"><img src="frames/home-03-arriving-d.jpg" alt="" /><figcaption>3 · the rose stone arrives along the lines</figcaption></figure>
-    <figure class="frame"><img src="frames/home-04-ring-d.jpg" alt="" /><figcaption>4 · the row re-forms into a ring around it</figcaption></figure>
-    <figure class="frame"><img src="frames/home-05-pullback-d.jpg" alt="" /><figcaption>5 · pull back: many groups</figcaption></figure>
-    <figure class="frame"><img src="frames/home-06-spread-d.jpg" alt="" /><figcaption>6 · rose spreads, nearest first</figcaption></figure>
+    <figure class="frame"><img src="frames/home-04-ring-d.jpg" alt="" /><figcaption>4 · the row re-forms around it; the contour rounds</figcaption></figure>
+    <figure class="frame"><img src="frames/home-05-pullback-d.jpg" alt="" /><figcaption>5 · pull back, tilt, dusk: many groups</figcaption></figure>
+    <figure class="frame"><img src="frames/home-07-spread-d.jpg" alt="" /><figcaption>6 · rose travels group to group, nearest first</figcaption></figure>
+    <figure class="frame"><img src="frames/about-d.jpg" alt="" /><figcaption>About · the ground from far away</figcaption></figure>
+    <figure class="frame"><img src="frames/team-drag-held-d.jpg" alt="" /><figcaption>Team · a stone dragged; the contour stretches, never splits</figcaption></figure>
+    <figure class="frame"><img src="frames/essays-d.jpg" alt="" /><figcaption>Essays · one stone per essay</figcaption></figure>
   </div>
   <div class="frames-m" style="margin-top:24px">
     <figure class="frame"><img src="frames/home-01-hero-m.jpg" alt="" /><figcaption>375 · hero</figcaption></figure>
     <figure class="frame"><img src="frames/home-04-ring-m.jpg" alt="" /><figcaption>375 · ring</figcaption></figure>
-    <figure class="frame"><img src="frames/home-06-spread-m.jpg" alt="" /><figcaption>375 · spread</figcaption></figure>
-    <figure class="frame"><img src="frames/about-d.jpg" alt="" /><figcaption>About</figcaption></figure>
-    <figure class="frame"><img src="frames/contact-d.jpg" alt="" /><figcaption>Contact</figcaption></figure>
+    <figure class="frame"><img src="frames/home-07-spread-m.jpg" alt="" /><figcaption>375 · spread</figcaption></figure>
+        <figure class="frame"><img src="frames/contact-d.jpg" alt="" /><figcaption>Contact</figcaption></figure>
   </div>
 </section>
 
 <section class="w">
   <h2>Palette</h2>
   <div class="sw">
-    <div><i style="background:#E7E1EC"></i><b>Lilac mist</b><span>#E7E1EC · ground</span></div>
-    <div><i style="background:#FBF6F4"></i><b>Low sun</b><span>#FBF6F4 · lit crests</span></div>
-    <div><i style="background:#A99DBB"></i><b>Dusk</b><span>#A99DBB · shaded grooves</span></div>
-    <div><i style="background:#F3EEF1"></i><b>Pale stone</b><span>#F3EEF1</span></div>
-    <div><i style="background:#2C2435"></i><b>Aubergine</b><span>#2C2435 · ink</span></div>
-    <div><i style="background:#E98A9E"></i><b>Rose</b><span>#E98A9E · the one accent</span></div>
+    <div><i style="background:#DCD9E2"></i><b>Mineral lilac</b><span>#DCD9E2 · ground</span></div>
+    <div><i style="background:#F6F5F8"></i><b>Low sun</b><span>#F6F5F8 · lit crests</span></div>
+    <div><i style="background:#8A849D"></i><b>Shade</b><span>#8A849D · grooves</span></div><div><i style="background:#2A2733"></i><b>Dusk</b><span>#2A2733 · far view</span></div><div><i style="background:#3D3846"></i><b>Basalt</b><span>#3D3846 · dark stones</span></div>
+    <div><i style="background:#EEECF0"></i><b>Pale stone</b><span>#EEECF0</span></div>
+    <div><i style="background:#231F2B"></i><b>Aubergine</b><span>#231F2B · ink</span></div>
+    <div><i style="background:#B8385F"></i><b>Madder rose</b><span>#B8385F · the one accent</span></div>
   </div>
-  <p style="margin-top:18px">Clearly apart from the other versions (paper and green, bone and ochre, cream and blue, black and orange). Colour comes from light on relief rather than from fills; rose is used only for what arrives, and it pools softly on the ground around it.</p>
+  <p style="margin-top:18px">Clearly apart from the other versions (paper and green, bone and ochre, cream and blue, black and orange). Colour comes from light on relief rather than from fills. The light register is a cool mineral lilac; the pull-back and About go to dusk. Stones vary: matte and lacquered, pale and basalt, round pebbles and flatter slabs, up to ten times apart in size. Rose is used only for what arrives and for the contours it has joined.</p>
 </section>
 
 <section class="w type">
   <h2>Type</h2>
   <div class="grid">
-    <div><div class="d">Corollary Labs</div><p class="muted">Fraunces, weight 300, SOFT axis at 100: a serif with rounded terminals. Names and headings only.</p></div>
+    <div><div class="d">Corollary Labs</div><p class="muted">Fraunces, weight 300, SOFT axis at 100: a serif with rounded terminals. Names and headings only. A system monospace for the small indices.</p></div>
     <div><p style="font-size:18px;margin-top:10px">Hanken Grotesk for everything else: reading text, labels, navigation. Quiet, humanist, legible at 13px.</p></div>
   </div>
 </section>

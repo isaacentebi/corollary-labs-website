@@ -25,11 +25,21 @@ if (main) {
   initBands(main);
 }
 
-// the nav softens once the page scrolls under it
+// the nav gets a soft backing once content runs under it, and turns light over the dark ground
 const nav = document.querySelector<HTMLElement>('[data-nav]');
-const onScroll = () => nav?.classList.toggle('is-scrolled', window.scrollY > 24);
+let navQueued = false;
+const navCheck = () => {
+  navQueued = false;
+  if (!nav) return;
+  nav.classList.toggle('is-scrolled', window.scrollY > 24);
+  let dark = false;
+  document.querySelectorAll<HTMLElement>('[data-dark]').forEach((el) => { const r = el.getBoundingClientRect(); if (r.top < 30 && r.bottom > 30) dark = true; });
+  nav.classList.toggle('on-dark', dark);
+};
+const onScroll = () => { if (!navQueued) { navQueued = true; requestAnimationFrame(navCheck); } };
 window.addEventListener('scroll', onScroll, { passive: true });
-onScroll();
+new MutationObserver(onScroll).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['data-dark'] });
+navCheck();
 
 // essays: sidenotes sit level with the note they belong to (wide screens only)
 const prose = document.querySelector<HTMLElement>('.prose');
