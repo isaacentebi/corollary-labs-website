@@ -1,21 +1,22 @@
 ---
 import Base from '../layouts/Base.astro';
+import PagePlate from '../components/PagePlate.astro';
 import Glyph from '../components/Glyph.astro';
 import '../styles/pages.css';
 const people = [1, 2, 3, 4];
 ---
 <Base page="team" title="Team">
-  <section class="page">
-    <header class="page__head">
-      <h1 class="display">Team</h1>
-    </header>
+  <PagePlate title="Team" variant={2}>
+    <p class="plate__line ph">[Team — one line under the title]</p>
+  </PagePlate>
+  <section class="page page--after">
     <ol class="team">
       {people.map((n, i) => (
         <li class="person" data-glyph-host tabindex="0" style={`--i:${i}`}>
-          <Glyph seed={`person-${n}`} class="person__g" />
           <span class="t-label person__n">0{n}</span>
           <p class="person__name">[Name]</p>
           <p class="person__role t-label ph">[Role]</p>
+          <Glyph seed={`person-${n}`} class="person__g" />
           <p class="person__bio ph">[One or two lines — background]</p>
         </li>
       ))}

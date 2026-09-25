@@ -1,14 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
-import Glyph from '../components/Glyph.astro';
+import PagePlate from '../components/PagePlate.astro';
 import '../styles/pages.css';
 ---
 <Base page="about" title="About">
-  <section class="page">
-    <header class="page__head" data-glyph-host>
-      <h1 class="display">About</h1>
-      <Glyph seed="about" class="page__glyph" big />
-    </header>
+  <PagePlate title="About" variant={1}>
+    <p class="plate__line ph">[About — one line under the title]</p>
+  </PagePlate>
+  <section class="page page--after">
     <div class="prose">
       <p class="prose__lede ph">[About — opening paragraph]</p>
       <p class="ph">[About — second paragraph]</p>

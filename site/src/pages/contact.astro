@@ -1,19 +1,29 @@
 ---
 import Base from '../layouts/Base.astro';
-import Glyph from '../components/Glyph.astro';
+import PagePlate from '../components/PagePlate.astro';
 import { site } from '../config/site';
 import '../styles/pages.css';
+const rows = [
+  { k: 'Email', v: site.email, href: `mailto:${site.email}` },
+  { k: 'Address', v: '[Address]' },
+  { k: 'Elsewhere', v: '[Links]' },
+];
 ---
 <Base page="contact" title="Contact">
-  <section class="page">
-    <header class="page__head" data-glyph-host>
-      <h1 class="display">Contact</h1>
-      <Glyph seed="contact" class="page__glyph" big />
-    </header>
-    <dl class="contact">
-      <div><dt class="t-label">Email</dt><dd><a class="contact__mail lk" href={`mailto:${site.email}`}>{site.email}</a></dd></div>
-      <div><dt class="t-label">Address</dt><dd class="ph">[Address]</dd></div>
-      <div><dt class="t-label">Elsewhere</dt><dd class="ph">[Links]</dd></div>
-    </dl>
+  <PagePlate title="Contact" variant={3}>
+    <p class="plate__line ph">[Contact — one line under the title]</p>
+  </PagePlate>
+  <section class="page page--after">
+    <div class="tilt" style={`--n:${rows.length}`}>
+      <svg class="tilt__axis" aria-hidden="true" preserveAspectRatio="none"><line x1="100%" y1="0" x2="0" y2="100%" /></svg>
+      <dl class="contact">
+        {rows.map((r, i) => (
+          <div style={`--i:${i}`}>
+            <dt class="t-label">{r.k}</dt>
+            <dd class={r.href ? '' : 'ph'}>{r.href ? <a class="contact__mail lk" href={r.href}>{r.v}</a> : r.v}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   </section>
 </Base>

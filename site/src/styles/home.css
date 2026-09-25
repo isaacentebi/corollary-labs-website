@@ -31,7 +31,7 @@
 }
 .stage .caps { opacity: calc(1 - var(--exit) * 4); }
 
-.rail { position: absolute; right: calc(var(--gut) * 0.8); top: 50%; height: 26vh; width: 9px; transform: translateY(-50%); z-index: 2; opacity: calc(1 - var(--exit) * 2); }
+.rail { position: absolute; right: calc(var(--gut) * 0.8); top: 50%; height: 26vh; width: 9px; transform: translateY(-50%); z-index: 2; opacity: calc(1 - var(--field)); }
 .rail::before { content: ''; position: absolute; left: 4px; top: 0; bottom: 0; width: 1px; background: var(--slate); }
 .rail i { position: absolute; left: 4px; top: 0; width: 1px; height: 100%; background: var(--chalk); transform-origin: top; transform: scaleY(var(--p)); }
 .rail b { position: absolute; left: 0; width: 9px; height: 1px; background: var(--haze); }

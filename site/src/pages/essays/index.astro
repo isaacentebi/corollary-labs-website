@@ -1,17 +1,18 @@
 ---
 import Base from '../../layouts/Base.astro';
 import EssayList from '../../components/EssayList.astro';
+import PagePlate from '../../components/PagePlate.astro';
 import { getCollection, render } from 'astro:content';
+import '../../styles/pages.css';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
 const rows = await Promise.all(essays.map(async (e) => ({ e, min: (await render(e)).remarkPluginFrontmatter.minutesRead as number })));
 ---
 <Base page="essays" title="Essays">
-  <section class="page">
-    <header class="page__head">
-      <h1 class="display">Essays</h1>
-      <span class="t-label ph">{String(rows.length).padStart(2, '0')}</span>
-    </header>
+  <PagePlate title="Essays" variant={4}>
+    <p class="plate__line t-label ph">{String(rows.length).padStart(2, '0')} essays</p>
+  </PagePlate>
+  <section class="page page--after">
     <EssayList rows={rows} big />
   </section>
 </Base>

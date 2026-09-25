@@ -28,7 +28,8 @@ const nav = [
     <script is:inline>
       (function () {
         try {
-          if (sessionStorage.getItem('tk.veil') && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('veil-arrive');
+          var t = sessionStorage.getItem('tk.veil');
+          if (t && !matchMedia('(prefers-reduced-motion: reduce)').matches) { document.documentElement.classList.add('veil-arrive'); window.__veilTitle = t; }
           sessionStorage.removeItem('tk.veil');
         } catch (e) {}
       })();
@@ -57,10 +58,21 @@ const nav = [
       </nav>
       <a class="lk" href={`mailto:${site.email}`}>{site.email}</a>
     </footer>
-    <div class="veil" aria-hidden="true"><i style="--y:-60vmax"></i><i style="--y:0vmax"></i><i style="--y:60vmax"></i><b></b></div>
+    <div class="veil" aria-hidden="true"><i style="--y:-50vmax"></i><i style="--y:0vmax"><span data-veil-title></span></i><i style="--y:50vmax"></i><b></b></div>
+    <script is:inline>
+      (function () { var t = window.__veilTitle, el = document.querySelector('[data-veil-title]'); if (t && el) el.textContent = t; })();
+    </script>
     <script>
-      // Page change: three planes slide in along the site's axis behind a cadmium bar, and slide out on arrival.
+      // Page change: the agent crosses, three light planes slide in along the site's axis, the middle one carrying
+      // the destination's title; the new page opens with the same planes sliding on and away, no hold.
       const veil = document.querySelector<HTMLElement>('.veil');
+      const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+      const TITLES: Record<string, string> = { '': 'Corollary Labs', essays: 'Essays', about: 'About', team: 'Team', contact: 'Contact' };
+      const titleFor = (a: HTMLAnchorElement, u: URL) => {
+        if (a.dataset.title) return a.dataset.title;
+        const key = u.pathname.slice(base.length).replace(/^\/|\/$/g, '');
+        return TITLES[key] ?? (a.textContent || '').replace(/\s+/g, ' ').replace(/[→←]/g, '').trim().slice(0, 48);
+      };
       const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
       document.addEventListener('click', (e) => {
         if (rm || !veil || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -70,12 +82,15 @@ const nav = [
         if (!/^https?:$/.test(u.protocol) || u.origin !== location.origin) return;
         if (u.pathname === location.pathname) return;
         e.preventDefault();
-        try { sessionStorage.setItem('tk.veil', '1'); } catch {}
+        const t = titleFor(a, u);
+        const span = veil.querySelector<HTMLElement>('[data-veil-title]');
+        if (span) span.textContent = t;
+        try { sessionStorage.setItem('tk.veil', t || ' '); } catch {}
         veil.classList.add('is-in');
-        setTimeout(() => { location.href = u.href; }, 540);
+        setTimeout(() => { location.href = u.href; }, 400);
       });
       window.addEventListener('pageshow', (e) => { if (e.persisted) veil?.classList.remove('is-in'); });
-      setTimeout(() => document.documentElement.classList.remove('veil-arrive'), 1200);
+      setTimeout(() => document.documentElement.classList.remove('veil-arrive'), 900);
     </script>
   </body>
 </html>

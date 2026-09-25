@@ -1,0 +1,37 @@
+---
+// A page's own picture: its title printed on the dominant plane along the site's axis. Scrolling the
+// first half-screen sends the agent in; the plane breaks and the pieces rebuild into this page's construction.
+interface Props { title: string; variant: number; slabH?: number }
+const { title, variant, slabH } = Astro.props;
+---
+<section class="plate" data-plate data-title={title} data-variant={variant} data-slab={slabH ?? ''}>
+  <div class="plate__stage" data-stage>
+    <canvas data-tektonik aria-hidden="true"></canvas>
+    <h1 class="u-sr">{title}</h1>
+    <div class="plate__foot"><slot /></div>
+  </div>
+</section>
+
+<script>
+  import { mountTektonik } from '../scripts/tektonik';
+  document.querySelectorAll<HTMLElement>('[data-plate]').forEach((el) => {
+    const stage = el.querySelector<HTMLElement>('[data-stage]');
+    if (!stage) return;
+    mountTektonik(stage, el, {
+      name: el.dataset.title, field: false, page: true,
+      variant: Number(el.dataset.variant) || 1, slabH: el.dataset.slab ? Number(el.dataset.slab) : undefined,
+    });
+  });
+</script>
+
+<style is:global>
+  .plate { position: relative; height: 150vh; height: 150svh; }
+  .plate__stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; --p: 0; }
+  .plate__stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: pan-y; cursor: crosshair; }
+  .plate__foot {
+    position: absolute; left: var(--gut); bottom: calc(var(--gut) * 1.1); z-index: 2; width: min(520px, calc(100% - 2 * var(--gut)));
+    padding-top: 14px; border-top: 1px solid var(--slate);
+    opacity: clamp(0, 1 - var(--p) * 5, 1); transition: none;
+  }
+  .plate__foot:empty { display: none; }
+</style>

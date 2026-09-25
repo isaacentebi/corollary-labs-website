@@ -12,7 +12,7 @@ const { rows, big = false } = Astro.props;
   <ol>
     {rows.map(({ e, min }, i) => (
       <li style={`--i:${i}`}>
-        <a class="erow" href={url(`essays/${e.id}/`)} data-glyph-host>
+        <a class="erow" href={url(`essays/${e.id}/`)} data-title={e.data.title} data-glyph-host>
           <Glyph seed={e.id} class="erow__g" />
           <span class="erow__meta t-label"><time datetime={e.data.date.toISOString()}>{fmtDate(e.data.date)}</time><span>{min} min</span></span>
           <span class="erow__m">
@@ -27,10 +27,10 @@ const { rows, big = false } = Astro.props;
 
 <style is:global>
   .elist { position: relative; --step: clamp(20px, 8vw, 132px); }
-  .elist ol { list-style: none; margin: 0; padding: 0; }
+  .elist ol { list-style: none; margin: 0; padding: 0 0 0 var(--step); }
   .elist li { margin-left: calc((var(--n) - 1 - var(--i)) * var(--step)); border-top: 1px solid var(--slate); }
   .elist li:last-child { border-bottom: 1px solid var(--slate); }
-  .elist__axis { position: absolute; left: 0; top: 0; height: 100%; width: calc((var(--n) - 1) * var(--step)); overflow: visible; pointer-events: none; }
+  .elist__axis { position: absolute; left: 0; top: 0; height: 100%; width: calc(var(--n) * var(--step)); overflow: visible; pointer-events: none; }
   .elist__axis line { stroke: var(--pewter); stroke-width: 1; vector-effect: non-scaling-stroke; }
   .erow { display: grid; grid-template-columns: 72px 128px minmax(0, 1fr); gap: 12px var(--gut); align-items: center; padding: 24px 0 24px 0; }
   .erow__g { width: 60px; height: 60px; }

@@ -61,7 +61,20 @@ interface Node {
   sx: number; sy: number; sr: number; hov: number; qA: Q; qC: Q;
 }
 
-export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
+export interface TkOptions {
+  /** text printed on the dominant plane */
+  name?: string;
+  /** the pulled-back field of other compositions (home only) */
+  field?: boolean;
+  /** page mode: scroll drives only the strike and the rebuild */
+  page?: boolean;
+  variant?: number;
+  slabH?: number;
+}
+
+export function mountTektonik(stage: HTMLElement, track: HTMLElement, opts: TkOptions = {}) {
+  const FIELD = opts.field !== false;
+  const PAGE = !!opts.page;
   const canvas = stage.querySelector<HTMLCanvasElement>('canvas[data-tektonik]')!;
   const ctx = canvas.getContext('2d')!;
   const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -74,7 +87,16 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
   let qFace: Q = qId();
   let tgtField: V3 = v();
   let nameK = 0; // world units per text pixel for the name
-  const NAME = 'Corollary Labs';
+  const NAME = opts.name ?? 'Corollary Labs';
+  // long names set in two lines, balanced on the space nearest the middle
+  const LINES = (() => {
+    if (NAME.length <= 16) return [NAME];
+    const mid = NAME.length / 2;
+    let best = -1;
+    for (let i = 0; i < NAME.length; i++) if (NAME[i] === ' ' && (best < 0 || Math.abs(i - mid) < Math.abs(best - mid))) best = i;
+    return best < 0 ? [NAME] : [NAME.slice(0, best), NAME.slice(best + 1)];
+  })();
+  let nameLead = 0; // line advance in text px
   let tPrimaryDir: V3 = v(1, 0, 0);
 
   // ---------- scene ----------
@@ -88,8 +110,9 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
         const A = place(f.A, pos, qA, k), B = place(f.B, pos, qA, k), C = place(f.C, pos, qC, k);
         const mid = scale(add(A.p, C.p), 0.5);
         const through = sub(scale(B.p, 2), mid); // control point that makes the path pass through B
-        const ctrl = gentle ? lerp3(mid, through, 0.3) : through;
-        const qc = gentle ? qSlerp(qSlerp(A.q, C.q, 0.5), B.q, 0.3) : B.q;
+        // field compositions never pass through the scatter: they lift straight into their own construction
+        const ctrl = gentle ? add(mid, scale(sub(qRot(qA, v(0, 0, 1)), v(0, 0, 0)), 0.12 * k)) : through;
+        const qc = gentle ? qSlerp(A.q, C.q, 0.5) : B.q;
         return { ...f, h: scale(f.h, k), A, B, C, ctrl, qc };
       }),
     }));
@@ -98,7 +121,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
     portrait = W < H * 0.9;
     agentStart = portrait ? AGENT_START_P : AGENT_START_L;
     tPrimaryDir = norm(sub(IMPACT, agentStart));
-    const base = buildComposition(agentStart, 7);
+    const base = buildComposition(agentStart, 7, { variant: opts.variant, slabH: opts.slabH });
     const qFinal = qMul(qZ(FINAL.roll), qMul(qX(FINAL.pitch), qY(FINAL.yaw)));
     qFace = qConj(qFinal);
     const Y0 = portrait ? 3.1 : 1.55;
@@ -112,14 +135,15 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
     }];
     // the fan: positions in the final view (x right, y up, z toward the viewer), relative to the camera target
     const L = [
-      { v: v(-1.25, 1.1, -0.7), roll: 0.25, k: 0.74 }, { v: v(-3.0, 0.75, -1.5), roll: 0.62, k: 0.66 }, { v: v(-4.1, -0.75, -2.3), roll: 0.98, k: 0.6 },
-      { v: v(1.35, 0.9, -0.7), roll: -0.22, k: 0.74 }, { v: v(3.1, 0.5, -1.5), roll: -0.6, k: 0.66 }, { v: v(4.15, -1.0, -2.3), roll: -0.95, k: 0.6 },
+      { v: v(-1.2, 1.1, -0.7), roll: 0.25, k: 0.74 }, { v: v(-2.85, 0.75, -1.5), roll: 0.62, k: 0.66 }, { v: v(-3.85, -0.75, -2.3), roll: 0.98, k: 0.6 },
+      { v: v(1.27, 0.9, -0.7), roll: -0.22, k: 0.74 }, { v: v(2.9, 0.5, -1.5), roll: -0.6, k: 0.66 }, { v: v(3.85, -1.0, -2.3), roll: -0.95, k: 0.6 },
     ];
     const P = [
       { v: v(-0.95, -0.35, -0.7), roll: 0.2, k: 0.7 }, { v: v(-1.2, 2.05, -1.5), roll: 0.42, k: 0.64 }, { v: v(-0.55, 4.3, -2.3), roll: 0.6, k: 0.58 },
       { v: v(1.0, -0.85, -0.7), roll: -0.18, k: 0.7 }, { v: v(1.25, 1.55, -1.5), roll: -0.4, k: 0.64 }, { v: v(0.75, 3.8, -2.3), roll: -0.62, k: 0.58 },
     ];
     const R = rng(31);
+    if (!FIELD) { adj = [[]]; return; }
     (portrait ? P : L).forEach((d, i) => {
       const pos = add(tgtField, qRot(qFace, d.v));
       const qA = qMul(qFace, qZ(d.roll));
@@ -146,7 +170,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
     dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     const port = W < H * 0.9;
-    S = port ? Math.min(W * 0.56, H * 0.32) : Math.min(W * 0.36, H * 0.5);
+    S = port ? Math.min(W * 0.63, H * 0.36) : Math.min(W * 0.36, H * 0.5);
     build();
     measureName();
   };
@@ -158,8 +182,12 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
   };
   const measureName = () => {
     setNameFont();
-    const m = ctx.measureText(NAME).width || 1;
-    nameK = (nodes[0].parents[0].h[0] * 2 * 0.86) / m;
+    const m = Math.max(...LINES.map((l) => ctx.measureText(l).width)) || 1;
+    const pa = nodes[0].parents[0];
+    nameLead = 96;
+    const byW = (pa.h[0] * 2 * 0.86) / m;
+    const byH = (pa.h[1] * 2 * (LINES.length > 1 ? 0.8 : 0.6)) / (72 + nameLead * (LINES.length - 1));
+    nameK = Math.min(byW, byH);
   };
 
   const readScroll = () => {
@@ -167,7 +195,8 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
     const span = r.height - window.innerHeight;
     const raw = span > 0 ? clamp(-r.top / span) : 0;
     exitT = span > 0 ? clamp((-r.top - span) / (window.innerHeight * 0.6)) : 0;
-    if (rm) { let best = 0; for (const st of STOPS_RM) if (raw >= st - 0.12) best = st; pT = best; }
+    if (PAGE) pT = rm ? 0 : T.build1 * clamp((raw - 0.03) / 0.9);
+    else if (rm) { let best = 0; for (const st of STOPS_RM) if (raw >= st - 0.12) best = st; pT = best; }
     else pT = raw;
   };
 
@@ -175,8 +204,8 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
   const KEYS = () => [
     [0, 0, 0, 0, 0, 0, 0],
     [T.strike, 0.0, -0.03, Math.log(1.0), 0, 0, 0],
-    [0.44, 0.26, -0.34, Math.log(portrait ? 0.86 : 0.97), 0, 0, 0],
-    [T.build1, 0.5, -0.72, Math.log(portrait ? 0.74 : 1.0), 0, 0, 0],
+    [0.44, 0.26, -0.34, Math.log(portrait ? 0.77 : 0.97), 0, 0, 0],
+    [T.build1, 0.5, -0.72, Math.log(portrait ? 0.66 : 1.0), 0, 0, 0],
     [T.field, FINAL.pitch, FINAL.yaw, Math.log(zD), FINAL.roll, FINAL.invD, 1],
     [1, FINAL.pitch + 0.02, FINAL.yaw - 0.05, Math.log(zD * 1.03), FINAL.roll, FINAL.invD, 1],
   ];
@@ -294,25 +323,28 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
       const k = nameK;
       ctx.setTransform(dpr * (X[0] - O[0]) * k, dpr * (X[1] - O[1]) * k, -dpr * (Y[0] - O[0]) * k, -dpr * (Y[1] - O[1]) * k, dpr * O[0], dpr * O[1]);
       setNameFont();
-      ctx.globalAlpha = it.alpha * a;
+      ctx.globalAlpha = 1; // the type keeps its exact colour on every piece
       ctx.fillStyle = '#0c1128';
       ctx.textBaseline = 'alphabetic';
       const x0 = (-pa.h[0] + pa.h[0] * 2 * 0.07) / k;
-      const yb = (-pa.h[1] + pa.h[1] * 2 * 0.27) / k;
-      ctx.fillText(NAME, x0, -yb);
+      // block of lines centred on the plane: cap height ≈ 72 text px, then one lead per extra line
+      const block = 72 + nameLead * (LINES.length - 1);
+      const top = (pa.h[1] / k) - ((pa.h[1] * 2) / k - block) / 2; // distance from centre to block top, in text px (up)
+      LINES.forEach((ln, i) => ctx.fillText(ln, x0, -(top - 72 - i * nameLead)));
       ctx.restore();
     };
   };
 
   // ---------- poses ----------
-  const fragAt = (f: WFrag, s: number): Pose => {
-    const u = clamp((s - f.o * 0.3) / 0.7);
+  const fragAt = (f: WFrag, s: number, field = false): Pose => {
+    const u = fragU(f, s, field);
     if (u <= 0) return f.A;
     if (u >= 1) return f.C;
     const t = easeInOut3(u);
     return { p: bez(f.A.p, f.ctrl, f.C.p, t), q: qBez(f.A.q, f.qc, f.C.q, t), s: lerp3(f.A.s, f.C.s, t) };
   };
-  const fragU = (f: WFrag, s: number) => clamp((s - f.o * 0.3) / 0.7);
+  // field: a partial change means some pieces fully rebuilt (nearest the agent's side) and the rest still in the picture
+  const fragU = (f: WFrag, s: number, field = false) => (field ? clamp((s * 1.7 - f.o) / 0.7) : clamp((s - f.o * 0.3) / 0.7));
 
   /** the agent: waits, crosses the grain, strikes, keeps its vector, turns into the keystone */
   const agentAt = (start: V3, impact: V3, C: Pose, dir: V3, travel: number, build: number): Pose => {
@@ -339,10 +371,12 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
     invD = cam.invD;
     tgt = lerp3(v(0, 0.05, 0), tgtField, cam.tmix);
     cx = W * (portrait ? 0.5 : 0.54);
-    cy = H * (portrait ? 0.5 : 0.47);
+    cy = H * (portrait ? (PAGE ? 0.45 : 0.54) : 0.47);
 
     const sP = buildS(p);
-    const fieldA = clamp((p - T.pull0 - 0.02) / 0.12);
+    const fieldA = FIELD ? clamp((p - T.pull0 - 0.02) / 0.12) : 0;
+    // scrolling back out of the field resets what was seeded there
+    if (FIELD && p < T.pull0) for (const n of nodes) if (!n.primary && (n.agent || n.lvl.to > 0)) { n.agent = null; n.lvl = { from: 0, to: 0, t0: 0, dur: 1 }; }
     const introT = introT0 >= 0 && !rm ? clamp((now - introT0) / 1700) : 1;
     const items: Item[] = [];
 
@@ -353,7 +387,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
     let J = 0;
     for (const pu of pulses) { const x = (now - pu.t0) / 900; if (x > 0 && x < 1) J += Math.sin(Math.PI * x) * Math.exp(-2.4 * x) * 1.6; }
     const crackP = clamp((p - T.strike + 0.004) / 0.035);
-    const nameA = (1 - smooth((sP - 0.22) / 0.3)) * (introT < 1 ? smooth((introT - 0.3) / 0.5) : 1);
+    const nameA = 1;
 
     primary.parents.forEach((pa, pi) => {
       const moving = pa.frags.some((f) => fragU(f, sP) > 0);
@@ -390,7 +424,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
         pa.frags.forEach((f, i) => {
           const pose = shift(fragAt(f, sP), i);
           const it = boxItem(pose, f.h, f.mat, 1, f.tint * 2);
-          if (it && pi === 0) nameOn(it, pose, pa, f.mid, nameA);
+          if (it && pi === 0 && fragU(f, sP) < 0.4) nameOn(it, pose, pa, f.mid, nameA); // leaves the piece mid-flight
           if (it) items.push(it);
         });
       }
@@ -447,7 +481,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
 
         const alpha = 1;
         n.parents.forEach((pa, pi) => {
-          const moving = pa.frags.some((f) => fragU(f, n.s) > 0);
+          const moving = pa.frags.some((f) => fragU(f, n.s, true) > 0);
           const lay = easeOut3(clamp(fieldA * 1.7 - ((pi * 0.13 + n.ring * 0.17) % 0.7)));
           if (lay <= 0.001) return;
           if (!moving) {
@@ -459,7 +493,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement) {
               if (ca > 0 && pa.cuts.length) it.lines = crackLines(pa, pose, ca);
               items.push(it);
             }
-          } else pa.frags.forEach((f) => { const it = boxItem(fragAt(f, n.s), f.h, f.mat, alpha, f.tint * 2); if (it) items.push(it); });
+          } else pa.frags.forEach((f) => { const it = boxItem(fragAt(f, n.s, true), f.h, f.mat, alpha, f.tint * 2); if (it) items.push(it); });
         });
         if (n.agent) {
           const e = rm ? 1 : clamp((now - n.agent.t0) / 1500);

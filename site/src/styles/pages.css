@@ -1,18 +1,25 @@
+.page--after { padding-top: clamp(24px, 4vw, 64px); min-height: 0; }
+.plate__line { margin: 0; font-size: 16px; line-height: 1.45; }
+
 .prose { max-width: 1180px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0 var(--gut); }
 .prose p { grid-column: 4 / span 7; margin: 0 0 1.2em; font-size: 19px; line-height: 1.6; }
 .prose .prose__lede { grid-column: 1 / span 10; font-size: clamp(26px, 3.2vw, 46px); line-height: 1.14; letter-spacing: -0.012em; margin-bottom: 1.1em; color: var(--chalk); }
 
-.team { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gut); }
-.person { border-top: 1px solid var(--slate); padding-top: 18px; outline-offset: 6px; margin-top: calc((3 - var(--i)) * 3.2vw); }
-/* the cards step up along the site's axis */
-.person__g { width: 100%; aspect-ratio: 1; background: var(--night-2); padding: 18%; margin-bottom: 18px; }
+/* team: names first, then the picture; the cards step up along the site's axis */
+.team { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gut); align-items: start; }
+.person { border-top: 1px solid var(--slate); padding-top: 18px; outline-offset: 6px; margin-top: calc((3 - var(--i)) * 1.6vw); }
 .person__n { color: var(--haze); }
 .person__name { margin: 8px 0 4px; font-size: 26px; font-weight: 720; font-stretch: 118%; letter-spacing: -0.02em; line-height: 1.1; }
-.person__role { margin: 0 0 12px; }
+.person__role { margin: 0 0 16px; }
+.person__g { width: 100%; aspect-ratio: 4 / 3; background: var(--night-2); padding: 12% 22%; margin-bottom: 14px; }
 .person__bio { margin: 0; font-size: 15px; line-height: 1.5; }
 
-.contact { margin: 0; display: grid; gap: 0; max-width: 1180px; }
-.contact > div { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 22px 0; border-top: 1px solid var(--slate); align-items: baseline; }
+/* contact: rows on the tilted grid, a hairline through the steps */
+.tilt { position: relative; --step: clamp(20px, 7vw, 120px); max-width: 1180px; }
+.tilt__axis { position: absolute; left: 0; top: 0; height: 100%; width: calc(var(--n) * var(--step)); overflow: visible; pointer-events: none; }
+.tilt__axis line { stroke: var(--pewter); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.contact { margin: 0; padding-left: var(--step); }
+.contact > div { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 26px 0; border-top: 1px solid var(--slate); align-items: baseline; margin-left: calc((var(--n) - 1 - var(--i)) * var(--step)); }
 .contact > div:last-child { border-bottom: 1px solid var(--slate); }
 .contact dt { color: var(--haze); }
 .contact dd { margin: 0; font-size: clamp(22px, 2.6vw, 36px); font-weight: 560; font-stretch: 110%; letter-spacing: -0.015em; }
@@ -21,17 +28,15 @@
 
 @media (max-width: 900px) {
   .team { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .person { margin-top: calc(((var(--i) + 1) % 2) * 8vw); }
+  .person { margin-top: calc(((var(--i) + 1) % 2) * 6vw); }
 }
 @media (max-width: 760px) {
-  .page { padding-top: 150px; }
   .prose { display: block; }
-  .page__head { grid-template-columns: 1fr; }
-  .page__glyph { width: 110px; }
+  .tilt { --step: 16px; }
   .contact > div { grid-template-columns: 1fr; gap: 6px; }
 }
 @media (max-width: 480px) {
   .team { grid-template-columns: 1fr; }
   .person { margin-top: 0; margin-left: calc((3 - var(--i)) * 14px); }
-  .person__g { width: 60%; }
+  .person__g { width: 70%; }
 }

@@ -16,7 +16,7 @@ const D = Math.PI / 180;
 const UP = qX(-Math.PI / 2); // a plate lying flat, face up
 
 // The picture rises along one diagonal (28°). One dominant plane carries the name; a large dark plane,
-// cropped by the frame, gives the scale jump; everything else is small and far.
+// cropped by the frame (top-left, clear of the captions), gives the scale jump; everything else is small and far.
 const DEFS: Def[] = [
   // 0 · the dominant pale plane → floors, jogged and fanned
   { mat: 'chalk', c: [-0.05, 0.12], w: 1.5, h: 0.27, ang: 28, n: 5, z: 0.02, t: 0.024,
@@ -37,7 +37,7 @@ const DEFS: Def[] = [
   { mat: 'slate', c: [0.84, 0.1], w: 0.48, h: 0.085, ang: 28, n: 3, z: 0.01, t: 0.03,
     C: { mode: 'join', c: v(0.66, -0.3, 0.22), dir: v(0.18, 0, 1), k: 1.3, t: 1.6 } },
   // 6 · the large dark plane, cropped by the frame → the ground the construction stands on
-  { mat: 'slate', c: [-1.42, -0.8], w: 1.5, h: 0.5, ang: 28, n: 3, z: -0.12, t: 0.02,
+  { mat: 'slate', c: [-1.52, 0.78], w: 1.5, h: 0.5, ang: 28, n: 3, z: -0.12, t: 0.02,
     C: { mode: 'stack', c: v(-0.02, -0.72, 0.06), step: v(0.42, -0.03, 0.08), q: qMul(qY(-0.12), UP), fan: 0.07, s: v(0.82, 0.95, 1) } },
   // 7–8 · two short bars → a stair
   { mat: 'chalk', c: [-0.66, 0.64], w: 0.3, h: 0.045, ang: 28, n: 1, z: 0.03, t: 0.016, minor: true,
@@ -54,18 +54,40 @@ const DEFS: Def[] = [
 /** Where the agent strikes the picture, and where it waits (landscape / portrait). */
 export const IMPACT: V3 = v(0.12, 0.07, 0.08);
 export const AGENT_START_L: V3 = v(1.22, -0.6, 0.12);
-export const AGENT_START_P: V3 = v(0.66, -0.98, 0.12);
+export const AGENT_START_P: V3 = v(0.52, -0.98, 0.12);
 export const AGENT_H: V3 = v(0.17, 0.021, 0.021);
 export const AGENT_C: Pose = { p: v(-0.04, 0.12, 0.1), q: qLook(v(-0.35, 0.18, 1)), s: v(2.3, 1.35, 1.35) };
 
-export function buildComposition(start: V3, seed = 7): Parent[] {
+export interface Variant { variant?: number; slabH?: number }
+
+/** Each page gets its own picture: the same grammar, secondary planes moved and dropped per variant. */
+function vary(defs: Def[], variant: number, slabH?: number): Def[] {
+  if (!variant && !slabH) return defs;
+  const r = rng(1000 + variant * 7919);
+  return defs.map((d, i) => {
+    const o = { ...d, c: [...d.c] as [number, number] };
+    if (i === 0 && slabH) o.h = slabH;
+    if (variant && i >= 2) {
+      const j = i === 6 ? 0.25 : i >= 7 ? 0.35 : 0.14;
+      o.c = [d.c[0] + (r() - 0.5) * 2 * j, d.c[1] + (r() - 0.5) * 2 * j];
+      if (i === 3 || i === 5) o.w = d.w * (0.7 + r() * 0.7);
+      if (i === 6) o.c = [variant % 2 ? -1.52 : 1.78, variant % 2 ? 0.8 : -0.18];
+      // keep the small planes clear of the header
+      if (i !== 6) o.c = [Math.min(o.c[0], 1.15), Math.min(o.c[1], 0.66)];
+    }
+    return o;
+  });
+}
+
+export function buildComposition(start: V3, seed = 7, opt: Variant = {}): Parent[] {
   const r = rng(seed);
+  const DEFS_V = vary(DEFS, opt.variant ?? 0, opt.slabH);
   const dir3 = norm(sub(IMPACT, start));
   const d2 = norm(v(dir3[0], dir3[1], 0));
   const tumbleAxis = cross(d2, v(0, 0, 1)); // pieces tumble forward, over the direction of travel
   const parents: Parent[] = [];
 
-  DEFS.forEach((df, pi) => {
+  DEFS_V.forEach((df, pi) => {
     const a = df.ang * D;
     const ax: V3 = v(Math.cos(a), Math.sin(a), 0);
     const qa = qZ(a);

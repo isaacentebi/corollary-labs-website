@@ -1,9 +1,7 @@
-.es { padding: calc(var(--gut) * 4 + 40px) var(--gut) clamp(64px, 10vw, 140px); }
-.es__head { position: relative; max-width: 1180px; margin: 0 auto clamp(56px, 8vw, 110px); padding-right: clamp(0px, 22vw, 300px); }
-.es__meta { display: flex; flex-wrap: wrap; gap: 8px 28px; color: var(--haze); margin-bottom: clamp(28px, 4vw, 48px); }
-.es__title { margin: 0; font-weight: 780; font-stretch: 120%; font-size: clamp(38px, 6vw, 92px); line-height: 0.95; letter-spacing: -0.035em; }
-.es__dek { margin: 24px 0 0; max-width: 38ch; font-size: clamp(19px, 1.7vw, 24px); line-height: 1.35; color: var(--haze); }
-.es__glyph { position: absolute; right: 0; top: 30px; width: clamp(160px, 20vw, 280px); }
+.es { padding: clamp(24px, 4vw, 64px) var(--gut) clamp(64px, 10vw, 140px); }
+.es__back { max-width: 1180px; margin: 0 auto clamp(40px, 6vw, 80px); color: var(--haze); }
+.es__meta { display: flex; flex-wrap: wrap; gap: 8px 24px; color: var(--haze); margin-bottom: 10px; }
+.es__dek { margin: 0; max-width: 40ch; font-size: clamp(16px, 1.3vw, 19px); line-height: 1.4; color: var(--chalk); }
 
 .es__body {
   max-width: 1180px; margin: 0 auto; padding-right: clamp(0px, 26vw, 360px);
@@ -71,10 +69,7 @@
 .es__next-g { position: absolute; right: 0; top: 50%; width: 96px; transform: translateY(-50%); }
 
 @media (max-width: 760px) {
-  .es { padding-top: 150px; }
-  .es__head { padding-right: 0; }
   .es__body { padding-right: 0; }
-  .es__glyph { position: static; width: 120px; margin-top: 32px; }
   .es__body { font-size: 17.5px; }
   .es__next { padding-right: 84px; }
   .es__next-g { width: 64px; }

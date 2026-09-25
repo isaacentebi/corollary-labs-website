@@ -102,23 +102,28 @@ img, svg, canvas { display: block; max-width: 100%; }
 }
 .page__glyph { width: clamp(110px, 18vw, 240px); }
 
-/* ---------- page change: planes along the axis ---------- */
+/* ---------- page change: light planes along the axis, the title on the middle one ---------- */
 .veil { position: fixed; inset: 0; z-index: 100; pointer-events: none; visibility: hidden; overflow: hidden; }
 .veil i, .veil b { position: absolute; left: 50%; top: 50%; }
-.veil i { width: 320vmax; height: 62vmax; margin: -31vmax 0 0 -160vmax; transform: rotate(var(--diag)) translate(320vmax, var(--y)); }
-.veil i:nth-child(1) { background: var(--slate); }
-.veil i:nth-child(2) { background: var(--night-2); }
-.veil i:nth-child(3) { background: #1b2349; }
-.veil b { width: 24vmax; height: 1.1vmax; margin: -0.55vmax 0 0 -12vmax; background: var(--cad); transform: rotate(var(--diag)) translate(140vmax, 0); }
+.veil i { width: 320vmax; margin: 0 0 0 -160vmax; transform: rotate(var(--diag)) translate(320vmax, var(--y)); }
+.veil i:nth-child(1) { height: 72vmax; margin-top: -36vmax; background: var(--haze); }
+.veil i:nth-child(2) { height: 28vmax; margin-top: -14vmax; background: var(--chalk); display: flex; align-items: center; justify-content: center; border-top: 1px solid rgba(12, 17, 40, 0.3); border-bottom: 1px solid rgba(12, 17, 40, 0.3); }
+.veil i:nth-child(3) { height: 72vmax; margin-top: -36vmax; background: var(--slate); }
+.veil [data-veil-title] {
+  display: block; max-width: 110vmin; color: var(--night); text-align: left;
+  font-weight: 800; font-stretch: 125%; letter-spacing: -0.035em; line-height: 0.95; font-size: clamp(40px, 9vmin, 132px);
+}
+.veil b { width: 24vmax; height: 1.1vmax; margin: -0.55vmax 0 0 -12vmax; background: var(--cad); transform: rotate(var(--diag)) translate(140vmax, 0); z-index: 2; }
 .veil.is-in { visibility: visible; pointer-events: auto; }
-.veil.is-in i { animation: veil-in 0.5s cubic-bezier(0.7, 0, 0.2, 1) forwards; }
-.veil.is-in i:nth-child(2) { animation-delay: 0.05s; }
-.veil.is-in i:nth-child(3) { animation-delay: 0.1s; }
-.veil.is-in b { animation: veil-agent 0.55s cubic-bezier(0.5, 0, 0.3, 1) forwards; }
+.veil.is-in b { animation: veil-agent 0.42s cubic-bezier(0.5, 0, 0.3, 1) forwards; }
+.veil.is-in i { animation: veil-in 0.36s cubic-bezier(0.7, 0, 0.25, 1) forwards; }
+.veil.is-in i:nth-child(2) { animation-delay: 0.03s; }
+.veil.is-in i:nth-child(3) { animation-delay: 0.05s; }
 .veil-arrive .veil { visibility: visible; }
-.veil-arrive .veil i { transform: rotate(var(--diag)) translate(0, var(--y)); animation: veil-out 0.65s cubic-bezier(0.6, 0, 0.15, 1) 0.05s forwards; }
-.veil-arrive .veil i:nth-child(2) { animation-delay: 0.11s; }
-.veil-arrive .veil i:nth-child(3) { animation-delay: 0.17s; }
+.veil-arrive .veil i { transform: rotate(var(--diag)) translate(0, var(--y)); animation: veil-out 0.5s cubic-bezier(0.55, 0, 0.2, 1) 0.02s forwards; }
+.veil-arrive .veil i:nth-child(3) { animation-delay: 0s; }
+.veil-arrive .veil i:nth-child(1) { animation-delay: 0.04s; }
+.veil-arrive .veil i:nth-child(2) { animation-delay: 0.12s; }
 @keyframes veil-in { from { transform: rotate(var(--diag)) translate(320vmax, var(--y)); } to { transform: rotate(var(--diag)) translate(0, var(--y)); } }
 @keyframes veil-out { from { transform: rotate(var(--diag)) translate(0, var(--y)); } to { transform: rotate(var(--diag)) translate(-320vmax, var(--y)); } }
 @keyframes veil-agent { from { transform: rotate(var(--diag)) translate(140vmax, 0); } to { transform: rotate(var(--diag)) translate(-140vmax, 0); } }

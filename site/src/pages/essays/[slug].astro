@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import Figure from '../../components/Figure.astro';
 import Term from '../../components/Term.astro';
 import Glyph from '../../components/Glyph.astro';
+import PagePlate from '../../components/PagePlate.astro';
 import { getCollection, render } from 'astro:content';
 import { site, url, fmtDate } from '../../config/site';
 import '../../styles/essay.css';
@@ -15,18 +16,15 @@ const { entry, next } = Astro.props;
 const { Content, remarkPluginFrontmatter: fm } = await render(entry);
 ---
 <Base page="essay" title={entry.data.title} description={entry.data.dek}>
+  <PagePlate title={entry.data.title} variant={5 + (entry.id.length % 3)} slabH={0.36}>
+    <div class="es__meta t-label">
+      <span><time datetime={entry.data.date.toISOString()}>{fmtDate(entry.data.date)}</time> · {fm.minutesRead} min</span>
+      {entry.data.placeholder && <span class="ph">[Placeholder essay]</span>}
+    </div>
+    <p class="es__dek">{entry.data.dek}</p>
+  </PagePlate>
   <article class="es">
-    <header class="es__head" data-glyph-host>
-      <div class="es__meta t-label">
-        <a class="lk" href={url('essays/')}>← Essays</a>
-        <span><time datetime={entry.data.date.toISOString()}>{fmtDate(entry.data.date)}</time> · {fm.minutesRead} min</span>
-        {entry.data.placeholder && <span class="ph">[Placeholder essay]</span>}
-      </div>
-      <h1 class="es__title">{entry.data.title}</h1>
-      <p class="es__dek">{entry.data.dek}</p>
-      <Glyph seed={entry.id} class="es__glyph" big />
-    </header>
-
+    <nav class="es__back t-label"><a class="lk" href={url('essays/')}>← Essays</a></nav>
     <div class="es__body">
       <Content components={{ Figure, Term }} />
     </div>
@@ -34,7 +32,7 @@ const { Content, remarkPluginFrontmatter: fm } = await render(entry);
     <footer class="es__end">
       <p class="t-label ph">— {site.author}, {fmtDate(entry.data.date)}</p>
       {next && next.id !== entry.id && (
-        <a class="es__next" href={url(`essays/${next.id}/`)} data-glyph-host>
+        <a class="es__next" href={url(`essays/${next.id}/`)} data-title={next.data.title} data-glyph-host>
           <span class="t-label">Next essay</span>
           <span class="es__next-t">{next.data.title}</span>
           <Glyph seed={next.id} class="es__next-g" />
