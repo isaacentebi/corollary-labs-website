@@ -1,47 +1,87 @@
 ---
-// A small score rendered at build time as SVG: one system, its own voices,
-// the new voice entering and its figure taken up. Seeded, so each essay has its own.
-import { otherSystem, geometry, hash, type Prim } from '../scripts/model';
+// A small score rendered at build time as SVG: one system with its own voices, entry point
+// and takers (seeded). With a playhead: the past in ink, the future in pencil; hovering the
+// parent link plays it through. Optional bracket, time ruler and rehearsal letters.
+import { otherSystem, geometry, groupSpans, hash, type Prim, type Grammar } from '../scripts/model';
 
-interface Props { seed: string; w?: number; h?: number; r?: number; voices?: number; class?: string; stroke?: number }
-const { seed, w = 320, h = 120, r = 1, voices, class: cls, stroke = 0.55 } = Astro.props;
-const sys = otherSystem(hash(seed) % 100000, voices);
-const prims = geometry(sys, { r, agentTo: r > 0 ? sys.t0 + (1 - sys.t0) * Math.min(1, r * 1.2) : 0 }, { detail: 0.6 });
-const pad = 4;
-const X = (t: number) => +(pad + t * (w - pad * 2)).toFixed(1);
-const Y = (y: number) => +(pad + y * (h - pad * 2)).toFixed(1);
+interface Props {
+  seed: string; w?: number; h?: number; r?: number; voices?: number; class?: string; stroke?: number;
+  at?: number | null; bracket?: boolean; ruler?: boolean; marks?: string[]; label?: string; grammar?: Grammar;
+}
+const { seed, w = 320, h = 120, r = 1, voices, class: cls, stroke = 0.55, at = 58, bracket = false, ruler = false, marks = [], label, grammar } = Astro.props;
+const sys = otherSystem(hash(seed) % 100000, voices, grammar);
+const st = { r, agentTo: r > 0 ? sys.t0 + (1 - sys.t0) * Math.min(1, r * 1.25) : 0 };
+const prims = geometry(sys, st, { detail: 0.7 });
+const padL = bracket ? 22 : 4, padR = 4, padT = marks.length ? 26 : 8, padB = ruler ? 22 : 8;
+const iw = w - padL - padR, ih = h - padT - padB;
+const X = (t: number) => +(padL + t * iw).toFixed(1);
+const Y = (y: number) => +(padT + y * ih).toFixed(1);
 const s = stroke;
 const d = (pts: [number, number][]) => pts.map(([t, y], i) => `${i ? 'L' : 'M'}${X(t)} ${Y(y)}`).join('');
 const hl = prims.filter((p): p is Extract<Prim, { k: 'hl' }> => p.k === 'hl');
 const ink = prims.filter((p) => p.k !== 'hl');
 const ribbon = (pts: [number, number, number][]) => {
-  const top = pts.map(([t, y, ww], i) => `${i ? 'L' : 'M'}${X(t)} ${+(Y(y) - (ww * s) / 2).toFixed(1)}`).join('');
-  const bot = [...pts].reverse().map(([t, y, ww]) => `L${X(t)} ${+(Y(y) + (ww * s) / 2).toFixed(1)}`).join('');
+  const top = pts.map(([t, y, ww], i) => `${i ? 'L' : 'M'}${X(t)} ${+(Y(y) - Math.max(0.3, (ww * s) / 2)).toFixed(1)}`).join('');
+  const bot = [...pts].reverse().map(([t, y, ww]) => `L${X(t)} ${+(Y(y) + Math.max(0.3, (ww * s) / 2)).toFixed(1)}`).join('');
   return top + bot + 'Z';
 };
+const hairpins = prims.filter((p): p is Extract<Prim, { k: 'hairpin' }> => p.k === 'hairpin');
+// brackets: system barline + one bracket per group, at the left
+const spans = bracket ? groupSpans(sys, st, 0).map((g) => ({ a: Y(g.a), b: Y(g.b) })) : [];
+const bx = padL - 7;
+const brk = (a: number, b: number) => `M${bx - 3} ${a - 4}V${b + 4}H${bx}V${a - 4}Z M${bx - 3} ${a - 4}Q${bx - 3} ${a - 9} ${bx + 7} ${a - 11}Q${bx + 1} ${a - 7} ${bx} ${a - 4}Z M${bx - 3} ${b + 4}Q${bx - 3} ${b + 9} ${bx + 7} ${b + 11}Q${bx + 1} ${b + 7} ${bx} ${b + 4}Z`;
+const top = spans.length ? Math.min(...spans.map((g) => g.a)) : 0, bot = spans.length ? Math.max(...spans.map((g) => g.b)) : 0;
+const ticks = ruler ? Array.from({ length: 51 }, (_, i) => ({ x: X(i / 50), len: i % 5 === 0 ? 7 : 3 })) : [];
+const ry = h - 6;
+const markAt = marks.map((m, i) => ({ m, x: X(i === 0 ? 0 : sys.t0 + (i - 1) * ((0.92 - sys.t0) / Math.max(1, marks.length - 1))) }));
 ---
-<svg class:list={['mini', cls]} viewBox={`0 0 ${w} ${h}`} aria-hidden="true" focusable="false">
-  <g class="mini__hl">
-    {hl.map((p) => <path d={d(p.pts)} stroke-width={Math.max(3, p.w * s)} />)}
-  </g>
-  <g class="mini__ink">
-    {ink.map((p) => {
-      if (p.k === 'ribbon') return <path d={ribbon(p.pts)} class="f" />;
-      if (p.k === 'path') return <path d={d(p.pts)} stroke-width={Math.max(0.6, p.w * s)} class={p.role ? 'agent' : ''} />;
-      if (p.k === 'rect') return <rect x={X(p.t)} y={Y(p.y)} width={Math.max(0.5, +(p.w * (w - pad * 2)).toFixed(1))} height={+(p.h * (h - pad * 2)).toFixed(1)} class={p.fill ? 'band' : 'box'} />;
-      if (p.k === 'dot') return <circle cx={X(p.t)} cy={Y(p.y)} r={Math.max(0.8, p.r * s)} class="f" />;
-      if (p.k === 'niente') return <circle cx={X(p.t)} cy={Y(p.y)} r={Math.max(1.6, 3.2 * s)} class="o" />;
-      return null;
-    })}
-  </g>
-</svg>
-<style>
-  .mini { display: block; width: 100%; height: auto; overflow: visible; }
-  .mini__hl path { fill: none; stroke: var(--hl); mix-blend-mode: multiply; }
-  .mini__ink path { fill: none; stroke: var(--ink); vector-effect: non-scaling-stroke; }
-  .mini__ink path.agent { stroke-linecap: round; }
-  .mini__ink .f { fill: var(--ink); stroke: none; }
-  .mini__ink .o { fill: none; stroke: var(--ink); stroke-width: 1; }
-  .mini__ink .box { fill: none; stroke: var(--ink); stroke-width: 0.8; vector-effect: non-scaling-stroke; }
-  .mini__ink .band { fill: color-mix(in srgb, var(--ink) 12%, transparent); stroke: var(--ink); stroke-width: 0.5; vector-effect: non-scaling-stroke; }
+{(() => {
+  const svg = (tone: 'ink' | 'pen' | 'solo') => (
+    <svg class:list={['mini', tone === 'ink' ? 'ms__ink' : tone === 'pen' ? 'ms__pen' : 'ms__solo']} viewBox={`0 0 ${w} ${h}`} aria-hidden="true" focusable="false">
+      <g class="mini__hl">
+        {hl.map((p) => <path d={d(p.pts)} stroke-width={Math.max(2.5, p.w * s)} opacity={p.a} />)}
+        {hairpins.map((p) => <path class="hp" d={`M${X(p.t + p.len)} ${Y(p.y) - p.open * ih}L${X(p.t)} ${Y(p.y)}L${X(p.t + p.len)} ${Y(p.y) + p.open * ih}Z`} />)}
+      </g>
+      <g class="mini__ink">
+        {ink.map((p) => {
+          if (p.k === 'ribbon') return <path d={ribbon(p.pts)} class="f" />;
+          if (p.k === 'path') return <path d={d(p.pts)} stroke-width={Math.max(0.5, p.w * s)} class={p.role ?? ''} />;
+          if (p.k === 'rect') return <rect x={X(p.t)} y={Y(p.y)} width={Math.max(0.5, +(p.w * iw).toFixed(1))} height={+(p.h * ih).toFixed(1)} class={p.fill ? 'band' : 'box'} />;
+          if (p.k === 'dot') return <circle cx={X(p.t)} cy={Y(p.y)} r={Math.max(0.7, p.r * s)} class="f" />;
+          if (p.k === 'niente') return <circle cx={X(p.t)} cy={Y(p.y)} r={Math.max(1.6, 3 * s)} class="o" />;
+          if (p.k === 'hairpin') return <path class="agent" stroke-width="0.8" d={`M${X(p.t + p.len)} ${Y(p.y) - p.open * ih}L${X(p.t)} ${Y(p.y)}L${X(p.t + p.len)} ${Y(p.y) + p.open * ih}`} />;
+          return null;
+        })}
+        {spans.length > 0 && <rect x={bx + 3} y={top - 5} width="1" height={bot - top + 10} class="f" />}
+        {spans.map((g) => <path d={brk(g.a, g.b)} class="f" />)}
+        {ticks.length > 0 && <path class="tick" d={`M${X(0)} ${ry}H${X(1)}` + ticks.map((t) => `M${t.x} ${ry}V${ry - t.len}`).join('')} />}
+        {markAt.map((mk) => <g class="mk"><rect x={mk.x + 0.5} y="1.5" width="15" height="15" /><text x={mk.x + 8} y="12.4">{mk.m}</text></g>)}
+      </g>
+    </svg>
+  );
+  return at === null ? (
+    <span class:list={['ms', 'ms--static', cls]} role={label ? 'img' : undefined} aria-label={label}>{svg('solo')}</span>
+  ) : (
+    <span class:list={['ms', cls]} style={`--at:${at}%`} role={label ? 'img' : undefined} aria-label={label}>
+      {svg('pen')}{svg('ink')}<span class="ms__head" aria-hidden="true"></span>
+    </span>
+  );
+})()}
+<style is:global>
+  .mini { width: 100%; height: auto; overflow: visible; color: var(--ink); }
+  .ms--static .mini { position: static; }
+  .mini.ms__pen { color: var(--pencil); }
+  .mini__hl path { fill: none; stroke: var(--hl); stroke-linecap: round; stroke-linejoin: round; mix-blend-mode: multiply; }
+  .mini__hl path.hp { fill: var(--hl); stroke: none; }
+  .ms__pen .mini__hl { opacity: .4; }
+  .mini__ink path { fill: none; stroke: currentColor; stroke-linejoin: round; }
+  .mini__ink path.agent, .mini__ink path.string { stroke-linecap: round; }
+  .mini__ink .f { fill: currentColor; stroke: none; }
+  .mini__ink .o { fill: none; stroke: currentColor; stroke-width: 0.9; }
+  .mini__ink .box { fill: none; stroke: currentColor; stroke-width: 0.8; }
+  .mini__ink .band { fill: color-mix(in srgb, currentColor 11%, transparent); stroke: currentColor; stroke-width: 0.5; }
+  .mini__ink .tick { stroke-width: 0.8; }
+  .mini__ink .mk rect { fill: var(--paper); stroke: currentColor; stroke-width: 1; }
+  .mini__ink .mk text { font: 640 9.5px var(--sans); text-anchor: middle; fill: currentColor; }
+  .ms__pen .mk rect { fill: none; }
 </style>

@@ -4,6 +4,6 @@ interface Props { kind?: string; n?: number; caption?: string }
 const { kind = 'fig', n = 1, caption = '' } = Astro.props;
 ---
 <figure class="fig">
-  <MiniScore seed={`${kind}-${n}`} w={720} h={200} voices={6} stroke={0.8} />
+  <MiniScore seed={`${kind}-${n}`} w={760} h={230} voices={6} stroke={0.85} bracket ruler at={null} />
   <figcaption><span class="fig__n">Fig. {n}</span>{caption}</figcaption>
 </figure>

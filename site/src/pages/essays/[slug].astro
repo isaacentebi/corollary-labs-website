@@ -26,13 +26,13 @@ const L = 'ABCDEFGHIJKLMNOP';
 
   <article class="essay">
     <header class="essay__head">
-      <div class="part__side"><span class="label">Essay</span></div>
+      <div class="part__side"><a class="sect" href={u('/essays/')}><span class="mark mark--fill">F</span><span class="label">Essays</span></a></div>
       <div class="essay__title">
         <p class="essay__meta"><time datetime={entry.data.date.toISOString()}>{fmtDate(entry.data.date)}</time><span>c. {fm.minutesRead}′</span>{entry.data.placeholder && <span>[Placeholder essay]</span>}</p>
-        <h1>{entry.data.title}</h1>
+        <h1 class="display"><span data-play>{entry.data.title}</span></h1>
         <p class="essay__dek">{entry.data.dek}</p>
       </div>
-      <div class="essay__score"><MiniScore seed={entry.id} w={1080} h={180} voices={6} stroke={0.9} /></div>
+      <div class="essay__score"><MiniScore class="only-wide" seed={entry.id} w={1080} h={210} voices={6} stroke={0.95} bracket ruler marks={sections.map((_, i) => L[i])} at={null} /><MiniScore class="only-narrow" seed={entry.id} w={520} h={250} voices={6} stroke={0.7} bracket ruler marks={sections.map((_, i) => L[i])} at={null} /></div>
     </header>
 
     <div class="essay__body prose" data-body>
@@ -45,7 +45,7 @@ const L = 'ABCDEFGHIJKLMNOP';
         <a class="next" href={u(`/essays/${next.id}/`)}>
           <span class="label">Next essay</span>
           <span class="next__title">{next.data.title}</span>
-          <span class="next__score"><MiniScore seed={next.id} w={420} h={80} /></span>
+          <span class="next__score"><MiniScore seed={next.id} w={420} h={96} at={40} /></span>
         </a>
       )}
     </footer>

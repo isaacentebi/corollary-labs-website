@@ -1,27 +1,36 @@
 ---
 import Base from '../layouts/Base.astro';
 import MiniScore from '../components/MiniScore.astro';
+import { u } from '../config/site';
 ---
 <Base page="about" title="About" description="[Meta description]">
   <header class="page-head">
-    <div class="part__side"><span class="mark">E</span></div>
-    <h1>About</h1>
-    <div class="page-head__strip"><MiniScore seed="about" w={1080} h={170} voices={6} stroke={0.9} /></div>
+    <div class="part__side"><span class="sect"><span class="mark mark--fill">E</span><span class="label">About</span></span></div>
+    <h1><span data-play>About</span></h1>
+    <div class="page-head__strip"><MiniScore class="only-wide" seed="about-page" w={1080} h={210} voices={6} stroke={0.95} bracket ruler marks={['A', 'B', 'C', 'D']} at={46} label="[Description of the score]" /><MiniScore class="only-narrow" seed="about-page" w={520} h={260} voices={6} stroke={0.7} bracket ruler marks={['A', 'B', 'C', 'D']} at={46} /></div>
   </header>
+
   <section class="part">
-    <div class="part__side"><h2 class="label">About</h2></div>
+    <div class="part__side"><span class="label">[Heading]</span></div>
     <div class="part__body">
-      <p class="lead">[About — one paragraph]</p>
+      <p class="lead"><span data-play>[About — one paragraph]</span></p>
       <div class="prose placeholder">
         <p>[About — second paragraph]</p>
         <p>[About — third paragraph]</p>
       </div>
+      <div class="notes">
+        <div class="note"><h3>[Heading]</h3><p>[One short paragraph]</p></div>
+        <div class="note"><h3>[Heading]</h3><p>[One short paragraph]</p></div>
+        <div class="note"><h3>[Heading]</h3><p>[One short paragraph]</p></div>
+      </div>
     </div>
   </section>
+
   <section class="part">
-    <div class="part__side"><h2 class="label">[Heading]</h2></div>
-    <div class="part__body prose placeholder">
-      <p>[Paragraph]</p>
+    <div class="part__side"><span class="label">[Heading]</span></div>
+    <div class="part__body">
+      <div class="prose placeholder"><p>[Paragraph]</p></div>
+      <p style="margin-top: 36px"><a class="more" href={u('/team/')}>Team <span aria-hidden="true">→</span></a></p>
     </div>
   </section>
 </Base>

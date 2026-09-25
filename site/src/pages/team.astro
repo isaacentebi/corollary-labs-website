@@ -1,14 +1,16 @@
 ---
 import Base from '../layouts/Base.astro';
 import MiniScore from '../components/MiniScore.astro';
-const people = [1, 2, 3, 4];
+import { u } from '../config/site';
+const people = [1, 2, 3, 4, 5];
+const grammars = ['fan', 'points', 'boxes', 'line', 'bars'] as const;
 ---
 <Base page="team" title="Team" description="[Meta description]">
   <header class="page-head">
-    <div class="part__side"><span class="label">{String(people.length).padStart(2, '0')}</span></div>
-    <h1>Team</h1>
+    <div class="part__side"><span class="sect"><span class="mark mark--fill">G</span><span class="label">Team</span></span></div>
+    <h1><span data-play>Team</span></h1>
   </header>
-  <section class="part" style="border-top: 0; padding-top: 0;">
+  <section class="part" style="border-top: 0; padding-top: 8px;">
     <div class="part__side"></div>
     <div class="part__body">
       <ul class="people">
@@ -16,10 +18,11 @@ const people = [1, 2, 3, 4];
           <li>
             <span class="who">[Name]</span>
             <span class="role">[Role]</span>
-            <MiniScore seed={`team-${n}`} w={420} h={40} voices={1} r={0} />
+            <span class="line"><MiniScore seed={`member-${n}`} w={520} h={56} voices={1} r={0} at={null} grammar={grammars[(n - 1) % grammars.length]} stroke={0.8} /></span>
           </li>
         ))}
       </ul>
+      <p style="margin-top: 56px"><a class="more" href={u('/contact/')}>Contact <span aria-hidden="true">→</span></a></p>
     </div>
   </section>
 </Base>
