@@ -27,17 +27,22 @@ const nav = [
     <a class="skip" href="#main">Skip to content</a>
     <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
       <filter id="ink" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
-        <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="3" seed="7" result="n" />
-        <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.6 1.22" result="a" />
+        <!-- brayer streaks along the part and pale patches where the ink ran thin -->
+        <feTurbulence type="fractalNoise" baseFrequency="0.05 0.9" numOctaves="2" seed="4" result="streak" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="9" result="thin" />
+        <feColorMatrix in="streak" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.55 1.18" result="a1" />
+        <feColorMatrix in="thin" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.6 0.28" result="a2" />
+        <feComposite in="a1" in2="a2" operator="arithmetic" k1="1" result="a" />
         <feComposite in="SourceGraphic" in2="a" operator="in" />
       </filter>
     </svg>
-    <header class="top">
+    <header class="top" data-top>
       <a class="brand" href={url('')} aria-label={`${site.name}, home`}>
         <Mark size={30} />
-        <span class="brand__name" data-text={site.name}>{site.name}</span>
+        <span class="brand__name">{site.name}</span>
       </a>
-      <nav class="top__nav" aria-label="Site">
+      <button class="top__menu" type="button" data-menu aria-expanded="false" aria-controls="site-nav"><span class="ov" data-text="Menu">Menu</span></button>
+      <nav class="top__nav" id="site-nav" aria-label="Site">
         {nav.map((n) => (
           <a href={n.href} class="ov" data-text={n.label} aria-current={page === n.key ? 'page' : undefined}>{n.label}</a>
         ))}
@@ -49,11 +54,46 @@ const nav = [
     <footer class="foot">
       <div class="foot__grid">
         <a class="brand brand--foot" href={url('')}><Mark size={22} /><span>{site.name}</span></a>
-        <nav class="foot__nav" aria-label="Footer">
-          {nav.map((n) => <a href={n.href} class="ov" data-text={n.label}>{n.label}</a>)}
-        </nav>
+        {page !== 'home' && (
+          <nav class="foot__nav" aria-label="Footer">
+            {nav.map((n) => <a href={n.href} class="ov" data-text={n.label}>{n.label}</a>)}
+          </nav>
+        )}
         <p class="foot__meta"><span>{site.email}</span><span>© {site.year}</span></p>
       </div>
     </footer>
+    <script>
+      // The header: hides while you read down, returns as soon as you scroll up.
+      // On phones, the four links fold into a menu.
+      const top = document.querySelector<HTMLElement>('[data-top]');
+      const btn = document.querySelector<HTMLButtonElement>('[data-menu]');
+      if (top) {
+        let last = scrollY, ticking = false;
+        const update = () => {
+          ticking = false;
+          const y = scrollY, dy = y - last;
+          top.classList.toggle('is-solid', y > 24);
+          if (Math.abs(dy) > 4) {
+            const hide = dy > 0 && y > 120 && top.dataset.open !== 'true' && !top.contains(document.activeElement);
+            top.classList.toggle('is-hidden', hide);
+            last = y;
+          }
+        };
+        addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+        top.addEventListener('focusin', () => top.classList.remove('is-hidden'));
+        update();
+      }
+      if (top && btn) {
+        const label = btn.querySelector('span')!;
+        const set = (open: boolean) => {
+          top.dataset.open = String(open);
+          btn.setAttribute('aria-expanded', String(open));
+          label.textContent = open ? 'Close' : 'Menu';
+          label.dataset.text = label.textContent;
+        };
+        btn.addEventListener('click', () => set(top.dataset.open !== 'true'));
+        addEventListener('keydown', (e) => { if (e.key === 'Escape' && top.dataset.open === 'true') { set(false); btn.focus(); } });
+      }
+    </script>
   </body>
 </html>

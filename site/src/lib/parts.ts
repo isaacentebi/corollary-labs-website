@@ -288,3 +288,47 @@ export function bounds(parts: Part[]): [number, number, number, number] {
 }
 
 export const byRadius = (a: Part, b: Part) => shapeRadius(b.shape) - shapeRadius(a.shape);
+
+const S = (kind: Shape['kind'], seed: number, o: Partial<Shape> = {}): Shape => ({ kind, seed, ...o });
+
+// ——— the first print, set by hand ———
+export function firstPrint(): Part[] {
+  const at = (shape: Shape, ink: Ink, px: number, py: number, th: number, px1: number, py1: number, th1: number, pin = 0, lag = 0): Part => {
+    const g = geo(shape);
+    const [bx, by] = g.pins[Math.min(pin, g.pins.length - 1)] ?? [0, 0];
+    return { shape, ink, px, py, ox: -bx, oy: -by, th, px1, py1, th1, lag };
+  };
+  const plate = S('plate', 41, { w: 34, h: 25 });
+  const disc = S('disc', 12, { r: 23 });
+  const spine = S('strip', 7, { L: 96, w: 5.6 });
+  return [
+    at(disc, 'y', 36, 38, 0, 42, 32, 18, 0, 0.1),
+    at(spine, 'c', 7, 63, -12, 7, 68, -27, 0, 0.2),
+    at(plate, 'y', 72, 73, 0, 69, 75, 13, 0, 0.55),
+    at(S('ring', 5, { r: 13, t: 2.6 }), 'c', 74, 24, 0, 68, 19, 0, 0, 0.4),
+    at(S('sector', 3, { r: 19, span: Math.PI / 2 }), 'c', 24, 94, -125, 20, 94, -150, 0, 0.7),
+    at(S('rod', 9, { L: 44, w: 1.5 }), 'y', 88, 46, 90, 89, 42, 116, 0, 0.85),
+    at(S('strip', 22, { L: 24, w: 3.8 }), 'c', 14, 13, 0, 16, 16, -14, 0, 0.6),
+    at(S('disc', 31, { r: 3.4 }), 'y', 57, 12, 0, 61, 12, 0, 0, 0.3),
+    // agents
+    { ...at(S('strip', 55, { L: 60, w: 5.2 }), 'm', 50, 50, 34, 50, 50, 34, 1), agent: true },
+    { ...at(S('disc', 14, { r: 10 }), 'm', 64, 63, 0, 64, 63, 0), agent: true },
+  ];
+}
+
+
+/** The team: one spine, one part bolted to it for each person. */
+export function teamPrint(n: number): Part[] {
+  return compose('team', { base: n + 1, agents: 1 });
+}
+
+/** Every essay's print, overprinted on one sheet, each a little off the last. */
+export function essaysPrint(slugs: string[]): Part[] {
+  const out: Part[] = [];
+  slugs.forEach((slug, i) => {
+    const a = (i / Math.max(1, slugs.length)) * Math.PI * 2;
+    const dx = Math.cos(a) * 9, dy = Math.sin(a) * 9;
+    for (const p of compose(slug)) out.push({ ...p, px: p.px + dx, py: p.py + dy, px1: p.px1 + dx, py1: p.py1 + dy });
+  });
+  return out;
+}

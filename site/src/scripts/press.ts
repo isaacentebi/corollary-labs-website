@@ -10,7 +10,7 @@
 // (drag before letting go to turn it). On the sheet, a print starts the change again from
 // that print. Renders on demand only: scroll, pointer, resize, or while an animation runs.
 
-import { INK, RIM, compose, geo, rng, bounds, type Part, type Shape, type Ink } from '../lib/parts';
+import { INK, RIM, compose, geo, rng, bounds, firstPrint as heroParts, type Part, type Shape, type Ink } from '../lib/parts';
 
 const P = 112; // print pitch on the sheet (a print is ~100 wide)
 const GX = 4, GY = 3; // the sheet extends GX/GY prints either side of the first
@@ -36,31 +36,6 @@ interface Tile {
 interface Stamp { path: Path2D; x: number; y: number; th: number; t0: number }
 
 const S = (kind: Shape['kind'], seed: number, o: Partial<Shape> = {}): Shape => ({ kind, seed, ...o });
-
-// ——— the first print, set by hand ———
-function heroParts(): Part[] {
-  const at = (shape: Shape, ink: Ink, px: number, py: number, th: number, px1: number, py1: number, th1: number, pin = 0, lag = 0): Part => {
-    const g = geo(shape);
-    const [bx, by] = g.pins[Math.min(pin, g.pins.length - 1)] ?? [0, 0];
-    return { shape, ink, px, py, ox: -bx, oy: -by, th, px1, py1, th1, lag };
-  };
-  const plate = S('plate', 41, { w: 34, h: 25 });
-  const disc = S('disc', 12, { r: 23 });
-  const spine = S('strip', 7, { L: 96, w: 5.6 });
-  return [
-    at(disc, 'y', 36, 38, 0, 42, 32, 18, 0, 0.1),
-    at(spine, 'c', 7, 63, -12, 7, 68, -27, 0, 0.2),
-    at(plate, 'y', 72, 73, 0, 69, 75, 13, 0, 0.55),
-    at(S('ring', 5, { r: 13, t: 2.6 }), 'c', 74, 24, 0, 68, 19, 0, 0, 0.4),
-    at(S('sector', 3, { r: 19, span: Math.PI / 2 }), 'c', 24, 94, -125, 20, 94, -150, 0, 0.7),
-    at(S('rod', 9, { L: 44, w: 1.5 }), 'y', 88, 46, 90, 89, 42, 116, 0, 0.85),
-    at(S('strip', 22, { L: 24, w: 3.8 }), 'c', 14, 13, 0, 16, 16, -14, 0, 0.6),
-    at(S('disc', 31, { r: 3.4 }), 'y', 57, 12, 0, 61, 12, 0, 0, 0.3),
-    // agents
-    { ...at(S('strip', 55, { L: 60, w: 5.2 }), 'm', 50, 50, 34, 50, 50, 34, 1), agent: true },
-    { ...at(S('disc', 14, { r: 10 }), 'm', 64, 63, 0, 64, 63, 0), agent: true },
-  ];
-}
 
 // ink laid by a brayer: streaks along the part, pale patches where the ink ran thin, specks
 function makePattern(ctx: CanvasRenderingContext2D, hex: string, seed: number): CanvasPattern {
@@ -183,9 +158,11 @@ export function initPress(root: HTMLElement) {
       z0 = Math.min(W * 0.44, H * 0.72) / 100;
       f0 = [W * 0.61, H * 0.52];
     } else {
-      const top = headH + 8, bottom = mask.y - 6;
-      z0 = Math.min(W * 0.84, (bottom - top) * 0.78) / 100;
-      f0 = [W * 0.5, (top + bottom) / 2 - 6];
+      // the print and its marks, centred in the space between the header and the words
+      const top = headH + 6, bottom = mask.y + 4;
+      z0 = Math.min(W * 0.86, (bottom - top) / 1.14) / 100;
+      const need = 114 * z0, slack = Math.max(0, bottom - top - need);
+      f0 = [W * 0.5, top + slack * 0.58 + need / 2 - 4 * z0];
     }
     // the sheet: 5 × 3 prints beside the words (2 × 3 above them on a phone)
     const [c0, cN, r0, rN] = wide ? [-2, 2, -1, 1] : [0, 1, -1, 1];
@@ -426,11 +403,12 @@ export function initPress(root: HTMLElement) {
     const hm = 1 - zoom;
     if (hm > 0.01) {
       const [x0, y0] = toS(0, 0), [x1, y1] = toS(100, 100);
-      for (const [wx, wy] of [[-9, -9], [109, -9], [-9, 109], [109, 109]]) {
+      const o = wide ? 9 : 5.2, tr = wide ? 2.4 : 1.6;
+      for (const [wx, wy] of [[-o, -o], [100 + o, -o], [-o, 100 + o], [100 + o, 100 + o]]) {
         const [x, y] = toS(wx, wy);
-        target(x, y, 2.4 * z, [['y', hm], ['c', hm], ['m', hm * hA]]);
+        target(x, y, tr * z, [['y', hm], ['c', hm], ['m', hm * hA]]);
       }
-      crops(x0, y0, x1, y1, 3 * z, 4 * z, hm * 0.5);
+      crops(x0, y0, x1, y1, (wide ? 3 : 2) * z, (wide ? 4 : 2.6) * z, hm * 0.5);
       // colour bar: each ink alone, then every overprint; pink ones print once an agent has
       const bar: Ink[][] = [['y'], ['c'], ['y', 'c'], ['m'], ['y', 'm'], ['c', 'm'], ['y', 'c', 'm']];
       ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * cam.tx, dpr * cam.ty);
@@ -445,17 +423,18 @@ export function initPress(root: HTMLElement) {
     }
     // the sheet: crop marks at its corners; beside each print, its registration target —
     // yellow and cyan from the start, pink once the change has reached it
-    if (zoom > 0.02) {
+    const sm = seg(zoom, 0.6, 1);
+    if (sm > 0.01) {
       let X0 = Infinity, Y0 = Infinity, X1 = -Infinity, Y1 = -Infinity;
       for (const t of tiles) {
         if (!t.inSheet) continue;
         X0 = Math.min(X0, t.x); Y0 = Math.min(Y0, t.y); X1 = Math.max(X1, t.x + 100); Y1 = Math.max(Y1, t.y + 100);
         const [tx, ty] = toS(t.x + 100, t.y);
         const a = tileA(t, now);
-        target(tx - 2, ty + 6, 3, [['y', zoom * 0.85], ['c', zoom * 0.85], ['m', zoom * clamp(a * 4)]]);
+        target(tx - 2, ty + 6, 3, [['y', sm * 0.85], ['c', sm * 0.85], ['m', sm * clamp(a * 4)]]);
       }
       const [x0, y0] = toS(X0 - 4, Y0 - 4), [x1, y1] = toS(X1 + 4, Y1 + 4);
-      crops(x0, y0, x1, y1, 6, 12, zoom * 0.45);
+      crops(x0, y0, x1, y1, 6, 12, sm * 0.45);
     }
     ctx.restore();
     ctx.globalCompositeOperation = 'multiply';

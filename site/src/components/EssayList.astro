@@ -11,7 +11,7 @@ const { essays, big = false } = Astro.props;
       <a class="erow" href={url(`essays/${e.id}/`)}>
         <Print seed={e.id} state="before" class="erow__print" />
         <span class="erow__date">{fmtDate(e.data.date)}</span>
-        <span class="erow__title">{e.data.title}</span>
+        <span class="erow__title reg" data-text={e.data.title}>{e.data.title}</span>
         <span class="erow__dek">{e.data.dek}</span>
       </a>
     </li>

@@ -2,7 +2,10 @@
 import Base from '../layouts/Base.astro';
 import EssayList from '../components/EssayList.astro';
 import { getCollection } from 'astro:content';
+import Print from '../components/Print.astro';
 import { url } from '../config/site';
+import { firstPrint, teamPrint, compose } from '../lib/parts';
+const people = 4;
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 ---
 <Base page="home">
@@ -23,7 +26,7 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
   <section class="block block--about" aria-labelledby="h-about">
     <h2 class="label" id="h-about">About</h2>
     <p class="lede">[About — one paragraph: who we are and what we work on, in plain terms. Three to four sentences.]</p>
-    <a class="more ov" href={url('about/')} data-text="About">About</a>
+    <a class="more ov" href={url('about/')} data-text="Read more">Read more</a>
   </section>
 
   <section class="block block--essays" aria-labelledby="h-essays">
@@ -33,9 +36,12 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
   </section>
 
   <nav class="block block--links" aria-label="Pages">
-    <a class="big ov" href={url('about/')} data-text="About">About</a>
-    <a class="big ov" href={url('team/')} data-text="Team">Team</a>
-    <a class="big ov" href={url('contact/')} data-text="Contact">Contact</a>
+    <h2 class="label">Pages</h2>
+    <ul class="pages">
+      <li><a href={url('about/')}><span class="big reg" data-text="About">About</span><Print parts={firstPrint()} state="before" pad={4} /></a></li>
+      <li><a href={url('team/')}><span class="big reg" data-text="Team">Team</span><Print parts={teamPrint(people)} state="before" pad={4} /></a></li>
+      <li><a href={url('contact/')}><span class="big reg" data-text="Contact">Contact</span><Print parts={compose('contact', { base: 3, agents: 1 })} state="before" pad={4} /></a></li>
+    </ul>
   </nav>
 
   <script>
