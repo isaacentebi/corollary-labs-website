@@ -3,22 +3,43 @@ import Base from '../layouts/Base.astro';
 import Header from '../components/Header.astro';
 import MiniScore from '../components/MiniScore.astro';
 import { getCollection, render } from 'astro:content';
-import { u, fmtDate } from '../config/site';
+import { site, hasEmail, u, fmtDate } from '../config/site';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
+// until a real address exists the primary action leads to the Contact block, not to mailto:[EMAIL]
+const contactHref = hasEmail ? `mailto:${site.email}` : '#contact';
+
+const capabilities = [
+  { t: 'Agent deployment', d: 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.', g: 'line' },
+  { t: 'Model fine-tuning', d: 'Models adapted and evaluated on your data for the specific tasks your agents perform.', g: 'fan' },
+  { t: 'Systems integration', d: 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.', g: 'boxes' },
+  { t: 'Evaluation and governance', d: 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.', g: 'points' },
+] as const;
+const legend = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
+const principles = [
+  { t: 'Workflow first.', d: 'We map how work is actually done before choosing a model.' },
+  { t: 'Design the reorganisation.', d: 'Roles, handoffs and controls change when agents arrive. We plan that change.' },
+  { t: 'Measure in production.', d: 'Every deployment reports on accuracy, cost and time saved.' },
+];
+const team = [1, 2, 3, 4];
+const grammars = ['fan', 'points', 'boxes', 'line'] as const;
 ---
 <Base page="home" header={false} bar="home">
-  <section class="story" data-story aria-label="Score">
-    <!-- rehearsal marks for the site ruler, placed at the scroll positions where the score reaches them -->
-    <i class="story__at" style="top: 30vh" data-mark="B"></i>
-    <i class="story__at" style="top: 48vh" data-mark="C"></i>
-    <i class="story__at" style="top: 99.6vh" data-mark="D"></i>
+  <!-- hero: the company, and the live score as its object (the entry plays once; you can draw a voice) -->
+  <section class="story" data-story aria-labelledby="hero-h">
     <div class="stage" data-stage data-state="1">
       <canvas class="stage__score" aria-hidden="true"></canvas>
-      <Header overlay />
-      <h1 class="stage__statement display"><span class="u-sr">Corollary Labs. </span><span class="swath" data-swath><span data-play data-play-manual data-statement>[Statement]</span></span></h1>
-      <p class="u-sr">[Description of the score]</p>
+      <Header overlay current="home" />
+      <div class="hero" data-copy>
+        <h1 class="hero__name display" id="hero-h"><span class="swath" data-swath><span data-play data-play-manual data-statement>Corollary Labs</span></span></h1>
+        <p class="hero__line">We deploy AI agents inside organisations and rebuild the operations around them.</p>
+        <p class="hero__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href={contactHref}>Contact us</a>
+          <a class="btn" href="#approach">Our approach <span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
       <div class="stage__tools">
         <button class="tool" type="button" data-draw aria-pressed="false">
           <svg viewBox="0 0 22 12" aria-hidden="true"><path d="M1 9C5 9 6 3 10 3S15 8 21 5" /></svg>Draw
@@ -32,17 +53,53 @@ const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e
     </div>
   </section>
 
-  <section class="part part--handoff" id="about" aria-labelledby="about-h">
-    <div class="part__side"><span class="bigmark" data-mark="E">E</span><h2 class="label" id="about-h">About</h2></div>
+  <section class="part part--handoff" id="capabilities" aria-labelledby="cap-h">
+    <div class="part__side"><span class="bigmark" data-mark="A">A</span><h2 class="label" id="cap-h">Capabilities</h2></div>
     <div class="part__body">
-      <p class="lead"><span data-play>[About — one paragraph]</span></p>
-      <a class="more" href={u('/about/')}>About <span aria-hidden="true">→</span></a>
+      <ol class="caps">
+        {capabilities.map((c, i) => (
+          <li class="cap">
+            <h3 class="cap__title"><span class="cap__n">0{i + 1}</span>{c.t}</h3>
+            <p class="cap__text">{c.d}</p>
+            <span class="cap__voice"><MiniScore seed={`cap-${i}`} w={360} h={56} voices={1} r={1} at={null} grammar={c.g} stroke={0.5} /></span>
+          </li>
+        ))}
+      </ol>
     </div>
   </section>
 
-  <section class="part" aria-labelledby="essays-h">
-    <div class="part__side"><span class="bigmark" data-mark="F">F</span><h2 class="label" id="essays-h">Essays</h2></div>
+  <section class="part approach" id="approach" aria-labelledby="ap-h">
+    <div class="part__side"><span class="bigmark" data-mark="B">B</span><h2 class="label" id="ap-h">Approach</h2></div>
     <div class="part__body">
+      <p class="intro">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+    </div>
+    <div class="fig" data-fig>
+      <div class="fig__stage" data-stage data-state="0">
+        <canvas class="fig__score" aria-hidden="true"></canvas>
+      </div>
+      <ol class="legend" aria-label="Legend">
+        {legend.map((l, i) => (
+          <li><button type="button" class:list={['legend__item', { 'is-now': i === 0 }]} data-beat={i} aria-current={i === 0 ? 'step' : 'false'}><span class="legend__n">0{i + 1}</span><span class="legend__t">{l}</span></button></li>
+        ))}
+        <li class="legend__play"><button class="tool" type="button" data-replay>
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path class="s0" d="M2 1.5v9l8-4.5z" /></svg>Play
+        </button></li>
+      </ol>
+    </div>
+    <div class="part__side"></div>
+    <div class="part__body">
+      <ol class="principles">
+        {principles.map((p, i) => (
+          <li><span class="principles__n">{i + 1}</span><h3>{p.t}</h3><p>{p.d}</p></li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="part" id="research" aria-labelledby="re-h">
+    <div class="part__side"><span class="bigmark" data-mark="C">C</span><h2 class="label" id="re-h">Research</h2></div>
+    <div class="part__body">
+      <p class="intro">Essays on agents, organisations and how new technology spreads.</p>
       <ol class="elist">
         {rows.map(({ e, fm }, i) => (
           <li>
@@ -56,18 +113,34 @@ const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e
           </li>
         ))}
       </ol>
-      <a class="more" href={u('/essays/')}>All essays <span aria-hidden="true">→</span></a>
+      <a class="more" href={u('/essays/')}>All research <span aria-hidden="true">→</span></a>
     </div>
   </section>
 
-  <section class="part" aria-label="Pages">
-    <div class="part__side"></div>
+  <section class="part" id="company" aria-labelledby="co-h">
+    <div class="part__side"><span class="bigmark" data-mark="D">D</span><h2 class="label" id="co-h">Company</h2></div>
     <div class="part__body">
-      <nav class="biglinks" aria-label="Pages">
-        <a href={u('/about/')}><span class="mark">E</span><span class="t">About</span><span class="arrow" aria-hidden="true">→</span></a>
-        <a href={u('/team/')}><span class="mark">G</span><span class="t">Team</span><span class="arrow" aria-hidden="true">→</span></a>
-        <a href={u('/contact/')}><span class="mark">H</span><span class="t">Contact</span><span class="arrow" aria-hidden="true">→</span></a>
-      </nav>
+      <p class="intro">Corollary Labs is an AI company. <span class="placeholder">[About — founding story and team, one paragraph]</span></p>
+      <ul class="people people--home">
+        {team.map((n) => (
+          <li>
+            <span class="who">[Name]</span>
+            <span class="role">[Role]</span>
+            <span class="line"><MiniScore seed={`member-${n}`} w={520} h={48} voices={1} r={0} at={null} grammar={grammars[(n - 1) % grammars.length]} stroke={0.8} /></span>
+          </li>
+        ))}
+      </ul>
+      <a class="more" href={u('/about/')}>About the company <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <section class="part" id="contact" aria-labelledby="ct-h">
+    <div class="part__side"><span class="bigmark" data-mark="E">E</span><h2 class="label" id="ct-h">Contact</h2></div>
+    <div class="part__body">
+      <div class="contact-lines">
+        <p>Deploying agents in your organisation? Talk to us.</p>
+        {hasEmail ? <a href={`mailto:${site.email}`}>{site.email}</a> : <span class="contact-email">{site.email}</span>}
+      </div>
     </div>
   </section>
 </Base>
@@ -76,4 +149,6 @@ const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e
   import { mountScore } from '../scripts/score';
   const root = document.querySelector<HTMLElement>('[data-story]');
   if (root) mountScore(root);
+  const fig = document.querySelector<HTMLElement>('[data-fig]');
+  if (fig) mountScore(fig, { mode: 'figure' });
 </script>

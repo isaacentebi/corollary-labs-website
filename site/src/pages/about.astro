@@ -3,19 +3,19 @@ import Base from '../layouts/Base.astro';
 import MiniScore from '../components/MiniScore.astro';
 import { u } from '../config/site';
 ---
-<Base page="about" title="About" description="[Meta description]">
+<Base page="about" title="About">
   <header class="page-head">
-    <div class="part__side"><span class="bigmark" data-mark="E">E</span><span class="label">About</span></div>
+    <div class="part__side"><span class="bigmark" data-mark="D">D</span><span class="label">About</span></div>
     <h1><span data-play>About</span></h1>
-    <div class="page-head__strip"><MiniScore class="only-wide ms--play" seed="about-page" w={1080} h={210} voices={6} stroke={0.95} bracket ruler marks={['A', 'B', 'C', 'D']} at={100} label="[Description of the score]" /><MiniScore class="only-narrow ms--play" seed="about-page" w={520} h={260} voices={6} stroke={0.7} bracket ruler marks={['A', 'B', 'C', 'D']} at={100} /></div>
+    <div class="page-head__strip"><MiniScore class="only-wide ms--play" seed="about-page" w={1080} h={210} voices={6} stroke={0.95} bracket ruler marks={['01', '02', '03', '04']} at={100} label="[Description of the score]" /><MiniScore class="only-narrow ms--play" seed="about-page" w={520} h={260} voices={6} stroke={0.7} bracket ruler marks={['01', '02', '03', '04']} at={100} /></div>
   </header>
 
-  <section class="part" data-mark="1">
+  <section class="part">
     <div class="part__side"><span class="label">[Heading]</span></div>
     <div class="part__body">
-      <p class="lead"><span data-play>[About — one paragraph]</span></p>
+      <p class="lead"><span data-play>Corollary Labs is an AI company.</span></p>
       <div class="prose placeholder">
-        <p>[About — second paragraph]</p>
+        <p>[About — founding story and team, one paragraph]</p>
         <p>[About — third paragraph]</p>
       </div>
       <div class="notes">
@@ -26,11 +26,19 @@ import { u } from '../config/site';
     </div>
   </section>
 
-  <section class="part" data-mark="2">
-    <div class="part__side"><span class="label">[Heading]</span></div>
+  <section class="part" aria-labelledby="team-h">
+    <div class="part__side"><h2 class="label" id="team-h">Team</h2></div>
     <div class="part__body">
-      <div class="prose placeholder"><p>[Paragraph]</p></div>
-      <p style="margin-top: 36px"><a class="more" href={u('/team/')}>Team <span aria-hidden="true">→</span></a></p>
+      <ul class="people people--home">
+        {[1, 2, 3, 4].map((n) => (
+          <li>
+            <span class="who">[Name]</span>
+            <span class="role">[Role]</span>
+            <span class="line"><MiniScore seed={`member-${n}`} w={520} h={48} voices={1} r={0} at={null} grammar={(['fan', 'points', 'boxes', 'line'] as const)[n - 1]} stroke={0.8} /></span>
+          </li>
+        ))}
+      </ul>
+      <a class="more" href={u('/team/')}>Team <span aria-hidden="true">→</span></a>
     </div>
   </section>
 </Base>

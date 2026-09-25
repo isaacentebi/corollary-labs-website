@@ -1,21 +1,21 @@
 ---
 import Base from '../layouts/Base.astro';
 import MiniScore from '../components/MiniScore.astro';
-import { site } from '../config/site';
+import { site, hasEmail } from '../config/site';
 ---
-<Base page="contact" title="Contact" description="[Meta description]">
+<Base page="contact" title="Contact">
   <header class="page-head">
-    <div class="part__side"><span class="bigmark" data-mark="H">H</span><span class="label">Contact</span></div>
+    <div class="part__side"><span class="bigmark" data-mark="E">E</span><span class="label">Contact</span></div>
     <h1><span data-play>Contact</span></h1>
   </header>
   <section class="part" style="border-top: 0; padding-top: 8px;">
     <div class="part__side"></div>
     <div class="part__body">
       <div class="contact-lines">
-        <a href="mailto:">{site.email}</a>
+        <p>Deploying agents in your organisation? Talk to us.</p>
+        {hasEmail ? <a href={`mailto:${site.email}`}>{site.email}</a> : <span class="contact-email">{site.email}</span>}
         <span>[Address]</span>
       </div>
-      <p class="prose placeholder" style="margin-top: 36px">[Contact — one line]</p>
       <div style="margin-top: clamp(48px, 7vw, 96px); max-width: 1080px"><MiniScore class="only-wide" seed="contact-page" w={1080} h={150} voices={4} stroke={0.9} bracket ruler at={80} /><MiniScore class="only-narrow" seed="contact-page" w={520} h={180} voices={4} stroke={0.7} bracket ruler at={80} /></div>
     </div>
   </section>

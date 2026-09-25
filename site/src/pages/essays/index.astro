@@ -8,10 +8,10 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
-<Base page="essays" title="Essays" description="[Meta description]">
+<Base page="essays" title="Research">
   <header class="page-head">
-    <div class="part__side"><span class="bigmark" data-mark="F">F</span><span class="label">Essays</span></div>
-    <h1><span data-play>Essays</span></h1>
+    <div class="part__side"><span class="bigmark" data-mark="C">C</span><span class="label">Research</span></div>
+    <h1><span data-play>Research</span></h1>
     <p class="page-head__meta">{pad(rows.length)} essays</p>
   </header>
   <section class="part" style="border-top: 0; padding-top: 8px;">

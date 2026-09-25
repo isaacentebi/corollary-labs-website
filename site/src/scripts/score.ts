@@ -1,10 +1,10 @@
-// The home score. On load the playhead plays the entry once; after that, scroll moves it.
-// A  the ensemble (the past, left of the entry)
-// B  a new voice enters from nothing
-// C  the ensemble makes room, regroups, and each voice restates the figure in its own grammar
-// D  the view pulls back: the figure reaches the near systems; the far ones only just see it enter
-// then the whole score collapses into the site ruler at the top of the page, which stays with you.
-// Visitors can draw a voice (UPIC). Space bends a little around it; voices never cross.
+// The home score, mounted twice.
+// hero:   on load the playhead plays the entry once and stops. Visitors can draw a voice (UPIC);
+//         space bends a little around it and voices never cross. Scrolling away folds the score
+//         into the site ruler at the top of the page, which stays with you.
+// figure: the Approach figure. The same score read in four beats, one per legend item:
+//         01 the ensemble · 02 a new voice enters · 03 the ensemble regroups and restates the
+//         figure · 04 the view pulls back and the figure reaches the other systems.
 // Renders only when something changes.
 import { mainSystem, otherSystem, geometry, userPrims, groupSpans, baseY, agentY, clamp, mix, smooth, hash, MOTIF_POINTS, strokeY, type State, type UserStroke, type System, type Prim } from './model';
 import { drawPrims, lerpRect, bracket, INK, PENCIL, GREY, HL, FONT, type Rect } from './render';
@@ -19,7 +19,8 @@ interface Other { sys: System; cell: Rect; d: number }
 const P0 = { T: 0.43, r: 0.12 };   // the state the intro lands on (scroll position 0)
 const BAR = 30;                     // height of the site ruler (px)
 
-export function mountScore(root: HTMLElement) {
+export function mountScore(root: HTMLElement, opts: { mode?: 'hero' | 'figure' } = {}) {
+  const fig = opts.mode === 'figure';
   const stage = root.querySelector<HTMLElement>('[data-stage]')!;
   const canvas = root.querySelector<HTMLCanvasElement>('canvas')!;
   const ctx = canvas.getContext('2d')!;
@@ -28,6 +29,9 @@ export function mountScore(root: HTMLElement) {
   const soundBtn = root.querySelector<HTMLButtonElement>('[data-sound]');
   const statement = root.querySelector<HTMLElement>('[data-statement]');
   const swath = root.querySelector<HTMLElement>('[data-swath]');
+  const copy = root.querySelector<HTMLElement>('[data-copy]');
+  const beats = [...root.querySelectorAll<HTMLButtonElement>('[data-beat]')];
+  const replay = root.querySelector<HTMLButtonElement>('[data-replay]');
   const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const coarse = matchMedia('(pointer: coarse)').matches;
   const html = document.documentElement;
@@ -40,8 +44,12 @@ export function mountScore(root: HTMLElement) {
   let F0: Rect = { x: 0, y: 0, w: 1, h: 1 };
   let others: Other[] = [];
   let p = 0, pTarget = 0, raf = 0, lastT = -1, lastState = -1, lastH = -1;
-  let q = 0, off = 0;   // q: how far the stage has scrolled away (0..1 over half a viewport); off: that distance in px
+  let q = 0, off = 0;   // q: how far the score has folded into the site ruler (0..1); off: that distance in px
   let intro = rm || scrollY > 20 ? 1 : 0, introStart = 0;
+  let copyBottom = 0;
+  // figure: the beat (0..3) the playhead is on, where it is going, and whether it is playing through
+  let beat = fig && rm ? 3 : 0, beatTarget = beat, playing = false, holdT = 0, lastNow = 0;
+  const DUR = [1.7, 2.6, 2.3];   // seconds per beat
   let rect: Rect = { x: 0, y: 0, w: 1, h: 1 };
   let zNow = 0;
   const users: Stroke[] = [];
@@ -51,25 +59,36 @@ export function mountScore(root: HTMLElement) {
   let auto: { stroke: Stroke; pts: [number, number][]; i: number } | null = null;
 
   // ------------------------------------------------ scroll → state
-  function mapping(p: number) {
+  // figure: eased within each beat, so the playhead settles on every one
+  const beatEase = (b: number) => { const i = Math.min(2, Math.floor(b)); return i + smooth(0, 1, b - i); };
+  function mapping(p0: number) {
     let T: number, r: number;
+    let p = p0, ii = fig ? 1 : intro, qq = fig ? 0 : q;
+    if (fig) { const b = beatEase(beat); ii = clamp(b); p = b <= 1 ? 0 : b <= 2 ? mix(0, 0.58, b - 1) : mix(0.58, 1, b - 2); }
     if (p < 0.45) { const f = seg(0, 0.45, p); T = mix(P0.T, 0.64, f); r = mix(P0.r, 1, smooth(0, 1, f)); }
     else if (p < 0.58) { T = mix(0.64, 0.74, seg(0.45, 0.58, p)); r = 1; }
     else { T = mix(0.74, 0.97, seg(0.58, 1, p)); r = 1; }
-    T = mix(T, 1, q);
-    if (intro < 1) {
-      const e = easeInOut(intro);
-      T = mix(0.27, T, e); r = mix(0, r, smooth(0.55, 1, intro));
+    T = mix(T, 1, qq);
+    if (ii < 1) {
+      const e = easeInOut(ii);
+      T = mix(0.27, T, e); r = mix(0, r, smooth(0.55, 1, ii));
     }
     const z = smooth(0.58, 0.95, p);
-    const h = q;   // the collapse happens as the stage scrolls away, within half a viewport
-    const state = T < sys.t0 ? 0 : T < 0.5 ? 1 : p < 0.58 ? 2 : 3;
+    const h = qq;   // the fold into the site ruler, as the stage scrolls away
+    const state = fig ? (T < sys.t0 ? 0 : beat < 1.12 ? 1 : beat < 2.05 ? 2 : 3) : T < sys.t0 ? 0 : T < 0.5 ? 1 : p < 0.58 ? 2 : 3;
     return { T, r, z, h, state, agentTo: T };
   }
 
   function baseRect(T: number): Rect {
     const L = narrow ? 34 : Math.max(84, gutter + 44), R = narrow ? 16 : gutter + 8;
-    const top = H * (narrow ? 0.335 : 0.36), bottom = H * (narrow ? 0.875 : 0.845);
+    let top: number, bottom: number;
+    if (fig) { top = narrow ? 62 : 84; bottom = H - (narrow ? 44 : 58); }
+    else {
+      // the hero: under the copy, above the ruler and the tools
+      bottom = H - (narrow ? 92 : 112);
+      top = Math.max(copyBottom + (narrow ? 48 : 70), H * 0.4);
+      if (bottom - top < 140) top = bottom - 140;
+    }
     const w = narrow ? Math.max(W * 2.5, 860) : W - L - R;
     const pan = narrow ? clamp(T * w - (W * 0.5 - L), 0, w - (W - L - R)) : 0;
     return { x: L - pan, y: top, w, h: bottom - top };
@@ -84,6 +103,7 @@ export function mountScore(root: HTMLElement) {
 
   function layout() {
     W = stage.clientWidth; H = stage.clientHeight;
+    if (copy) copyBottom = copy.getBoundingClientRect().bottom - stage.getBoundingClientRect().top;
     dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     narrow = W < 760;
@@ -106,12 +126,15 @@ export function mountScore(root: HTMLElement) {
   }
 
   function readScroll() {
+    if (fig) return;
     const r = root.getBoundingClientRect();
     const span = root.offsetHeight - window.innerHeight;
     pTarget = span > 0 ? clamp(-r.top / span) : 0;
     if (pTarget > 0.002 && intro < 1) intro = 1;   // the reader takes over
     off = Math.max(0, window.innerHeight - r.bottom);
-    q = clamp(off / (window.innerHeight * 0.5));
+    // the fold starts once the copy has scrolled out of view, and takes a third of a viewport
+    const off0 = Math.max(0, Math.min(copyBottom - 40, window.innerHeight * 0.6));
+    q = clamp((off - off0) / (window.innerHeight * 0.3));
     // the site ruler takes over once the score has collapsed into it
     html.classList.toggle('bar-on', q > 0.985);
     request();
@@ -122,7 +145,24 @@ export function mountScore(root: HTMLElement) {
   function frame(now: number) {
     raf = 0;
     let again = false;
-    if (intro < 1) {
+    if (fig) {
+      const dt = lastNow ? Math.min(0.05, (now - lastNow) / 1000) : 1 / 60;
+      lastNow = now;
+      if (rm) beat = beatTarget;
+      else if (beat !== beatTarget) {
+        const d = beatTarget - beat, i = Math.min(2, Math.floor(d > 0 ? beat : beat - 1e-6));
+        const step = (dt / DUR[Math.max(0, i)]) * (Math.abs(d) > 1.01 ? 2.2 : 1);
+        beat = Math.abs(d) <= step ? beatTarget : beat + Math.sign(d) * step;
+        again = true;
+      }
+      if (beat === beatTarget && playing) {
+        // hold on each beat, then read on
+        if (beatTarget < 3) { clearTimeout(holdT); holdT = window.setTimeout(() => { if (playing) { beatTarget++; request(); } }, 1100); }
+        else playing = false;
+      }
+      if (!again) lastNow = 0;
+    }
+    if (!fig && intro < 1) {
       if (!introStart) introStart = now;
       intro = clamp((now - introStart - 350) / 2600);
       if (intro < 1) again = true;
@@ -142,7 +182,7 @@ export function mountScore(root: HTMLElement) {
       u.g = (u.g ?? 0) + u.v * dt;
       if (Math.abs(1 - u.g) > 0.001 || Math.abs(u.v) > 0.001) again = true; else { u.g = 1; u.v = 0; }
     }
-    if (intro > 0.12) { statement?.classList.add('is-played'); swath?.classList.add('is-played'); }
+    if (!fig && intro > 0.12) { statement?.classList.add('is-played'); swath?.classList.add('is-played'); }
     draw();
     if (again) request();
   }
@@ -206,7 +246,10 @@ export function mountScore(root: HTMLElement) {
     if (users.length) clip(null, () => drawPrims(ctx, userPrims(st), rect, { ink: INK, band: '', hl: HL, hlA: 1 }, s, 'ink'));
     chrome(T, st, m.state, e, hh);
 
-    if (m.state !== lastState) { stage.dataset.state = String(m.state); lastState = m.state; }
+    if (m.state !== lastState) {
+      stage.dataset.state = String(m.state); lastState = m.state;
+      beats.forEach((b, i) => { b.classList.toggle('is-now', i === m.state); b.classList.toggle('is-past', i < m.state); b.setAttribute('aria-current', i === m.state ? 'step' : 'false'); });
+    }
     if (sound.on && lastT >= 0 && T > lastT + 1e-5 && intro >= 1) voiceEvents(prims, st, lastT, T);
     lastT = T;
   }
@@ -233,9 +276,9 @@ export function mountScore(root: HTMLElement) {
     }
 
     // rehearsal marks: the current one is filled with the highlighter
-    if (a > 0.01) {
+    if (fig && a > 0.01) {
       ctx.globalAlpha = a;
-      const bs = narrow ? 24 : 30, my = R.y - (narrow ? 38 : 52);
+      const bs = narrow ? 26 : 32, my = R.y - (narrow ? 38 : 52);
       ctx.font = `560 ${narrow ? 13 : 15}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       const edgeX = narrow ? 34 : 0;
       MARKS.forEach((t, i) => {
@@ -250,7 +293,7 @@ export function mountScore(root: HTMLElement) {
         if (i === state) { ctx.fillStyle = HL; ctx.fillRect(x, my - bs / 2, bs, bs); ctx.fillStyle = INK; }
         else if (i < state) { ctx.fillStyle = 'rgba(255,225,74,.35)'; ctx.fillRect(x, my - bs / 2, bs, bs); ctx.fillStyle = INK; }
         ctx.lineWidth = 1.5; ctx.strokeRect(x + 0.75, my - bs / 2 + 0.75, bs - 1.5, bs - 1.5);
-        ctx.fillText('ABCD'[i], x + bs / 2, my + 0.5);
+        ctx.fillText(`0${i + 1}`, x + bs / 2, my + 0.5);
       });
       ctx.globalAlpha = 1;
     }
@@ -324,7 +367,7 @@ export function mountScore(root: HTMLElement) {
     s.mean = s.pts.reduce((acc, q) => acc + q[1], 0) / s.pts.length;
   }
   const addStroke = (s: Stroke) => { users.push(s); while (users.length > 2) users.shift(); };
-  const canDraw = (ev: PointerEvent) => zNow < 0.3 && (ev.pointerType === 'mouse' ? ev.button === 0 : ev.pointerType === 'pen' || drawMode);
+  const canDraw = (ev: PointerEvent) => !fig && zNow < 0.3 && (ev.pointerType === 'mouse' ? ev.button === 0 : ev.pointerType === 'pen' || drawMode);
   canvas.addEventListener('pointerdown', (ev) => {
     if (!canDraw(ev)) return;
     ev.preventDefault();
@@ -385,8 +428,18 @@ export function mountScore(root: HTMLElement) {
     else if (sound.enable()) { soundBtn.setAttribute('aria-pressed', 'true'); label.textContent = 'Sound on'; sound.play('agent', agentY(sys, { r: 0, agentTo: 1 }, sys.t0 + 0.012), 0); }
   });
 
+  // figure: the legend moves the playhead to a beat; it plays through once when first seen
+  const play = (from: number) => { if (rm) { beat = beatTarget = 3; request(); return; } clearTimeout(holdT); beat = beatTarget = from; playing = true; request(); };
+  beats.forEach((b, i) => b.addEventListener('click', () => { playing = false; clearTimeout(holdT); beatTarget = i; request(); }));
+  replay?.addEventListener('click', () => play(0));
+  if (fig && !rm && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); if (beat === 0 && beatTarget === 0) window.setTimeout(() => play(0), 500); } }, { threshold: 0.55 });
+    io.observe(stage);
+  }
+
   window.addEventListener('scroll', readScroll, { passive: true });
-  new ResizeObserver(() => { layout(); readScroll(); }).observe(stage);
+  const ro = new ResizeObserver(() => { layout(); readScroll(); });
+  ro.observe(stage); if (copy) ro.observe(copy);
   document.fonts?.ready.then(request);
   layout(); readScroll();
   p = pTarget;

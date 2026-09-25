@@ -3,16 +3,19 @@ import Logo from './Logo.astro';
 import { u } from '../config/site';
 interface Props { current?: string; overlay?: boolean }
 const { current, overlay = false } = Astro.props;
+// on the home page the sections are anchors; elsewhere they lead back to them
+const home = current === 'home';
 const links = [
-  { label: 'Essays', href: u('/essays/'), key: 'essays' },
-  { label: 'About', href: u('/about/'), key: 'about' },
-  { label: 'Team', href: u('/team/'), key: 'team' },
-  { label: 'Contact', href: u('/contact/'), key: 'contact' },
+  { label: 'Capabilities', href: home ? '#capabilities' : u('/#capabilities'), key: 'capabilities' },
+  { label: 'Approach', href: home ? '#approach' : u('/#approach'), key: 'approach' },
+  { label: 'Company', href: u('/about/'), key: 'company' },
+  { label: 'Contact', href: home ? '#contact' : u('/#contact'), key: 'contact' },
 ];
+const cur = current === 'about' || current === 'team' ? 'company' : current;
 ---
 <header class:list={['head', { 'head--overlay': overlay }]}>
   <Logo />
   <nav class="head__nav" aria-label="Main">
-    {links.map((l) => <a href={l.href} aria-current={current === l.key ? 'page' : undefined}>{l.label}</a>)}
+    {links.map((l) => <a href={l.href} aria-current={cur === l.key ? 'page' : undefined}>{l.label}</a>)}
   </nav>
 </header>

@@ -1,10 +1,13 @@
 export const site = {
   name: 'Corollary Labs',
   author: 'Corollary Labs',
-  email: '[Email]',
+  email: '[EMAIL]',
   year: 2026,
-  description: '[Meta description]',
+  description: 'Corollary Labs deploys AI agents inside organisations and rebuilds the operations around them.',
 } as const;
+
+/** The contact action: a live mailto only once a real address exists; until then, the Contact block. */
+export const hasEmail = !/^\[.*\]$/.test(site.email);
 
 /** Join a site-relative path onto the configured base (works under /score). */
 export const u = (path = '') => {

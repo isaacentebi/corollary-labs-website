@@ -20,7 +20,7 @@ const marks = sections.map((_, i) => L[i]);
 <Base page="essays" title={entry.data.title} description={entry.data.dek}>
   <article class="essay">
     <header class="essay__head">
-      <div class="part__side"><a class="sect sect--big" href={u('/essays/')}><span class="bigmark">F</span><span class="label">Essays</span></a></div>
+      <div class="part__side"><a class="sect sect--big" href={u('/essays/')}><span class="bigmark">C</span><span class="label">Research</span></a></div>
       <div class="essay__title">
         <p class="essay__meta"><time datetime={entry.data.date.toISOString()}>{fmtDate(entry.data.date)}</time><span>c. {fm.minutesRead}′</span>{entry.data.placeholder && <span>[Placeholder essay]</span>}</p>
         <h1 class="display"><span data-play>{entry.data.title}</span></h1>
@@ -40,7 +40,7 @@ const marks = sections.map((_, i) => L[i]);
       <p class="essay__sign">— Corollary Labs, {fmtDate(entry.data.date)}</p>
       {next && next.id !== entry.id && (
         <a class="next" href={u(`/essays/${next.id}/`)}>
-          <span class="label">Next essay</span>
+          <span class="label">Next</span>
           <span class="next__title">{next.data.title}</span>
           <span class="next__score"><MiniScore seed={next.id} w={420} h={96} at={40} vt={`score-${next.id}`} /></span>
         </a>

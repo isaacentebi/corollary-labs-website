@@ -2,12 +2,12 @@
 import Base from '../layouts/Base.astro';
 import MiniScore from '../components/MiniScore.astro';
 import { u } from '../config/site';
-const people = [1, 2, 3, 4, 5];
+const people = [1, 2, 3, 4];
 const grammars = ['fan', 'points', 'boxes', 'line', 'bars'] as const;
 ---
-<Base page="team" title="Team" description="[Meta description]">
+<Base page="team" title="Team">
   <header class="page-head">
-    <div class="part__side"><span class="bigmark" data-mark="G">G</span><span class="label">Team</span></div>
+    <div class="part__side"><span class="bigmark" data-mark="D">D</span><span class="label">Team</span></div>
     <h1><span data-play>Team</span></h1>
   </header>
   <section class="part" style="border-top: 0; padding-top: 8px;">

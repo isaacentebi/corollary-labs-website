@@ -11,6 +11,8 @@ export default defineConfig({
   devToolbar: { enabled: false },
   trailingSlash: 'ignore',
   integrations: [mdx()],
+  // dev only: node_modules is a symlink into the main checkout, so let Vite serve font files from it
+  vite: { server: { fs: { strict: false } } },
   markdown: {
     remarkPlugins: [remarkReadingTime],
     rehypePlugins: [rehypeSidenotes],
