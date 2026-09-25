@@ -115,8 +115,8 @@ void main(){
     float under = ym - p.y;
     float fill = smoothstep(0.0, px * 2.0, under);
     // it dissolves toward the rim (Irwin's discs), so the disc never reads as a solid ball
-    float rimFade = 1.0 - smoothstep(0.55, 1.0, dl);
-    seen += lin(fillCol) * fillAmt * fill * (0.18 + 0.82 * exp(-under / (lensR * 0.3))) * mix(0.35, 1.0, rimFade);
+    float rimFade = 1.0 - smoothstep(0.35, 1.0, dl);
+    seen += lin(fillCol) * fillAmt * fill * (0.06 + 0.94 * exp(-under / (lensR * 0.22))) * mix(0.25, 1.0, rimFade);
     vec3 sc = mix(lin(fillCol), vec3(1.0), 0.35);
     seen += sc * fillAmt * (exp(-pow((p.y - ym) / (px * 1.6), 2.0)) * 0.9 + exp(-abs(p.y - ym) / 0.02) * 0.12);
     // light from inside, strongest at the centre (never a ring)
