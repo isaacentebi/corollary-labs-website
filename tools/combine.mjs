@@ -1,7 +1,8 @@
 // Builds every version of the site into ONE static folder and adds a version switcher to every page.
 //   /           Plotter (master, site/)
 //   /<key>/     each direction branch (direction/<key>), built with Astro `base: '/<key>'`
-// Usage: node tools/combine.mjs [--deploy] [--only=wild,organic]   (Plotter is always included)
+// Usage: node tools/combine.mjs [--deploy] [--only=wild,organic] [--snapshot]   (Plotter is always included)
+//   --snapshot  build each branch from its last commit in a fresh temp worktree, so in-progress edits never ship
 //   --deploy  deploys deploy/out to the Vercel project linked in site/.vercel (corollarylabs.vercel.app)
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -31,7 +32,16 @@ const sh = (cmd, cwd = ROOT) => execSync(cmd, { cwd, stdio: 'inherit' });
 const out = (cmd, cwd = ROOT) => execSync(cmd, { cwd, encoding: 'utf8' });
 
 // where each branch is checked out (a lead's worktree), or a fresh temporary worktree
+const SNAPSHOT = process.argv.includes('--snapshot');
 function worktreeFor(branch) {
+  if (SNAPSHOT) {
+    try { out(`git rev-parse --verify ${branch}`); } catch { return null; }
+    const tmp = path.join(ROOT, 'deploy/wt', branch.replace('/', '-'));
+    try { execSync(`git worktree remove --force "${tmp}"`, { cwd: ROOT, stdio: 'ignore' }); } catch {}
+    fs.rmSync(tmp, { recursive: true, force: true });
+    sh(`git worktree add --detach --force "${tmp}" ${branch}`);
+    return tmp;
+  }
   const list = out('git worktree list --porcelain').split('\n\n');
   for (const w of list) {
     const p = /^worktree (.+)$/m.exec(w)?.[1], b = /^branch refs\/heads\/(.+)$/m.exec(w)?.[1];
@@ -44,9 +54,26 @@ function worktreeFor(branch) {
   return tmp;
 }
 
-function buildInto(siteDir, dest) {
+// node_modules for a checkout: master's if the branch's package.json matches, else the lead worktree's real install, else npm install
+function leadWorktree(branch) {
+  for (const w of out('git worktree list --porcelain').split('\n\n')) {
+    const p = /^worktree (.+)$/m.exec(w)?.[1], b = /^branch refs\/heads\/(.+)$/m.exec(w)?.[1];
+    if (b === branch && p) return p;
+  }
+  return null;
+}
+function ensureModules(siteDir, branch) {
   const nm = path.join(siteDir, 'node_modules');
-  if (!fs.existsSync(nm)) fs.symlinkSync(NODE_MODULES, nm);
+  if (fs.existsSync(nm)) return;
+  const same = !branch || (() => { try { out(`git diff --quiet master ${branch} -- site/package.json`); return true; } catch { return false; } })();
+  if (same) return fs.symlinkSync(NODE_MODULES, nm);
+  const lead = branch && leadWorktree(branch);
+  const leadNm = lead && path.join(lead, 'site/node_modules');
+  if (leadNm && fs.existsSync(leadNm) && !fs.lstatSync(leadNm).isSymbolicLink()) return fs.symlinkSync(leadNm, nm);
+  sh('npm install --no-audit --no-fund --loglevel=error', siteDir);
+}
+function buildInto(siteDir, dest, branch) {
+  ensureModules(siteDir, branch);
   sh('npx astro build', siteDir);
   fs.cpSync(path.join(siteDir, 'dist'), dest, { recursive: true });
 }
@@ -61,7 +88,7 @@ for (const v of VERSIONS) {
   if (!v.key) { buildInto(path.join(ROOT, 'site'), OUT); built.push(v); continue; }
   const wt = worktreeFor(`direction/${v.key}`);
   if (!wt) { console.warn(`skip ${v.key}: no branch direction/${v.key} yet`); continue; }
-  buildInto(path.join(wt, 'site'), path.join(OUT, v.key));
+  buildInto(path.join(wt, 'site'), path.join(OUT, v.key), `direction/${v.key}`);
   // a version built without its base path would load Plotter's assets: catch it here
   const html = fs.readFileSync(path.join(OUT, v.key, 'index.html'), 'utf8');
   if (new RegExp(`(?:src|href)="/(?!/)(?!${v.key}/)`).test(html)) console.warn(`WARNING ${v.key}: root-absolute URLs in index.html (base path not applied?)`);
