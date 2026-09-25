@@ -182,7 +182,9 @@ export function warp(st: State, t: number, y: number) {
     const ys = strokeY(p, t);
     const m = s.mean ?? 0.5;
     const u = (y - ys) / 0.085;
-    const lens = 0.95 * (y - ys) * Math.exp(-u * u);
+    // where the drawn line is steep it passes through; where it is level it pushes
+    const slope = Math.abs(strokeY(p, t + 0.004) - strokeY(p, t - 0.004)) / 0.008;
+    const lens = (0.95 / (1 + slope * 0.35)) * (y - ys) * Math.exp(-u * u);
     const lean = 0.3 * (ys - m) * Math.exp(-(((y - m) / 0.36) ** 2));
     d += W * Math.min(1.08, s.g ?? 1) * (lens + lean);
   }
