@@ -183,6 +183,8 @@ function bandState(w: number, h: number) {
 
 // ---------------------------------------------------------------- render on demand
 let wave = [0, 0, 180];
+let bandClip = [-1e5, 1e5];
+let snap = false;
 let transitioning = false;
 const comps = [0, 0, 0, 0, 0];
 let dim = 1;
@@ -217,8 +219,8 @@ function frame(now: number) {
   const bounds = [0, ...rects.slice(0, 4).map((r) => r.right), W];
   rects.forEach((r, i) => {
     let target = openW - s > 1 ? 1 - clamp((r.width - s) / (openW - s)) : 1;
-    if (i === hovered && i !== active && !transitioning) target = 0;
-    comps[i] = transitioning ? target : lerp(comps[i], target, 0.16);
+    if (i === hovered && i !== active && !transitioning && !still) target = 0;
+    comps[i] = transitioning || still || snap ? target : lerp(comps[i], target, 0.16);
   });
 
   cursor.x = lerp(cursor.x, cursor.tx, 0.22); cursor.y = lerp(cursor.y, cursor.ty, 0.22);
@@ -237,17 +239,18 @@ function frame(now: number) {
     }
   }
   if (transitioning) dimTarget = 1;
-  dim = lerp(dim, dimTarget, 0.12);
+  dim = still ? dimTarget : lerp(dim, dimTarget, 0.12);
+  snap = false;
 
   for (let i = ripples.length - 1; i >= 0; i--) if (now - ripples[i].t > 3200) ripples.splice(i, 1);
   const rip = ripples.map((r) => [r.x, r.y, (now - r.t) / 1000, 1]);
-  const intro = still ? 0 : Math.pow(1 - smooth(0.1, 1.3, (now - bootAt) / 1000), 2);
+  const intro = still ? 1 : clamp(((now - bootAt) / 1000 - 0.15) / 0.7);
 
   const f: Frame = {
     bounds, comps: comps.slice(), strip: phone ? stripH : 1e5, dim,
     band: bandRect, agents: st.agents, front: st.front,
     cursor: [cursor.x, cursor.y, cursor.s], wave, ripples: rip,
-    pitch: phone ? 8 : 9, intro,
+    pitch: phone ? 8 : 9, intro, clip: transitioning ? bandClip : [-1e5, 1e5],
   };
   // draw only if something visible changed; stop the loop once it has been quiet for a few frames
   const sig = JSON.stringify([bounds.map(Math.round), comps.map((c) => c.toFixed(3)), bandRect?.map(Math.round), st.agents.map((a) => a.map((v) => v.toFixed(1))), st.front.map((v) => v.toFixed(1)), Math.round(cursor.x), Math.round(cursor.y), cursor.s.toFixed(3), dim.toFixed(3), wave.map((v) => v.toFixed(1)), intro.toFixed(3), W, H]);
@@ -301,8 +304,12 @@ async function go(href: string, push = true) {
 
   // a frozen copy of the page being left, so both regions can move at the same time
   let ghost: HTMLElement | null = null;
+  const st0 = leaf.querySelector<HTMLElement>('.hero__stage');
+  const stOff = st0 ? st0.getBoundingClientRect().top - (st0.parentElement as HTMLElement).getBoundingClientRect().top : 0;
   if (!still && from !== to) {
     ghost = leaf.cloneNode(true) as HTMLElement;
+    const gst = ghost.querySelector<HTMLElement>('.hero__stage');
+    if (gst) { gst.style.position = 'relative'; gst.style.top = `${stOff}px`; }
     ghost.removeAttribute('id'); ghost.setAttribute('aria-hidden', 'true'); ghost.inert = true;
     ghost.classList.add('ghost');
     Object.assign(ghost.style, { left: `${before.left}px`, top: `${before.top}px`, width: `${before.width}px` });
@@ -333,6 +340,9 @@ async function go(href: string, push = true) {
   transitioning = true;
   leaf.classList.add('is-moving');
   ghost.classList.add('is-moving');
+  hovered = -1;
+  const movingFolds = [folds[from], folds[to]].filter(Boolean);
+  movingFolds.forEach((f) => f.classList.add('is-moving'));
   const box = leaf.getBoundingClientRect();
   const dur = 720, start = performance.now();
   const inset = (el: DOMRect, x: number, w: number) => `inset(0 ${Math.max(0, el.left + el.width - (x + w))}px 0 ${Math.max(0, x - el.left)}px)`;
@@ -350,10 +360,13 @@ async function go(href: string, push = true) {
       const gx = lerp(go0[0], go1[0], e), gw = lerp(go0[1], go1[1], e);
       const no0 = stripOf(A, to), no1 = stripOf(B, to);
       const nx = lerp(no0[0], no1[0], e), nw = lerp(no0[1], no1[1], e);
-      ghost!.style.clipPath = inset(before, gx, gw);
+      // desktop: the old page closes into its strip. phone: the new page wipes across the old one.
+      // Either way both pages stay whole (band and body) and are cut at the same edge.
+      ghost!.style.clipPath = phone
+        ? `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${nx - before.left}px 0, ${nx + nw - before.left}px 0, ${nx + nw - before.left}px 100%, ${nx - before.left}px 100%, ${nx - before.left}px 0)`
+        : inset(before, gx, gw);
+      bandClip = [nx, nx + nw];
       leaf.style.clipPath = inset(box, nx, nw);
-      ghost!.style.setProperty('--fade', String(1 - clamp(ms / 120)));
-      leaf.style.setProperty('--fade', String(clamp((ms - (dur - 150)) / 150)));
       // the strain wave rides the seam that moves furthest
       const dl = Math.abs(no1[0] - no0[0]), dr = Math.abs(no1[0] + no1[1] - (no0[0] + no0[1]));
       const seam = dl > dr ? nx : nx + nw;
@@ -364,7 +377,10 @@ async function go(href: string, push = true) {
   });
 
   ghost.remove();
-  leaf.style.clipPath = ''; leaf.style.removeProperty('--fade');
+  leaf.style.clipPath = '';
+  movingFolds.forEach((f) => f.classList.remove('is-moving'));
+  bandClip = [-1e5, 1e5];
+  snap = true;
   leaf.classList.remove('is-moving');
   placeCSS(to);
   wave = [0, 0, 180];

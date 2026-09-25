@@ -152,10 +152,15 @@ html:not(.js) .motion { display: none; }
   padding-right: max(var(--pad), calc((100% - var(--measure)) / 2));
 }
 
-/* during a page change: text fades, surfaces stay */
-.is-moving > * > * { opacity: var(--fade, 1); }
+/* during a page change: a frozen copy of the page being left, whole (band and body), cut at the moving edge */
 .ghost { position: fixed; z-index: 3; margin: 0 !important; pointer-events: none; }
-.ghost .band { background: var(--ground); }
+.ghost .band {
+  background:
+    repeating-linear-gradient(90deg, rgba(23, 20, 31, 0.16) 0 1.3px, transparent 1.3px var(--pitch)),
+    var(--ground);
+}
+.ghost .band__title { color: var(--accent) !important; }
+.fold.is-moving .fold__label { opacity: 0 !important; transition: opacity 0.1s; }
 
 /* the band: a window onto the sheet, with the page title written into it */
 .band {
@@ -196,14 +201,14 @@ html:not(.gl-on) .band {
 /* ---------- home ---------- */
 /* a short scene: the stage is pinned at 88% of the screen and the About block already shows below it; scrolling
    (about half a screen) runs the scene while that block slides up over the lower part of the stage */
-.hero { position: relative; height: calc(88svh + 52vh); }
+.hero { position: relative; --stage: min(88svh, 760px); height: calc(var(--stage) + 50vh); }
 .hero__stage {
   position: sticky; top: var(--strip);
-  height: calc(88vh - var(--strip)); height: calc(88svh - var(--strip));
-  align-items: flex-start; padding-top: calc(var(--pad) + 13vh) !important;
+  height: calc(var(--stage) - var(--strip));
+  align-items: flex-start; padding-top: calc(var(--pad) + min(13vh, 110px)) !important;
   --fit: 8.2;
 }
-.hero + .brief { margin-top: -52vh; z-index: 3; box-shadow: 0 -1px 0 var(--seam); }
+.hero + .brief { margin-top: -50vh; z-index: 3; box-shadow: 0 -1px 0 var(--seam); }
 .hero__name .band__line { display: inline; }
 .hero__mark { position: absolute; left: max(var(--pad), calc((100% - var(--measure)) / 2)); top: calc(var(--pad) * 0.7); }
 .hero__statement {
@@ -236,10 +241,11 @@ html:not(.gl-on) .band {
   grid-column: 1 / -1; list-style: none; margin: calc(var(--pad) * 0.5) 0 0; padding: 0;
   display: flex; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
 }
-.stretch-links li { flex: 1 1 0; min-width: 0; transition: flex-grow 0.7s var(--ease); }
+.stretch-links { overflow: hidden; }
+.stretch-links li { flex: 1 1 0; min-width: max-content; transition: flex-grow 0.7s var(--ease); }
 .stretch-links li + li { border-left: 1px solid var(--rule); }
 .stretch-links a {
-  display: flex; align-items: center; justify-content: flex-start; height: clamp(84px, 9vw, 140px); padding: 0 clamp(14px, 2vw, 28px);
+  display: flex; align-items: center; justify-content: flex-start; height: clamp(84px, 9vw, 140px); padding: 0 calc(clamp(14px, 2vw, 28px) + 0.9em) 0 clamp(14px, 2vw, 28px);
   text-decoration: none; overflow: hidden; position: relative;
   font: 700 clamp(30px, 4.2vw, 68px)/1 var(--sans); font-stretch: 100%; letter-spacing: -0.01em;
   transition: font-stretch 0.7s var(--ease), color 0.3s;
@@ -250,7 +256,7 @@ html:not(.gl-on) .band {
 }
 .stretch-links a::before { content: '→'; position: absolute; right: clamp(14px, 2vw, 28px); font-size: 0.5em; font-weight: 500; opacity: 0.5; }
 .stretch-links:hover li:hover, .stretch-links li:focus-within { flex-grow: 2; }
-.stretch-links li:hover a, .stretch-links li a:focus-visible { font-stretch: 150%; }
+.stretch-links li:hover a, .stretch-links li a:focus-visible { font-stretch: 128%; }
 .stretch-links li:hover a::after, .stretch-links li a:focus-visible::after { transform: scaleX(1); }
 
 .latest { padding-top: calc(var(--pad) * 1.1); padding-bottom: calc(var(--pad) * 1.3); }
@@ -369,7 +375,7 @@ html[data-page='home'] .foot__nav { visibility: hidden; }
   body { font-size: 18px; }
   .band { height: clamp(210px, 32vh, 300px); padding-top: 22px; padding-bottom: 22px; }
   .band--short { height: 120px; }
-  .hero__stage.band { height: calc(88vh - var(--strip)); height: calc(88svh - var(--strip)); padding-top: calc(22px + 12vh) !important; padding-bottom: 22px; --fit: 5.5; }
+  .hero__stage.band { height: calc(var(--stage) - var(--strip)); padding-top: calc(22px + min(12vh, 100px)) !important; padding-bottom: 22px; --fit: 5.5; }
   .hero__name .band__line { display: block; }
   .hero__mark { top: 20px; }
   .hero__statement { bottom: 20px; font-size: 16px; }

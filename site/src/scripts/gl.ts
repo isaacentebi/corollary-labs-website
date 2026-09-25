@@ -17,7 +17,8 @@ export interface Frame {
   wave: number[];        // x, amplitude (pitches), width
   ripples: number[][];   // [x, y, age s, amp]
   pitch: number;
-  intro: number;         // 0..1: the gratings settle into register on first load
+  intro: number;         // 0..1: progress of the short sweep on first load
+  clip: number[];        // x-range the band may draw in (the opening page during a transition)
 }
 
 const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
@@ -29,7 +30,7 @@ uniform float u_b[6]; uniform float u_comp[5]; uniform float u_strip; uniform fl
 uniform vec4 u_band; uniform float u_hasBand; uniform sampler2D u_mask; uniform float u_hasMask;
 uniform vec4 u_ag[6]; uniform float u_nag;
 uniform vec3 u_front;
-uniform vec3 u_cur; uniform vec3 u_wave; uniform vec4 u_rip[4]; uniform float u_intro;
+uniform vec3 u_cur; uniform vec3 u_wave; uniform vec4 u_rip[4]; uniform float u_intro; uniform vec2 u_clip;
 uniform vec3 u_ground; uniform vec3 u_ink; uniform vec3 u_acc;
 
 float lines(float s, float w) {
@@ -40,11 +41,13 @@ float lines(float s, float w) {
   return mix(c, w / u_p, smoothstep(u_p * 0.25, u_p * 0.6, fw));
 }
 // the moiré seen from reading distance: 0 where the gratings coincide, 1 where they are half a pitch apart
+// quantised to three flat steps with ~1px anti-aliased edges: crisp contour bands, no blur
 float fringe(float D) {
   float ph = D / u_p;
-  float t = 0.5 - 0.5 * cos(6.2831853 * ph);
-  t = smoothstep(0.12, 0.88, t);
-  return mix(t, 0.5, smoothstep(0.22, 0.55, fwidth(ph)));
+  float tc = 0.5 - 0.5 * cos(6.2831853 * ph);
+  float fw = max(fwidth(tc) * 0.75, 0.0005);
+  float t = 0.5 * (smoothstep(0.3 - fw, 0.3 + fw, tc) + smoothstep(0.7 - fw, 0.7 + fw, tc));
+  return mix(t, 0.5, smoothstep(0.3, 0.6, fwidth(ph)));
 }
 
 void main() {
@@ -63,11 +66,13 @@ void main() {
     phs += fi * 1.9 * wgt;
   }
   c *= 1.0 - smoothstep(u_strip - 2.0, u_strip + 2.0, y);
+  // during a page change the opening page is not a fold: its strain stays at the moving seam (the wave)
+  c *= 1.0 - step(-1e4, u_clip.x) * step(u_clip.x, x) * step(x, u_clip.y);
   float Df = c * ((y - u_res.y * 0.5) * ang + u_p * 0.8 * sin(y * 0.008 + phs));
 
   // the band
   vec2 bl = frag - u_band.xy;
-  float inBand = step(0.0, bl.x) * step(0.0, bl.y) * step(bl.x, u_band.z) * step(bl.y, u_band.w) * u_hasBand;
+  float inBand = step(0.0, bl.x) * step(0.0, bl.y) * step(bl.x, u_band.z) * step(bl.y, u_band.w) * u_hasBand * step(u_clip.x, x) * step(x, u_clip.y);
   float Db = 0.0; float dmin = 1e5; float dots = 0.0; float halo = 0.0;
   for (int i = 0; i < 6; i++) {
     if (float(i) >= u_nag) break;
@@ -85,7 +90,6 @@ void main() {
   // pointer, click rings, the wave that runs along the moving seam, the settle-in on load
   float Dx = 0.0;
   vec2 dc = frag - u_cur.xy;
-  Dx += u_cur.z * u_p * 1.25 * exp(-dot(dc, dc) / 7000.0);
   for (int i = 0; i < 4; i++) {
     vec4 rp = u_rip[i];
     if (rp.w > 0.0) {
@@ -96,7 +100,9 @@ void main() {
   }
   float wq = (x - u_wave.x) / u_wave.z;
   Dx += u_wave.y * u_p * exp(-wq * wq);
-  Dx += u_intro * u_p * 2.5 * (x / u_res.x + 0.4 * y / u_res.y);
+  // on load: one narrow band sweeps once across the sheet (the letters are not affected, see below)
+  float iq = (x - mix(-0.15, 1.15, u_intro) * u_res.x) / 70.0;
+  Dx += sin(3.14159 * u_intro) * u_p * 0.5 * exp(-iq * iq);
 
   float D = Df + Db * inBand + Dx;
   float t = fringe(D);
@@ -104,18 +110,20 @@ void main() {
   // the title is written into the sheet. Rings and the pointer do not reach inside the letters: a letter is rose on
   // the undisturbed sheet and lilac once the front has shifted it, so it always reads, and it inverts with the sheet.
   float m = u_hasMask > 0.5 ? texture2D(u_mask, bl / u_band.zw).r * inBand : 0.0;
-  float edge = u_hasMask > 0.5 ? smoothstep(0.12, 0.45, fwidth(m)) : 0.0;
   t = mix(t, 1.0 - smoothstep(0.35, 0.65, fr), m);
 
   // folds are quieter than the band, and quieter still while reading
   float strength = mix(1.0, 0.72 * u_dim, c * (1.0 - inBand));
   vec3 col = mix(u_ground, u_acc, t * 0.9 * strength);
-  // a faint ruling: the fixed grating, and the moving one in a deeper rose
+  // the two rulings: faint on the plain sheet, stronger inside rose bands, where their beat shows as fine lines
   float l1 = lines(x, 1.3);
   float l2 = lines(x - D, 1.3);
-  col = mix(col, u_ink, l1 * 0.2 * strength * (1.0 - m * 0.6));
-  col = mix(col, u_acc * 0.72, l2 * 0.22 * strength * (1.0 - m * 0.6));
-  col = mix(col, u_ink, edge * 0.28);
+  float ruleK = strength * (1.0 - m * 0.75);
+  col = mix(col, u_ground, l2 * (0.1 + 0.45 * t) * ruleK);
+  col = mix(col, u_ink, l1 * (0.16 + 0.34 * t) * ruleK);
+  // the pointer: a thin contour ring
+  float cr = abs(length(dc) - 36.0);
+  col = mix(col, u_acc * 0.85, (1.0 - smoothstep(0.4, 1.2, cr)) * u_cur.z);
   col = mix(col, u_ground, halo * inBand);
   col = mix(col, u_ink, dots * inBand);
   gl_FragColor = vec4(col, 1.0);
@@ -141,7 +149,7 @@ export function createRenderer(canvas: HTMLCanvasElement) {
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U: Record<string, WebGLUniformLocation | null> = {};
-  for (const n of ['u_res', 'u_dpr', 'u_p', 'u_b', 'u_comp', 'u_strip', 'u_dim', 'u_band', 'u_hasBand', 'u_mask', 'u_hasMask', 'u_ag', 'u_nag', 'u_front', 'u_cur', 'u_wave', 'u_rip', 'u_intro', 'u_ground', 'u_ink', 'u_acc'])
+  for (const n of ['u_res', 'u_dpr', 'u_p', 'u_b', 'u_comp', 'u_strip', 'u_dim', 'u_band', 'u_hasBand', 'u_mask', 'u_hasMask', 'u_ag', 'u_nag', 'u_front', 'u_cur', 'u_wave', 'u_rip', 'u_intro', 'u_clip', 'u_ground', 'u_ink', 'u_acc'])
     U[n] = gl.getUniformLocation(prog, n);
 
   const cs = getComputedStyle(document.documentElement);
@@ -190,6 +198,7 @@ export function createRenderer(canvas: HTMLCanvasElement) {
     const rp = new Float32Array(16); f.ripples.slice(0, 4).forEach((r, i) => rp.set(r, i * 4));
     g.uniform4fv(U.u_rip, rp);
     g.uniform1f(U.u_intro, f.intro);
+    g.uniform2f(U.u_clip, f.clip[0], f.clip[1]);
     g.drawArrays(g.TRIANGLES, 0, 3);
   }
 
