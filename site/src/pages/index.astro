@@ -2,12 +2,18 @@
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 import { url, nav } from '../config/site';
+import Wordmark from '../components/Wordmark.astro';
 import '../styles/home.css';
 
-const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const all = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
+const essays = all.slice(0, 3);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 ---
 <Base page="home" head={false}>
+  <header class="site-head grid homebar" data-homebar aria-hidden="true" inert>
+    <Wordmark />
+    <nav aria-label="Primary">{nav.map((n) => <a class="navlink" href={n.href}>{n.label}</a>)}</nav>
+  </header>
   <section class="story" data-programme aria-label="Corollary Labs">
     <div class="stage" data-stage>
       <canvas aria-hidden="true"></canvas>
@@ -24,7 +30,6 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
   <section class="section grid home-about" aria-labelledby="about-h">
     <h2 class="section__label label" id="about-h">About</h2>
     <p class="home-about__text lead ph">[About — one paragraph]</p>
-    <a class="home-about__more textlink" href={url('about/')}>About</a>
   </section>
 
   <section class="section grid home-essays" aria-labelledby="essays-h">
@@ -33,7 +38,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
       {essays.map((e, i) => (
         <li>
           <a class="erow" href={url(`essays/${e.id}/`)}>
-            <span class="erow__n label">{String(i + 1).padStart(2, '0')}</span>
+            <span class="erow__n label">{String(all.length - i).padStart(2, '0')}</span>
             <span class="erow__date label">{fmt(e.data.date)}</span>
             <span class="erow__t">{e.data.title}</span>
             <span class="erow__d">{e.data.dek}</span>
@@ -53,6 +58,19 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
   <script>
     import { mountProgramme } from '../scripts/programme';
     const root = document.querySelector<HTMLElement>('[data-programme]');
+    const bar = document.querySelector<HTMLElement>('[data-homebar]');
+    const tail = document.querySelector<HTMLElement>('.home-about');
+    if (bar && tail) {
+      // the links return once the story has passed
+      const upd = () => {
+        const on = tail.getBoundingClientRect().top < innerHeight * 0.5;
+        if (on === bar.classList.contains('is-on')) return;
+        bar.classList.toggle('is-on', on);
+        bar.toggleAttribute('inert', !on);
+        bar.setAttribute('aria-hidden', String(!on));
+      };
+      addEventListener('scroll', upd, { passive: true }); upd();
+    }
     if (root) document.fonts.load("700 100px Archivo").then(() => document.fonts.ready).then(() => mountProgramme(root)).catch(() => root.classList.add('is-static'));
   </script>
 </Base>

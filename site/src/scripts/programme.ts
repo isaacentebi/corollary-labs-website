@@ -13,8 +13,8 @@
 */
 
 type Rect = { x: number; y: number; w: number; h: number };
-type Tok = { id: number; w: number; kind: 0 | 1 | 2; pEnd: boolean; born: number; ox: number; oy: number; at: number; dur: number };
-type Pos = { x: number; y: number; w: number; v: number } | null;
+type Tok = { id: number; s?: string; w: number; w0?: number; kind: 0 | 1 | 2; pEnd: boolean; born: number; ox: number; oy: number; at: number; dur: number };
+type Pos = { x: number; y: number; w: number; v: number; c?: number } | null;
 type Grid = { cols: number; colW: number; x: (i: number) => number; span: (n: number) => number };
 type Letter = { x: number; y: number; s: number; wd: number; wt: number; v: number };
 type Bar = { x: number; y: number; w: number; h: number };
@@ -76,7 +76,7 @@ function edgePairs(G0: Grid, G1: Grid, A: number) {
 
 /* ---------------- title metrics (measured once from the real font) ---------------- */
 let P: number[][][] = []; // P[wdi][wti][k] = advance of TITLE.slice(0,k) at 100px
-let BASE = 0.9, CAP = 0.7;
+let BASE = 0.9, CAP = 0.7, ASC = 0.74;
 function measureTitle() {
   const box = document.createElement('div');
   box.setAttribute('aria-hidden', 'true');
@@ -101,6 +101,8 @@ function measureTitle() {
   c.font = '700 100px Archivo';
   const m = c.measureText('H');
   if (m.actualBoundingBoxAscent > 40) CAP = m.actualBoundingBoxAscent / 100;
+  const l = c.measureText('l');
+  ASC = Math.max(CAP, l.actualBoundingBoxAscent / 100);
 }
 function axisIdx(arr: number[], v: number) {
   let i = 0; while (i < arr.length - 2 && v > arr[i + 1]) i++;
@@ -131,15 +133,22 @@ function lettersOf(lines: TLine[]): Letter[] {
 
 /* ---------------- text stream and flow ---------------- */
 const CHARS = [1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 8, 8, 9, 10, 11, 12];
-function makeStream(n: number, fs: number, seed: number): Tok[] {
+// the text of the origin page is set from the placeholders themselves
+const VOCAB = ['[Text]', '[Text]', '[Text]', '[Sentence]', '[Sentence]', '[Word]', '[Word]', '[Line]', '[Clause]', '[Phrase]', '[Text]', '[Term]'];
+function makeStream(n: number, fs: number, seed: number, measure?: (s: string) => number): Tok[] {
   const r = rng(seed);
   const out: Tok[] = [];
   let para = 30 + Math.floor(r() * 50);
   for (let i = 0; i < n; i++) {
-    const c = CHARS[Math.floor(r() * CHARS.length)];
     const end = --para <= 0;
-    if (end) para = 34 + Math.floor(r() * 56);
-    out.push({ id: i, w: c * fs * 0.52, kind: 0, pEnd: end, born: 0, ox: 0, oy: 0, at: 0, dur: 0 });
+    if (end) para = (measure ? 14 : 34) + Math.floor(r() * (measure ? 26 : 56));
+    if (measure) {
+      const s = VOCAB[Math.floor(r() * VOCAB.length)];
+      out.push({ id: i, s, w: measure(s), kind: 0, pEnd: end, born: 0, ox: 0, oy: 0, at: 0, dur: 0 });
+    } else {
+      const c = CHARS[Math.floor(r() * CHARS.length)];
+      out.push({ id: i, w: c * fs * 0.52, kind: 0, pEnd: end, born: 0, ox: 0, oy: 0, at: 0, dur: 0 });
+    }
   }
   return out;
 }
@@ -158,7 +167,7 @@ function flow(stream: Tok[], boxes: Rect[], lh: number, sp: number, top: number,
     if (!include(t)) continue;
     if (b && has && x + t.w > b.x + b.w) nl();
     if (!b) { pos[i] = { x: lastX, y: lastY, w: t.w, v: 0 }; continue; }
-    pos[i] = { x, y, w: t.w, v: 1 }; nvis = i + 1;
+    pos[i] = { x, y, w: t.w, v: 1, c: bi }; nvis = i + 1;
     lastX = x; lastY = y; x += t.w + sp; has = true;
     if (t.pEnd) { nl(); if (b && y !== first(b)) nl(); }
   }
@@ -168,14 +177,15 @@ function flow(stream: Tok[], boxes: Rect[], lh: number, sp: number, top: number,
 /* ---------------- page builder ---------------- */
 interface Layout {
   W: number; H: number; top: number; lh: number; fs: number; nWords: number; seed: number; K: number;
+  measure?: (s: string) => number;
   G0: Grid; G1: Grid; A: number;
   boxes: [Rect[], Rect[], Rect[]];
   col: Rect; // agent column in S1
 }
 function buildPage(Lo: Layout, keep?: Tok[]): Page {
   const { lh, fs, K } = Lo;
-  const sp = fs * 0.3;
-  let stream = keep ? keep.filter((t) => t.kind !== 1) : makeStream(Lo.nWords, fs, Lo.seed);
+  const sp = Lo.measure ? fs * 0.34 : fs * 0.3;
+  let stream = keep ? keep.filter((t) => t.kind !== 1) : makeStream(Lo.nWords, fs, Lo.seed, Lo.measure);
   // place the K inline elements evenly through the text that S2 can hold
   const probe = flow(stream, Lo.boxes[2], lh, sp, Lo.top, () => true);
   const r = rng(Lo.seed + 7);
@@ -202,102 +212,107 @@ function buildPage(Lo: Layout, keep?: Tok[]): Page {
 }
 
 /* ---------------- the origin page (the home composition) ---------------- */
-function originLayout(W: number, H: number, leadH: (w: number) => number) {
+function originLayout(W: number, H: number, leadH: (w: number) => number, measure: (s: string) => number, fs: number, lh: number) {
   const mobile = W < 820;
   const mx = mobile ? 16 : clamp(W * 0.0278, 24, 56);
   const g = mobile ? 12 : 20;
-  const top = mobile ? 16 : mx;
-  const lh = mobile ? 14 : 16;
-  const fs = mobile ? 10 : 11;
+  const top = mobile ? 16 : Math.max(mx, 32);
   const snap = (y: number) => top + Math.ceil((y - top) / lh) * lh;
   const bottom = H - (mobile ? 20 : mx);
   const G0 = makeGrid(W, mobile ? 6 : 12, mx, g), G1 = makeGrid(W, mobile ? 7 : 13, mx, g);
   const A = mobile ? 3 : 4;
   const map = (i: number) => (i < A ? i : i + 1);
   const T: [TLine[], TLine[], TLine[]] = [[], [], []];
+  let Tmid: TLine[] | null = null;
   const lead: [Rect, Rect, Rect] = [] as any, nav: any = [[], [], []];
   const boxes: [Rect[], Rect[], Rect[]] = [[], [], []];
-  const navItems = 4, navLh = mobile ? 17 : 19;
+  const navItems = 4, navLh = 19;
   let col: Rect;
 
   if (!mobile) {
     // S0: name on one line across 9 columns; statement in 4; two text columns of 4; links in the last column
     const wt0 = 760;
     const m0 = G0.span(9), size0 = Math.min((m0 / lineW(0, 14, 100, wt0)) * 100, H * 0.2);
-    const base0 = top + CAP * size0;
+    const base0 = top + ASC * size0;
     T[0] = [{ a: 0, b: 14, x: G0.x(0), base: base0, size: size0, wd: 100, wt: wt0 }];
     const bodyTop = snap(Math.max(base0 + size0 * 0.26 + lh * 3, H * 0.34));
-    lead[0] = { x: G0.x(0), y: bodyTop - 4, w: G0.span(4), h: 0 };
+    lead[0] = { x: G0.x(0), y: bodyTop - 6, w: G0.span(4), h: 0 };
     boxes[0] = [{ x: G0.x(4), y: bodyTop, w: G0.span(4), h: bottom - bodyTop }, { x: G0.x(8), y: bodyTop, w: G0.span(4), h: bottom - bodyTop }];
-    nav[0] = Array.from({ length: navItems }, (_, k) => ({ x: G0.x(11), y: top - 3 + k * navLh }));
+    const nc = W < 1000 ? 10 : 11; // the links' column: one from the edge, two when columns are narrow
+    nav[0] = Array.from({ length: navItems }, (_, k) => ({ x: G0.x(nc), y: top - 3 + k * navLh }));
     // S1: same column counts on the 13-column grid; the name keeps its size and yields width
     const m1 = G1.span(9);
-    T[1] = [{ a: 0, b: 14, x: G1.x(0), base: base0, size: size0, wd: solveWd(0, 14, size0, wt0, m1), wt: wt0 }];
-    lead[1] = { x: G1.x(0), y: bodyTop - 4, w: G1.span(4), h: 0 };
+    const wd1 = solveWd(0, 14, size0, wt0, m1);
+    T[1] = [{ a: 0, b: 14, x: G1.x(0), base: base0, size: size0, wd: wd1, wt: wt0 }];
+    lead[1] = { x: G1.x(0), y: bodyTop - 6, w: G1.span(4), h: 0 };
     boxes[1] = [{ x: G1.x(map(4)), y: bodyTop, w: G1.span(4), h: bottom - bodyTop }, { x: G1.x(map(8)), y: bodyTop, w: G1.span(4), h: bottom - bodyTop }];
-    nav[1] = nav[0].map((n: any) => ({ x: G1.x(12), y: n.y }));
-    col = { x: G1.x(A), y: bodyTop - 4, w: G1.colW, h: bottom - bodyTop + 4 };
+    nav[1] = nav[0].map((n: any) => ({ x: G1.x(nc + 1), y: n.y }));
+    col = { x: G1.x(A), y: bodyTop - 6, w: G1.colW, h: bottom - bodyTop + 6 };
+    // between S1 and S2 "Labs" first drops, rigid, to its own line under "Corollary"
+    Tmid = [
+      { a: 0, b: 9, x: G1.x(0), base: base0, size: size0, wd: wd1, wt: wt0 },
+      { a: 10, b: 14, x: G1.x(0), base: base0 + size0 * 0.3 + CAP * size0, size: size0, wd: wd1, wt: wt0 },
+    ];
     // S2: re-organised. The name re-breaks into a justified block over 7 columns;
     // the statement moves up beside it; the text re-flows into three columns.
     const wt2 = 820, m2 = G1.span(7);
     const size2a = Math.min((m2 / lineW(0, 9, 100, wt2)) * 100, H * 0.2);
-    const base2a = top + CAP * size2a;
+    const base2a = top + ASC * size2a;
     const size2b = Math.min(size2a * 1.55, H * 0.3);
     const wd2b = solveWd(10, 14, size2b, wt2, m2);
-    const base2b = base2a + size2a * 0.2 + CAP * size2b + size2a * 0.12;
+    const base2b = base2a + size2a * 0.24 + CAP * size2b + size2a * 0.08;
     T[2] = [
       { a: 0, b: 9, x: G1.x(0), base: base2a, size: size2a, wd: 100, wt: wt2 },
       { a: 10, b: 14, x: G1.x(0), base: base2b, size: size2b, wd: wd2b, wt: wt2 },
     ];
-    lead[2] = { x: G1.x(8), y: top - 4, w: G1.span(4), h: 0 };
+    lead[2] = { x: G1.x(8), y: top - 6, w: G1.span(nc - 7), h: 0 };
     const top2 = snap(Math.max(base2b + lh * 2, H * 0.34));
-    const pad = lh * 0;
     boxes[2] = [
-      { x: G1.x(0), y: top2 + pad, w: G1.span(4), h: bottom - top2 - pad },
-      { x: G1.x(4), y: top2 + pad, w: G1.span(4), h: bottom - top2 - pad },
-      { x: G1.x(8), y: snap(top + leadH(G1.span(4)) + lh * 2), w: G1.span(4), h: 0 },
+      { x: G1.x(0), y: top2, w: G1.span(4), h: bottom - top2 },
+      { x: G1.x(4), y: top2, w: G1.span(4), h: bottom - top2 },
+      { x: G1.x(8), y: snap(top + Math.max(leadH(G1.span(nc - 7)), navLh * 4) + lh * 2), w: G1.span(4), h: 0 },
     ];
     boxes[2][2].h = bottom - boxes[2][2].y;
     nav[2] = nav[1];
   } else {
-    // phones: the name in two lines across all 6 columns; links beside "Labs"; text in 2 columns
+    // phones: one row of links at the top that never moves; the name in two lines below it
+    const navRow = Array.from({ length: navItems }, (_, k) => ({ x: mx + (k * (W - 2 * mx)) / navItems, y: top - 3 }));
+    nav[0] = navRow; nav[1] = navRow; nav[2] = navRow;
+    const t0 = top + 19 + 22;
     const wt0 = 760;
     const m0 = G0.span(6), size0 = (m0 / lineW(0, 9, 100, wt0)) * 100;
-    const b1 = top + CAP * size0 + 4, b2 = b1 + size0 * 0.9;
+    const b1 = t0 + ASC * size0, b2 = b1 + size0 * 0.92;
     T[0] = [
       { a: 0, b: 9, x: G0.x(0), base: b1, size: size0, wd: 100, wt: wt0 },
       { a: 10, b: 14, x: G0.x(0), base: b2, size: size0, wd: 100, wt: wt0 },
     ];
-    nav[0] = Array.from({ length: navItems }, (_, k) => ({ x: G0.x(4), y: b2 - CAP * size0 - 4 + k * navLh }));
     const leadY = snap(b2 + lh * 2);
-    lead[0] = { x: G0.x(0), y: leadY - 3, w: G0.span(6), h: 0 };
+    lead[0] = { x: G0.x(0), y: leadY - 4, w: G0.span(6), h: 0 };
     const bodyTop = snap(leadY + leadH(G0.span(6)) + lh * 2);
     boxes[0] = [{ x: G0.x(0), y: bodyTop, w: G0.span(3), h: bottom - bodyTop }, { x: G0.x(3), y: bodyTop, w: G0.span(3), h: bottom - bodyTop }];
     const m1 = G1.span(6);
-    T[1] = T[0].map((L) => ({ ...L, x: G1.x(0), wd: solveWd(0, 9, size0, wt0, m1) }));
-    nav[1] = nav[0].map((n: any) => ({ x: G1.x(5), y: n.y }));
-    lead[1] = { x: G1.x(0), y: leadY - 3, w: G1.span(6), h: 0 };
+    const wd1 = solveWd(0, 9, size0, wt0, m1);
+    T[1] = T[0].map((L) => ({ ...L, x: G1.x(0), wd: wd1 }));
+    lead[1] = { x: G1.x(0), y: leadY - 4, w: G1.span(6), h: 0 };
     const bodyTop1 = snap(leadY + leadH(G1.span(6)) + lh * 2);
     boxes[1] = [{ x: G1.x(0), y: bodyTop1, w: G1.span(3), h: bottom - bodyTop1 }, { x: G1.x(4), y: bodyTop1, w: G1.span(3), h: bottom - bodyTop1 }];
-    col = { x: G1.x(A), y: bodyTop1 - 3, w: G1.colW, h: bottom - bodyTop1 + 3 };
+    col = { x: G1.x(A), y: bodyTop1 - 4, w: G1.colW, h: bottom - bodyTop1 + 4 };
     // S2: justified block over 7 columns ("Labs" widens to the measure), text in 5 + 2 columns
     const wt2 = 820, m2 = G1.span(7);
     const s2a = (m2 / lineW(0, 9, 100, wt2)) * 100;
     const s2b = Math.min((m2 / lineW(10, 14, 116, wt2)) * 100, H * 0.16);
-    const c1 = top + CAP * s2a + 4, c2 = c1 + s2a * 0.14 + CAP * s2b + s2a * 0.12;
+    const c1 = t0 + ASC * s2a, c2 = c1 + s2a * 0.24 + CAP * s2b + s2a * 0.06;
     T[2] = [
       { a: 0, b: 9, x: G1.x(0), base: c1, size: s2a, wd: 100, wt: wt2 },
       { a: 10, b: 14, x: G1.x(0), base: c2, size: s2b, wd: solveWd(10, 14, s2b, wt2, m2), wt: wt2 },
     ];
-    const navY = snap(c2 + lh * 1.5);
-    nav[2] = [0, 2, 4, 6].map((c, k) => ({ x: G1.x(c) - (k === 3 ? G1.colW * 0.9 : 0), y: navY - 12 }));
-    const leadY2 = snap(navY + lh * 1.5);
-    lead[2] = { x: G1.x(0), y: leadY2 - 3, w: G1.span(5), h: 0 };
+    const leadY2 = snap(c2 + lh * 2);
+    lead[2] = { x: G1.x(0), y: leadY2 - 4, w: G1.span(5), h: 0 };
     const body2 = snap(leadY2 + leadH(G1.span(5)) + lh * 2);
     boxes[2] = [{ x: G1.x(0), y: body2, w: G1.span(5), h: bottom - body2 }, { x: G1.x(5), y: snap(leadY2), w: G1.span(2), h: bottom - snap(leadY2) }];
   }
-  const Lo: Layout = { W, H, top, lh, fs, nWords: mobile ? 560 : 1150, seed: 11, K: mobile ? 9 : 14, G0, G1, A, boxes, col: col! };
-  return { Lo, T, lead, nav };
+  const Lo: Layout = { W, H, top, lh, fs, nWords: mobile ? 900 : 1500, seed: 11, K: mobile ? 9 : 14, G0, G1, A, boxes, col: col!, measure };
+  return { Lo, T, Tmid, lead, nav };
 }
 
 /* ---------------- sheets in the field (S3) ---------------- */
@@ -362,6 +377,10 @@ function miniLayout(W: number, H: number, seed: number): Layout & { tb: [Bar[], 
 }
 
 /* ---------------- the stage ---------------- */
+const easeBack = (t: number) => { const c1 = 1.25, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const lerpLines = (A: TLine[], B: TLine[], t: number): TLine[] =>
+  A.map((a, k) => { const b = B[k]; return { a: a.a, b: a.b, x: lerp(a.x, b.x, t), base: lerp(a.base, b.base, t), size: lerp(a.size, b.size, t), wd: lerp(a.wd, b.wd, t), wt: lerp(a.wt, b.wt, t) }; });
+
 export function mountProgramme(root: HTMLElement) {
   const story = root;
   const stage = root.querySelector<HTMLElement>('[data-stage]')!;
@@ -380,7 +399,6 @@ export function mountProgramme(root: HTMLElement) {
   };
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // letters
   titleEl.textContent = '';
   const letterEls = [...TITLE].map((ch) => {
     const s = document.createElement('span');
@@ -388,10 +406,11 @@ export function mountProgramme(root: HTMLElement) {
     titleEl.appendChild(s); return s;
   });
 
-  let W = 0, H = 0, dpr = 1;
+  let W = 0, H = 0, dpr = 1, FS = 9, LH = 13;
   let page!: Page;
   let minis = new Map<string, Page>();
   let T: [TLine[], TLine[], TLine[]];
+  let Tmid: TLine[] | null = null;
   let leadR: [Rect, Rect, Rect];
   let navR: any;
   let p = 0;
@@ -400,22 +419,35 @@ export function mountProgramme(root: HTMLElement) {
   let hover: { x: number; y: number; idx: number } | null = null;
   let inserted = 0;
   const shown = new Map<number, { x: number; y: number }>();
-
+  const font = () => `440 ${FS}px Archivo, sans-serif`;
+  const wcache = new Map<string, number>();
+  const measure = (s: string) => {
+    let w = wcache.get(s);
+    if (w === undefined) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.font = font(); w = ctx.measureText(s).width; ctx.restore(); wcache.set(s, w); }
+    return w;
+  };
   const leadHeight = (w: number) => { leadEl.style.width = w + 'px'; return leadEl.offsetHeight; };
+  const layout = () => originLayout(W, H, leadHeight, measure, FS, LH);
 
   function build(keepStream = false) {
     const r = stage.getBoundingClientRect();
     W = Math.round(r.width); H = Math.round(r.height);
+    const mobile = W < 820;
+    const nFS = mobile ? 8 : 9, nLH = mobile ? 12 : 13;
+    if (nFS !== FS) { wcache.clear(); keepStream = false; }
+    FS = nFS; LH = nLH;
     dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-    const o = originLayout(W, H, leadHeight);
-    T = o.T; leadR = o.lead; navR = o.nav;
-    const prev = keepStream && page ? page.stream : undefined;
-    page = buildPage(o.Lo, prev);
-    page.letters = [lettersOf(T[0]), lettersOf(T[1]), lettersOf(T[2])];
+    const o = layout();
+    T = o.T; Tmid = o.Tmid; leadR = o.lead; navR = o.nav;
+    page = buildPage(o.Lo, keepStream && page ? page.stream : undefined);
     minis = new Map();
     req();
+  }
+  function relayout() {
+    const o = layout();
+    page = buildPage(o.Lo, page.stream);
   }
 
   function miniAt(i: number, j: number) {
@@ -451,15 +483,21 @@ export function mountProgramme(root: HTMLElement) {
   function posAt(pg: Page, i: number, st: number, out: { x: number; y: number; w: number; a: number }) {
     const k = st <= 1 ? 0 : 1, t = st <= 1 ? st : st - 1;
     const A = pg.L[k][i], B = pg.L[k + 1][i];
-    if (!A && !B) return false;
-    if (A && B) {
-      if (A.v && B.v) { out.x = lerp(A.x, B.x, pathX(t)); out.y = lerp(A.y, B.y, pathY(t)); out.w = lerp(A.w, B.w, t); out.a = 1; }
-      else if (A.v) { out.x = A.x; out.y = A.y; out.w = A.w; out.a = 1 - t; }
-      else if (B.v) { out.x = B.x; out.y = B.y; out.w = B.w; out.a = t; }
-      else return false;
-      return true;
-    }
-    return false;
+    if (!A || !B) return false;
+    if (A.v && B.v && (A.c !== B.c || A.y !== B.y)) {
+      // a word that changes line is re-set, never dragged across other words:
+      // it leaves with a short drift towards its new place and arrives the same way
+      const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || 1, k = Math.min(d, 18) / d;
+      if (t < 0.5) { const f = sm(clamp(t / 0.45)); out.x = A.x + dx * k * f; out.y = A.y + dy * k * f; out.w = A.w; out.a = 1 - f; }
+      else { const f = sm(clamp((t - 0.55) / 0.45)); out.x = B.x - dx * k * (1 - f); out.y = B.y - dy * k * (1 - f); out.w = B.w; out.a = f; }
+    } else if (A.v && B.v) {
+      out.x = lerp(A.x, B.x, pathX(t)); out.y = lerp(A.y, B.y, pathY(t)); out.w = lerp(A.w, B.w, t);
+      // words in transit recede, so the settled text always reads first
+      out.a = A.x === B.x && A.y === B.y ? 1 : 1 - 0.6 * Math.sin(Math.PI * t);
+    } else if (A.v) { out.x = A.x; out.y = A.y; out.w = A.w; out.a = 1 - t; }
+    else if (B.v) { out.x = B.x; out.y = B.y; out.w = B.w; out.a = t; }
+    else return false;
+    return true;
   }
 
   /* ---------- drawing ---------- */
@@ -467,10 +505,11 @@ export function mountProgramme(root: HTMLElement) {
   function drawPage(pg: Page, u1: number, u2: number, now: number, origin: boolean, gridA: number): boolean {
     let busy = false;
     const { lh, barH } = pg;
-    // grid hairlines
+    const fs = origin ? FS : lh * 0.68;
+    const chip = (x: number, baseline: number, w: number) => ctx.fillRect(x - 1, baseline - fs * 0.9, w + 2, fs * 1.14);
     if (gridA > 0.01) {
       ctx.fillStyle = C.ink;
-      ctx.globalAlpha = 0.075 * gridA;
+      ctx.globalAlpha = 0.06 * gridA;
       const [e0, e1] = pg.edges;
       for (let i = 0; i < e0.length; i++) {
         const d = Math.abs(e0[i] - pg.agentX) / pg.W;
@@ -479,7 +518,6 @@ export function mountProgramme(root: HTMLElement) {
       }
       ctx.globalAlpha = 1;
     }
-    // title bars (sheets in the field)
     if (pg.titleBars) {
       ctx.fillStyle = C.ink;
       const [a0, a1, a2] = pg.titleBars;
@@ -491,127 +529,139 @@ export function mountProgramme(root: HTMLElement) {
         ctx.fillRect(lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.w, b.w, t), lerp(a.h, b.h, t));
       }
     }
-    // text
     const N = pg.stream.length;
     const introOn = origin && intro > 0;
+    if (origin) { ctx.font = font(); ctx.textBaseline = 'alphabetic'; }
     ctx.fillStyle = C.ink;
-    const agentsIn: { x: number; y: number; w: number; t: number }[] = [];
     let ki = 0;
     for (let i = 0; i < N; i++) {
       const tk = pg.stream[i];
       if (tk.kind === 1) {
-        // the new column's slice k becomes inline element k
+        // slice k of the new column becomes inline element k, snapped to its word box and baseline
         const A = pg.L[2][i];
         const k = ki++;
         const x1 = pg.col[1].x, w1 = pg.col[1].w, sh = pg.col[1].h / pg.K, y1 = pg.col[1].y + k * sh;
         const x0 = pg.col[0].x;
-        let x: number, y: number, w: number, h: number, inl = 0;
+        let x: number, y: number, w: number, h: number;
         if (u2 <= 0 || !A || !A.v) {
-          // the column opens with the grid, and fills from the top, slice by slice
           const tg = REDUCED ? u1 : seg(u1, 0, 1 - SPREAD);
           const front = REDUCED ? pg.K : clamp((u1 - 0.18) / 0.62) * pg.K; const tf = clamp(front - k);
           x = lerp(x0, x1, tg); w = lerp(0, w1, tg); y = y1; h = (sh + 0.5) * tf;
-          if (u2 > 0 && A && !A.v) { const f = 1 - u2; w *= f; }
+          if (u2 > 0 && A && !A.v) w *= 1 - u2;
         } else {
-          const d2 = i / pg.nvis;
-          const t = REDUCED ? 1 : seg(u2, clamp(d2) * SPREAD, 1 - SPREAD);
-          const hy = A.y - lh * 0.74, hh = lh * 0.92;
-          x = lerp(x1, A.x - 2, t); y = lerp(y1, hy, t); w = lerp(w1, A.w + 4, t); h = lerp(sh + 0.5, hh, t); inl = t;
-          if (inl > 0) agentsIn.push({ x: A.x, y: A.y, w: A.w, t: inl });
+          const t = REDUCED ? 1 : seg(u2, clamp(i / pg.nvis) * SPREAD, 1 - SPREAD);
+          const hy = A.y - fs * 0.9, hh = fs * 1.14;
+          const sq = clamp(t / 0.3); // first it condenses to a word, then it travels
+          w = lerp(w1, A.w + 2, sq); h = lerp(sh + 0.5, hh, sq);
+          x = lerp(x1 + (w1 - w) / 2, A.x - 1, pathX(clamp((t - 0.2) / 0.8)));
+          y = lerp(y1 + (sh - h) / 2, hy, pathY(clamp((t - 0.2) / 0.8)));
         }
-        if (w > 0.2) { ctx.fillStyle = C.signal; ctx.fillRect(x, y, w, h); ctx.fillStyle = C.ink; }
+        if (w > 0.2 && h > 0.2) { ctx.fillStyle = C.signal; ctx.fillRect(x, y, w, h); ctx.fillStyle = C.ink; }
         continue;
       }
       const P0 = pg.L[0][i];
-      const d1 = P0 ? Math.abs(P0.x + P0.w / 2 - pg.agentX) / pg.W : 0;
-      const d2 = clamp(i / pg.nvis);
-      const st = stageT(u1, u2, d1, d2);
+      // S0→S1: a whole text column re-sets together, nearest to the new column first
+      const bx = P0 && P0.c !== undefined ? pg.specBoxes[0][P0.c] : null;
+      const d1 = bx ? Math.abs(bx.x + bx.w / 2 - pg.agentX) / pg.W : 0;
+      const st = stageT(u1, u2, d1, clamp(i / pg.nvis));
       if (!posAt(pg, i, st, tmp)) continue;
       let a = tmp.a, w = tmp.w, x = tmp.x, y = tmp.y;
       if (tk.at) {
         const e = (now - tk.at) / tk.dur;
-        if (e < 1) { const f = 1 - easeOut(clamp(e)); x += tk.ox * f; y += tk.oy * f; busy = true; }
+        if (e < 1) {
+          busy = true;
+          if (tk.oy) {
+            // a word pushed onto the next line is re-set there: out, then in
+            if (e < 0.35) { x += tk.ox; y += tk.oy; a *= e <= 0 ? 1 : 1 - e / 0.35; }
+            else { const f = (e - 0.35) / 0.65; a *= f; x -= 8 * (1 - easeOut(f)); }
+          } else if (e > 0) { const f = 1 - easeBack(clamp(e)); x += tk.ox * f; }
+          else x += tk.ox;
+        }
         else tk.at = 0;
       }
       if (tk.born) {
-        const e = (now - tk.born) / 420;
-        if (e < 1) { w *= easeOut(clamp(e)); busy = true; } else tk.born = 0;
+        const e = (now - tk.born) / 460;
+        if (e < 1) { w = lerp(tk.w0 || 0, w, easeOut(clamp(e))); busy = true; } else tk.born = 0;
       }
       if (introOn) {
-        const e = (now - intro - 250 - i * 1.1) / 260;
-        if (e < 1) { busy = true; if (e <= 0) continue; a *= clamp(e); w *= easeOut(clamp(e)); }
+        const e = (now - intro - 300 - i * 0.9) / 240;
+        if (e < 1) { busy = true; if (e <= 0) continue; a *= clamp(e); }
       }
       if (origin) shown.set(tk.id, { x, y });
-      if (a < 0.01 || w < 0.2) continue;
+      if (a < 0.01) continue;
       if (tk.kind === 2) {
-        ctx.fillStyle = C.signal; ctx.globalAlpha = a;
-        ctx.fillRect(x - 2, y - lh * 0.74, w + 4, lh * 0.92);
-        ctx.fillStyle = C.ink;
+        ctx.fillStyle = C.signal; ctx.globalAlpha = Math.min(1, a * 1.4);
+        chip(x, y, w);
+        ctx.fillStyle = C.ink; ctx.globalAlpha = 1;
+        continue;
       }
-      ctx.globalAlpha = a * (tk.kind === 2 ? 1 : 0.62);
-      ctx.fillRect(x, y - barH, w, barH);
+      if (tk.s && origin) {
+        ctx.globalAlpha = a * 0.56;
+        ctx.fillText(tk.s, x, y);
+      } else {
+        ctx.globalAlpha = a * 0.62;
+        ctx.fillRect(x, y - barH, w, barH);
+      }
       ctx.globalAlpha = 1;
-    }
-    // ink inside the inline elements, once they have arrived
-    for (const g of agentsIn) {
-      ctx.globalAlpha = clamp((g.t - 0.6) / 0.4);
-      ctx.fillRect(g.x, g.y - barH, g.w, barH);
     }
     ctx.globalAlpha = 1;
     return busy;
   }
 
+  /* the name: always set as whole lines, so letters keep their spacing and never cross */
+  function titleLines(u1: number, u2: number): TLine[] {
+    if (REDUCED) return u2 > 0 ? T[2] : u1 > 0 ? T[1] : T[0];
+    if (u2 <= 0) return lerpLines(T[0], T[1], ease(u1));
+    if (!Tmid) return lerpLines(T[1], T[2], ease(u2));
+    const ta = clamp(u2 / 0.42), tb = clamp((u2 - 0.42) / 0.58);
+    if (tb > 0) return lerpLines(Tmid, T[2], ease(tb));
+    // "Labs" leaves the line whole: first down to its own line, then left to the margin
+    const L1 = T[1][0];
+    const fromX = L1.x + ((adv(10, L1.wd, L1.wt) - adv(0, L1.wd, L1.wt)) * L1.size) / 100;
+    const m = Tmid[1];
+    return [Tmid[0], { ...m, x: lerp(fromX, m.x, sm(clamp((ta - 0.45) / 0.55))), base: lerp(L1.base, m.base, sm(clamp(ta / 0.55))) }];
+  }
+
   function placeDom(u1: number, u2: number, now: number, cam: { s: number; tx: number; ty: number }) {
     layer.style.transform = cam.s === 1 ? '' : `translate3d(${cam.tx}px,${cam.ty}px,0) scale(${cam.s})`;
     let busy = false;
-    const Ls = page.letters!;
-    for (let i = 0; i < letterEls.length; i++) {
-      const L0 = Ls[0][i];
-      const d1 = Math.abs(L0.x - page.agentX) / W;
-      const d2 = ((TITLE.length - 1 - i) / TITLE.length) * 0.5; // "Labs" drops first
-      const st = stageT(u1, u2, d1, d2);
-      const k = st <= 1 ? 0 : 1, t = st <= 1 ? st : st - 1;
-      const A = Ls[k][i], B = Ls[k + 1][i];
-      let wd = lerp(A.wd, B.wd, t), wt = lerp(A.wt, B.wt, t);
-      const s = lerp(A.s, B.s, t) / 100, x = lerp(A.x, B.x, t), y = lerp(A.y, B.y, t);
-      let op = 1;
-      if (intro > 0) {
-        const e = clamp((now - intro - i * 45) / 900);
-        if (e < 1) busy = true;
-        const f = easeOut(e);
-        wd = lerp(125, wd, f); wt = lerp(250, wt, f); op = clamp(e * 3);
-      }
-      const el = letterEls[i];
-      el.style.transform = `translate3d(${x.toFixed(2)}px,${(y - BASE * s * 100).toFixed(2)}px,0) scale(${s.toFixed(4)})`;
-      el.style.fontVariationSettings = `'wdth' ${wd.toFixed(2)}, 'wght' ${wt.toFixed(1)}`;
-      el.style.opacity = String(op);
+    let lines = titleLines(u1, u2);
+    let op = 1;
+    if (intro > 0) {
+      const e = clamp((now - intro) / 1100);
+      if (e < 1) busy = true;
+      const f = easeOut(e);
+      lines = lines.map((L) => ({ ...L, wd: lerp(62, L.wd, f), wt: lerp(300, L.wt, f) }));
+      op = clamp(e * 4);
     }
-    // statement and links: interpolate their boxes; the browser re-flows the statement's lines
-    // S0→S1 they slide with the grid; S1→S2 they are re-set in their new place (out, then in),
-    // so they never cross the title as it re-breaks
-    const place = (el: HTMLElement, A: Rect | { x: number; y: number }, B: Rect | { x: number; y: number }, t: number, reset: boolean, fade: number) => {
-      let x: number, y: number, o = 1, w = 'w' in A ? A.w : 0;
-      if (reset && (Math.abs(A.x - B.x) + Math.abs(A.y - B.y) > 2)) {
+    const Ls = lettersOf(lines);
+    for (let i = 0; i < letterEls.length; i++) {
+      const L = Ls[i], el = letterEls[i], s = L.s / 100;
+      el.style.transform = `translate3d(${L.x.toFixed(2)}px,${(L.y - BASE * L.s).toFixed(2)}px,0) scale(${s.toFixed(4)})`;
+      el.style.fontVariationSettings = `'wdth' ${L.wd.toFixed(2)}, 'wght' ${L.wt.toFixed(1)}`;
+      el.style.opacity = String(L.v ? op : 0);
+    }
+    // statement and links: S0→S1 they slide with the grid; S1→S2 they are re-set in their new
+    // place (out, then in), so they never cross the name as it re-breaks
+    const place = (el: HTMLElement, A: any, B: any, t: number, reset: boolean, fade: number) => {
+      let x: number, y: number, o = 1, w = A.w || 0;
+      if (reset && Math.abs(A.x - B.x) + Math.abs(A.y - B.y) > 2) {
         const side = t < 0.5 ? A : B;
-        x = side.x; y = side.y; if ('w' in side) w = side.w;
+        x = side.x; y = side.y; w = side.w || 0;
         o = t < 0.5 ? 1 - clamp(t / 0.35) : clamp((t - 0.65) / 0.35);
-      } else {
-        x = lerp(A.x, B.x, t); y = lerp(A.y, B.y, t); if ('w' in A && 'w' in B) w = lerp(A.w, B.w, t);
-      }
+      } else { x = lerp(A.x, B.x, t); y = lerp(A.y, B.y, t); if (A.w && B.w) w = lerp(A.w, B.w, t); }
       if (w) el.style.width = w.toFixed(1) + 'px';
       el.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0)`;
       el.style.opacity = String(o * fade);
     };
     const fade = intro > 0 ? clamp((now - intro - 500) / 700) : 1;
     if (fade < 1) busy = true;
-    const lt = stageT(u1, u2, Math.abs(leadR[0].x + leadR[0].w / 2 - page.agentX) / W, 0.3);
+    const lt = stageT(u1, u2, Math.abs(leadR[0].x + leadR[0].w / 2 - page.agentX) / W, 0);
     const lk = lt <= 1 ? 0 : 1;
     place(leadEl, leadR[lk], leadR[lk + 1], lt <= 1 ? lt : lt - 1, lk === 1, fade);
-    navEls.forEach((el, k) => {
-      const nt = stageT(u1, u2, Math.abs(navR[0][k].x - page.agentX) / W, 0.1 + k * 0.05);
-      const nk = nt <= 1 ? 0 : 1;
-      place(el, navR[nk][k], navR[nk + 1][k], nt <= 1 ? nt : nt - 1, nk === 1, fade);
-    });
+    const nt = REDUCED ? (u2 > 0 ? 2 : u1) : u2 > 0 ? 1 + ease(u2) : ease(u1);
+    const nk = nt <= 1 ? 0 : 1;
+    navEls.forEach((el, k) => place(el, navR[nk][k], navR[nk + 1][k], nt <= 1 ? nt : nt - 1, false, fade));
     return busy;
   }
 
@@ -630,7 +680,6 @@ export function mountProgramme(root: HTMLElement) {
     let busy = false;
     ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * cam.tx, dpr * cam.ty);
     if (z > 0) {
-      // the field of sheets, each running the same programme when the change reaches it
       const r = REDUCED ? q : clamp((q - 0.12) / 0.88);
       const sx = W + G, sy = H + G;
       const nx = Math.ceil((cx / s) / sx) + 1, ny = Math.ceil((cy / s) / sy) + 1;
@@ -645,29 +694,37 @@ export function mountProgramme(root: HTMLElement) {
         if (i === 0 && j === 0) { busy = drawPage(page, u1, u2, now, true, 1 - z) || busy; ctx.restore(); continue; }
         const d = Math.hypot(ox, oy) / maxD;
         const lp = REDUCED ? r : clamp((r - d * 0.62) / 0.38);
-        const m = miniAt(i, j);
-        drawPage(m, clamp(lp * 2), clamp(lp * 2 - 1), now, false, 0);
+        drawPage(miniAt(i, j), clamp(lp * 2), clamp(lp * 2 - 1), now, false, 0);
         ctx.restore();
+      }
+      // the field dissolves into the page below it
+      const fa = REDUCED ? q : clamp((q - 0.72) / 0.28);
+      if (fa > 0) {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const g = ctx.createLinearGradient(0, H * 0.38, 0, H);
+        g.addColorStop(0, 'rgba(236,236,232,0)');
+        g.addColorStop(1, 'rgba(236,236,232,1)');
+        ctx.globalAlpha = fa;
+        ctx.fillStyle = g;
+        ctx.fillRect(0, H * 0.38, W, H * 0.62 + 1);
+        ctx.globalAlpha = 1;
       }
     } else {
       busy = drawPage(page, u1, u2, now, true, 1) || busy;
     }
-    // the insertion caret (hero only)
     if (hover && z === 0 && u1 === 0) {
-      ctx.fillStyle = C.ink;
-      ctx.fillRect(hover.x - 1, hover.y - page.lh * 0.8, 2, page.lh);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.fillStyle = C.signal;
-      ctx.fillRect(hover.x - 4, hover.y - page.lh * 0.8 - 5, 7, 5);
+      ctx.fillRect(hover.x - 1.5, hover.y - LH * 0.95, 3, LH * 1.2);
     }
     busy = placeDom(u1, u2, now, cam) || busy;
-    if (intro > 0 && now - intro > 2400) intro = 0;
+    if (intro > 0 && now - intro > 2600) intro = 0;
     return busy || intro > 0;
   }
 
   function frame(now: number) { raf = 0; if (draw(now)) req(); }
   function req() { if (!raf) raf = requestAnimationFrame(frame); }
 
-  /* ---------- scroll ---------- */
   function onScroll() {
     const r = story.getBoundingClientRect();
     const span = r.height - H;
@@ -675,49 +732,58 @@ export function mountProgramme(root: HTMLElement) {
     if (np !== p) { p = np; if (p > 0.02) hover = null; req(); }
   }
 
-  /* ---------- a visitor inserts an element: the text downstream re-flows ---------- */
+  /* ---------- a visitor inserts an element: the text downstream re-flows, in reading order ---------- */
   function locate(mx: number, my: number) {
     const { u1 } = phases();
     if (u1 > 0 || p > 0.03) return null;
-    const lh = page.lh;
-    let best = -1, bx = 0, by = 0, bd = 1e9;
     const L0 = page.L[0];
+    let bestDy = 1e9;
     for (let i = 0; i < page.stream.length; i++) {
       const P0 = L0[i];
-      if (!P0 || !P0.v) continue;
-      if (Math.abs(P0.y - lh * 0.3 - my) > lh * 0.55) continue;
+      if (!P0 || !P0.v || mx < P0.x - 30 || mx > P0.x + P0.w + 30) continue;
+      bestDy = Math.min(bestDy, Math.abs(P0.y - FS * 0.35 - my));
+    }
+    if (bestDy > LH * 1.2) return null;
+    let best = -1, bx = 0, by = 0, bd = 1e9;
+    for (let i = 0; i < page.stream.length; i++) {
+      const P0 = L0[i];
+      if (!P0 || !P0.v || Math.abs(Math.abs(P0.y - FS * 0.35 - my) - bestDy) > 0.5) continue;
       const dl = Math.abs(P0.x - mx), dr = Math.abs(P0.x + P0.w - mx);
       if (dl < bd) { bd = dl; best = i; bx = P0.x - page.sp / 2; by = P0.y; }
       if (dr < bd) { bd = dr; best = i + 1; bx = P0.x + P0.w + page.sp / 2; by = P0.y; }
     }
-    if (best < 0 || bd > 40) return null;
+    if (best < 0 || bd > 30) return null;
     return { x: bx, y: by, idx: best };
   }
   function insertAt(idx: number) {
-    if (inserted >= 24) return;
-    inserted++;
     const now = performance.now();
+    const st = page.stream;
+    // a click beside an existing element grows it (to a limit) instead of stacking a new one
+    const near = st[idx - 1]?.kind === 2 ? st[idx - 1] : st[idx]?.kind === 2 ? st[idx] : null;
+    let tok: Tok;
+    if (near) {
+      if (near.w > FS * 6) return;
+      near.w0 = near.w; near.w += FS * 1.6; near.born = REDUCED ? 0 : now; tok = near;
+    } else {
+      if (inserted >= 12) return;
+      inserted++;
+      tok = { id: 500000 + inserted, w: (3 + Math.floor(Math.random() * 3)) * FS * 0.55, w0: 0, kind: 2, pEnd: false, born: REDUCED ? 0 : now, ox: 0, oy: 0, at: 0, dur: 0 };
+      st.splice(idx, 0, tok);
+    }
     const old = new Map(shown);
-    const fs = W < 820 ? 10 : 11;
-    const tok: Tok = { id: 500000 + inserted, w: (3 + Math.floor(Math.random() * 5)) * fs * 0.52, kind: 2, pEnd: false, born: REDUCED ? 0 : now, ox: 0, oy: 0, at: 0, dur: 0 };
-    page.stream.splice(idx, 0, tok);
-    const leadKeep = page.letters;
-    const o = originLayout(W, H, leadHeight);
-    page = buildPage(o.Lo, page.stream);
-    page.letters = leadKeep;
+    relayout();
     if (!REDUCED) {
       const { u1, u2 } = phases();
       const newIdx = page.stream.indexOf(tok);
+      const s0 = stageT(u1, u2, 0, 0);
       page.stream.forEach((t, i) => {
         const was = old.get(t.id);
         if (!was || t === tok) return;
-        const st = stageT(u1, u2, 0, 0);
-        if (!posAt(page, i, st, tmp)) return;
+        if (!posAt(page, i, s0, tmp)) return;
         const dx = was.x - tmp.x, dy = was.y - tmp.y;
         if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
-        t.ox = dx; t.oy = dy; t.dur = 620;
-        // the re-flow travels downstream from the insertion point
-        t.at = now + Math.min(420, Math.max(0, i - newIdx) * 1.6);
+        t.ox = dx; t.oy = Math.abs(dy) < 0.5 ? 0 : dy; t.dur = t.oy ? 420 : 560;
+        t.at = now + Math.min(1100, Math.max(0, i - newIdx) * 5);
       });
     }
     req();
@@ -737,7 +803,7 @@ export function mountProgramme(root: HTMLElement) {
     if ((e.target as HTMLElement).closest('a')) return;
     const r = stage.getBoundingClientRect();
     const h = locate(e.clientX - r.left, e.clientY - r.top);
-    if (h) { insertAt(h.idx); hover = null; }
+    if (h) { insertAt(h.idx); hover = null; req(); }
   });
 
   let lastW = 0, lastH = 0;
@@ -755,4 +821,19 @@ export function mountProgramme(root: HTMLElement) {
   ro.observe(stage);
   onScroll();
   root.classList.add('is-live');
+
+  // one insertion plays by itself, so the hero shows its rule before anyone scrolls
+  if (!REDUCED) {
+    setTimeout(() => {
+      if (p > 0.01 || inserted > 0) return;
+      const b = page.specBoxes[0][0];
+      const L0 = page.L[0];
+      const idx = page.stream.findIndex((t, i) => { const P0 = L0[i]; return t.kind === 0 && !!P0 && P0.v === 1 && P0.y > b.y + LH * 4 && P0.x > b.x + b.w * 0.4; });
+      if (idx < 0) return;
+      const P0 = L0[idx]!;
+      hover = { x: P0.x - page.sp / 2, y: P0.y, idx };
+      req();
+      setTimeout(() => { hover = null; if (p > 0.01) { req(); return; } insertAt(idx); }, 650);
+    }, 1400);
+  }
 }

@@ -31,6 +31,14 @@ html[data-page='home'] .gridlines { display: none; }
 .story.is-static { height: auto; }
 .story.is-static .stage { position: relative; height: auto; }
 
+/* the header returns once the story has passed */
+.homebar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 20; padding-bottom: 12px;
+  background: var(--paper); border-bottom: 1px solid var(--rule);
+  transform: translateY(-101%); transition: transform 0.45s var(--ease-out);
+}
+.homebar.is-on { transform: none; }
+
 /* tail */
 .home-about .home-about__text { grid-column: 1 / -1; }
 .home-about .home-about__more { grid-column: 1 / -1; justify-self: start; font-size: var(--t-s); }
