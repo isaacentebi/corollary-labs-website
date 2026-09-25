@@ -14,11 +14,11 @@ const VERSIONS = [
   { key: '', name: 'Plotter' },
   { key: 'organic', name: 'Organic' },
   { key: 'proof', name: 'Proof' },
-  { key: 'wild', name: 'Wild' },
+  { key: 'wild', name: 'Tableau' },
   { key: 'plotsoft', name: 'Plotter soft' },
   { key: 'soft', name: 'Soft' },
-  { key: 'free', name: 'Free' },
-  { key: 'out', name: 'Out' },
+  { key: 'free', name: 'Loops' },
+  { key: 'out', name: 'Interference' },
 ];
 const sh = (cmd, cwd = ROOT) => execSync(cmd, { cwd, stdio: 'inherit' });
 const out = (cmd, cwd = ROOT) => execSync(cmd, { cwd, encoding: 'utf8' });
