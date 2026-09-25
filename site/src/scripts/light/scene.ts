@@ -5,7 +5,7 @@ import { states, nightHorizon, type Env } from './states';
 import { layoutField } from './diffusion';
 import { pack, mixInto, LENGTH, smooth, clamp } from './params';
 
-const KEY_P: Record<string, number> = { io: 0.75, auto: 1, combine: 1, deform: 0.96, diffuse: 1, work: 0.5 };
+const KEY_P: Record<string, number> = { io: 0.75, auto: 1, combine: 1, deform: 0.96, diffuse: 1, work: 0.5, moment: 0.5, dawn: 1 };
 const STORE = 'cl-light';
 
 export function mountScene() {

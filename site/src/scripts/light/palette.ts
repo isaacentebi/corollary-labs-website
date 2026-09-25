@@ -2,23 +2,30 @@
 import { hex } from './params';
 
 export const C = {
-  // gallery wall and floor (Niesche, Pashgian and Bell installation photographs: warm white wall, grey floor)
-  wall: hex('#eeebe6'), wallHi: hex('#f4f2ee'), floor: hex('#d9d4cc'),
-  // the volume by day (Niesche, "Schein Blossom, Spring Has No Border", 2022: orange core, pink, lilac edge)
-  core: hex('#ff8a47'), ring: hex('#f6a08c'), lilac: hex('#c3a6ec'), paleRing: hex('#fbf1ea'),
-  // dusk (Brindle, "Refracting Twilight", 2016: lavender sky, saturated blue band, dark water)
-  duskTop: hex('#5a5cb4'), duskMid: hex('#2a3bb4'), duskBand: hex('#2f5bff'), duskLow: hex('#0a0f2c'), night: hex('#060818'),
-  // dawn (Witmer, "Onekama Beach", 2022: amber over navy with a thin coral line at the join)
-  dawnTop: hex('#1d2033'), dawnAmber: hex('#e09e1d'), dawnCoral: hex('#d2715e'),
-  // Turrell, "Breathing Light", 2013: magenta room, red-hot inner rectangle
-  magenta: hex('#d21fbf'), hot: hex('#ff2a5a'),
-  // Brindle, "Light Glyph (Teal)": cyan emitted light
-  cyan: hex('#58e8f2'),
-  // Pashgian spheres: resin green
-  resin: hex('#1fc9a0'),
-  // warm light entering (Menchelli, "Parallelogram Sunrise", 2024)
-  sun: hex('#ffc46b'), amber: hex('#ff9d3c'),
+  // pale gallery wall for reading pages (Niesche, Pashgian and Bell installation photographs)
+  wall: hex('#eeebe6'), wallHi: hex('#f3f1ed'), wallLow: hex('#e4e0da'),
+  // the lit room of the first screen: a warm grey wall, lit mainly by the object in it
+  // (Pashgian's columns shown in dim rooms; Turrell's walls carrying the field's hue at low value)
+  roomHi: hex('#dcd8d3'), room: hex('#d2cdc6'), roomLow: hex('#c4beb6'),
+  // the object: two neighbouring hues, apricot core easing to coral (Pastine, "Blue (Orange)",
+  // hues edging into each other; Alexander, "Green Wedge", colour deepening with thickness)
+  apricot: hex('#ffbf8a'), coral: hex('#f48a7a'), spill: hex('#ffb892'),
+  // the frosted body the light is suspended in: a little lighter than the room around it
+  frostDay: hex('#ece6df'), frostDusk: hex('#8d8ac8'),
+  // ignition: amber at the rim first, then the core (Menchelli, "Parallelogram (Sunrise)", 2024)
+  amber: hex('#ffab5c'), sun: hex('#ffc97a'),
+  // dusk, muted (Turrell, "Twilight Epiphany": lilac-grey canopy, deep blue sky; Ando, "Meditation Blue Black")
+  duskTop: hex('#5c5a98'), duskMid: hex('#2c3790'), duskLow: hex('#0e1330'), duskGlow: hex('#4a64d6'),
+  night: hex('#07091a'), nightMid: hex('#1a2052'), nightLow: hex('#0a0c1c'),
+  // glass lit from outside, and the cool light that leaves it
+  glass: hex('#a3a9dc'), cool: hex('#8fd3ee'),
+  // new combinations: rose and blue fields; where they meet, a violet neither has
+  rose: hex('#ff7d9c'), blue: hex('#5f7cf2'), violet: hex('#b98cf5'),
+  // dawn (Witmer, "Onekama Beach", 2022: amber over navy)
+  dawnSky: hex('#4d56a8'), dawnPale: hex('#efe6dc'), dawnAmber: hex('#e09e1d'), dawnLow: hex('#1d2033'),
+  // contact: the whole room is the light (Turrell, "Breathing Light": hue turns, value barely moves)
+  gPeach: hex('#ffd6c2'), gApricot: hex('#ffbfa3'), gRose: hex('#ffabb6'),
+  // research: pale silver (Brindle, "Distant Light")
+  silver: hex('#e9ebf0'), silverLow: hex('#e1e4ea'), faintBlue: hex('#5a78e6'),
   white: hex('#ffffff'),
-  // contact: apricot Ganzfeld
-  apricot: hex('#ffb489'), peach: hex('#ffd9bf'), rose: hex('#ff7f86'),
 };
