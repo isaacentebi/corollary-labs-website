@@ -1,17 +1,27 @@
 ---
 import Base from '../layouts/Base.astro';
 import PagePlate from '../components/PagePlate.astro';
+import { url } from '../config/site';
 import '../styles/pages.css';
+const team = [1, 2, 3, 4];
 ---
 <Base page="about" title="About">
   <PagePlate title="About" variant={1}>
-    <p class="plate__line ph">[About — one line under the title]</p>
+    <p class="plate__line">Corollary Labs is an AI company.</p>
   </PagePlate>
   <section class="page page--after">
     <div class="prose">
       <p class="prose__lede ph">[About — opening paragraph]</p>
       <p class="ph">[About — second paragraph]</p>
       <p class="ph">[About — third paragraph]</p>
+    </div>
+    <div class="about-team">
+      <a class="t-label lk about-team__k" href={url('team/')}>Team →</a>
+      <ol>
+        {team.map((n, i) => (
+          <li style={`--i:${i}`}><span class="t-label">0{n}</span><span class="ph">[Name — Role]</span></li>
+        ))}
+      </ol>
     </div>
   </section>
 </Base>

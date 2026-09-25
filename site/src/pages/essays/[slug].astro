@@ -24,7 +24,7 @@ const { Content, remarkPluginFrontmatter: fm } = await render(entry);
     <p class="es__dek">{entry.data.dek}</p>
   </PagePlate>
   <article class="es">
-    <nav class="es__back t-label"><a class="lk" href={url('essays/')}>← Essays</a></nav>
+    <nav class="es__back t-label"><a class="lk" href={url('essays/')} data-title="Research">← Research</a></nav>
     <div class="es__body">
       <Content components={{ Figure, Term }} />
     </div>
@@ -33,7 +33,7 @@ const { Content, remarkPluginFrontmatter: fm } = await render(entry);
       <p class="t-label ph">— {site.author}, {fmtDate(entry.data.date)}</p>
       {next && next.id !== entry.id && (
         <a class="es__next" href={url(`essays/${next.id}/`)} data-title={next.data.title} data-glyph-host>
-          <span class="t-label">Next essay</span>
+          <span class="t-label">Next</span>
           <span class="es__next-t">{next.data.title}</span>
           <Glyph seed={next.id} class="es__next-g" />
         </a>

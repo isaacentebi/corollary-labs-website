@@ -8,9 +8,9 @@ import '../../styles/pages.css';
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
 const rows = await Promise.all(essays.map(async (e) => ({ e, min: (await render(e)).remarkPluginFrontmatter.minutesRead as number })));
 ---
-<Base page="essays" title="Essays">
-  <PagePlate title="Essays" variant={4}>
-    <p class="plate__line t-label ph">{String(rows.length).padStart(2, '0')} essays</p>
+<Base page="essays" title="Research">
+  <PagePlate title="Research" variant={4}>
+    <p class="plate__line">Essays on agents, organisations and how new technology spreads.</p>
   </PagePlate>
   <section class="page page--after">
     <EssayList rows={rows} big />

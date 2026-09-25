@@ -130,7 +130,8 @@ img, svg, canvas { display: block; max-width: 100%; }
 
 @media (max-width: 760px) {
   .page { padding-top: 150px; }
-  .nav { gap: 10px 18px; }
+  .hd { gap: 10px 24px; padding-top: 14px; }
+  .nav { flex-basis: 100%; gap: 8px 16px; padding-top: 0; font-size: 10px; letter-spacing: 0.1em; font-stretch: 104%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

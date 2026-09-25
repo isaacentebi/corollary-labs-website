@@ -70,11 +70,20 @@ export interface TkOptions {
   page?: boolean;
   variant?: number;
   slabH?: number;
+  /** hero mode: the picture holds still (scroll does not drive it); pointer lift and click pulse stay */
+  still?: boolean;
+  /** play the planes' arrival on load (default true) */
+  intro?: boolean;
+  /** override scale and centre of the picture */
+  frame?: (W: number, H: number, portrait: boolean) => { s: number; cx: number; cy: number };
+  /** override where the agent waits */
+  agentStart?: (portrait: boolean) => V3;
 }
 
 export function mountTektonik(stage: HTMLElement, track: HTMLElement, opts: TkOptions = {}) {
   const FIELD = opts.field !== false;
   const PAGE = !!opts.page;
+  const STILL = !!opts.still;
   const canvas = stage.querySelector<HTMLCanvasElement>('canvas[data-tektonik]')!;
   const ctx = canvas.getContext('2d')!;
   const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -119,7 +128,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement, opts: TkOp
 
   const build = () => {
     portrait = W < H * 0.9;
-    agentStart = portrait ? AGENT_START_P : AGENT_START_L;
+    agentStart = opts.agentStart ? opts.agentStart(portrait) : portrait ? AGENT_START_P : AGENT_START_L;
     tPrimaryDir = norm(sub(IMPACT, agentStart));
     const base = buildComposition(agentStart, 7, { variant: opts.variant, slabH: opts.slabH });
     const qFinal = qMul(qZ(FINAL.roll), qMul(qX(FINAL.pitch), qY(FINAL.yaw)));
@@ -170,7 +179,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement, opts: TkOp
     dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     const port = W < H * 0.9;
-    S = port ? Math.min(W * 0.63, H * 0.36) : Math.min(W * 0.36, H * 0.5);
+    S = opts.frame ? opts.frame(W, H, port).s : port ? Math.min(W * 0.63, H * 0.36) : Math.min(W * 0.36, H * 0.5);
     build();
     measureName();
   };
@@ -181,6 +190,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement, opts: TkOp
     if ('letterSpacing' in c) c.letterSpacing = '-3px';
   };
   const measureName = () => {
+    if (!NAME) { nameK = 0; return; }
     setNameFont();
     const m = Math.max(...LINES.map((l) => ctx.measureText(l).width)) || 1;
     const pa = nodes[0].parents[0];
@@ -195,7 +205,8 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement, opts: TkOp
     const span = r.height - window.innerHeight;
     const raw = span > 0 ? clamp(-r.top / span) : 0;
     exitT = span > 0 ? clamp((-r.top - span) / (window.innerHeight * 0.6)) : 0;
-    if (PAGE) pT = rm ? 0 : T.build1 * clamp((raw - 0.03) / 0.9);
+    if (STILL) { pT = 0; exitT = 0; }
+    else if (PAGE) pT = rm ? 0 : T.build1 * clamp((raw - 0.03) / 0.9);
     else if (rm) { let best = 0; for (const st of STOPS_RM) if (raw >= st - 0.12) best = st; pT = best; }
     else pT = raw;
   };
@@ -370,8 +381,11 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement, opts: TkOp
     Z = S * cam.zoom;
     invD = cam.invD;
     tgt = lerp3(v(0, 0.05, 0), tgtField, cam.tmix);
-    cx = W * (portrait ? 0.5 : 0.54);
-    cy = H * (portrait ? (PAGE ? 0.45 : 0.54) : 0.47);
+    if (opts.frame) { const fr = opts.frame(W, H, portrait); cx = fr.cx; cy = fr.cy; }
+    else {
+      cx = W * (portrait ? 0.5 : 0.54);
+      cy = H * (portrait ? (PAGE ? 0.45 : 0.54) : 0.47);
+    }
 
     const sP = buildS(p);
     const fieldA = FIELD ? clamp((p - T.pull0 - 0.02) / 0.12) : 0;
@@ -541,7 +555,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement, opts: TkOp
   const request = () => { if (!running) { running = true; requestAnimationFrame(frame); } };
 
   // ---------- input ----------
-  window.addEventListener('scroll', () => { readScroll(); if (visible) request(); }, { passive: true });
+  window.addEventListener('scroll', () => { if (STILL) return; readScroll(); if (visible) request(); }, { passive: true });
   new ResizeObserver(() => { measure(); readScroll(); request(); }).observe(canvas);
   new IntersectionObserver((es) => { visible = es[0].isIntersecting; if (visible) request(); }).observe(stage);
 
@@ -602,7 +616,7 @@ export function mountTektonik(stage: HTMLElement, track: HTMLElement, opts: TkOp
   readScroll();
   p = pT;
   document.fonts?.load('800 100px "Archivo Variable"').then(() => { measureName(); request(); }).catch(() => {});
-  if (!rm && pT < 0.02) introT0 = performance.now();
+  if (!rm && pT < 0.02 && opts.intro !== false) introT0 = performance.now();
   stage.classList.add('is-live');
   request();
 }

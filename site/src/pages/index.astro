@@ -1,65 +1,148 @@
 ---
 import Base from '../layouts/Base.astro';
 import EssayList from '../components/EssayList.astro';
-import PageLinks from '../components/PageLinks.astro';
 import { getCollection, render } from 'astro:content';
-import { url } from '../config/site';
+import { site, url, mailto } from '../config/site';
 import '../styles/home.css';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 const rows = await Promise.all(essays.map(async (e) => ({ e, min: (await render(e)).remarkPluginFrontmatter.minutesRead as number })));
-const captions = [
-  '[One sentence — a firm as it is arranged today]',
-  '[One sentence — an agent arrives and the arrangement comes apart]',
-  '[One sentence — the same parts reassemble around the agent]',
-  '[One sentence — the change travels from firm to firm, weaker at each step]',
+
+const capabilities = [
+  { t: 'Agent deployment.', d: 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.' },
+  { t: 'Model fine-tuning.', d: 'Models adapted and evaluated on your data for the specific tasks your agents perform.' },
+  { t: 'Systems integration.', d: 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.' },
+  { t: 'Evaluation and governance.', d: 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.' },
 ];
+const legend = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
+const principles = [
+  { t: 'Workflow first.', d: 'We map how work is actually done before choosing a model.' },
+  { t: 'Design the reorganisation.', d: 'Roles, handoffs and controls change when agents arrive. We plan that change.' },
+  { t: 'Measure in production.', d: 'Every deployment reports on accuracy, cost and time saved.' },
+];
+const team = [1, 2, 3, 4];
+const contactHref = mailto ?? '#contact';
 ---
 <Base page="home">
-  <section class="story" data-story aria-label="Introduction">
-    <div class="stage" data-stage data-state="0">
+  <!-- 1 · Hero: the company, stated; the composition is its object -->
+  <section class="hero" data-hero aria-labelledby="hero-name">
+    <div class="hero__stage" data-stage>
       <canvas data-tektonik aria-hidden="true"></canvas>
-
-      <h1 class="u-sr">Corollary Labs</h1>
-
-      <div class="caps">
-        <p class="cap cap--lead ph">[Statement — one or two lines]</p>
-        <ol class="caps__list" aria-label="Story">
-          {captions.map((c, i) => (
-            <li class="cap" data-i={i}>
-              <span class="cap__n t-label">0{i + 1}</span>
-              <span class="cap__t ph">{c}</span>
-            </li>
-          ))}
-        </ol>
+    </div>
+    <div class="hero__copy">
+      <h1 id="hero-name" class="u-sr">{site.name}</h1>
+      <p class="hero__head">We deploy AI agents inside organisations and rebuild the operations around them.</p>
+      <p class="hero__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
+      <div class="hero__act">
+        <a class="btn btn--primary" href={contactHref}><span>Contact us</span></a>
+        <a class="btn btn--ghost" href="#approach"><span>Our approach</span></a>
       </div>
-
-      <div class="rail" aria-hidden="true"><i></i><b></b><b></b><b></b><b></b></div>
     </div>
   </section>
 
-  <section class="tail">
-    <div class="about">
-      <p class="t-label about__k">About</p>
-      <p class="about__p ph">[About — one paragraph on who we are and what we work on]</p>
-      <a class="t-label lk about__more" href={url('about/')}>About →</a>
+  <!-- 2 · Capabilities: four rows on the rising grid -->
+  <section class="sec" id="capabilities" aria-labelledby="cap-h">
+    <h2 class="sec__h" id="cap-h">Capabilities</h2>
+    <div class="steps" style={`--n:${capabilities.length}`}>
+      <svg class="steps__axis" aria-hidden="true" preserveAspectRatio="none"><line x1="100%" y1="0" x2="0" y2="100%" /></svg>
+      <ol>
+        {capabilities.map((c, i) => (
+          <li class="cap" style={`--i:${i}`}>
+            <span class="cap__n t-label">0{i + 1}</span>
+            <h3 class="cap__t">{c.t}</h3>
+            <p class="cap__d">{c.d}</p>
+          </li>
+        ))}
+      </ol>
     </div>
+  </section>
 
-    <div class="latest">
-      <div class="latest__head">
-        <h2 class="t-label">Essays</h2>
-        <a class="t-label lk" href={url('essays/')}>All essays →</a>
+  <!-- 3 · Approach: the story, short, with a plain legend -->
+  <section class="sec sec--approach" id="approach" aria-labelledby="ap-h">
+    <div class="ap__head">
+      <h2 class="sec__h" id="ap-h">Approach</h2>
+      <p class="sec__intro">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+    </div>
+    <div class="story" data-story>
+      <div class="stage" data-stage data-state="0">
+        <canvas data-tektonik aria-hidden="true"></canvas>
+        <ol class="legend" aria-label="Legend">
+          {legend.map((l, i) => (
+            <li class="legend__i" data-i={i}><span class="t-label">0{i + 1}</span><span class="legend__t">{l}</span></li>
+          ))}
+        </ol>
+        <div class="rail" aria-hidden="true"><i></i><b></b><b></b><b></b><b></b></div>
       </div>
-      <EssayList rows={rows} />
     </div>
+    <ol class="principles">
+      {principles.map((p, i) => (
+        <li style={`--i:${i}`}>
+          <h3 class="principles__t">{p.t}</h3>
+          <p class="principles__d">{p.d}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
 
-    <PageLinks />
+  <!-- 4 · Research -->
+  <section class="sec" id="research" aria-labelledby="re-h">
+    <div class="sec__row">
+      <h2 class="sec__h" id="re-h">Research</h2>
+      <p class="sec__intro">Essays on agents, organisations and how new technology spreads.</p>
+    </div>
+    <EssayList rows={rows} />
+    <a class="t-label lk sec__more" href={url('essays/')} data-title="Research">All research →</a>
+  </section>
+
+  <!-- 5 · Company -->
+  <section class="sec" id="company" aria-labelledby="co-h">
+    <h2 class="sec__h" id="co-h">Company</h2>
+    <div class="co">
+      <div class="co__about">
+        <p class="t-label co__k">About</p>
+        <p class="co__p">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
+      </div>
+      <div class="co__team">
+        <a class="t-label co__k lk" href={url('team/')}>Team</a>
+        <ol class="co__list" style={`--n:${team.length}`}>
+          {team.map((n, i) => (
+            <li style={`--i:${i}`}><span class="t-label co__n">0{n}</span><span class="ph">[Name — Role]</span></li>
+          ))}
+        </ol>
+        <a class="t-label lk sec__more" href={url('about/')}>About the company →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Contact: a plane, the agent resting on its edge -->
+  <section class="sec sec--contact" id="contact" aria-labelledby="ct-h">
+    <div class="ct">
+      <span class="ct__bar" aria-hidden="true"></span>
+      <span class="ct__agent" aria-hidden="true"></span>
+      <h2 class="t-label ct__k" id="ct-h">Contact</h2>
+      <p class="ct__line">Deploying agents in your organisation? Talk to us.</p>
+      {mailto ? <a class="ct__mail" href={mailto}>{site.email}</a> : <p class="ct__mail">{site.email}</p>}
+    </div>
   </section>
 </Base>
 
 <script>
   import { mountTektonik } from '../scripts/tektonik';
+  import { v } from '../scripts/math3';
+  // Hero: the picture holds still; the planes lean toward the pointer and a click sends a pulse through them.
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  const heroStage = hero?.querySelector<HTMLElement>('[data-stage]');
+  if (hero && heroStage) {
+    mountTektonik(heroStage, hero, {
+      still: true, field: false,
+      frame: (W, H, portrait) => portrait
+        ? { s: Math.min(W * 0.54, H * 0.25), cx: W * 0.5, cy: H * 0.315 }
+        : { s: Math.min(W * 0.3, H * 0.39), cx: W * 0.6, cy: H * 0.43 },
+      agentStart: (portrait) => (portrait ? v(0.72, -0.5, 0.12) : v(1.22, -0.6, 0.12)),
+    });
+  }
+  // Approach: strike → fracture → rebuild → field, scrubbed by scroll, labelled by the legend.
   const track = document.querySelector<HTMLElement>('[data-story]');
-  const stage = document.querySelector<HTMLElement>('[data-stage]');
-  if (track && stage) mountTektonik(stage, track);
+  const stage = track?.querySelector<HTMLElement>('[data-stage]');
+  if (track && stage) mountTektonik(stage, track, { name: '', intro: false });
 </script>

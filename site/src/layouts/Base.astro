@@ -2,16 +2,24 @@
 import '@fontsource-variable/archivo/standard.css';
 import '../styles/global.css';
 import Mark from '../components/Mark.astro';
-import { site, url } from '../config/site';
+import { site, url, mailto } from '../config/site';
 
 interface Props { title?: string; description?: string; page: 'home' | 'essays' | 'essay' | 'about' | 'team' | 'contact' }
 const { title, description = site.description, page } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 const nav = [
-  { label: 'Essays', href: url('essays/'), key: 'essays' },
-  { label: 'About', href: url('about/'), key: 'about' },
-  { label: 'Team', href: url('team/'), key: 'team' },
-  { label: 'Contact', href: url('contact/'), key: 'contact' },
+  { label: 'Capabilities', href: url('#capabilities'), key: 'capabilities' },
+  { label: 'Approach', href: url('#approach'), key: 'approach' },
+  { label: 'Company', href: url('about/'), key: 'about' },
+  { label: 'Contact', href: url('#contact'), key: 'contact' },
+];
+const foot = [
+  { label: 'Capabilities', href: url('#capabilities') },
+  { label: 'Approach', href: url('#approach') },
+  { label: 'Research', href: url('essays/') },
+  { label: 'About', href: url('about/') },
+  { label: 'Team', href: url('team/') },
+  { label: 'Contact', href: url('contact/') },
 ];
 ---
 <!doctype html>
@@ -44,7 +52,7 @@ const nav = [
       </a>
       <nav class="nav t-label" aria-label="Site">
         {nav.map((n) => (
-          <a class="lk" href={n.href} aria-current={page === n.key || (page === 'essay' && n.key === 'essays') ? 'page' : undefined}>{n.label}</a>
+          <a class="lk" href={n.href} aria-current={page === n.key || (page === 'team' && n.key === 'about') || (page === 'contact' && n.key === 'contact') ? 'page' : undefined}>{n.label}</a>
         ))}
       </nav>
     </header>
@@ -52,11 +60,11 @@ const nav = [
       <slot />
     </main>
     <footer class="ft t-label">
-      <span>© {site.year} {site.name}</span>
       <nav class="ft__nav" aria-label="Footer">
-        {nav.map((n) => <a class="lk" href={n.href}>{n.label}</a>)}
+        {foot.map((n) => <a class="lk" href={n.href}>{n.label}</a>)}
       </nav>
-      <a class="lk" href={`mailto:${site.email}`}>{site.email}</a>
+      {mailto ? <a class="lk ft__mail" href={mailto}>{site.email}</a> : <span class="ft__mail">{site.email}</span>}
+      <span class="ft__c">© {site.year} {site.name}</span>
     </footer>
     <div class="veil" aria-hidden="true"><i style="--y:-50vmax"></i><i style="--y:0vmax"><span data-veil-title></span></i><i style="--y:50vmax"></i><b></b></div>
     <script is:inline>
@@ -67,7 +75,7 @@ const nav = [
       // the destination's title; the new page opens with the same planes sliding on and away, no hold.
       const veil = document.querySelector<HTMLElement>('.veil');
       const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-      const TITLES: Record<string, string> = { '': 'Corollary Labs', essays: 'Essays', about: 'About', team: 'Team', contact: 'Contact' };
+      const TITLES: Record<string, string> = { '': 'Corollary Labs', essays: 'Research', about: 'About', team: 'Team', contact: 'Contact' };
       const titleFor = (a: HTMLAnchorElement, u: URL) => {
         if (a.dataset.title) return a.dataset.title;
         const key = u.pathname.slice(base.length).replace(/^\/|\/$/g, '');
@@ -80,7 +88,7 @@ const nav = [
         if (!a || a.target || a.hasAttribute('download')) return;
         const u = new URL(a.href, location.href);
         if (!/^https?:$/.test(u.protocol) || u.origin !== location.origin) return;
-        if (u.pathname === location.pathname) return;
+        if (u.pathname.replace(/\/$/, '') === location.pathname.replace(/\/$/, '')) return;
         e.preventDefault();
         const t = titleFor(a, u);
         const span = veil.querySelector<HTMLElement>('[data-veil-title]');

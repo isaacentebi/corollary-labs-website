@@ -1,17 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
 import PagePlate from '../components/PagePlate.astro';
-import { site } from '../config/site';
+import { site, mailto } from '../config/site';
 import '../styles/pages.css';
 const rows = [
-  { k: 'Email', v: site.email, href: `mailto:${site.email}` },
+  { k: 'Email', v: site.email, href: mailto ?? undefined },
   { k: 'Address', v: '[Address]' },
   { k: 'Elsewhere', v: '[Links]' },
 ];
 ---
 <Base page="contact" title="Contact">
   <PagePlate title="Contact" variant={3}>
-    <p class="plate__line ph">[Contact — one line under the title]</p>
+    <p class="plate__line">Deploying agents in your organisation? Talk to us.</p>
   </PagePlate>
   <section class="page page--after">
     <div class="tilt" style={`--n:${rows.length}`}>

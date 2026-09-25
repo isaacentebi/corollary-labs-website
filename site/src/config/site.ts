@@ -4,8 +4,11 @@ export const site = {
   author: 'Corollary Labs',
   email: '[EMAIL]',
   year: 2026,
-  description: '[Meta description]',
+  description: 'Corollary Labs deploys AI agents inside organisations and rebuilds the operations around them.',
 } as const;
+
+/** A mailto only once a real address exists; the [EMAIL] placeholder stays plain text. */
+export const mailto = site.email.includes('@') ? `mailto:${site.email}` : null;
 
 /** Prefix an internal path with the deploy base (works under /supre and at root). */
 export const url = (path = '') => {
