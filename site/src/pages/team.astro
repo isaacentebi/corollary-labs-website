@@ -3,14 +3,14 @@ import Sheet from '../layouts/Sheet.astro';
 import Band from '../components/Band.astro';
 import Rings from '../components/Rings.astro';
 const people = [
-  { dx: 7, dy: 2, hx: -10, hy: 6 },
-  { dx: -5, dy: 6, hx: 9, hy: -7 },
-  { dx: 3, dy: -8, hx: -6, hy: 11 },
-  { dx: -8, dy: -3, hx: 12, hy: 4 },
+  { dx: 6, dy: 2, hx: -9, hy: 6 },
+  { dx: -14, dy: 7, hx: 6, hy: -4 },
+  { dx: 3, dy: -19, hx: -10, hy: 9 },
+  { dx: -26, dy: -4, hx: 8, hy: 3 },
 ];
 ---
 <Sheet active="team" page="team" title="Team">
-  <Band lines={['Team']} state="four" />
+  <Band lines={['Team']} state="four" fit={3.15} />
   <section class="page">
     <p class="lede ph">[Team — one line]</p>
     <ul class="people">

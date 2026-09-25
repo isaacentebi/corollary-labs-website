@@ -1,0 +1,14 @@
+---
+import Sheet from '../layouts/Sheet.astro';
+import Band from '../components/Band.astro';
+import { regions } from '../config/site';
+---
+<Sheet active={null} page="lost" title="Not found">
+  <Band lines={['404']} state="lost" fit={2.0} />
+  <section class="page">
+    <p class="lede ph">[Not found — one line]</p>
+    <ul class="lost-links">
+      {regions.map((r) => <li><a href={r.href}>{r.key === 'home' ? 'Home' : r.label}</a></li>)}
+    </ul>
+  </section>
+</Sheet>

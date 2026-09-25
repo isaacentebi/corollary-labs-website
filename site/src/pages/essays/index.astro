@@ -7,7 +7,7 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 ---
 <Sheet active="essays" page="essays" title="Essays">
-  <Band lines={['Essays']} state="front" />
+  <Band lines={['Essays']} state="front" fit={4.1} />
   <section class="page">
     <p class="lede ph">[Essays — one line]</p>
     <ol class="rows rows--index">

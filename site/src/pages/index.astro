@@ -2,13 +2,15 @@
 import Sheet from '../layouts/Sheet.astro';
 import { getCollection } from 'astro:content';
 import { url } from '../config/site';
+import Mark from '../components/Mark.astro';
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 ---
 <Sheet active="home" page="home">
   <section class="hero" data-hero aria-label="Corollary Labs">
     <div class="hero__stage band" data-band data-state="home">
-      <h1 class="band__title hero__name" data-latent><span class="band__line">Corollary</span><span class="band__line">Labs</span></h1>
+      <Mark size={34} cls="hero__mark" />
+      <h1 class="band__title hero__name" data-latent><span class="band__line">Corollary</span> <span class="band__line">Labs</span></h1>
       <p class="hero__statement ph">[Statement]</p>
       <div class="hero__meter" aria-hidden="true"><i data-meter></i></div>
     </div>

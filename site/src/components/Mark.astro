@@ -1,0 +1,13 @@
+---
+// Logo option A, the latent disc: a ruled square in which a disc is shifted half a pitch, so it exists only as colour.
+interface Props { size?: number; cls?: string }
+const { size = 24, cls = '' } = Astro.props;
+const xs = [3, 8, 13, 18, 23, 28];
+---
+<svg class:list={['mark', cls]} width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+  <defs><clipPath id="mark-disc"><circle cx="16" cy="16" r="9.5" /></clipPath></defs>
+  <g clip-path="url(#mark-disc)" class="mark__disc">
+    <rect x="4" y="4" width="24" height="24" />
+  </g>
+  <g class="mark__rule">{xs.map((x) => <rect x={x} y="3" width="1.6" height="26" />)}</g>
+</svg>
