@@ -42,11 +42,20 @@ function onLoad() {
     field.apply({ ...mode, pattern: 'diagonal', agents: 0 }, { instant: true });
     field.apply(mode);
   } else field.apply(mode);
+  if (root.classList.contains('wave-wait')) setTimeout(() => root.classList.remove('wave-wait'), (field.waveDur || 0.5) * 1000 + 40);
   if (page === 'home') cleanup = story(field, field.pattern(mode.pattern, mode.seed, mode.density));
   root.classList.add('field-on');
 }
 
 document.addEventListener('astro:page-load', onLoad);
+
+// when the colours change (violet ↔ paper), the new content waits until the colour front has passed
+let lastTheme = document.documentElement.dataset.theme;
+document.addEventListener('astro:after-swap', () => {
+  const t = document.documentElement.dataset.theme;
+  if (t !== lastTheme && field && !field.reduced) document.documentElement.classList.add('wave-wait');
+  lastTheme = t;
+});
 
 // header: hidden while scrolling down, back on the way up
 {

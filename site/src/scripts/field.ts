@@ -29,7 +29,9 @@ export interface Mode {
 const N = 64, M = 64, T = N * M, MAXR = 24;
 const STEP = 0.075;       // seconds per arc of the colour front
 const TURN = 0.42;        // seconds per quarter-turn (morph)
-const WAVE = 0.022;       // seconds per tile of distance for page waves
+const WAVE = 0.022;       // seconds per tile of distance (fallback)
+const SWEEP = 1.1;        // seconds for a page wave to cross from the centre to a corner
+const QUICK = 0.2;        // seconds per turn inside a page wave
 
 const VS = `#version 300 es
 in vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
@@ -74,7 +76,7 @@ void main(){
   ivec2 t = ivec2(mod(cid, G));
   vec4 A = texelFetch(uA, t, 0); vec4 B = texelFetch(uB, t, 0);
   // theme: changes tile by tile, as a wave from the page's centre
-  float wm = clamp((uTime - uWave.x - length(floor(g0) + 0.5 - uWave.yz) * uWave.w) / 0.07, 0.0, 1.0);
+  float wm = step(uWave.x + length(floor(g0) + 0.5 - uWave.yz) * uWave.w, uTime);
   vec3 ground = mix(uT0[0], uT1[0], wm), loop = mix(uT0[1], uT1[1], wm), lit = mix(uT0[2], uT1[2], wm), agentC = mix(uT0[3], uT1[3], wm);
   // content panels: whole tiles of ground
   for (int i = 0; i < ${MAXR}; i++) {
@@ -94,7 +96,10 @@ void main(){
   float d = isA ? dA : dB;
   float px1 = length(fwidth(g));
   float pr = length(g - uCam);
-  float hw = 0.5 * uW * (1.0 + uPulse * sin(pr * 0.42 - uTime * 1.3));
+  // stirring the plane thickens the lines it twists (colour stays either loop or acid)
+  vec2 sd = g0 - uStir.xy;
+  float wake = clamp(abs(uStir.z) / 1.6, 0.0, 1.0) * exp(-dot(sd, sd) / (uStir.w * uStir.w));
+  float hw = 0.5 * uW * (1.0 + uPulse * sin(pr * 0.42 - uTime * 1.3)) * (1.0 + 0.7 * wake);
   float fe = 0.7 * min(fwidth(d), 1.5 * px1) + 1e-5;
   float cov = 1.0 - smoothstep(hw - fe, hw + fe, d);
   float ent = A.z; float eA = mod(ent, 2.0); float eB = floor(ent / 2.0);
@@ -102,16 +107,13 @@ void main(){
   if (m < 0.001) {
     float u = isA ? arcU(f, c0) : arcU(f, (c0 + 2) % 4);
     lv = isA ? fill(B.x, B.y, eA, u) : fill(B.z, B.w, eB, u);
+    lv = step(0.5, lv);
     bd = lv > 0.99 ? (isA ? band(B.x, eA, u) : band(B.z, eB, u)) : 0.0;
   } else {
     lv = step(0.5, isA ? fill(B.x, B.y, eA, 0.5) : fill(B.z, B.w, eB, 0.5)); bd = 0.0;
   }
-  vec3 line = mix(loop, lit, lv);
-  line = mix(line, vec3(1.0), bd * 0.75);
-  // stirring the plane carries a little acid through the loops it twists
-  vec2 sd = g0 - uStir.xy;
-  float wake = clamp(abs(uStir.z) / 1.6, 0.0, 1.0) * exp(-dot(sd, sd) / (uStir.w * uStir.w));
-  line = mix(line, lit, wake * 0.7 * (1.0 - lv));
+  vec3 line = mix(loop, lit, step(0.5, lv));
+  line = mix(line, vec3(1.0), step(0.5, bd) * 0.8);
   vec3 col = mix(ground, line, cov);
   // agent: a disc at the centre of its tile, a halo of ground, and a slow ring while live
   float ag = A.y;
@@ -149,6 +151,7 @@ export class LoopField {
   agentPhase = new Float32Array(T);
   settled = new Int8Array(T).fill(-1);
   protect = new Uint8Array(T);            // tiles the ambient turns leave alone
+  covered = new Uint8Array(T); coverKey = '';
   // arc state (2 per tile)
   lit = new Uint8Array(T * 2); litT = new Float32Array(T * 2).fill(1e9); unlitT = new Float32Array(T * 2).fill(-1e9);
   entry = new Uint8Array(T * 2);
@@ -224,6 +227,9 @@ export class LoopField {
   }
   /** Smallest tile size that hides the torus repeat. */
   get minCell() { return Math.max(this.W, this.H) / (N - 6); }
+  /** seconds per tile so that a wave crosses the screen (centre → corner) in SWEEP seconds */
+  spread() { return SWEEP / Math.max(4, Math.hypot(this.W, this.H) / 2 / this.viewT.cell); }
+  waveDur = 0; themeChanged = false;
   get live() { return !this.reduced && (this.alwaysLive || this.now < this.liveUntil); }
 
   // ---------- geometry helpers ----------
@@ -306,9 +312,9 @@ export class LoopField {
   }
 
   /** An agent enters at `t`: the tiles around it turn, one after another, so its loop grows. */
-  enter(t: number) {
+  enter(t: number, R = 2) {
     this.setAgent(t, true);
-    const moves = this.plan(t, 2).sort((a, b) => Math.hypot(a[1], a[2]) - Math.hypot(b[1], b[2]));
+    const moves = this.plan(t, R).sort((a, b) => Math.hypot(a[1], a[2]) - Math.hypot(b[1], b[2]));
     moves.forEach(([q], i) => { if (!this.isTurning(q)) this.turn(q, 1, 0.25 + i * 0.09); });
   }
 
@@ -339,8 +345,8 @@ export class LoopField {
       dx = Math.min(dx, N - dx); dy = Math.min(dy, M - dy);
       this.kFrom[t] = cur; this.kTo[t] = cur + n;
       // neighbours never start together: a checkerboard offset inside the wave
-      this.t0[t] = this.now + Math.hypot(dx, dy) * WAVE + ((i + j) % 2) * 0.12;
-      this.dur[t] = this.reduced ? 0.0001 : TURN;
+      this.t0[t] = this.now + Math.hypot(dx, dy) * this.spread() + ((i + j) % 2) * 0.1;
+      this.dur[t] = this.reduced ? 0.0001 : QUICK;
       if (this.reduced) this.t0[t] = this.now - 1;
     }
     this.dirtyTopo = true;
@@ -348,6 +354,7 @@ export class LoopField {
 
   apply(mode: Mode, opts: { instant?: boolean } = {}) {
     const cell = Math.max(mode.cell, this.minCell);
+    this.viewT.cell = cell;
     if (mode.cam) Object.assign(this.viewT, { camX: mode.cam[0], camY: mode.cam[1] });
     Object.assign(this.viewT, { cell, w: mode.width ?? 0.16, rot: 0 });
     if (opts.instant) { Object.assign(this.view, this.viewT); }
@@ -362,7 +369,13 @@ export class LoopField {
     // colours change tile by tile, with the same wave as the turns
     const next = copyTheme(THEMES[mode.theme]);
     if (opts.instant || this.reduced) { this.theme0 = copyTheme(next); this.wave[0] = -100; }
-    else { this.theme0 = this.theme1; this.wave = [this.now, this.view.camX, this.camYe, WAVE * 0.55]; }
+    else {
+      this.theme0 = this.theme1;
+      const sp = this.spread() * 0.45;
+      this.wave = [this.now, this.view.camX, this.camYe, sp];
+      this.waveDur = SWEEP * 0.45 + 0.05;
+    }
+    this.themeChanged = next.ground.join() !== this.theme1.ground.join();
     this.theme1 = next;
     this.ambient = this.reduced ? 0 : mode.ambient ?? 0;
     this.interactive = mode.interactive ?? true;
@@ -415,7 +428,7 @@ export class LoopField {
       s === 0 ? N * M + j * N + i : s === 1 ? j * N + ((i + 1) % N) : s === 2 ? N * M + ((j + 1) % M) * N + i : j * N + i;
     for (let j = 0; j < M; j++) for (let i = 0; i < N; i++) {
       const t = j * N + i, k = this.settled[t];
-      if (k < 0) continue;
+      if (k < 0 || this.covered[t]) continue;
       for (const a of [0, 1] as const) {
         const [s0, s1] = arcSides(k, a);
         const n0 = side(i, j, s0), n1 = side(i, j, s1), arc = t * 2 + a;
@@ -426,7 +439,7 @@ export class LoopField {
     // phase 1: reachability from agents
     const reach = new Uint8Array(T * 2), queue = new Int32Array(T * 2);
     let qh = 0, qt = 0;
-    for (let t = 0; t < T; t++) if (this.agentA[t] > 0.5 && this.settled[t] >= 0) for (const a of [0, 1]) { const arc = t * 2 + a; reach[arc] = 1; queue[qt++] = arc; }
+    for (let t = 0; t < T; t++) if (this.agentA[t] > 0.5 && this.settled[t] >= 0 && !this.covered[t]) for (const a of [0, 1]) { const arc = t * 2 + a; reach[arc] = 1; queue[qt++] = arc; }
     while (qh < qt) {
       const arc = queue[qh++];
       for (let e = 0; e < 2; e++) {
@@ -467,7 +480,7 @@ export class LoopField {
     }
     // drain what lost its connection (turning tiles keep their state until they land)
     for (let arc = 0; arc < T * 2; arc++) {
-      if (this.lit[arc] && !reach[arc] && this.settled[arc >> 1] >= 0) { this.lit[arc] = 0; this.unlitT[arc] = this.now; until = Math.max(until, this.now + 0.5); }
+      if (this.lit[arc] && !reach[arc] && (this.settled[arc >> 1] >= 0 || this.covered[arc >> 1])) { this.lit[arc] = 0; this.unlitT[arc] = this.now; until = Math.max(until, this.now + 0.5); }
     }
     this.fillUntil = Math.max(this.fillUntil, until);
     this.dirtyB = true;
@@ -506,6 +519,20 @@ export class LoopField {
       this.rects.set([a, bb, c, d], n * 4); n++;
     }
     this.nRects = n;
+    // which tiles are fully under a panel (only the visible range matters)
+    const [vx0, vy0] = this.toGrid0(0, 0), [vx1, vy1] = this.toGrid0(this.W, this.H);
+    let key = '';
+    const parts: number[][] = [];
+    for (let r = 0; r < n; r++) {
+      const a = Math.max(this.rects[r * 4], Math.floor(vx0) - 1), b = Math.max(this.rects[r * 4 + 1], Math.floor(vy0) - 1);
+      const c = Math.min(this.rects[r * 4 + 2], Math.ceil(vx1) + 1), d = Math.min(this.rects[r * 4 + 3], Math.ceil(vy1) + 1);
+      if (c > a && d > b) { parts.push([a, b, c, d]); key += `${a},${b},${c},${d};`; }
+    }
+    if (key !== this.coverKey) {
+      this.coverKey = key; this.covered.fill(0);
+      for (const [a, b, c, d] of parts) for (let j = b; j < d; j++) for (let i = a; i < c; i++) this.covered[LoopField.idx(i, j)] = 1;
+      this.dirtyTopo = true;
+    }
   }
 
   frame(): boolean {
@@ -560,6 +587,7 @@ export class LoopField {
         this.agentA[t] = na; busy = true;
       }
     }
+    this.measureRects();
     // tile angles + settled topology
     const A = this.dataA;
     for (let t = 0; t < T; t++) {
@@ -577,7 +605,6 @@ export class LoopField {
     }
     if (this.now < this.fillUntil) busy = true;
     this.pulse = lerp(this.pulse, live ? this.pulseT : 0, 1 - Math.exp(-dt * 2));
-    this.measureRects();
     this.draw();
     return busy;
   }

@@ -21,7 +21,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
 
   <div class="wrap">
     <section class="home-about cut" aria-labelledby="h-about">
-      <h2 id="h-about" class="label">About</h2>
+      <h2 id="h-about" class="label"><a href={href('about/')}>About</a></h2>
       <p class="lead ph">[About — one paragraph]</p>
     </section>
 
@@ -41,7 +41,6 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
     </section>
 
     <nav class="bigl" aria-label="Pages">
-      <a class="bigl__a cut" href={href('about/')}>About</a>
       <a class="bigl__a cut" href={href('team/')}>Team</a>
       <a class="bigl__a cut" href={href('contact/')}>Contact</a>
     </nav>

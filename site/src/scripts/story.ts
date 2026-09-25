@@ -23,12 +23,12 @@ export function story(f: LoopField, k: Int8Array) {
   const small = innerWidth < 700;
   const c0 = small ? 30 : 44;
 
-  // the hero agent: a tile in the upper right whose loop is a good size
+  // the hero agent: a tile just above the name, whose loop is a good size
   const { comp, size } = components(N, M, Array.from(k));
   let hero = -1, best = 0;
   for (let j = 0; j < M; j++) for (let i = 0; i < N; i++) {
     const x = innerWidth / 2 + (i + 0.5 - cx) * c0, y = innerHeight / 2 + (j + 0.5 - cy) * c0;
-    if (x < innerWidth * (small ? 0.25 : 0.55) || x > innerWidth * 0.9 || y < innerHeight * 0.16 || y > innerHeight * (small ? 0.45 : 0.42)) continue;
+    if (x < innerWidth * (small ? 0.15 : 0.08) || x > innerWidth * (small ? 0.85 : 0.5) || y < innerHeight * (small ? 0.5 : 0.3) || y > innerHeight * (small ? 0.66 : 0.44)) continue;
     const t = j * N + i, s = (size.get(comp[t * 2]) || 0) + (size.get(comp[t * 2 + 1]) || 0);
     if (s <= 70 && s > best) { best = s; hero = t; }
   }
@@ -50,12 +50,14 @@ export function story(f: LoopField, k: Int8Array) {
     if (cheb <= 4) { f.protect[t] = 1; continue; }
     if (planned.has(t) || t === hero) continue;
     const pc = 0.43 + 0.36 * (d / dmax) + (r() - 0.5) * 0.03;
-    if (r() < 0.34) wave.push([t, pc + ((i + j) % 2) * 0.012]);
-    if (cheb > 6 && r() < 0.003) agents.push([t, pc + 0.015]);
+    if (r() < 0.28) wave.push([t, pc + ((i + j) % 2) * 0.012]);
+    if (cheb > 6 && r() < 0.002) agents.push([t, pc + 0.015]);
   }
   if (hero >= 0) {
     f.protect[hero] = 1;
-    setTimeout(() => f.enter(hero), f.reduced ? 0 : 900);
+    // it enters, then its loop keeps growing outward in two more steps (about 3.5 s in all)
+    if (f.reduced) f.enter(hero, 4);
+    else { setTimeout(() => f.enter(hero, 2), 600); setTimeout(() => f.enter(hero, 3), 1900); setTimeout(() => f.enter(hero, 4), 3100); }
   }
   const span = () => Math.max(1, el.offsetHeight - innerHeight);
   f.scrollPx = () => Math.max(0, scrollY - span());
@@ -85,7 +87,7 @@ export function story(f: LoopField, k: Int8Array) {
     for (const [t, pc] of agents) { const on = ps > pc; if ((f.agentT[t] > 0.5) !== on) f.setAgent(t, on); }
     // p-driven quarter-turns (each takes a fixed time once its threshold is passed)
     const nowMs = performance.now(), dt = Math.min(0.1, (nowMs - last) / 1000); last = nowMs;
-    const stepT = f.reduced ? 1 : dt / 0.42;
+    const stepT = f.reduced ? 1 : dt / 0.3;
     for (const list of [ring, wave]) for (const [t, pc] of list) {
       const target = ps > pc ? 1 : 0, cur = prog[t];
       if (cur !== target) { prog[t] = target > cur ? Math.min(1, cur + stepT) : Math.max(0, cur - stepT); f.keepAwake = true; }
