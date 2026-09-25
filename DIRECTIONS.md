@@ -120,3 +120,22 @@ Founder rules applied to every version:
 Build and deploy: `node tools/combine.mjs --deploy`. Use `--only=a,b` for a subset, or `--switcher-only` to rewrite only the switcher.
 
 Next: the founder picks what to merge, then the copy gets written.
+
+## Status (round 3: lineage directions)
+
+Seven new directions were borrowed from design lineages: principles, not pastiche. Each was built as a sketch, reviewed by a blind critic, then promoted to a full build (Cybersyn, Score, Weave, Overprint, Tektonik) or given a polish round (Metabolism, Swiss). All are live under "Sketches" in the switcher and on https://corollarylabs.vercel.app/versions/.
+
+| Path | Name | Lineage | Last critic |
+|---|---|---|---|
+| `/weave/` | Weave | Anni Albers, Jacquard | 7.5, with hero fixes applied after (critic expected ~8.5) |
+| `/metab/` | Metabolism | Kurokawa, Tange, Isozaki | 7.5, the three blocking fixes applied after |
+| `/score/` | Score | Cardew, Xenakis, Brown, Feldman, Stockhausen | 7.5, differentiation fixes applied after |
+| `/swiss/` | Swiss | Müller-Brockmann, Crouwel, Gerstner | 7.5, fixes applied after; carmine accent |
+| `/martens/` | Overprint | Karel Martens, Otl Aicher | 7, staging fixes applied after |
+| `/supre/` | Suprematist (Tektonik) | Malevich, Lissitzky, early Hadid | 8, inner-page fixes applied after |
+| `/cyber/` | Cybersyn | Cybersyn/Beer, Rams, Olivetti | 7.5, first-frame and climax fixes applied after |
+
+Deploy tooling:
+- `node tools/combine.mjs --snapshot` builds from each branch's last commit only.
+- `--update=<key>` rebuilds one version in place.
+- `tools/thumbs.mjs` refreshes the overview thumbnails.
