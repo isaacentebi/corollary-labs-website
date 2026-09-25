@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import MiniScore from '../components/MiniScore.astro';
+import { site } from '../config/site';
+---
+<Base page="contact" title="Contact" description="[Meta description]">
+  <header class="page-head">
+    <div class="part__side"><span class="mark">G</span></div>
+    <h1>Contact</h1>
+  </header>
+  <section class="part">
+    <div class="part__side"><h2 class="label">Contact</h2></div>
+    <div class="part__body">
+      <div class="contact-lines">
+        <a href="mailto:">{site.email}</a>
+        <span>[Address]</span>
+      </div>
+      <p class="prose placeholder" style="margin-top: 32px">[Contact — one line]</p>
+      <div style="margin-top: clamp(40px, 6vw, 80px); max-width: 720px"><MiniScore seed="contact" w={720} h={110} voices={3} /></div>
+    </div>
+  </section>
+</Base>

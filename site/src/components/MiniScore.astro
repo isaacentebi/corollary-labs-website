@@ -1,0 +1,47 @@
+---
+// A small score rendered at build time as SVG: one system, its own voices,
+// the new voice entering and its figure taken up. Seeded, so each essay has its own.
+import { otherSystem, geometry, hash, type Prim } from '../scripts/model';
+
+interface Props { seed: string; w?: number; h?: number; r?: number; voices?: number; class?: string; stroke?: number }
+const { seed, w = 320, h = 120, r = 1, voices, class: cls, stroke = 0.55 } = Astro.props;
+const sys = otherSystem(hash(seed) % 100000, voices);
+const prims = geometry(sys, { r, agentTo: r > 0 ? sys.t0 + (1 - sys.t0) * Math.min(1, r * 1.2) : 0 }, { detail: 0.6 });
+const pad = 4;
+const X = (t: number) => +(pad + t * (w - pad * 2)).toFixed(1);
+const Y = (y: number) => +(pad + y * (h - pad * 2)).toFixed(1);
+const s = stroke;
+const d = (pts: [number, number][]) => pts.map(([t, y], i) => `${i ? 'L' : 'M'}${X(t)} ${Y(y)}`).join('');
+const hl = prims.filter((p): p is Extract<Prim, { k: 'hl' }> => p.k === 'hl');
+const ink = prims.filter((p) => p.k !== 'hl');
+const ribbon = (pts: [number, number, number][]) => {
+  const top = pts.map(([t, y, ww], i) => `${i ? 'L' : 'M'}${X(t)} ${+(Y(y) - (ww * s) / 2).toFixed(1)}`).join('');
+  const bot = [...pts].reverse().map(([t, y, ww]) => `L${X(t)} ${+(Y(y) + (ww * s) / 2).toFixed(1)}`).join('');
+  return top + bot + 'Z';
+};
+---
+<svg class:list={['mini', cls]} viewBox={`0 0 ${w} ${h}`} aria-hidden="true" focusable="false">
+  <g class="mini__hl">
+    {hl.map((p) => <path d={d(p.pts)} stroke-width={Math.max(3, p.w * s)} />)}
+  </g>
+  <g class="mini__ink">
+    {ink.map((p) => {
+      if (p.k === 'ribbon') return <path d={ribbon(p.pts)} class="f" />;
+      if (p.k === 'path') return <path d={d(p.pts)} stroke-width={Math.max(0.6, p.w * s)} class={p.role ? 'agent' : ''} />;
+      if (p.k === 'rect') return <rect x={X(p.t)} y={Y(p.y)} width={Math.max(0.5, +(p.w * (w - pad * 2)).toFixed(1))} height={+(p.h * (h - pad * 2)).toFixed(1)} class={p.fill ? 'band' : 'box'} />;
+      if (p.k === 'dot') return <circle cx={X(p.t)} cy={Y(p.y)} r={Math.max(0.8, p.r * s)} class="f" />;
+      if (p.k === 'niente') return <circle cx={X(p.t)} cy={Y(p.y)} r={Math.max(1.6, 3.2 * s)} class="o" />;
+      return null;
+    })}
+  </g>
+</svg>
+<style>
+  .mini { display: block; width: 100%; height: auto; overflow: visible; }
+  .mini__hl path { fill: none; stroke: var(--hl); mix-blend-mode: multiply; }
+  .mini__ink path { fill: none; stroke: var(--ink); vector-effect: non-scaling-stroke; }
+  .mini__ink path.agent { stroke-linecap: round; }
+  .mini__ink .f { fill: var(--ink); stroke: none; }
+  .mini__ink .o { fill: none; stroke: var(--ink); stroke-width: 1; }
+  .mini__ink .box { fill: none; stroke: var(--ink); stroke-width: 0.8; vector-effect: non-scaling-stroke; }
+  .mini__ink .band { fill: color-mix(in srgb, var(--ink) 12%, transparent); stroke: var(--ink); stroke-width: 0.5; vector-effect: non-scaling-stroke; }
+</style>

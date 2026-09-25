@@ -1,0 +1,24 @@
+---
+// The mark: a voice entering from nothing — the niente circle and an opening hairpin.
+import { u } from '../config/site';
+interface Props { size?: 'sm' | 'lg'; link?: boolean }
+const { size = 'sm', link = true } = Astro.props;
+const Tag = link ? 'a' : 'span';
+---
+<Tag class:list={['logo', `logo--${size}`]} href={link ? u('/') : undefined} aria-label={link ? 'Corollary Labs, home' : undefined}>
+  <svg class="logo__mark" viewBox="0 0 30 16" aria-hidden="true">
+    <path class="logo__hl" d="M9.5 8 29 1.6V14.4Z" />
+    <circle cx="4" cy="8" r="2.9" />
+    <path d="M9.5 8 29 1.6M9.5 8 29 14.4" />
+  </svg>
+  <span class="logo__word">Corollary Labs</span>
+</Tag>
+<style>
+  .logo { display: inline-flex; align-items: center; gap: 0.6em; color: var(--ink); text-decoration: none; font-weight: 560; letter-spacing: -0.01em; font-size: 15px; line-height: 1; }
+  .logo--lg { font-size: clamp(22px, 2.4vw, 30px); gap: 0.5em; }
+  .logo__mark { width: 1.9em; height: 1em; overflow: visible; }
+  .logo__mark circle, .logo__mark path:not(.logo__hl) { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+  .logo__hl { fill: var(--hl); mix-blend-mode: multiply; transform-origin: 9.5px 8px; transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+  a.logo:hover .logo__hl { transform: scaleX(1.12); }
+  @media (prefers-reduced-motion: reduce) { .logo__hl { transition: none; } }
+</style>

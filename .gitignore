@@ -16,3 +16,4 @@ clone-workspace/superdark/
 research/
 deploy/
 .claude/worktrees/
+site/node_modules

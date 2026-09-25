@@ -1,8 +1,75 @@
 ---
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import '../styles/landing.css';
+import Header from '../components/Header.astro';
+import MiniScore from '../components/MiniScore.astro';
+import { getCollection, render } from 'astro:content';
+import { u, fmtDate } from '../config/site';
+
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
 ---
-<Base page="home">
-  <Story />
+<Base page="home" header={false}>
+  <section class="story" data-story aria-label="Score">
+    <div class="stage" data-stage data-state="0">
+      <canvas class="stage__score" aria-hidden="true"></canvas>
+      <Header overlay />
+      <h1 class="stage__statement"><span class="u-sr">Corollary Labs. </span>[Statement]</h1>
+      <p class="u-sr">[Description of the score]</p>
+      <div class="stage__tools">
+        <span class="tool tool--hint" data-hint>
+          <svg viewBox="0 0 22 12" aria-hidden="true"><path d="M1 9C5 9 6 3 10 3S15 8 21 5" /></svg>Draw
+        </span>
+        <button class="tool" type="button" data-clear hidden>Clear</button>
+        <button class="tool" type="button" data-sound aria-pressed="false">
+          <svg viewBox="0 0 16 12" aria-hidden="true"><path class="s0" d="M1 4h3l4-3v10L4 8H1z" /><path class="s1" d="M11 3.5c1.2 1.4 1.2 3.6 0 5M13.2 1.5c2.4 2.6 2.4 6.4 0 9" /></svg>
+          <span data-sound-label>Sound off</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="part" id="about" aria-labelledby="about-h">
+    <div class="part__side"><span class="mark">E</span><h2 class="label" id="about-h">About</h2></div>
+    <div class="part__body">
+      <p class="lead">[About — one paragraph]</p>
+      <a class="more" href={u('/about/')}>About <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <section class="part" aria-labelledby="essays-h">
+    <div class="part__side"><span class="mark">F</span><h2 class="label" id="essays-h">Essays</h2></div>
+    <div class="part__body">
+      <ol class="elist">
+        {rows.map(({ e, fm }) => (
+          <li>
+            <a class="erow" href={u(`/essays/${e.id}/`)}>
+              <span class="erow__score"><MiniScore seed={e.id} w={420} h={96} voices={4} /></span>
+              <span class="erow__text">
+                <span class="erow__title">{e.data.title}</span>
+                <span class="erow__meta"><time datetime={e.data.date.toISOString()}>{fmtDate(e.data.date)}</time><span>c. {fm.minutesRead}′</span></span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+      <a class="more" href={u('/essays/')}>All essays <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <section class="part part--links" aria-label="Pages">
+    <div class="part__side"><span class="mark">G</span></div>
+    <div class="part__body">
+      <nav class="biglinks" aria-label="Pages">
+        <a href={u('/about/')}>About</a>
+        <a href={u('/team/')}>Team</a>
+        <a href={u('/contact/')}>Contact</a>
+      </nav>
+    </div>
+  </section>
 </Base>
+
+<script>
+  import { mountScore } from '../scripts/score';
+  const root = document.querySelector<HTMLElement>('[data-story]');
+  if (root) mountScore(root);
+</script>
