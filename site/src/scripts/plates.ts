@@ -15,7 +15,8 @@ const P: Record<string, RGB[]> = {
   emerald: ['#0d3b2c', '#1fc9a0', '#e9f3ee', '#c7a3d6', '#eeebe6'].map(hex),
   sunset: ['#280506', '#a75332', '#ffc46b', '#ffe6c7', '#eeebe6'].map(hex),
   cross: ['#e1711c', '#d8d6cf', '#6fbae5', '#eeebe6', '#ffffff'].map(hex),
-  silver: ['#e9ecf0', '#c9d2e4', '#1c3fd6', '#ffffff', '#eeebe6'].map(hex),
+  amber: ['#ffb347', '#ff8a6a', '#5a5cb4', '#f5e9df', '#eeebe6'].map(hex),
+  silver:['#e9ecf0', '#c9d2e4', '#1c3fd6', '#ffffff', '#eeebe6'].map(hex),
 };
 
 function shade(kind: string, pal: RGB[], u: number, v: number, ar: number): RGB {

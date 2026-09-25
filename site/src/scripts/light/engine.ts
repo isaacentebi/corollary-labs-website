@@ -87,12 +87,35 @@ export class LightField {
     this.raf = requestAnimationFrame(this.tick);
   }
 
+  // a scripted fade from one state to the target (the light coming on), then normal easing resumes
+  tweenFrom: Float32Array | null = null;
+  tweenT0 = 0;
+  tweenDur = 1;
+  tween(from: Float32Array, seconds: number) {
+    this.tweenFrom = new Float32Array(from);
+    this.cur.set(from);
+    this.tweenT0 = performance.now();
+    this.tweenDur = seconds * 1000;
+    this.draw();
+    this.request();
+  }
+
   tick = (now: number) => {
     this.raf = 0;
     const dt = Math.min(0.1, (now - this.last) / 1000);
     this.last = now;
     const k = this.tau <= 0 ? 1 : 1 - Math.exp(-dt / this.tau);
     let moving = false;
+    if (this.tweenFrom) {
+      const t = Math.min(1, (now - this.tweenT0) / this.tweenDur);
+      const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      for (let i = 0; i < LENGTH; i++) this.cur[i] = this.tweenFrom[i] + (this.tgt[i] - this.tweenFrom[i]) * e;
+      if (t >= 1) this.tweenFrom = null;
+      this.draw();
+      this.onFrame?.();
+      this.raf = requestAnimationFrame(this.tick);
+      return;
+    }
     for (let i = 0; i < LENGTH; i++) {
       const d = this.tgt[i] - this.cur[i];
       if (Math.abs(d) > 1e-4) { this.cur[i] += d * k; moving = true; } else this.cur[i] = this.tgt[i];

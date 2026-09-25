@@ -109,6 +109,14 @@ html.js [data-reveal][data-d='4'] { transition-delay: 0.48s; }
   transition: color 0.5s var(--ease);
 }
 html[data-nav-tone='dusk'] .nav { color: var(--lit); }
+/* a scrim, not a bar: whatever passes under the navigation goes out of focus (Irwin's scrim veils) */
+.nav::before {
+  content: ''; position: absolute; inset: 0 0 -28px; z-index: -1; pointer-events: none;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent);
+  opacity: 0; transition: opacity 0.5s var(--ease);
+}
+.nav.is-scrolled::before { opacity: 1; }
 .nav__brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 520; font-size: 1.02rem; letter-spacing: -0.005em; }
 .nav__brand .mark { transition: transform 0.8s var(--ease), filter 0.8s var(--ease); }
 .nav__brand:hover .mark { transform: scale(1.12); filter: saturate(1.3) brightness(1.08); }

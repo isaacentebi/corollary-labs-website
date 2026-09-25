@@ -41,8 +41,8 @@ const roomR = (e: Env): Vec => (e.m ? [0.12, 0.14] : [0.17, 0.21]);
 
 // The volume as the hero shows it: after Niesche's squircle gradients (core, pale crossing ring, lilac edge)
 const heroVolume = (e: Env): State => ({
-  volC: e.m ? [0, 0.17] : [e.a * 0.5 * 0.46, 0.03],
-  volR: e.m ? [0.14, 0.15] : [0.2, 0.25],
+  volC: e.m ? [0, 0.235] : [e.a * 0.5 * 0.46, 0.03],
+  volR: e.m ? [0.11, 0.12] : [0.2, 0.25],
   volN: 3.4, volSoft: 0.006, volBody: 0, paint: 1, volTint: C.lilac,
   lit: 0, emitRim: 0.25, rimCol: C.paleRing, ringPos: 0.66, ringW: 0.15,
   emitCore: 0.55, coreCol: C.core, halo: 0.7, haloCol: C.ring, sheen: 0.25,
@@ -67,7 +67,8 @@ export const states: Record<string, StateFn> = {
       ...dayRoom(e),
       wallTop: lerpV(C.wallHi, [0.9, 0.87, 0.88], k), wallMid: lerpV(C.wall, [0.95, 0.85, 0.78], k),
       horizonGlow: C.amber, horizonGlowAmt: 0.22 * k, horizonGlowW: 0.05,
-      volC: e.m ? [0, 0.25] : [-e.a * 0.5 * 0.5 + e.ox, 0.0],
+      // on phones the column rises out of the way as the list arrives
+      volC: e.m ? [0, lerp(0.25, 0.78, sm(0.12, 0.42, p))] : [-e.a * 0.5 * 0.5 + e.ox, 0.0],
       volR: e.m ? [0.055, 0.12] : [0.085, 0.3],
       volN: 2.6, volSoft: 0.006, volBody: 0, paint: 1, volTint: lerpV(C.lilac, C.ring, k),
       emitRim: 0.25, rimCol: C.paleRing, ringPos: 0.62, ringW: 0.16,
@@ -192,8 +193,9 @@ export const states: Record<string, StateFn> = {
     const k = sm(0.0, 1.0, p);
     return {
       ...night,
-      wallTop: lerpV(night.wallTop!, [0.96, 0.8, 0.6], k), wallMid: lerpV(night.wallMid!, C.dawnAmber, k), wallBot: lerpV(night.wallBot!, C.dawnTop, k),
-      horizon: lerp(night.horizon!, -0.02, k), horizonGlow: lerpV(C.duskBand, C.dawnCoral, k), horizonGlowAmt: lerp(0.5, 0.35, k), horizonGlowW: 0.03, horizonLine: 0.9,
+      // blue above, a pale neutral lighter than both at the crossing (Pastine), amber at the horizon
+      wallTop: lerpV(night.wallTop!, [0.3, 0.34, 0.66], k), wallMid: lerpV(night.wallMid!, [0.94, 0.9, 0.86], k), wallBot: lerpV(night.wallBot!, C.dawnTop, k),
+      horizon: lerp(night.horizon!, -0.02, k), horizonGlow: lerpV(C.duskBand, C.dawnAmber, k), horizonGlowAmt: lerp(0.5, 0.55, k), horizonGlowW: lerp(0.05, 0.07, k), horizonLine: 0.9,
       volC: e.nodeSeed.slice(0, 2), volR: [0.001, 0.001],
       coreCol: lerpV(C.core, C.magenta, 0.2), rimCol: lerpV(C.paleRing, C.cyan, 0.3), haloCol: C.ring,
       field: 1 - k, fieldProg: 1, fieldHaze: 1,
@@ -225,12 +227,14 @@ export const states: Record<string, StateFn> = {
 
   // Contact: the whole room is the light (Turrell, "Breathing Light": a frameless field whose hue
   // shifts while its lightness barely moves, with a hotter inner rectangle low in the room)
+  // The hue turns (peach → apricot → rose) while the lightness hardly moves; a ghost rectangle a few
+  // percent warmer floats low in the field, and one soft band crosses it about 70% of the way down.
   contact: (p, e) => ({
-    wallTop: [1.0, 0.8, 0.72], wallMid: C.apricot, wallBot: [0.99, 0.6, 0.56],
-    horizon: -0.47, horizonSoft: 0.1, horizonGlow: C.rose, horizonGlowAmt: 0.0, horizonGlowW: 0.1, horizonLine: 0,
-    roomLight: 0.2, vignette: 0.2, grain: 0.028, refl: 0,
-    volC: [e.ox, e.m ? -0.14 : -0.12], volR: e.m ? [0.2, 0.17] : [0.5, 0.2], volN: 3.2, volSoft: 0.35,
-    volBody: 0, paint: 0.85, volTint: C.apricot, coreCol: [1.0, 0.42, 0.45], rimCol: C.apricot, ringPos: 0.7, ringW: 0.01,
-    emitCore: 0.3, emitRim: 0, halo: 0, haloCol: C.rose, sheen: 0, frame: 0,
+    wallTop: [1.0, 0.83, 0.74], wallMid: [1.0, 0.7, 0.6], wallBot: [0.99, 0.6, 0.62],
+    horizon: -0.22, horizonSoft: 0.12, horizonGlow: [1.0, 0.86, 0.8], horizonGlowAmt: 0.12, horizonGlowW: 0.05, horizonLine: 0,
+    roomLight: 0.12, vignette: 0.16, grain: 0.028, refl: 0,
+    volC: [e.ox, e.m ? -0.02 : -0.03], volR: e.m ? [0.17, 0.26] : [0.52, 0.28], volN: 5, volSoft: 0.05,
+    volBody: 0, paint: 0.32, volTint: [1.0, 0.66, 0.6], coreCol: [1.0, 0.56, 0.56], rimCol: [1.0, 0.66, 0.6], ringPos: 0.7, ringW: 0.01,
+    emitCore: 0.0, emitRim: 0, halo: 0, haloCol: C.rose, sheen: 0, frame: 0,
   }),
 };

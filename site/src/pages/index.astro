@@ -87,10 +87,11 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
   .hero__sub { font-size: var(--fs-lede); max-width: 36em; line-height: 1.5; text-wrap: pretty; }
   .hero__actions { display: flex; align-items: center; gap: 28px; margin-top: 8px; font-weight: 480; }
   @media (max-width: 759px) {
-    .hero { align-items: flex-end; padding-bottom: 44px; padding-top: 50svh; min-height: 100svh; }
-    .hero__text { max-width: none; gap: 16px; }
-    .hero__headline { font-size: clamp(1.75rem, 7.4vw, 2.3rem); }
-    .hero__sub { font-size: 1rem; }
+    .hero { align-items: flex-end; padding-bottom: 32px; padding-top: 42svh; min-height: 100svh; }
+    .hero__text { max-width: none; gap: 14px; }
+    .hero__headline { font-size: clamp(1.6rem, 7vw, 2.2rem); line-height: 1.06; }
+    .hero__sub { font-size: 0.95rem; line-height: 1.45; }
+    .hero__actions { margin-top: 4px; }
   }
 
   /* what we do: a list beside the column of light */

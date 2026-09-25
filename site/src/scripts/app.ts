@@ -4,22 +4,28 @@ import { paintPlates } from './plates';
 const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-mountScene();
+const field = mountScene();
 paintPlates();
 
-// ---- nav tone follows the section behind it
+// ---- nav tone follows the light behind it (the wall's top colour), or the section when there is no light
 const nav = document.querySelector<HTMLElement>('[data-nav]');
 const toned = [...document.querySelectorAll<HTMLElement>('[data-tone-section]')];
 function navTone() {
-  const y = 28;
   let tone = root.dataset.tone || 'day';
-  for (const s of toned) {
-    const r = s.getBoundingClientRect();
-    if (r.top <= y && r.bottom > y) { tone = s.dataset.toneSection!; break; }
+  if (field) {
+    const c = field.cur; // wallTop is the first parameter
+    const lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    tone = lum < 0.55 ? 'dusk' : 'day';
+  } else {
+    for (const s of toned) {
+      const r = s.getBoundingClientRect();
+      if (r.top <= 28 && r.bottom > 28) { tone = s.dataset.toneSection!; break; }
+    }
   }
-  root.dataset.navTone = tone;
+  if (root.dataset.navTone !== tone) root.dataset.navTone = tone;
   nav?.classList.toggle('is-scrolled', window.scrollY > 8);
 }
+if (field) field.onFrame = navTone;
 navTone();
 window.addEventListener('scroll', navTone, { passive: true });
 window.addEventListener('resize', navTone);

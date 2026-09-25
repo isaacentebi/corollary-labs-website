@@ -117,7 +117,7 @@ void main(){
   vec2 hw = q;
   hw.x += warp * volR.x * 0.35 * sin(q.y / max(volR.y, 1e-3) * warpFreq + warpPhase);
   hw.y += warp * volR.y * 0.3 * sin(q.x / max(volR.x, 1e-3) * warpFreq * 0.8 - warpPhase * 1.3);
-  float xn = hw.x / max(volR.x, 1e-3);
+  float xn = clamp(hw.x / max(volR.x, 1e-3), -1.25, 1.25);
   hw.y -= bend * volR.x * 0.42 * (xn * xn * xn - xn * 0.6);
   float d0 = superD(hw, volR, volN);   // the shape before any cut: its glow never breaks
   // cut: points on one side of a line slide along it (only the body is cut)
@@ -144,7 +144,11 @@ void main(){
   // painted light (Niesche): core colour easing to the edge colour, with a pale ring where they cross
   // (Pastine: the crossing of two colours carries a neutral lighter than both)
   float ringG = exp(-pow((rad - ringPos) / max(ringW, 0.01), 2.0));
-  vec3 painted = mix(lin(coreCol), lin(volTint), smoothstep(0.12, 0.98, rad));
+  // the core sits a little behind the surface, so it shifts against the rim as the viewer moves
+  // (Pashgian's suspended inner forms)
+  vec2 par = clamp((uPointer - volC) * 0.12, vec2(-0.05), vec2(0.05)) * sheen;
+  float radC = clamp(length((q - par * volR / 0.2) / max(volR, vec2(1e-4))), 0.0, 1.5);
+  vec3 painted = mix(lin(coreCol), lin(volTint), smoothstep(0.12, 0.98, mix(rad, radC, 0.85)));
   painted = mix(painted, lin(rimCol), ringG * 0.85);
   painted *= 1.0 + emitCore * 0.45 * (1.0 - smoothstep(0.0, 0.7, rad));
   col = mix(col, painted, inside * paint);
@@ -213,14 +217,14 @@ void main(){
       vec4 n = uNodes[i];
       vec2 dq = p - n.xy;
       float on = smoothstep(n.w, n.w + 0.07, fieldProg);
-      float dn2 = superD(dq, vec2(n.z * 1.1, n.z), 3.4);
-      float b = 1.0 - smoothstep(-0.08, 0.08, dn2);
-      float g = exp(-max(dn2, 0.0) * 1.6);
+      float dn2 = superD(dq, vec2(n.z * 1.1, n.z), 2.6);
+      float b = 1.0 - smoothstep(-0.12, 0.1, dn2);
+      float g = exp(-max(dn2, 0.0) * 1.1);
       float r2 = length(dq / vec2(n.z * 1.1, n.z));
       // each firm takes the light differently: its own strength and a slight shift of hue
       float hv = hash(vec2(float(i) * 7.13, 3.7));
       vec3 core_ = mix(lin(coreCol), lin(haloCol), hv * 0.6);
-      vec3 lit_ = mix(core_, lin(rimCol), smoothstep(0.1, 1.0, r2)) * (0.55 + 0.6 * hash(vec2(float(i) * 1.9, 8.1)));
+      vec3 lit_ = mix(core_, lin(rimCol), smoothstep(0.45, 1.1, r2) * 0.7) * (0.5 + 0.6 * hash(vec2(float(i) * 1.9, 8.1)));
       // unlit: dark glass with a faint rim; lit: the painted light and its spill
       acc += vec3(0.01, 0.013, 0.03) * b * (1.0 - on) + lin(rimCol) * 0.018 * exp(-pow(dn2 / 0.06, 2.0)) * (1.0 - on);
       acc += lit_ * on * (b * 1.1 + g * 0.18);
@@ -229,7 +233,7 @@ void main(){
       float rf = exp(-rq.x * rq.x * 2.2) * exp(-rq.y * rq.y * 1.5) * step(p.y, n.y - n.z);
       acc += lit_ * on * 0.12 * rf;
     }
-    col += acc * field;
+    col += acc * field * smoothstep(0.01, 0.08, field);
     col += lin(haloCol) * field * fieldHaze * fieldProg * exp(-abs(y - horizon) / 0.1) * 0.2;
   }
 

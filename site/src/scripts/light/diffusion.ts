@@ -10,7 +10,9 @@ function rng(seed: number) {
 
 export interface FieldLayout { nodes: Float32Array; seed: [number, number, number] }
 
-export function layoutField(aspect: number, horizon: number): FieldLayout {
+export function layoutField(aspect: number, horizon: number, ox = 0): FieldLayout {
+  // when text occupies the left half, the plain occupies the right half
+  const narrow = ox > 0 ? 0.52 : 1;
   const r = rng(7);
   const N = NODE_COUNT;
   const world: { x: number; z: number }[] = [];
@@ -26,7 +28,7 @@ export function layoutField(aspect: number, horizon: number): FieldLayout {
   // project onto the screen
   const focal = aspect > 1 ? 0.3 : 0.24;
   const proj = world.map((w) => ({
-    x: (w.x / w.z) * focal * 1.6,
+    x: (w.x / w.z) * focal * 1.6 * narrow + ox,
     y: horizon - (focal * 0.9) / w.z,
     s: (aspect > 1 ? 0.028 : 0.022) / Math.pow(w.z, 0.9),
   }));

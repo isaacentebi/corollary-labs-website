@@ -36,9 +36,9 @@ export function mountScene() {
     env.m = w < 760;
     const shift = canvas!.dataset.shift;
     env.ox = env.m ? 0 : shift === 'right' ? env.a * 0.5 * 0.42 : 0;
-    const fl = layoutField(env.a, env.m ? 0.02 : 0.04);
+    const fl = layoutField(env.a, env.m ? 0.04 : 0.06, env.ox);
     field.setNodes(fl.nodes);
-    env.nodeSeed = [fl.seed[0] + env.ox * 0.5, fl.seed[1], fl.seed[2]];
+    env.nodeSeed = [fl.seed[0], fl.seed[1], fl.seed[2]];
   }
 
   const stateAt = (i: number, p: number, out: Float32Array) => {
@@ -101,19 +101,11 @@ export function mountScene() {
   const intro = canvas.dataset.intro === 'on' && !document.documentElement.classList.contains('returning');
   if (reduced) {
     field.snap();
-  } else if (intro) {
-    pack(states.dark(0, env), field.cur);
-    field.pointer = [...field.pointerTgt];
-    field.tau = 0.9;
-    field.draw();
-    window.setTimeout(() => { field.tau = 0.28; }, 2600);
-    field.request();
+  } else if (intro && window.scrollY < 10) {
+    // the room first, then its light comes on
+    field.tween(pack(states.dark(0, env)), 2.8);
   } else if (prev) {
-    field.cur.set(prev);
-    field.tau = 0.5;
-    field.draw();
-    window.setTimeout(() => { field.tau = 0.28; }, 1400);
-    field.request();
+    field.tween(prev, 1.1);
   } else {
     field.snap();
   }
