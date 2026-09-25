@@ -48,6 +48,8 @@ type BoxStyle = {
   window?: boolean; // round window on +u end face
   rails?: boolean; // service lines along u on the top face
   ghost?: boolean;
+  ghostA?: number; // faint ghost (chalk dashes at this alpha) instead of the lamp preview
+  glow?: number; // lamp outline with bloom, 0..1
   open?: [boolean, boolean]; // ends (−u, +u) that continue into the next segment: no edge drawn there
 };
 
@@ -86,10 +88,13 @@ export function drawBox(ctx: CanvasRenderingContext2D, cam: Cam, x: number, y: n
     if (!st.ghost) {
       ctx.fillStyle = st.lamp ? C.lamp[f.tone] : C.face[f.tone];
       ctx.fill();
+    } else if (!st.ghostA) {
+      ctx.fillStyle = `rgba(${C.lampRGB},0.14)`;
+      ctx.fill();
     }
     if (st.ghost) {
       ctx.setLineDash([3, 3]);
-      ctx.strokeStyle = `rgba(${C.lampRGB},0.95)`;
+      ctx.strokeStyle = st.ghostA ? `rgba(${C.line},${st.ghostA})` : `rgba(${C.lampRGB},0.95)`;
     } else ctx.strokeStyle = st.lamp ? C.lampEdge : `rgba(${C.line},${la})`;
     ctx.beginPath();
     for (let i = 0; i < 4; i++) {
@@ -100,6 +105,22 @@ export function drawBox(ctx: CanvasRenderingContext2D, cam: Cam, x: number, y: n
     }
     ctx.stroke();
     if (st.ghost) ctx.setLineDash([]);
+  }
+
+  if (st.glow && st.glow > 0.01) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(${C.lampRGB},${Math.min(1, st.glow)})`;
+    ctx.lineWidth = 1.6;
+    ctx.shadowColor = `rgba(${C.lampRGB},${0.9 * st.glow})`;
+    ctx.shadowBlur = 14 * st.glow;
+    for (const f of faces) {
+      const pts = f.cs.map(P);
+      ctx.beginPath();
+      pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+      ctx.closePath();
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   // round window on the outer end (+u) face: an affine image of a circle
@@ -115,7 +136,7 @@ export function drawBox(ctx: CanvasRenderingContext2D, cam: Cam, x: number, y: n
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.restore();
     if (st.ghost) {
-      ctx.strokeStyle = `rgba(${C.lampRGB},0.9)`;
+      ctx.strokeStyle = st.ghostA ? `rgba(${C.line},${st.ghostA})` : `rgba(${C.lampRGB},0.9)`;
       ctx.stroke();
     } else if (st.lamp) {
       ctx.fillStyle = C.night;
@@ -217,6 +238,16 @@ function order(A: OB, B: OB, V: [number, number, number]) {
   if (A.r && B.r) {
     const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || 1;
     axes.push([dx / d, dy / d]);
+  } else if (A.r || B.r) {
+    // cylinder vs box: the axis from the cylinder axis to the nearest point of the box
+    const Cy = A.r ? A : B, Bx = A.r ? B : A;
+    const ux = Math.cos(Bx.a), uy = Math.sin(Bx.a);
+    const dx = Cy.x - Bx.x, dy = Cy.y - Bx.y;
+    const lu = Math.max(-Bx.hu, Math.min(Bx.hu, dx * ux + dy * uy));
+    const lv = Math.max(-Bx.hv, Math.min(Bx.hv, -dx * uy + dy * ux));
+    const px = Bx.x + ux * lu - uy * lv, py = Bx.y + uy * lu + ux * lv;
+    const nx = px - Cy.x, ny = py - Cy.y, d = Math.hypot(nx, ny);
+    if (d > 1e-4) axes.push([nx / d, ny / d]);
   }
   const ext = (O: OB, nx: number, ny: number) => {
     const c = O.x * nx + O.y * ny;

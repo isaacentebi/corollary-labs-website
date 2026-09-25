@@ -14,7 +14,6 @@ export const rng = (seed: number) => () => {
 
 export const clamp = (x: number, a = 0, b = 1) => (x < a ? a : x > b ? b : x);
 export const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
-const easeOut = (x: number) => 1 - Math.pow(1 - x, 3);
 const win = (t: number, a: number, b: number) => (b <= a ? (t >= a ? 1 : 0) : clamp((t - a) / (b - a)));
 
 export const BEAM_W = 0.75; // half width
@@ -49,6 +48,7 @@ export class Struct {
   scripted = new Set<number>();
   userBusy = new Set<number>();
   alpha = 0.9;
+  deferSockets = false; // build all beams first, then their sockets (so no socket sits inside a later beam)
 
   core(x: number, y: number, r: number, h0: number, h1 = h0, g0 = -1, g1 = -1) {
     this.cores.push({ x, y, r, h0, h1, g0, g1 });
@@ -89,7 +89,7 @@ export class Struct {
     this.beams.push({ core, a, len: len + c.r * 0.25, z, g0, g1 });
     const bi = this.beams.length - 1;
     this.solids.push(this.beamAABB(core, a, len, z));
-    if (sockets) this.beamSockets(bi);
+    if (sockets && !this.deferSockets) this.beamSockets(bi);
     return bi;
   }
 
@@ -117,7 +117,7 @@ export class Struct {
   coreSockets(ci: number, zs: number[], angles = [Math.PI / 4, (3 * Math.PI) / 4, (5 * Math.PI) / 4, (7 * Math.PI) / 4]) {
     const c = this.cores[ci];
     for (const z of zs) for (const a of angles) {
-      const off = c.r + CAP_L + 0.02;
+      const off = c.r + CAP_L - 0.16;
       this.trySock({ x: c.x + Math.cos(a) * off, y: c.y + Math.sin(a) * off, z, a, beam: -1, core: ci, s: 0 });
     }
   }
@@ -196,7 +196,10 @@ export class Struct {
         const e = ease(u / 0.6);
         return { x: S.x + ox, y: S.y + oy, z: S.z + 7 * (1 - e), a: S.a, k: clamp(u / 0.18) };
       }
-      const e = easeOut((u - 0.6) / 0.4);
+      // slide in, overshoot a little into the socket, settle (the latch)
+      const x = (u - 0.6) / 0.4;
+      const c1 = 1.6, c3 = c1 + 1;
+      const e = 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
       return { x: S.x + ox * (1 - e), y: S.y + oy * (1 - e), z: S.z, a: S.a, k: 1 };
     }
     const F = this.socks[m.from];
@@ -222,7 +225,7 @@ export class Struct {
     return b.g0 < 0 ? 1 : ease(win(t, b.g0, b.g1));
   }
 
-  items(cam: Cam, t: number, now: number, out: Item[], opts: { lod?: boolean; fade?: number; cull?: [number, number] } = {}) {
+  items(cam: Cam, t: number, now: number, out: Item[], opts: { lod?: boolean; fade?: number; cull?: [number, number]; glow?: (ci: number) => number; ghosts?: number[]; ghostA?: number; hover?: number } = {}) {
     const lod = !!opts.lod;
     const la = this.alpha * (opts.fade ?? 1);
     const W = opts.cull;
@@ -263,14 +266,21 @@ export class Struct {
         out.push(boxItem(cam, x0 + ux * m, y0 + uy * m, b.z, b.z + BEAM_H, b.a, (s1 - s) / 2 + 0.002, BEAM_W, { alpha: la * 0.95, rails: !lod, open: [s > 0, s1 < L - 1e-3] }));
       }
     }
+    // open sockets, drawn as faint dashed ghosts (the hovered one in lamp)
+    if (opts.ghosts) for (const i of opts.ghosts) {
+      const s = this.socks[i];
+      const hov = i === opts.hover;
+      out.push(boxItem(cam, s.x, s.y, s.z, s.z + CAP_H, s.a, CAP_L, CAP_W, { ghost: true, ghostA: hov ? 0 : opts.ghostA ?? 0.3, window: true }));
+    }
     // units
-    for (const cap of this.caps) {
+    for (let ci = 0; ci < this.caps.length; ci++) {
+      const cap = this.caps[ci];
       const p = this.pose(cap, t, now);
       if (!p) continue;
       const S = this.socks[cap.moves[cap.moves.length - 1].to];
       if (S.beam >= 0 && this.beamGrow(this.beams[S.beam], t, now) <= 0 && cap.moves.length === 1) continue;
       if (!onScreen(p.x, p.y, p.z)) continue;
-      const it = boxItem(cam, p.x, p.y, p.z, p.z + CAP_H, p.a, CAP_L, CAP_W, { lamp: cap.agent, alpha: la, window: !lod });
+      const it = boxItem(cam, p.x, p.y, p.z, p.z + CAP_H, p.a, CAP_L, CAP_W, { lamp: cap.agent, alpha: la, window: !lod, glow: opts.glow ? opts.glow(ci) : 0 });
       if (p.k < 1) {
         const d = it.draw;
         it.draw = (ctx) => {
@@ -281,6 +291,31 @@ export class Struct {
       }
       out.push(it);
     }
+  }
+
+  // world points that outline what stands at clock t (for a tight camera fit)
+  fitPoints(t: number) {
+    const pts: [number, number, number][] = [];
+    const m = CAP_L * 2 + 0.3;
+    this.cores.forEach((c, i) => {
+      const h = this.coreH(i, t);
+      if (h < 0.05) return;
+      for (let k = 0; k < 8; k++) {
+        const a = (k * Math.PI) / 4;
+        for (const z of [0, h]) pts.push([c.x + Math.cos(a) * (c.r + 0.3), c.y + Math.sin(a) * (c.r + 0.3), z]);
+      }
+    });
+    for (const b of this.beams) {
+      if (b.real !== undefined) continue;
+      const g = this.beamGrow(b, t, 0);
+      if (g <= 0 || this.coreH(b.core, t) < b.z + BEAM_H) continue;
+      const [sx, sy] = this.beamStart(b);
+      const ux = Math.cos(b.a), uy = Math.sin(b.a);
+      for (const s of [0, b.len * g]) for (const side of [-1, 1]) for (const z of [b.z - 0.3, b.z + CAP_H]) {
+        pts.push([sx + ux * s - uy * side * (BEAM_W + m), sy + uy * s + ux * side * (BEAM_W + m), z]);
+      }
+    }
+    return pts;
   }
 
   // bounds of what stands at clock t (for camera fitting)

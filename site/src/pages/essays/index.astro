@@ -9,7 +9,7 @@ const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 ---
 <Base page="essays" title="Essays">
-  <section class="page wrap">
+  <section class="page wrap shaft">
     <header class="phead">
       <h1 class="phead__title">Essays</h1>
       <p class="phead__meta mono">{String(rows.length).padStart(2, '0')}</p>

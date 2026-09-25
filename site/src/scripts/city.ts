@@ -9,6 +9,7 @@ export function buildHero() {
   const B = H.core(10, 0, 1.1, 8.2);
   const Cc = H.core(0, 10, 1.1, 9, 12.4, 0.24, 0.44);
   const D = H.core(10, 10, 1.1, 0, 13.2, 0.18, 0.42);
+  H.deferSockets = true;
   // present infrastructure
   H.bridge(A, B, 3);
   H.bridge(A, Cc, 5.5);
@@ -24,6 +25,8 @@ export function buildHero() {
   H.beam(D, 0, 6, 10, 0.5, 0.64);
   H.beam(D, PI / 2, 5, 8.4, 0.54, 0.68);
   H.beam(Cc, PI / 2, 5, 10.6, 0.56, 0.7);
+  H.deferSockets = false;
+  H.beams.forEach((_, bi) => H.beamSockets(bi));
   H.coreSockets(A, [0.9, 9.7]);
   H.coreSockets(D, [1.2, 5.6, 11.9]);
   H.coreSockets(B, [1.1]);
@@ -57,40 +60,55 @@ export function buildHero() {
 
   // wave 2: agents plug into freed sockets and new infrastructure
   for (let k = 0; k < 13; k++) {
-    const t0 = 0.64 + k * 0.024;
+    const t0 = 0.64 + k * 0.02;
     const cand = shuffle(H.freeAt(t0));
     // keep a reserve of never-used sockets for the visitor
     const pick = cand.find((i) => H.sockReady(i) > 0 || H.busy.has(i)) ?? (cand.length > 8 ? cand[0] : undefined);
-    if (pick !== undefined) H.plug(pick, t0, 0.14);
+    if (pick !== undefined) H.plug(pick, t0, 0.11);
   }
   return { H, cores: { A, B, C: Cc, D } };
 }
 
 export type Cluster = { S: Struct; T: number; x: number; y: number };
+export type NetSeg = { x0: number; y0: number; x1: number; y1: number; d0: number; w: number };
 
 export const SPINE_Y = -13;
-export const BRANCH_DX = 26;
+export const BRANCH_DX = 44;
+export const SPEED = 175; // network distance covered per unit of the city clock
+const T0 = 0.1;
 
+// The city: one spine, branches at intervals, a few structures along each branch. The change starts at our
+// structure (the one the visitor plugged into) and travels along the network: T = network distance / SPEED.
 export function buildCity() {
   const r = rng(29);
   const clusters: Cluster[] = [];
   const branches: { x: number; y0: number; y1: number }[] = [];
-  for (let k = -9; k <= 9; k++) {
+  const net: NetSeg[] = [];
+  const OUR = 18; // our structure sits 18 up branch 0
+  net.push({ x0: 5, y0: SPINE_Y + OUR, x1: 5, y1: SPINE_Y, d0: 0, w: 2 });
+  net.push({ x0: 5, y0: SPINE_Y, x1: 5 + 6 * BRANCH_DX, y1: SPINE_Y, d0: OUR, w: 3 });
+  net.push({ x0: 5, y0: SPINE_Y, x1: 5 - 6 * BRANCH_DX, y1: SPINE_Y, d0: OUR, w: 3 });
+  for (let k = -5; k <= 5; k++) {
     const x = 5 + k * BRANCH_DX;
     for (const side of [1, -1]) {
-      const L = k === 0 && side === 1 ? 40 : 30 + r() * 95;
-      branches.push({ x, y0: SPINE_Y + side * 1.6, y1: SPINE_Y + side * L });
-      for (let d = 18; d < L - 4; d += 22) {
-        if (k === 0 && side === 1 && d === 18) continue; // ours
+      const ours = k === 0 && side === 1;
+      const L = ours ? 70 : 26 + r() * 60;
+      branches.push({ x, y0: SPINE_Y + side * 2.2, y1: SPINE_Y + side * L });
+      if (ours) net.push({ x0: 5, y0: SPINE_Y + OUR, x1: 5, y1: SPINE_Y + L, d0: 0, w: 2 });
+      else net.push({ x0: x, y0: SPINE_Y, x1: x, y1: SPINE_Y + side * L, d0: OUR + Math.abs(x - 5), w: 2 });
+      for (let d = 20; d < L - 5; d += 26) {
+        if (ours && d === 20) continue; // ours
         const cy = SPINE_Y + side * d;
-        const dist = Math.abs(k) * BRANCH_DX + d + 18 + (side === -1 ? 3 : 0);
-        const T = dist > 300 ? 9 : 0.1 + dist / 225 + (r() - 0.5) * 0.08;
+        const dist = ours ? Math.abs(d - OUR) : OUR + Math.abs(x - 5) + d;
+        const T = T0 + dist / SPEED + (r() - 0.5) * 0.03;
         clusters.push({ S: genCluster(r, x, cy, T), T, x, y: cy });
       }
     }
   }
-  return { clusters, branches };
+  return { clusters, branches, net };
 }
+
+export const FRONT = (c: number) => (c - T0) * SPEED;
 
 function genCluster(r: () => number, cx: number, cy: number, T: number) {
   const S = new Struct();
@@ -98,9 +116,9 @@ function genCluster(r: () => number, cx: number, cy: number, T: number) {
   const type = r();
   const hs = () => 4 + Math.floor(r() * 10);
   const cores: number[] = [];
-  if (type < 0.34) {
+  if (type < 0.22) {
     cores.push(S.core(cx, cy, 1, hs() + 3));
-  } else if (type < 0.67) {
+  } else if (type < 0.55) {
     cores.push(S.core(cx, cy - 4.5, 1, hs()), S.core(cx, cy + 4.5, 1, hs()));
   } else {
     const o = 4;
