@@ -19,7 +19,7 @@ export function mixS(a: State, b: State, t: number): State {
 
 // the horizon the lights stand on (the same on every page, so the twilight at Contact is the one the
 // diffusion scene arrives at)
-export const fieldHorizon = (e: { m: boolean }) => (e.m ? 0.18 : -0.16);
+export const fieldHorizon = (e: { m: boolean }) => (e.m ? 0.1 : -0.16);
 
 // ---------- fields
 // the first screen: silver light above, deepening to gold, rising from a razor horizon over black

@@ -24,7 +24,7 @@ export function layoutField(aspect: number, horizon: number, ox = 0): FieldLayou
     for (let i = 0; i < row.n && pts.length < N; i++) {
       const t = (i + 0.2 + r() * 0.6) / row.n;
       const x = x0 + (x1 - x0) * t;
-      const y = horizon - 0.2 / row.z - (r() - 0.5) * 0.008;
+      const y = horizon - (aspect > 1 ? 0.2 : 0.12) / row.z - (r() - 0.5) * 0.008;
       pts.push({ x, y, s: (aspect > 1 ? 0.017 : 0.013) / Math.pow(row.z, 0.8), wx: x * row.z, wz: row.z * 1.6 });
     }
   }
