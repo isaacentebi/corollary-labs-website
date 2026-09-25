@@ -70,12 +70,12 @@ import { u } from '../lib/url';
 
   @media (max-width: 759px) {
     .t-head { max-width: none; justify-content: flex-end; padding-bottom: 10vh; }
-    /* phones: the light has the screen to itself, then the text passes over it, then the light again */
-    .idea, .idea--auto, .idea--deform { min-height: 0; }
-    .idea__text { position: relative; min-height: 0; display: block; padding-top: 62svh; padding-bottom: 46svh; }
-    .idea__panel { max-width: none; text-shadow: 0 0 18px rgba(8, 11, 36, 0.55), 0 0 2px rgba(8, 11, 36, 0.4); }
-    .idea__line { font-size: 1.4rem; }
-    .idea__body { font-size: 0.98rem; }
+    /* phones: the light keeps the upper half; the text holds the lower half while the light changes */
+    .idea, .idea--auto, .idea--deform { min-height: 170vh; }
+    .idea__text { position: sticky; top: 49svh; min-height: 0; display: block; padding-bottom: 3svh; }
+    .idea__panel { max-width: none; gap: 10px; }
+    .idea__line { font-size: 1.25rem; margin-bottom: 2px; }
+    .idea__body { font-size: 0.9rem; line-height: 1.5; }
     .practice__list { grid-template-columns: 1fr; }
     .t-dawn { height: 50vh; }
   }

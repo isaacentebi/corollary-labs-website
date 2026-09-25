@@ -51,8 +51,8 @@ const lit = (frost: Vec = C.frostDusk): State => ({
 });
 const heroC = (e: Env): Vec => (e.plate ? [0, 0] : e.m ? [0, 0.255] : [e.a * 0.5 * 0.44, 0.0]);
 const heroR = (e: Env): Vec => (e.plate ? [0.12, 0.36] : e.m ? [0.062, 0.165] : [0.1, 0.31]);
-const roomC = (e: Env): Vec => (e.plate ? [0, 0] : e.m ? [0, 0.18] : [e.ox, 0.04]);
-const roomR = (e: Env): Vec => (e.plate ? [0.14, 0.33] : e.m ? [0.075, 0.17] : [0.11, 0.27]);
+const roomC = (e: Env): Vec => (e.plate ? [0, 0] : e.m ? [0, 0.2] : [e.ox, 0.04]);
+const roomR = (e: Env): Vec => (e.plate ? [0.14, 0.33] : e.m ? [0.07, 0.15] : [0.11, 0.27]);
 const lensR = (e: Env): Vec => (e.plate ? [0.4, 0.12] : e.m ? [0.17, 0.07] : [0.34, 0.1]);
 
 // ---------- the thinking, one function per idea

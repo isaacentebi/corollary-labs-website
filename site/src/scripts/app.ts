@@ -45,14 +45,18 @@ window.addEventListener('scroll', navTone, { passive: true });
 window.addEventListener('resize', navTone);
 
 // ---- the home moment's text fades with its section; its line changes when the light is reshaped
-const roomTexts = [...document.querySelectorAll<HTMLElement>('.moment__text')];
+// (the Thinking page's texts do the same: one at a time, gone before the next one arrives)
+const roomTexts = [...document.querySelectorAll<HTMLElement>('.moment__text, .idea__text')];
 const momentLines = [...document.querySelectorAll<HTMLElement>('[data-moment-line]')];
 function fadeRooms() {
   const vh = window.innerHeight;
   for (const t of roomTexts) {
     const r = t.closest('section')!.getBoundingClientRect();
+    const idea = t.classList.contains('idea__text');
     const inn = clamp01((vh * 0.55 - r.top) / (vh * 0.2));
-    const out = clamp01((r.bottom - vh * 0.5) / (vh * 0.2));
+    // an idea's text fades as the end of its section starts to push it up
+    const outAt = window.innerWidth < 760 ? 0.7 : 0.8;
+    const out = idea ? clamp01((r.bottom - vh * outAt) / (vh * 0.18)) : clamp01((r.bottom - vh * 0.5) / (vh * 0.2));
     t.style.opacity = Math.min(inn, out).toFixed(3);
     const k = (vh * 0.5 - r.top) / r.height > 0.55 ? 1 : 0;
     momentLines.forEach((l) => l.classList.toggle('is-on', +l.dataset.momentLine! === k));
