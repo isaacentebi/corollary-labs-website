@@ -1,23 +1,14 @@
 ---
-import '@fontsource/instrument-serif/400.css';
-import '@fontsource/instrument-serif/400-italic.css';
-import '@fontsource-variable/inter-tight/wght.css';
-import '@fontsource-variable/inter-tight/wght-italic.css';
-import '@fontsource/space-mono/400.css';
-import '@fontsource/space-mono/700.css';
-import '../styles/tokens.css';
 import '../styles/global.css';
-import { ClientRouter } from 'astro:transitions';
-import Footer from '../components/Footer.astro';
-import Preloader from '../components/Preloader.astro';
-import { site } from '../config/site';
+import Mark from '../components/Mark.astro';
+import { site, u, nav } from '../config/site';
 
-interface Props { title?: string; description?: string; page: 'home' | 'index' | 'essay' | 'about' | 'team' }
+interface Props { title?: string; description?: string; page: string }
 const { title, description = site.description, page } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 ---
 <!doctype html>
-<html lang="en" data-page={page} transition:animate="none">
+<html lang="en" data-page={page}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -25,27 +16,39 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
     <meta name="description" content={description} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta name="theme-color" content="#fafaf8" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <ClientRouter fallback="swap" />
-    <script is:inline>
-      (function () {
-        var d = document.documentElement;
-        d.classList.add('js');
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('rm');
-        try { if (sessionStorage.getItem('corollary.intro')) d.classList.add('intro-seen'); } catch (e) {}
-        // failsafe: never leave content hidden if the motion layer fails to boot
-        window.__motionFailsafe = setTimeout(function () { d.classList.add('motion-fail'); }, 5000);
-      })();
-    </script>
+    <meta name="theme-color" content="#121418" />
+    <link rel="icon" href={u('favicon.svg')} type="image/svg+xml" />
+    <link rel="preload" href={u('fonts/archivo-latin-standard-normal.woff2')} as="font" type="font/woff2" crossorigin />
+    <style is:inline set:html={`
+      @font-face{font-family:'Archivo';src:url(${u('fonts/archivo-latin-standard-normal.woff2')}) format('woff2');font-weight:100 900;font-stretch:62% 125%;font-style:normal;font-display:swap}
+      @font-face{font-family:'Archivo';src:url(${u('fonts/archivo-latin-standard-italic.woff2')}) format('woff2');font-weight:100 900;font-stretch:62% 125%;font-style:italic;font-display:swap}
+      @font-face{font-family:'Plex Mono';src:url(${u('fonts/ibm-plex-mono-latin-400-normal.woff2')}) format('woff2');font-weight:400;font-display:swap}
+    `} />
   </head>
-  <body id="top">
-    <Preloader />
-    <a class="skip-link" href="#main">Skip to content</a>
-    <main id="main" data-page-root data-page={page}>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="top">
+      <a class="brand" href={u()} aria-label={`${site.name}, home`}>
+        <Mark size={30} />
+        <span class="brand__word">{site.name}</span>
+      </a>
+      <nav class="top__nav" aria-label="Main">
+        {nav.map((n) => <a href={u(n.href)} aria-current={page === n.key ? 'page' : undefined}>{n.label}</a>)}
+      </nav>
+    </header>
+    <main id="main">
       <slot />
     </main>
-    <Footer />
+    <footer class="foot">
+      <div class="foot__in">
+        <a class="brand brand--foot" href={u()}><Mark size={26} /><span class="brand__word">{site.name}</span></a>
+        <nav class="foot__nav" aria-label="Footer">
+          <a href={u()}>Home</a>
+          {nav.map((n) => <a href={u(n.href)}>{n.label}</a>)}
+        </nav>
+        <p class="foot__meta"><span>{site.email}</span><span>© {site.year} {site.name}</span></p>
+      </div>
+    </footer>
     <script>
       import '../scripts/app';
     </script>

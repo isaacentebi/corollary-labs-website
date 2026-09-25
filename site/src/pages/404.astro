@@ -1,0 +1,12 @@
+---
+import Base from '../layouts/Base.astro';
+import { u } from '../config/site';
+---
+<Base page="404" title="Not found">
+  <section class="page wrap">
+    <header class="phead">
+      <h1 class="phead__title">Not found</h1>
+    </header>
+    <p><a class="more" href={u()}>Home <span aria-hidden="true">→</span></a></p>
+  </section>
+</Base>

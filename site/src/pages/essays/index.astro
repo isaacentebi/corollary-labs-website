@@ -1,33 +1,27 @@
 ---
 import Base from '../../layouts/Base.astro';
-import InlineCurve from '../../components/InlineCurve.astro';
+import Unit from '../../components/Unit.astro';
 import { getCollection, render } from 'astro:content';
-import '../../styles/index.css';
+import { u } from '../../config/site';
 
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
-const pad = (n: number) => String(n).padStart(2, '0');
 ---
-<Base page="index" title="Essays" description="[Meta description]">
-  <section class="index o-container" aria-labelledby="index-title">
-    <header class="index-band" aria-labelledby="index-title">
-      <canvas class="field index-band__field" data-field="index" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="index-title">Essays</h1>
-      <span class="index-band__count t-label" aria-hidden="true" data-reveal="scramble">{String(rows.length).padStart(2, '0')} essays</span>
+<Base page="essays" title="Essays">
+  <section class="page wrap">
+    <header class="phead">
+      <h1 class="phead__title">Essays</h1>
+      <p class="phead__meta mono">{String(rows.length).padStart(2, '0')}</p>
     </header>
-    <div class="rule" data-reveal="rule"></div>
-    <ol class="index-list" data-reveal="rows">
-      {rows.map(({ e, fm }, i) => (
-        <li>
-          <a class="index-row" href={`/essays/${e.id}/`} data-shuffle-hover>
-            <span class="index-row__n t-label">{pad(rows.length - i)}</span>
-            <time class="index-row__date t-label" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
-            <span class="index-row__main">
-              <span class="index-row__title"><span class="index-row__glyph" aria-hidden="true"><InlineCurve progress={[0.2, 0.5, 0.8][i % 3]} /></span><span data-shuffle-target>{e.data.title}</span></span>
-              <span class="index-row__dek">{e.data.dek}</span>
-            </span>
-            <span class="index-row__time t-label">{fm.minutesRead} min</span>
+    <ol class="elist elist--index">
+      {rows.map(({ e, fm }) => (
+        <li data-reveal>
+          <a class="erow" href={u(`essays/${e.id}/`)}>
+            <span class="erow__glyph"><Unit /></span>
+            <time class="erow__date mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+            <span class="erow__main"><span class="erow__title">{e.data.title}</span><span class="erow__dek">{e.data.dek}</span></span>
+            <span class="erow__time mono">{fm.minutesRead} min</span>
           </a>
         </li>
       ))}

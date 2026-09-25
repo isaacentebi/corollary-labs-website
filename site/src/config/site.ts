@@ -1,18 +1,19 @@
-// Single source of truth for the brand name and site-level copy.
-// Change the name here and it propagates to the wordmark, titles, meta, footer and essays.
+// Brand name and site-level placeholders. Every internal URL goes through u() so the build works under a base path.
 export const site = {
   name: 'Corollary Labs',
-  word: 'Corollary',
-  tag: 'Labs',
   author: 'Corollary Labs',
-  email: '[EMAIL]',
+  email: '[Email]',
   year: 2026,
-  url: 'https://corollarylabs.example',
   description: '[Meta description]',
-  nav: [
-    { label: 'Thesis', href: '/#thesis' },
-    { label: 'About', href: '/#about' },
-    { label: 'Essays', href: '/essays/' },
-  ],
-  cta: { label: 'Contact', href: '#contact' },
 } as const;
+
+const raw = import.meta.env.BASE_URL;
+const base = raw.endsWith('/') ? raw : raw + '/';
+export const u = (path = '') => base + path.replace(/^\//, '');
+
+export const nav = [
+  { label: 'Essays', href: 'essays/', key: 'essays' },
+  { label: 'About', href: 'about/', key: 'about' },
+  { label: 'Team', href: 'team/', key: 'team' },
+  { label: 'Contact', href: 'contact/', key: 'contact' },
+] as const;
