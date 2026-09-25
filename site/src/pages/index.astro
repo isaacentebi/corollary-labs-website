@@ -1,8 +1,58 @@
 ---
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
-import '../styles/landing.css';
+import { getCollection } from 'astro:content';
+import { url, nav } from '../config/site';
+import '../styles/home.css';
+
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 ---
-<Base page="home">
-  <Story />
+<Base page="home" head={false}>
+  <section class="story" data-programme aria-label="Corollary Labs">
+    <div class="stage" data-stage>
+      <canvas aria-hidden="true"></canvas>
+      <div class="stage__layer" data-layer>
+        <h1 class="st-title" data-title aria-label="Corollary Labs">Corollary Labs</h1>
+        <p class="st-lead lead ph" data-lead>[Statement — one or two sentences]</p>
+        <nav aria-label="Primary">
+          {nav.map((n) => <a class="st-nav navlink" data-navitem href={n.href}>{n.label}</a>)}
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <section class="section grid home-about" aria-labelledby="about-h">
+    <h2 class="section__label label" id="about-h">About</h2>
+    <p class="home-about__text lead ph">[About — one paragraph]</p>
+    <a class="home-about__more textlink" href={url('about/')}>About</a>
+  </section>
+
+  <section class="section grid home-essays" aria-labelledby="essays-h">
+    <h2 class="section__label label" id="essays-h">Essays</h2>
+    <ol class="elist">
+      {essays.map((e, i) => (
+        <li>
+          <a class="erow" href={url(`essays/${e.id}/`)}>
+            <span class="erow__n label">{String(i + 1).padStart(2, '0')}</span>
+            <span class="erow__date label">{fmt(e.data.date)}</span>
+            <span class="erow__t">{e.data.title}</span>
+            <span class="erow__d">{e.data.dek}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+    <a class="home-essays__all textlink" href={url('essays/')}>All essays</a>
+  </section>
+
+  <section class="section grid home-links" aria-label="Pages">
+    {nav.slice(1).map((n) => (
+      <a class="biglink" href={n.href}><span class="biglink__m" aria-hidden="true"></span><span class="biglink__t">{n.label}</span></a>
+    ))}
+  </section>
+
+  <script>
+    import { mountProgramme } from '../scripts/programme';
+    const root = document.querySelector<HTMLElement>('[data-programme]');
+    if (root) document.fonts.load("700 100px Archivo").then(() => document.fonts.ready).then(() => mountProgramme(root)).catch(() => root.classList.add('is-static'));
+  </script>
 </Base>

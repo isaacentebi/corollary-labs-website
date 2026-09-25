@@ -1,6 +1,6 @@
 ---
-// Inline glossary term (Ref B annotation chip, inverted ink/paper). Definition appears on hover/focus.
+// Inline term with its definition on hover/focus.
 interface Props { def: string }
 const { def } = Astro.props;
 ---
-<span class="term" tabindex="0" data-term><slot /><span class="term__def" role="tooltip">{def}</span></span>
+<span class="term" tabindex="0"><slot /><span class="term__def" role="tooltip">{def}</span></span>

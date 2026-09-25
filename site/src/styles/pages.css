@@ -1,0 +1,40 @@
+/* Inner pages: title on the grid, then content by column. */
+.phead { padding-top: calc(var(--lh) * 5); row-gap: calc(var(--lh) * 1.5); }
+.phead .ptitle { grid-column: 1 / -1; }
+.phead__lead { grid-column: 1 / -1; }
+@media (min-width: 820px) {
+  .phead { padding-top: calc(var(--lh) * 6); }
+  .phead__lead { grid-column: 4 / span 7; margin-top: calc(var(--lh) * 1); }
+}
+
+/* label / value rows, set across the grid */
+.rows { grid-column: 1 / -1; border-top: 2px solid var(--ink); }
+.rows > div {
+  display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); column-gap: var(--g);
+  padding: 12px 0 14px; border-bottom: 1px solid var(--rule); align-items: baseline;
+}
+.rows dt { grid-column: 1 / span 2; }
+.rows dd { grid-column: 3 / -1; margin: 0; }
+@media (min-width: 820px) {
+  .rows dt { grid-column: 1 / span 3; }
+  .rows dd { grid-column: 4 / span 6; }
+}
+
+.prose-ph { grid-column: 1 / -1; display: grid; gap: var(--lh); }
+@media (min-width: 820px) { .prose-ph { grid-column: 4 / span 6; } }
+
+/* team: one row per person; the signal column marks the row under the pointer */
+.people { grid-column: 1 / -1; border-top: 2px solid var(--ink); }
+.person {
+  display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); column-gap: var(--g);
+  padding: 14px 0 20px; border-bottom: 1px solid var(--rule); position: relative; align-items: baseline;
+}
+.person__n { grid-column: 1 / span 1; }
+.person__name { grid-column: 2 / -1; font-size: var(--t-l); line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; }
+.person__role { grid-column: 2 / -1; margin-top: 4px; }
+.person__line { grid-column: 2 / -1; margin-top: 4px; font-size: var(--t-s); }
+@media (min-width: 820px) {
+  .person__name { grid-column: 4 / span 3; }
+  .person__role { grid-column: 7 / span 2; margin: 0; }
+  .person__line { grid-column: 9 / span 4; margin: 0; }
+}

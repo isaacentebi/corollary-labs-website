@@ -1,53 +1,46 @@
 ---
-import '@fontsource/instrument-serif/400.css';
-import '@fontsource/instrument-serif/400-italic.css';
-import '@fontsource-variable/inter-tight/wght.css';
-import '@fontsource-variable/inter-tight/wght-italic.css';
-import '@fontsource/space-mono/400.css';
-import '@fontsource/space-mono/700.css';
-import '../styles/tokens.css';
-import '../styles/global.css';
-import { ClientRouter } from 'astro:transitions';
-import Footer from '../components/Footer.astro';
-import Preloader from '../components/Preloader.astro';
-import { site } from '../config/site';
+import '../styles/swiss.css';
+import fontUrl from '../fonts/archivo-latin-wdth-normal.woff2?url';
+import { site, url, nav } from '../config/site';
+import Wordmark from '../components/Wordmark.astro';
 
-interface Props { title?: string; description?: string; page: 'home' | 'index' | 'essay' | 'about' | 'team' }
-const { title, description = site.description, page } = Astro.props;
+interface Props { title?: string; description?: string; page: 'home' | 'essays' | 'essay' | 'about' | 'team' | 'contact'; head?: boolean }
+const { title, description = site.description, page, head = true } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
+const current = (href: string) => (href === url(`${page}/`) ? 'page' : undefined);
 ---
 <!doctype html>
-<html lang="en" data-page={page} transition:animate="none">
+<html lang="en" data-page={page}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
-    <meta name="theme-color" content="#fafaf8" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <ClientRouter fallback="swap" />
-    <script is:inline>
-      (function () {
-        var d = document.documentElement;
-        d.classList.add('js');
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('rm');
-        try { if (sessionStorage.getItem('corollary.intro')) d.classList.add('intro-seen'); } catch (e) {}
-        // failsafe: never leave content hidden if the motion layer fails to boot
-        window.__motionFailsafe = setTimeout(function () { d.classList.add('motion-fail'); }, 5000);
-      })();
-    </script>
+    <meta name="theme-color" content="#ecece8" />
+    <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
+    <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
+    <script is:inline>document.documentElement.classList.add('js');</script>
   </head>
-  <body id="top">
-    <Preloader />
+  <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    <main id="main" data-page-root data-page={page}>
+    <div class="gridlines" aria-hidden="true">{Array.from({ length: 12 }, () => <i />)}</div>
+    {head && (
+      <header class="site-head grid">
+        <Wordmark />
+        <nav aria-label="Primary">
+          {nav.map((n) => <a class="navlink" href={n.href} aria-current={current(n.href)}>{n.label}</a>)}
+        </nav>
+      </header>
+    )}
+    <main id="main">
       <slot />
     </main>
-    <Footer />
-    <script>
-      import '../scripts/app';
-    </script>
+    <footer class="site-foot grid">
+      <div class="site-foot__top" aria-hidden="true"></div>
+      <div><Wordmark /><p class="ph" style="margin-top:8px">[Location]</p></div>
+      <div><span class="label">Pages</span><ul><li><a class="textlink" href={url()}>Home</a></li>{nav.slice(0, 2).map((n) => <li><a class="textlink" href={n.href}>{n.label}</a></li>)}</ul></div>
+      <div><span class="label">&nbsp;</span><ul>{nav.slice(2).map((n) => <li><a class="textlink" href={n.href}>{n.label}</a></li>)}</ul></div>
+      <div><span class="label">Contact</span><p class="ph">{site.email}</p><p class="ph" style="margin-top:4px">© {site.year}</p></div>
+    </footer>
   </body>
 </html>
