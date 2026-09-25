@@ -2,47 +2,26 @@
 
 The notes below come from looking at the actual works. Each artist in the brief (20 contemporary, 5 historical) has 2 to 4 named works, a URL for each, and the local image we examined. Images are in `research/<artist>/`, which is gitignored and never published. The hex values were sampled from photographs, so they carry the camera's colour and are not the paint's true colour.
 
-## The concept in one paragraph
+## The concept (round 3)
 
-A Light and Space object is known by what the light does as it passes through it, not by what is inside. The brief describes a firm the same way: by its inputs and outputs. The whole site is one continuous field of light behind every page, and it never cuts between scenes: each section is a state of the same field, and scrolling moves between states. The five ideas are rooms in that field:
+A Light and Space work is known by what light does in it. The site is one continuous field of light behind every page, at the scale of the room. Every scene sets that field against one precise luminous boundary: a razor horizon, a lens rim, a glass edge, or a cut. Scrolling moves the horizon, so the light rises or falls as a band between scenes and never cross-fades through grey. The palette is taken from the works: the deep dark; one accent family running from black through ember to pale gold (Brindle); and the silvery greys of anodised metal (Ando).
 
-1. **Inputs and outputs.** A translucent volume is lit from outside. Warm light enters on one side and cool light leaves on the other.
-2. **Automation.** The light moves inside the volume, first at the rim (execution), then at the core (planning). The boundary grows outward, and what still comes in narrows to a thread.
-3. **New combinations.** The volume parts into three translucent panes. They separate, then settle overlapping, and where they overlap a pale light appears that none of them carries.
-4. **Continuous deformation.** The form bends into a new shape without tearing. Where it cannot bend it is cut: the halves slide along a bright seam and are re-joined.
-5. **Diffusion.** The volume becomes one of many small volumes on a plain at night. Light reaches the others from their neighbours, at uneven speeds, and some are reached late or not at all.
+| Scene | What happens | Works it comes from |
+|---|---|---|
+| First screen | A field of light at viewport scale: silver deepening to gold, rising from a razor horizon over black ground. The headline sits inside the light. | Casper Brindle, *Refracting Twilight* (2016) and *Distant Light* (2018); James Turrell, *Twilight Epiphany* (2012) |
+| What we do | The horizon rises past the top; the text sits on the deep dark with the light above it. | Brindle, *Veil VI* (2024); Miya Ando, *Meditation Blue Black* (2013) |
+| Inputs and outputs | A lens on the horizon shows the field inverted inside it, behind a precise frosted rim. Warm light enters on one side and cool light leaves on the other. | Helen Pashgian, spheres and lenses; Robert Irwin, disc rim (*Untitled*, 1968) |
+| Automation | The lens fills the frame and lights from within: first the rim (execution), then the core (planning). What still comes in narrows to a thread. | Pashgian, columns in *Light Invisible* (LACMA, 2014); Peter Alexander, *Green Wedge* (1969) |
+| New combinations | Four coated planes on a bright field. Each passes one colour, returns a faint other one and catches light on one edge. They move from a row into a new overlapping order; where they overlap, colours appear that none of them has, never white. | Larry Bell, *Cube* (1966) and *6 x 6 An Improvisation* (2014); Alexander's cast resin; Gabriele Evertz, *Grays + the Expanded Spectrum* (2014) |
+| Continuous deformation | One thin band of light across the whole frame bends without tearing, is cut, slides along the cut and is re-joined along a bright seam. | Brindle's strata; Fabiola Menchelli, *Queer Horizon* (2024); José Dávila, *Joint Effort*; Heather Gwen Martin, *Slow Curve* (2026) |
+| Diffusion | Small, precise lights in rows along a horizon come on one after another, unevenly, on dark ground. Dawn follows. | Wanda Koop, *Ukrainian Quartet – Snake Island* (2023); Perla Krauze, *Horizonte #7* (2021); Douglas Witmer, *Onekama Beach* (2022) |
+| Home moment | The lens on the horizon ignites, flattens into the horizon's band, is cut and re-joined, and its light runs out along the horizon as a row of lights. | All of the above, in one continuous movement |
+| Company and Research | Silver, which rises from below as a band when you arrive from the dark. | Ando, *Hakanai* (2013); Bell's coated glass |
+| Contact | The finished twilight: steel sky, a band of gold light, every light on along the horizon. The words sit in the band. | Turrell, *Twilight Epiphany*; Brindle, *Refracting Twilight* |
+| Plates (research and team) | Separate WebP studies after single works: strata (Brindle), a lens (Pashgian), a panel edge (Ando), a monochrome horizon field (Koop), coated planes (Bell and Evertz), a light bar (Brindle, *Light-Glyph*), a smoky green column (Pashgian). | As named |
+| Surface | Coloured, even grain instead of grey noise. | Ana Montiel, *This Human Experience We Share 4* (2019) |
 
-## Where each decision comes from
-
-| Decision on the site | Work(s) it comes from |
-|---|---|
-| The volume: a squircle whose colour eases from core to edge, with a thin pale ring where the two colours cross, and a hairline metal edge | Jonny Niesche, *Schein Blossom (Spring has no border)* (2022), *Aba Zabba Zoom (Emerald)* (2022), *Kansai Schwartzkopf (Red)* (2021) |
-| The pale ring, and the pale light where panes overlap, are *lighter* than the colours on either side | Ruth Pastine, *Blue (Orange), Light as Air* (2022); *Red (Green), Light as Air* (2022) |
-| Light seems to come from inside; the core sits "behind" the surface and shifts slightly against the rim when the pointer moves | Helen Pashgian, spheres and columns (*Light Invisible*, LACMA 2014); Peter Alexander, *Green Wedge* (1969) |
-| Coloured (not grey) pool of light on the floor under the hero volume, and its reflection in a gloss floor | Pashgian's tinted shadows; Casper Brindle, *Light-Glyph (Teal)* (2026) installation floor |
-| The rooms are a horizon: a lavender wall that surges to a thin saturated blue line, dark water below | Casper Brindle, *Refracting Twilight* (2016), *Distant Light* (2018); Miya Ando, *Meditation Blue Black* (2013) |
-| The research pages: a pale silver field crossed by one thin blue line | Casper Brindle, *Distant Light* (2018) |
-| A thin-film sheen on the volume's rim that changes hue with the viewer's position | Larry Bell, *Cube* (1966), vacuum-coated glass |
-| Inputs and outputs as soft bands of warm and cool light through haze, not arrows | James Turrell, *Afrum I (White)* (1967), a sharp shape with a narrow bloom; Irwin, *Scrim veil—Black rectangle—Natural light* (1977) |
-| The three translucent panes: each has a lighter hairline rim, and overlaps add up like stacked filters | Peter Zimmermann, *Engine*, *Sheen* (2025, epoxy resin); Larry Bell, *6 x 6 An Improvisation* (2014) |
-| The cut: a bright seam, the halves slide along it and are re-joined, and the seam stays faintly visible | Fabiola Menchelli, *Queer Horizon* (2024) and *Parallelogram (Sunrise)* (2024), where the lit crease is the fold; José Dávila, *Joint Effort* series (c. 2015–16); Ilán Rabchinskey, *Numinous Horizon* (2024), where cut acrylic edges glow brighter than their faces |
-| The deformation is a slow S-curve, not a wobble | Heather Gwen Martin, *Slow Curve* (2026); Andy Moses, *Geomorphology 1707* (2020) |
-| Diffusion: small lights on a dark plain, each with a short reflection, reached unevenly | Perla Krauze, *Horizonte #7* (2021): stones along a ruled horizon; Wanda Koop, *Ukrainian Quartet – Snake Island* (2023): the horizon and the drop into dark water |
-| Dawn between the night field and the day: blue above, a pale neutral at the crossing, amber at the horizon | Douglas Witmer, *Onekama Beach, July 11, 2022, 9:38pm* (2022); Menchelli, *sunset spectrum* (2025); Pastine's lighter neutral |
-| Contact is a room of light: the hue turns (peach, apricot, rose) while the lightness barely changes, with a "ghost" rectangle a few percent warmer and one soft band | James Turrell, *Breathing Light* (2013), LACMA |
-| Coloured grain over every gradient, strongest in blue, instead of grey noise | Ana Montiel, *This Human Experience We Share (These Days of Fiction) 4* (2019); *ECHO* (2020) |
-| Text arrives out of blur, the way eyes adjust in a lit room, and whatever passes under the navigation goes out of focus (a scrim, not a bar) | Turrell's Ganzfelds; Robert Irwin, *Scrim veil* (1977) and *untitled (dawn to dusk)* (2016) |
-| Research plates: horizon, volume, fold and crossing stills painted once per size | Brindle; Niesche; Menchelli; Pastine |
-| Mobile text panels are smoked glass that dims what is behind it by about 30% | José Dávila, *Joint Effort* (smoked glass and marble) |
-| The mark: a small squircle lit from inside | Niesche, Pashgian |
-
-We studied the following artists but did not take anything specific from them: Rachelle Bussières (*Eclipse IV*: a flat disc with offset crescents), Gabriele Evertz (light made by placing values next to each other, not by blending), Dion Johnson (arcs whose fills run in opposite directions), Scott Sueme (one sprayed gradient as the only light among matte shapes), Anne Vieux (fold hotspots with coloured fringes) and Astrid Sylwan (squeegee sheets). Their notes are below. The Evertz and Sueme ideas shaped a principle: each screen has one source of light, and everything else stays matte.
-
----
-
-# Group E: Light and Space originals (Turrell, Irwin, Bell, Pashgian, Alexander)
-
-All images are saved under `research/<artist>/` in worktree `agent-adbfbcbdc74a3d231`, and I looked at every one of them. The hex values come from pixels I sampled with a small script (3x3 average on a downscaled copy), so they are real readings from these photographs. They are not the true colours of the objects: the camera, white balance and JPEG all shift colour, and saturated LED light clips in photographs. Treat them as starting points.
+Studied without a specific borrowing: Rachelle Bussières, Dion Johnson, Scott Sueme, Anne Vieux, Astrid Sylwan, Ruth Pastine, Jonny Niesche and Ilán Rabchinskey. Niesche and Pastine shaped the earlier rounds. Their notes remain below.
 
 ---
 
