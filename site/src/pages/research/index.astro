@@ -1,0 +1,24 @@
+---
+import Base from '../../layouts/Base.astro';
+import EssayList from '../../components/EssayList.astro';
+import { research } from '../../config/site';
+import { getCollection } from 'astro:content';
+const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
+---
+<Base page="research" title={research.title} description={research.intro}>
+  <section class="rhead wrap" data-light="research" data-tone-section="day">
+    <h1 class="rhead__title" data-reveal>{research.title}</h1>
+    <p class="rhead__intro muted" data-reveal data-d="1">{research.intro}</p>
+  </section>
+  <section class="rlist wrap" data-light="research" data-tone-section="day" aria-label="All essays">
+    <EssayList essays={essays} size="large" />
+  </section>
+</Base>
+
+<style>
+  .rhead { min-height: 40vh; display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; padding-top: 120px; padding-bottom: 7vh; }
+  .rhead__title { font-size: var(--fs-display); font-weight: 300; letter-spacing: -0.025em; }
+  .rhead__intro { font-size: var(--fs-lede); max-width: 32em; }
+  .rlist { padding-bottom: 16vh; min-height: 60vh; }
+  @media (max-width: 759px) { .rhead { min-height: 34vh; } }
+</style>

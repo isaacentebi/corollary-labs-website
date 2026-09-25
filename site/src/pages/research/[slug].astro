@@ -1,0 +1,59 @@
+---
+import Base from '../../layouts/Base.astro';
+import Figure from '../../components/Figure.astro';
+import Term from '../../components/Term.astro';
+import { getCollection, render } from 'astro:content';
+import { site, research } from '../../config/site';
+import { u } from '../../lib/url';
+import { plateFor, plateSrc, DATE_PH, MIN_PH } from '../../lib/plates';
+import '../../styles/essay.css';
+
+export async function getStaticPaths() {
+  const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date);
+  return essays.map((entry, i) => ({ params: { slug: entry.id }, props: { entry, next: essays[(i + 1) % essays.length] } }));
+}
+const { entry, next } = Astro.props;
+const { Content, headings } = await render(entry);
+const sections = headings.filter((h) => h.depth === 2);
+const pl = plateFor(entry.id);
+const npl = next ? plateFor(next.id) : null;
+---
+<Base page="essay" title={entry.data.title} description={entry.data.dek}>
+  <article class="essay">
+    <header class="essay-head wrap" data-light="research" data-tone-section="day">
+      <a class="essay-head__back label faint" href={u('/research/')}>← {research.title}</a>
+      <h1 class="essay-head__title" data-reveal>{entry.data.title}</h1>
+      <p class="essay-head__dek" data-reveal data-d="1">{entry.data.dek}</p>
+      <p class="essay-head__meta faint" data-reveal data-d="2">
+        <span>{DATE_PH}</span>
+        <span>{MIN_PH}</span>
+        <span>{site.name}</span>
+        {entry.data.placeholder && <span class="essay-head__flag">[Placeholder text]</span>}
+      </p>
+      <img class="essay-head__plate" src={plateSrc(pl)} alt="" width="1200" height="800" data-reveal data-d="2" />
+    </header>
+
+    <div class="essay-main wrap" data-light="read" data-tone-section="day">
+      {sections.length > 1 && (
+        <nav class="toc" aria-label="Contents">
+          <p class="label faint">Contents</p>
+          <ol>{sections.map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+        </nav>
+      )}
+      <div class="essay-body">
+        <Content components={{ Figure, Term }} />
+      </div>
+    </div>
+
+    {next && next.id !== entry.id && (
+      <footer class="essay-next wrap" data-light="read" data-tone-section="day">
+        <a class="next" href={u(`/research/${next.id}/`)}>
+          <img class="next__plate" src={plateSrc(npl!)} alt="" loading="lazy" width="1200" height="800" />
+          <span class="label faint">Next</span>
+          <span class="next__title">{next.data.title}</span>
+          <span class="next__dek muted">{next.data.dek}</span>
+        </a>
+      </footer>
+    )}
+  </article>
+</Base>
