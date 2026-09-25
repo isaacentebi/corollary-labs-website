@@ -3,10 +3,11 @@ import '@fontsource-variable/inter-tight/wght.css';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ScoreBar from '../components/ScoreBar.astro';
 import { site, u } from '../config/site';
 
-interface Props { title?: string; description?: string; page: string; header?: boolean }
-const { title, description = site.description, page, header = true } = Astro.props;
+interface Props { title?: string; description?: string; page: string; header?: boolean; bar?: 'inline' | 'home' }
+const { title, description = site.description, page, header = true, bar = 'inline' } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 ---
 <!doctype html>
@@ -24,6 +25,7 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
   <body>
     <a class="skip" href="#main">Skip to content</a>
     {header && <Header current={page} />}
+    <ScoreBar home={bar === 'home'} />
     <main id="main">
       <slot />
     </main>
@@ -37,6 +39,14 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
           if (en.isIntersecting) { en.target.classList.add('is-played'); io.unobserve(en.target); }
         }), { rootMargin: '0px 0px -18% 0px' });
         els.forEach((e) => { if (!e.hasAttribute('data-play-manual')) io.observe(e); });
+      }
+      const marks = document.querySelectorAll<HTMLElement>('.bigmark, [data-body] h2');
+      if (!('IntersectionObserver' in window)) marks.forEach((m) => m.classList.add('is-on'));
+      else {
+        const mo = new IntersectionObserver((entries) => entries.forEach((en) => {
+          if (en.isIntersecting) { en.target.classList.add('is-on'); mo.unobserve(en.target); }
+        }), { rootMargin: '0px 0px -30% 0px' });
+        marks.forEach((m) => mo.observe(m));
       }
     </script>
   </body>

@@ -5,12 +5,12 @@ import { u } from '../config/site';
 ---
 <Base page="about" title="About" description="[Meta description]">
   <header class="page-head">
-    <div class="part__side"><span class="sect"><span class="mark mark--fill">E</span><span class="label">About</span></span></div>
+    <div class="part__side"><span class="bigmark" data-mark="E">E</span><span class="label">About</span></div>
     <h1><span data-play>About</span></h1>
-    <div class="page-head__strip"><MiniScore class="only-wide" seed="about-page" w={1080} h={210} voices={6} stroke={0.95} bracket ruler marks={['A', 'B', 'C', 'D']} at={46} label="[Description of the score]" /><MiniScore class="only-narrow" seed="about-page" w={520} h={260} voices={6} stroke={0.7} bracket ruler marks={['A', 'B', 'C', 'D']} at={46} /></div>
+    <div class="page-head__strip"><MiniScore class="only-wide ms--play" seed="about-page" w={1080} h={210} voices={6} stroke={0.95} bracket ruler marks={['A', 'B', 'C', 'D']} at={100} label="[Description of the score]" /><MiniScore class="only-narrow ms--play" seed="about-page" w={520} h={260} voices={6} stroke={0.7} bracket ruler marks={['A', 'B', 'C', 'D']} at={100} /></div>
   </header>
 
-  <section class="part">
+  <section class="part" data-mark="1">
     <div class="part__side"><span class="label">[Heading]</span></div>
     <div class="part__body">
       <p class="lead"><span data-play>[About — one paragraph]</span></p>
@@ -26,7 +26,7 @@ import { u } from '../config/site';
     </div>
   </section>
 
-  <section class="part">
+  <section class="part" data-mark="2">
     <div class="part__side"><span class="label">[Heading]</span></div>
     <div class="part__body">
       <div class="prose placeholder"><p>[Paragraph]</p></div>

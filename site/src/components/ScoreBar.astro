@@ -1,0 +1,63 @@
+---
+// The site's time ruler. Every page carries it: the page is read as a score, the playhead is
+// your position, the highlighter fills what you have read, and each [data-mark] (or lettered
+// essay section) is a rehearsal mark. Between pages it morphs (view transitions), so the
+// playhead travels with you. On the home page it appears when the score collapses into it.
+interface Props { home?: boolean }
+const { home = false } = Astro.props;
+---
+<div class:list={['bar', { 'bar--home': home }]} data-bar aria-hidden="true">
+  <div class="bar__fill"></div>
+  <div class="bar__ticks"></div>
+  <div class="bar__marks" data-bar-marks></div>
+  <div class="bar__head"></div>
+</div>
+
+<script>
+  function initBar() {
+    const bar = document.querySelector<HTMLElement>('[data-bar]');
+    if (!bar) return;
+    const box = bar.querySelector<HTMLElement>('[data-bar-marks]')!;
+    const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // essay sections are lettered A, B, C… in order
+    document.querySelectorAll<HTMLElement>('[data-body] h2').forEach((h, i) => { if (!h.dataset.mark) h.dataset.mark = 'ABCDEFGHIJKLMNOP'[i]; });
+    const targets = [...document.querySelectorAll<HTMLElement>('[data-mark]')];
+    const marks = targets.map((el) => {
+      const a = document.createElement('button');
+      a.type = 'button'; a.tabIndex = -1; a.className = 'bar__mark'; a.textContent = el.dataset.mark!;
+      a.addEventListener('click', () => {
+        const y = el.getBoundingClientRect().top + scrollY - innerHeight * 0.3;
+        scrollTo({ top: Math.max(0, y), behavior: rm ? 'auto' : 'smooth' });
+      });
+      box.appendChild(a);
+      return { el, a, at: 0 };
+    });
+    let raf = 0;
+    const total = () => Math.max(1, document.documentElement.scrollHeight - innerHeight);
+    const place = () => {
+      const T = total(), span = bar.clientWidth - 34;
+      let last = -Infinity;
+      for (const m of marks) {
+        const y = m.el.getBoundingClientRect().top + scrollY - innerHeight * 0.3;
+        m.at = Math.min(1, Math.max(0, y / T));
+        m.a.style.left = `calc(6px + ${m.at} * (100% - 34px))`;
+        // marks that would touch are thinned: keep the later one
+        const px = m.at * span;
+        m.a.hidden = false;
+        if (px - last < 22) { const prev = marks[marks.indexOf(m) - 1]; if (prev) prev.a.hidden = true; }
+        last = px;
+      }
+      update();
+    };
+    const update = () => {
+      raf = 0;
+      const p = Math.min(1, Math.max(0, scrollY / total()));
+      bar.style.setProperty('--p', p.toFixed(4));
+      for (const m of marks) m.a.classList.toggle('is-past', p + 0.002 >= m.at);
+    };
+    addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    new ResizeObserver(place).observe(document.body);
+    place();
+  }
+  initBar();
+</script>

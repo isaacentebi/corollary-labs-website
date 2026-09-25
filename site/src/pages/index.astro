@@ -8,18 +8,19 @@ import { u, fmtDate } from '../config/site';
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
 ---
-<Base page="home" header={false}>
+<Base page="home" header={false} bar="home">
   <section class="story" data-story aria-label="Score">
+    <!-- rehearsal marks for the site ruler, placed at the scroll positions where the score reaches them -->
+    <i class="story__at" style="top: 30vh" data-mark="B"></i>
+    <i class="story__at" style="top: 48vh" data-mark="C"></i>
+    <i class="story__at" style="top: 99.6vh" data-mark="D"></i>
     <div class="stage" data-stage data-state="1">
       <canvas class="stage__score" aria-hidden="true"></canvas>
       <Header overlay />
-      <h1 class="stage__statement display"><span class="u-sr">Corollary Labs. </span><span data-play data-play-manual data-statement>[Statement]</span></h1>
+      <h1 class="stage__statement display"><span class="u-sr">Corollary Labs. </span><span class="swath" data-swath><span data-play data-play-manual data-statement>[Statement]</span></span></h1>
       <p class="u-sr">[Description of the score]</p>
       <div class="stage__tools">
-        <span class="tool tool--hint" aria-hidden="true">
-          <svg viewBox="0 0 22 12"><path d="M1 9C5 9 6 3 10 3S15 8 21 5" /></svg>Draw
-        </span>
-        <button class="tool tool--touch" type="button" data-draw aria-pressed="false">
+        <button class="tool" type="button" data-draw aria-pressed="false">
           <svg viewBox="0 0 22 12" aria-hidden="true"><path d="M1 9C5 9 6 3 10 3S15 8 21 5" /></svg>Draw
         </button>
         <button class="tool" type="button" data-clear hidden>Clear</button>
@@ -32,7 +33,7 @@ const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e
   </section>
 
   <section class="part part--handoff" id="about" aria-labelledby="about-h">
-    <div class="part__side"><span class="sect"><span class="mark">E</span><h2 class="label" id="about-h">About</h2></span></div>
+    <div class="part__side"><span class="bigmark" data-mark="E">E</span><h2 class="label" id="about-h">About</h2></div>
     <div class="part__body">
       <p class="lead"><span data-play>[About — one paragraph]</span></p>
       <a class="more" href={u('/about/')}>About <span aria-hidden="true">→</span></a>
@@ -40,13 +41,13 @@ const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e
   </section>
 
   <section class="part" aria-labelledby="essays-h">
-    <div class="part__side"><span class="sect"><span class="mark">F</span><h2 class="label" id="essays-h">Essays</h2></span></div>
+    <div class="part__side"><span class="bigmark" data-mark="F">F</span><h2 class="label" id="essays-h">Essays</h2></div>
     <div class="part__body">
       <ol class="elist">
         {rows.map(({ e, fm }, i) => (
           <li>
             <a class="erow" href={u(`/essays/${e.id}/`)}>
-              <MiniScore seed={e.id} w={420} h={104} voices={[4, 5, 3][i % 3]} at={[64, 52, 71][i % 3]} />
+              <MiniScore seed={e.id} w={420} h={104} voices={[4, 5, 3][i % 3]} at={[64, 52, 71][i % 3]} vt={`score-${e.id}`} />
               <span class="erow__text">
                 <span class="erow__title">{e.data.title}</span>
                 <span class="erow__meta"><time datetime={e.data.date.toISOString()}>{fmtDate(e.data.date)}</time><span>c. {fm.minutesRead}′</span></span>

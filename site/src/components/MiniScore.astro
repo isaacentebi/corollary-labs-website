@@ -6,9 +6,9 @@ import { otherSystem, geometry, groupSpans, hash, type Prim, type Grammar } from
 
 interface Props {
   seed: string; w?: number; h?: number; r?: number; voices?: number; class?: string; stroke?: number;
-  at?: number | null; bracket?: boolean; ruler?: boolean; marks?: string[]; label?: string; grammar?: Grammar;
+  at?: number | null; bracket?: boolean; ruler?: boolean; marks?: string[]; label?: string; grammar?: Grammar; vt?: string;
 }
-const { seed, w = 320, h = 120, r = 1, voices, class: cls, stroke = 0.55, at = 58, bracket = false, ruler = false, marks = [], label, grammar } = Astro.props;
+const { seed, w = 320, h = 120, r = 1, voices, class: cls, stroke = 0.55, at = 58, bracket = false, ruler = false, marks = [], label, grammar, vt } = Astro.props;
 const sys = otherSystem(hash(seed) % 100000, voices, grammar);
 const st = { r, agentTo: r > 0 ? sys.t0 + (1 - sys.t0) * Math.min(1, r * 1.25) : 0 };
 const prims = geometry(sys, st, { detail: 0.7 });
@@ -46,7 +46,7 @@ const markAt = marks.map((m, i) => ({ m, x: X(i === 0 ? 0 : sys.t0 + (i - 1) * (
         {ink.map((p) => {
           if (p.k === 'ribbon') return <path d={ribbon(p.pts)} class="f" />;
           if (p.k === 'path') return <path d={d(p.pts)} stroke-width={Math.max(0.5, p.w * s)} class={p.role ?? ''} />;
-          if (p.k === 'rect') return <rect x={X(p.t)} y={Y(p.y)} width={Math.max(0.5, +(p.w * iw).toFixed(1))} height={+(p.h * ih).toFixed(1)} class={p.fill ? 'band' : 'box'} />;
+          if (p.k === 'rect') return <rect x={X(p.t)} y={Y(p.y)} width={Math.max(0.5, +(p.w * iw).toFixed(1))} height={+(p.h * ih).toFixed(1)} class={p.hlFill ? 'band hlband' : p.fill ? 'band' : 'box'} />;
           if (p.k === 'dot') return <circle cx={X(p.t)} cy={Y(p.y)} r={Math.max(0.7, p.r * s)} class="f" />;
           if (p.k === 'niente') return <circle cx={X(p.t)} cy={Y(p.y)} r={Math.max(1.6, 3 * s)} class="o" />;
           if (p.k === 'hairpin') return <path class="agent" stroke-width="0.8" d={`M${X(p.t + p.len)} ${Y(p.y) - p.open * ih}L${X(p.t)} ${Y(p.y)}L${X(p.t + p.len)} ${Y(p.y) + p.open * ih}`} />;
@@ -60,9 +60,9 @@ const markAt = marks.map((m, i) => ({ m, x: X(i === 0 ? 0 : sys.t0 + (i - 1) * (
     </svg>
   );
   return at === null ? (
-    <span class:list={['ms', 'ms--static', cls]} role={label ? 'img' : undefined} aria-label={label}>{svg('solo')}</span>
+    <span class:list={['ms', 'ms--static', cls]} style={vt ? `view-transition-name:${vt}` : undefined} role={label ? 'img' : undefined} aria-label={label}>{svg('solo')}</span>
   ) : (
-    <span class:list={['ms', cls]} style={`--at:${at}%`} role={label ? 'img' : undefined} aria-label={label}>
+    <span class:list={['ms', cls]} style={`--at:${at}%` + (vt ? `;view-transition-name:${vt}` : '')} role={label ? 'img' : undefined} aria-label={label}>
       {svg('pen')}{svg('ink')}<span class="ms__head" aria-hidden="true"></span>
     </span>
   );
@@ -80,6 +80,8 @@ const markAt = marks.map((m, i) => ({ m, x: X(i === 0 ? 0 : sys.t0 + (i - 1) * (
   .mini__ink .o { fill: none; stroke: currentColor; stroke-width: 0.9; }
   .mini__ink .box { fill: none; stroke: currentColor; stroke-width: 0.8; }
   .mini__ink .band { fill: color-mix(in srgb, currentColor 11%, transparent); stroke: currentColor; stroke-width: 0.5; }
+  .mini__ink .band.hlband { fill: var(--hl); mix-blend-mode: multiply; }
+  .ms__pen .band.hlband { fill-opacity: .4; }
   .mini__ink .tick { stroke-width: 0.8; }
   .mini__ink .mk rect { fill: var(--paper); stroke: currentColor; stroke-width: 1; }
   .mini__ink .mk text { font: 640 9.5px var(--sans); text-anchor: middle; fill: currentColor; }

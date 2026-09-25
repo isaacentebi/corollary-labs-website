@@ -69,9 +69,16 @@ export function drawPrims(ctx: CanvasRenderingContext2D, prims: Prim[], r: Rect,
         break;
       }
       case 'rect': {
-        const x = Math.round(X(p.t)) + 0.5, y = Math.round(Y(p.y)) + 0.5;
-        const w = Math.max(1, Math.round(p.w * r.w) - 1), h = Math.max(1, Math.round(p.h * r.h));
-        if (p.fill) {
+        // glyph height follows the system's proportions but never stretches past a readable shape
+        const gh = Math.min(r.h, r.w * 0.42);
+        const cy = Y(p.y + p.h / 2);
+        const h = Math.max(1, Math.round(p.h * gh));
+        const x = Math.round(X(p.t)) + 0.5, y = Math.round(cy - h / 2) + 0.5;
+        const w = Math.max(1, Math.round(p.w * r.w) - 1);
+        if (p.hlFill) {
+          ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = c.hlA; ctx.fillStyle = c.hl; ctx.fillRect(x, y, w, h); ctx.restore();
+          ctx.lineWidth = Math.max(0.5, 0.8 * s); ctx.strokeRect(x, y, w, h);
+        } else if (p.fill) {
           ctx.fillStyle = c.band; ctx.fillRect(x, y, w, h); ctx.fillStyle = c.ink;
           ctx.lineWidth = Math.max(0.5, 0.7 * s); ctx.strokeRect(x, y, w, h);
         } else {

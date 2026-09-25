@@ -15,24 +15,21 @@ const { entry, next } = Astro.props;
 const { Content, headings, remarkPluginFrontmatter: fm } = await render(entry);
 const sections = headings.filter((h) => h.depth === 2);
 const L = 'ABCDEFGHIJKLMNOP';
+const marks = sections.map((_, i) => L[i]);
 ---
 <Base page="essays" title={entry.data.title} description={entry.data.dek}>
-  <div class="ruler" aria-hidden="true" data-ruler>
-    <div class="ruler__fill"></div>
-    <div class="ruler__ticks"></div>
-    {sections.map((h, i) => <a class="ruler__mark" href={`#${h.slug}`} data-for={h.slug} tabindex="-1">{L[i]}</a>)}
-    <div class="ruler__head"></div>
-  </div>
-
   <article class="essay">
     <header class="essay__head">
-      <div class="part__side"><a class="sect" href={u('/essays/')}><span class="mark mark--fill">F</span><span class="label">Essays</span></a></div>
+      <div class="part__side"><a class="sect sect--big" href={u('/essays/')}><span class="bigmark">F</span><span class="label">Essays</span></a></div>
       <div class="essay__title">
         <p class="essay__meta"><time datetime={entry.data.date.toISOString()}>{fmtDate(entry.data.date)}</time><span>c. {fm.minutesRead}′</span>{entry.data.placeholder && <span>[Placeholder essay]</span>}</p>
         <h1 class="display"><span data-play>{entry.data.title}</span></h1>
         <p class="essay__dek">{entry.data.dek}</p>
       </div>
-      <div class="essay__score"><MiniScore class="only-wide" seed={entry.id} w={1080} h={210} voices={6} stroke={0.95} bracket ruler marks={sections.map((_, i) => L[i])} at={null} /><MiniScore class="only-narrow" seed={entry.id} w={520} h={250} voices={6} stroke={0.7} bracket ruler marks={sections.map((_, i) => L[i])} at={null} /></div>
+      <div class="essay__score">
+        <MiniScore class="only-wide ms--play" seed={entry.id} w={1080} h={210} voices={6} stroke={0.95} bracket ruler marks={marks} at={100} vt={`score-${entry.id}`} />
+        <MiniScore class="only-narrow ms--play" seed={entry.id} w={520} h={250} voices={6} stroke={0.7} bracket ruler marks={marks} at={100} vt={`score-${entry.id}`} />
+      </div>
     </header>
 
     <div class="essay__body prose" data-body>
@@ -45,40 +42,9 @@ const L = 'ABCDEFGHIJKLMNOP';
         <a class="next" href={u(`/essays/${next.id}/`)}>
           <span class="label">Next essay</span>
           <span class="next__title">{next.data.title}</span>
-          <span class="next__score"><MiniScore seed={next.id} w={420} h={96} at={40} /></span>
+          <span class="next__score"><MiniScore seed={next.id} w={420} h={96} at={40} vt={`score-${next.id}`} /></span>
         </a>
       )}
     </footer>
   </article>
 </Base>
-
-<script>
-  // reading as a playhead: the ruler fills with the highlighter as the essay is read;
-  // each section's rehearsal letter sits where that section begins.
-  const ruler = document.querySelector<HTMLElement>('[data-ruler]');
-  const body = document.querySelector<HTMLElement>('[data-body]');
-  if (ruler && body) {
-    const marks = [...ruler.querySelectorAll<HTMLElement>('.ruler__mark')];
-    let raf = 0;
-    const span = () => { const r = body.getBoundingClientRect(); const top = r.top + scrollY - innerHeight * 0.3; return { top, len: Math.max(1, body.offsetHeight - innerHeight * 0.4) }; };
-    const place = () => {
-      const s = span();
-      marks.forEach((m) => {
-        const h = document.getElementById(m.dataset.for!);
-        if (!h) return;
-        const y = h.getBoundingClientRect().top + scrollY - innerHeight * 0.3;
-        m.style.left = `${Math.min(100, Math.max(0, ((y - s.top) / s.len) * 100))}%`;
-      });
-    };
-    const update = () => {
-      raf = 0;
-      const s = span();
-      const p = Math.min(1, Math.max(0, (scrollY - s.top) / s.len));
-      ruler.style.setProperty('--p', String(p));
-      marks.forEach((m) => m.classList.toggle('is-past', parseFloat(m.style.left) / 100 <= p + 0.001));
-    };
-    addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
-    new ResizeObserver(() => { place(); update(); }).observe(body);
-    marks.forEach((m) => m.addEventListener('click', (e) => { e.preventDefault(); document.getElementById(m.dataset.for!)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }));
-  }
-</script>

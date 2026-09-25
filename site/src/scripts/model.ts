@@ -177,26 +177,28 @@ export function warp(st: State, t: number, y: number) {
   for (const s of us) {
     const p = s.pts; if (p.length < 2) continue;
     const ta = p[0][0], tb = p[p.length - 1][0];
-    const W = smooth(ta - 0.07, ta + 0.01, t) * (1 - smooth(tb - 0.01, tb + 0.07, t));
-    if (W <= 0) continue;
+    // local in time: strongest where the line enters, fading along the timeline
+    const W = smooth(ta - 0.05, ta + 0.01, t) * (1 - smooth(tb - 0.01, tb + 0.05, t)) * Math.exp(-Math.max(0, t - ta) / 0.3);
+    if (W <= 0.001) continue;
     const ys = strokeY(p, t);
     const m = s.mean ?? 0.5;
-    const u = (y - ys) / 0.085;
+    const u = (y - ys) / 0.07;
     // where the drawn line is steep it passes through; where it is level it pushes
     const slope = Math.abs(strokeY(p, t + 0.004) - strokeY(p, t - 0.004)) / 0.008;
-    const lens = (0.95 / (1 + slope * 0.35)) * (y - ys) * Math.exp(-u * u);
-    const lean = 0.3 * (ys - m) * Math.exp(-(((y - m) / 0.36) ** 2));
+    const lens = (0.9 / (1 + slope * 0.35)) * (y - ys) * Math.exp(-u * u);
+    const lean = 0.12 * (ys - m) * Math.exp(-(((y - m) / 0.3) ** 2));
     d += W * Math.min(1.08, s.g ?? 1) * (lens + lean);
   }
-  return y + 0.1 * Math.tanh(d / 0.1);
+  // never more than about half a lane
+  return y + 0.075 * Math.tanh(d / 0.075);
 }
 
 // ---------------------------------------------------------------- geometry
 export type Prim =
-  | { k: 'path'; pts: [number, number][]; w: number; role?: 'agent' | 'string'; vi?: number }
+  | { k: 'path'; pts: [number, number][]; w: number; role?: 'agent' | 'string'; vi?: number; rs?: boolean }
   | { k: 'ribbon'; pts: [number, number, number][]; role?: 'user' }  // t, y, width (px units)
-  | { k: 'rect'; t: number; y: number; w: number; h: number; fill: boolean; n?: number; lw?: number; vi?: number }
-  | { k: 'dot'; t: number; y: number; r: number; stem?: number; vi?: number }
+  | { k: 'rect'; t: number; y: number; w: number; h: number; fill: boolean; n?: number; lw?: number; vi?: number; rs?: boolean; hlFill?: boolean }
+  | { k: 'dot'; t: number; y: number; r: number; stem?: number; vi?: number; rs?: boolean }
   | { k: 'hl'; pts: [number, number][]; w: number; a: number }
   | { k: 'hairpin'; t: number; y: number; len: number; open: number }
   | { k: 'niente'; t: number; y: number };
@@ -217,7 +219,7 @@ export function geometry(sys: System, st: State, opts: { detail?: number; skipUs
   const step = STEP / (opts.detail ?? 1);
 
   // the new voice's part is marked with the highlighter
-  if (st.agentTo > sys.t0) out.push({ k: 'hl', pts: sample((t) => agentY(sys, st, t), sys.t0, st.agentTo, step), w: 12, a: 1 });
+  if (st.agentTo > sys.t0) out.push({ k: 'hl', pts: sample((t) => agentY(sys, st, t), sys.t0, st.agentTo, step), w: 18, a: 1 });
 
   for (let vi = 0; vi < sys.voices.length; vi++) {
     const v = sys.voices[vi];
@@ -228,8 +230,8 @@ export function geometry(sys: System, st: State, opts: { detail?: number; skipUs
     const shown = wa + MOTIF_LEN * im;              // the restatement is written in as im grows
     const inside = (t: number, d = 0) => im > 0 && t + d > wa - 0.006 && t < Math.min(wb, shown) + 0.004;
     const U = (t: number) => motif(t - wa) * v.k;   // signed figure, -1..1
-    // thin highlighter underlay: follows the restatement as this voice writes it
-    let under: [number, number][] | null = im > 0 && v.g !== 'boxes' && v.g !== 'bars' ? sample((t) => B(t) + C(t), wa, Math.min(1, shown), step) : im > 0 ? [] : null;
+    // thin highlighter underlay for the continuous voices (the discrete ones get theirs from their own marks, below)
+    const under: [number, number][] | null = im > 0 && (v.g === 'line' || v.g === 'fan') ? sample((t) => B(t) + C(t), wa, Math.min(1, shown), step) : null;
 
     if (v.g === 'line') {
       // Cardew: the line leans into the figure and thickens where it moves
@@ -257,15 +259,14 @@ export function geometry(sys: System, st: State, opts: { detail?: number; skipUs
       // pointillist restatement: the figure as a run of points, stems follow the motion
       if (im > 0) for (let t = wa + 0.004; t < Math.min(wb, shown); t += 0.0072) {
         const y = B(t) + C(t), dy = C(t + 0.004) - C(t - 0.004);
-        out.push({ vi, k: 'dot', t, y, r: 1.3 + 1.6 * Math.abs(U(t)), stem: Math.abs(dy) > 0.0015 ? -Math.sign(dy) * 0.026 : 0 });
+        out.push({ vi, rs: true, k: 'dot', t, y, r: 1.3 + 1.6 * Math.abs(U(t)), stem: Math.abs(dy) > 0.0015 ? -Math.sign(dy) * 0.026 : 0 });
       }
     } else if (v.g === 'boxes') {
       for (const e of v.events) { const t = snapT(sys, st, e.t); if (inside(t, e.d)) continue; out.push({ vi, k: 'rect', t, y: B(t + e.d / 2) + e.v * 0.03 - 0.013, w: e.d, h: 0.026, fill: false, n: e.n }); }
       // Feldman: the figure as boxes stepping between high, middle and low register
       if (im > 0) for (let t = wa; t < Math.min(wb, shown) - 0.004; t += 0.0205) {
         const f = U(t + 0.01), reg = Math.max(-1, Math.min(1, Math.round(-f * 1.6)));
-        out.push({ vi, k: 'rect', t, y: B(t + 0.01) + reg * 0.032 - 0.013, w: 0.019, h: 0.026, fill: false, n: 1 + Math.round(Math.abs(f) * 4), lw: 1.5 });
-        under!.push([t, B(t + 0.01) + reg * 0.032], [t + 0.0205, B(t + 0.01) + reg * 0.032]);
+        out.push({ vi, rs: true, k: 'rect', t, y: B(t + 0.01) + reg * 0.032 - 0.013, w: 0.019, h: 0.026, fill: false, n: 1 + Math.round(Math.abs(f) * 4), lw: 1.5 });
       }
     } else if (v.g === 'bars') {
       for (const e of v.events) {
@@ -277,8 +278,7 @@ export function geometry(sys: System, st: State, opts: { detail?: number; skipUs
       // Brown: the figure as a staircase of bars, weight follows the size of the move
       if (im > 0) for (let t = wa; t < Math.min(wb, shown) - 0.004; t += 0.0145) {
         const c = C(t + 0.006), lv = Math.round(c / 0.009) * 0.009;
-        out.push({ vi, k: 'path', pts: [[t, B(t) + lv], [t + 0.0115, B(t) + lv]], w: 1.2 + 3.6 * Math.abs(U(t + 0.006)) });
-        under!.push([t, B(t) + lv], [t + 0.0145, B(t) + lv]);
+        out.push({ vi, rs: true, k: 'path', pts: [[t, B(t) + lv], [t + 0.0115, B(t) + lv]], w: 1.2 + 3.6 * Math.abs(U(t + 0.006)) });
       }
     } else if (v.g === 'fan') {
       // Xenakis: strings are ruled between control times; inside the figure they pinch into a bundle and trace it
@@ -296,10 +296,10 @@ export function geometry(sys: System, st: State, opts: { detail?: number; skipUs
       }
     } else if (v.g === 'bands') {
       for (const e of v.events) { const t = snapT(sys, st, e.t); if (inside(t, e.d)) continue; out.push({ vi, k: 'rect', t, y: B(t) + e.v * 0.022 - (e.h ?? 0.02) / 2, w: e.d, h: e.h ?? 0.02, fill: true }); }
-      // Stockhausen: overlapping bands whose centre and width follow the figure
-      if (im > 0) for (let t = wa; t < Math.min(wb, shown) - 0.006; t += 0.013) {
-        const y = B(t + 0.012) + C(t + 0.012), h = 0.012 + 0.022 * Math.abs(U(t + 0.012));
-        out.push({ vi, k: 'rect', t, y: y - h / 2, w: 0.024, h, fill: true });
+      // Stockhausen: the figure as bands stepping in pitch; their fill is the highlight
+      if (im > 0) for (let t = wa; t < Math.min(wb, shown) - 0.008; t += 0.0215) {
+        const c = C(t + 0.011), y = B(t + 0.011) + Math.round(c / 0.012) * 0.012, h = 0.016 + 0.014 * Math.abs(U(t + 0.011));
+        out.push({ vi, rs: true, k: 'rect', t, y: y - h / 2, w: 0.024, h, fill: true, hlFill: true });
       }
     }
     if (under && under.length > 1) out.push({ k: 'hl', pts: under, w: 5, a: 0.8 });
@@ -320,11 +320,30 @@ export function geometry(sys: System, st: State, opts: { detail?: number; skipUs
 
   // bend everything around any drawn line
   if (st.users?.length) for (const p of out) {
+    if ('rs' in p && p.k === 'rect' && p.hlFill) { const y2 = warp(st, p.t + p.w / 2, p.y + p.h / 2); p.y = y2 - p.h / 2; continue; }
     if (p.k === 'path' && p.vi !== undefined) { const tm = (p.pts[0][0] + p.pts[p.pts.length - 1][0]) / 2, ym = (p.pts[0][1] + p.pts[p.pts.length - 1][1]) / 2, dy = warp(st, tm, ym) - ym; p.pts = p.pts.map(([t, y]) => [t, y + dy]); }
     else if (p.k === 'path' || p.k === 'hl') p.pts = p.pts.map(([t, y]) => [t, warp(st, t, y)]);
     else if (p.k === 'ribbon') p.pts = p.pts.map(([t, y, w]) => [t, warp(st, t, y), w]);
     else if (p.k === 'rect') { const y2 = warp(st, p.t + p.w / 2, p.y + p.h / 2); p.y = y2 - p.h / 2; }
     else if (p.k === 'dot' || p.k === 'niente' || p.k === 'hairpin') p.y = warp(st, p.t, p.y);
+  }
+
+  // underlays for the discrete voices, derived from their own (possibly bent) marks so they never detach
+  const byVoice = new Map<number, Prim[]>();
+  for (const p of out) if ((p.k === 'rect' || p.k === 'dot' || p.k === 'path') && p.rs && p.vi !== undefined && !(p.k === 'rect' && p.hlFill)) {
+    if (!byVoice.has(p.vi)) byVoice.set(p.vi, []);
+    byVoice.get(p.vi)!.push(p);
+  }
+  for (const list of byVoice.values()) {
+    const pts: [number, number][] = [];
+    const tOf = (p: Prim) => (p.k === 'path' ? p.pts[0][0] : (p as { t: number }).t);
+    list.sort((a, b) => tOf(a) - tOf(b));
+    for (const p of list) {
+      if (p.k === 'rect') { const cy = p.y + p.h / 2; pts.push([p.t, cy], [p.t + p.w + 0.0015, cy]); }
+      else if (p.k === 'path') pts.push([p.pts[0][0], p.pts[0][1]], [p.pts[p.pts.length - 1][0] + 0.003, p.pts[p.pts.length - 1][1]]);
+      else if (p.k === 'dot') pts.push([p.t, p.y]);
+    }
+    if (pts.length > 1) out.unshift({ k: 'hl', pts, w: 5, a: 0.8 });
   }
 
   // the visitor's own line: ink only, weight follows the pen (steep = thin)
