@@ -1,72 +1,85 @@
-// Home: scroll → story position `s` for the drawing, over about three screens.
-//   hero   0.0–0.3 vh   s −1 → 0     (the hero copy fades; the firm idles)
-//   fig 1  0.3–1.0 vh   s  0 → 1     the firm
-//   fig 2  1.0–2.2 vh   s  1 → 4     an agent enters, plan-making, reorganisation
-//   fig 3  2.2–2.9 vh   s  4 → 5.2   the change spreads; the aperture opens
+// Home: two uses of the one drawing, both rendered on demand.
+//   hero      the organisation as a living cell, behind the name and headline; the pointer presses its wall
+//   approach  the same drawing told in four beats (01–04): it plays through once when it comes into view,
+//             and each beat can be chosen; transitions scrub the story position `s` smoothly
 import { Specimen } from './specimen';
+import { live } from './live';
+import { beats } from '../config/site';
 
-export const homeLayout = (w: number, h: number) => {
-  if (w < 760) { const R = Math.min(w * 0.66, h * 0.3); return { cx: w / 2, cy: Math.max(30 + R, (h - 150) / 2), R }; }
-  const R = Math.min(h * 0.42, w * 0.29);
-  return { cx: w * 0.665, cy: h * 0.5 + 8, R };
+const clamp = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+// hero aperture: to the right of the copy on desktop, above it on phones
+export const heroLayout = (w: number, h: number) => {
+  if (w < 760) { const R = Math.min(w * 0.4, innerHeight * 0.19, 170); return { cx: w / 2, cy: 64 + R + 4, R }; }
+  const m = Math.max(w * 0.05, 56);
+  const R = Math.max(210, Math.min(h * 0.4, w * 0.28, (w - m - 600) / 2));
+  return { cx: w - R - m, cy: h * 0.52 + 14, R };
 };
 
-const MAP: [number, number, number, number][] = [[0, 0.3, -1, 0], [0.3, 1.0, 0, 1], [1.0, 2.2, 1, 4], [2.2, 2.9, 4, 5.3]];
-const toS = (y: number) => {
-  for (const [a, b, s0, s1] of MAP) if (y <= b) return s0 + (Math.max(0, y - a) / (b - a)) * (s1 - s0);
-  return 5.3;
-};
+function initHero(RM: boolean) {
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-specimen]');
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  if (!canvas || !hero) return;
+  const root = document.documentElement;
+  const sp = new Specimen({ canvas, plate: -1, reduced: RM, layout: heroLayout });
+  const L = live(sp);
+  hero.addEventListener('pointermove', (e) => { sp.setPointer(e.clientX, e.clientY, true); L.wake(1400); });
+  hero.addEventListener('pointerleave', () => { sp.setPointer(0, 0, false); L.wake(1200); });
+  let rz = 0;
+  addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { sp.resize(); L.wake(300); }); });
+  new IntersectionObserver(([en]) => L.setVisible(en.isIntersecting, 5000)).observe(hero);
+  const past = () => root.classList.toggle('past-hero', scrollY > hero.offsetHeight * 0.55);
+  addEventListener('scroll', past, { passive: true }); past();
+  L.wake(6500);
+  (window as any).__specimen = sp; // for headless review
+}
+
+function initApproach(RM: boolean) {
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-approach]');
+  const btns = [...document.querySelectorAll<HTMLButtonElement>('[data-beat]')];
+  if (!canvas || !btns.length) return;
+  const sp = new Specimen({ canvas, plate: beats[0].s, reduced: RM, closed: true, layout: (w, h) => ({ cx: w / 2, cy: h / 2, R: Math.min(w, h) * 0.47 }) });
+  const DWELL = 2.4;
+  let cur = 0, from = beats[0].s, to = beats[0].s, t = 0, dur = 0, auto = !RM, playing = false, dwell = 0;
+
+  const mark = () => btns.forEach((b, i) => {
+    b.setAttribute('aria-pressed', String(i === cur));
+    b.style.setProperty('--p', i < cur ? '1' : '0');
+  });
+  const go = (i: number) => {
+    cur = i; from = sp.s; to = beats[i].s; t = 0; dwell = 0;
+    const d = Math.abs(to - from);
+    dur = RM ? 0 : clamp(d * (to < from ? 0.55 : 1.35), 0.6, 3);
+    canvas.setAttribute('aria-label', `${beats[i].n} ${beats[i].title}`);
+    mark();
+  };
+  const step = (dt: number) => {
+    if (t < dur) { t += dt; sp.s = sp.sTarget = from + (to - from) * ease(clamp(t / dur)); }
+    else { sp.s = sp.sTarget = to; }
+    const active = btns[cur];
+    if (auto && playing && t >= dur) {
+      dwell += dt;
+      active.style.setProperty('--p', cur < beats.length - 1 ? clamp(dwell / DWELL).toFixed(3) : '1');
+      if (dwell >= DWELL) { if (cur < beats.length - 1) go(cur + 1); else auto = false; }
+    } else if (!auto) active.style.setProperty('--p', '1');
+    return t < dur || (auto && playing);
+  };
+  const L = live(sp, step);
+  btns.forEach((b, i) => b.addEventListener('click', () => { auto = false; go(i); btns[i].style.setProperty('--p', '1'); L.wake(RM ? 0 : dur * 1000 + 2500); }));
+  go(0);
+  let rz = 0;
+  addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { sp.resize(); L.wake(300); }); });
+  new IntersectionObserver(([en]) => {
+    L.setVisible(en.isIntersecting, 3000);
+    if (en.isIntersecting && en.intersectionRatio >= 0.45 && auto && !playing) { playing = true; dwell = 0; L.wake(DWELL * 1000); }
+  }, { threshold: [0, 0.45] }).observe(canvas);
+  if (RM) { sp.draw(); }
+  (window as any).__approach = { sp, go };
+}
 
 export function initHome() {
-  const canvas = document.querySelector<HTMLCanvasElement>('[data-specimen]');
-  const home = document.querySelector<HTMLElement>('[data-home]');
-  if (!canvas || !home) return;
-  const root = document.documentElement;
-  const RM = root.classList.contains('rm');
-  const sp = new Specimen({ canvas, reduced: RM, layout: homeLayout, labels: false });
-  const legends = [...document.querySelectorAll<HTMLElement>('[data-legend]')];
-  const hero = document.querySelector<HTMLElement>('[data-hero]');
-  const mobile = () => innerWidth < 760;
-
-  const setVars = () => {
-    const L = homeLayout(innerWidth, innerHeight);
-    if (mobile()) home.style.setProperty('--ap-b', `${Math.round(L.cy + L.R + 10)}px`);
-    else home.style.removeProperty('--ap-b');
-  };
-
-  const measure = () => {
-    const vh = innerHeight;
-    const y = (scrollY - home.offsetTop) / vh;
-    let s = toS(y);
-    if (RM) s = y < 0.3 ? -1 : y < 1.0 ? 1 : y < 2.2 ? 3.98 : 5.3; // reduced motion: settled states only
-    sp.sTarget = s; if (RM) sp.s = s;
-    legends.forEach((lg, i) => {
-      const s0 = +lg.dataset.s0!, s1 = +lg.dataset.s1!, last = i === legends.length - 1;
-      const inAt = s0 + (i === 0 ? 0.12 : 0.04), outAt = last ? 99 : s1 + 0.04;
-      const a = RM ? (s >= s0 && (s < s1 || last) ? 1 : 0)
-        : Math.min(1, Math.max(0, (s - inAt) / 0.08)) * Math.min(1, Math.max(0, (outAt - s) / 0.08));
-      const leave = last ? 1 - Math.min(1, Math.max(0, (y - 2.84) / 0.12)) : 1; // gone before the next section arrives
-      lg.style.opacity = (a * leave).toFixed(3);
-      lg.style.visibility = a * leave > 0.005 ? 'visible' : 'hidden';
-    });
-    if (hero) { const ha = RM ? (y < 0.3 ? 1 : 0) : 1 - Math.min(1, Math.max(0, (y - 0.03) / 0.25)); hero.style.opacity = ha.toFixed(3); }
-    home.classList.toggle('is-open', s > 4.45);
-    root.classList.toggle('is-dark', s > 3.06 && s < 4.0);
-    root.classList.toggle('past-hero', y > 0.3);
-    if (RM) sp.draw();
-  };
-
-  canvas.addEventListener('pointermove', (e) => sp.setPointer(e.clientX, e.clientY, true));
-  canvas.addEventListener('pointerleave', () => sp.setPointer(0, 0, false));
-  addEventListener('scroll', measure, { passive: true });
-  let rz = 0;
-  addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { setVars(); sp.resize(); measure(); }); });
-  setVars(); measure(); sp.s = sp.sTarget;
-
-  if (RM) { sp.draw(); return; }
-  let inView = true;
-  const io = new IntersectionObserver(([en]) => { inView = en.isIntersecting; if (inView && !document.hidden) sp.start(); else sp.stop(); });
-  io.observe(home);
-  document.addEventListener('visibilitychange', () => { if (document.hidden || !inView) sp.stop(); else sp.start(); });
-  (window as any).__specimen = sp; // for headless review
+  const RM = document.documentElement.classList.contains('rm');
+  initHero(RM);
+  initApproach(RM);
 }

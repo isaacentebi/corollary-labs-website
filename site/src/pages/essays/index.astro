@@ -1,5 +1,5 @@
 ---
-// Essays: a tray of slides. Each essay has a small specimen, generated from its slug.
+// Research: the essays, as a tray of slides. Each essay has a small specimen, generated from its slug.
 import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
 import { u } from '../../config/site';
@@ -10,10 +10,10 @@ const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((
 const rows = await Promise.all(essays.map(async (e, i) => ({ e, i, fm: (await render(e)).remarkPluginFrontmatter, svg: slideSVG(e.id, i % 3) })));
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 ---
-<Base page="essays" title="Essays" description="[Meta description]">
+<Base page="essays" title="Research">
   <section class="page essays" aria-labelledby="essays-title">
-    <p class="page__kicker t-label" data-reveal>{rows.length} essays</p>
-    <h1 class="page__title t-display" id="essays-title" data-reveal>Essays</h1>
+        <h1 class="page__title t-display" id="essays-title" data-reveal>Research</h1>
+    <p class="page__intro" data-reveal>Essays on agents, organisations and how new technology spreads.</p>
     <ol class="tray">
       {rows.map(({ e, i, fm, svg }) => (
         <li class="tray__item" data-reveal style={`--rd:${i * 0.12}s`}>

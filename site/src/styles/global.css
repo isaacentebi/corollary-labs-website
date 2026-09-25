@@ -37,6 +37,7 @@ html, body { transition: background-color 0.7s var(--soft), color 0.7s var(--sof
 
 *, *::before, *::after { box-sizing: border-box; }
 html {
+  scroll-padding-top: calc(var(--bar) + 8px);
   background: var(--paper); color: var(--ink);
   font-family: var(--f-text); font-size: 16px; line-height: 1.45;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
@@ -74,23 +75,39 @@ body::after {
 .link-u { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size 0.5s var(--soft); padding-bottom: 1px; }
 .link-u:hover, .link-u:focus-visible, .link-u[aria-current='page'] { background-size: 100% 1px; }
 
-/* ── nav: a paper band with the mark and the name; hides while you read down, returns when you scroll up ─ */
-.nav { position: fixed; top: 0; left: 0; right: 0; height: var(--bar); z-index: 80; display: flex; align-items: center; padding: 0 var(--gutter);
+/* ── nav: a paper band with the mark, the name and four links; hides while you read down, returns on the way up ─ */
+.nav { position: fixed; top: 0; left: 0; right: 0; height: var(--bar); z-index: 80; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 var(--gutter);
   background: linear-gradient(var(--paper) 78%, color-mix(in srgb, var(--paper) 0%, transparent));
   transition: transform 0.55s var(--soft); }
 html.nav-hidden .nav:not(.is-open):not(:focus-within) { transform: translateY(-105%); }
-.nav__btn { display: flex; align-items: center; gap: 12px; padding: 4px 10px 4px 2px; margin-left: -2px; border-radius: 999px; }
-.nav__btn:focus-visible { outline-offset: 2px; }
+.nav__home { display: flex; align-items: center; gap: 12px; padding: 4px 10px 4px 2px; margin-left: -2px; border-radius: 999px; }
 .nav__mark { width: 38px; height: 38px; color: var(--ink); overflow: visible; transition: color 0.3s var(--soft), transform 0.7s var(--spring); }
 .nav__mark path { fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.nav__name { position: relative; display: grid; font-family: var(--f-display); font-variation-settings: 'SOFT' 100; font-weight: 400; font-size: 20px; letter-spacing: -0.01em; white-space: nowrap; }
-.nav__name > span { grid-area: 1 / 1; justify-self: start; text-align: left; transition: opacity 0.3s var(--soft), transform 0.45s var(--soft); }
-.nav__name .-close { opacity: 0; transform: translateY(6px); font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; align-self: center; }
-.nav.is-open .nav__name .-name { opacity: 0; transform: translateY(-6px); }
-.nav.is-open .nav__name .-close { opacity: 1; transform: none; }
-html[data-page='home']:not(.past-hero) .nav:not(.is-open) .nav__name .-name { opacity: 0; transform: translateX(-6px); }
-.nav__btn:hover .nav__mark, .nav.is-open .nav__mark { color: var(--accent); }
-.nav.is-open .nav__mark { transform: rotate(180deg); }
+.nav__home:hover .nav__mark { color: var(--accent); transform: rotate(-24deg); }
+.nav__name { font-family: var(--f-display); font-variation-settings: 'SOFT' 100; font-weight: 400; font-size: 20px; letter-spacing: -0.01em; white-space: nowrap; transition: opacity 0.4s var(--soft), transform 0.5s var(--soft); }
+html[data-page='home']:not(.past-hero) .nav__name { opacity: 0; transform: translateX(-6px); }
+.nav__links ul { display: flex; gap: clamp(22px, 2.6vw, 42px); }
+.nav__links a { font-family: var(--f-text); font-size: 17px; letter-spacing: 0.005em; }
+.nav__links a[aria-current='page'] { color: var(--accent); }
+.nav__btn { display: none; align-items: center; gap: 10px; padding: 8px 0 8px 10px; font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+.nav__btn-label { display: grid; }
+.nav__btn-label > span { grid-area: 1 / 1; justify-self: end; transition: opacity 0.3s var(--soft), transform 0.45s var(--soft); }
+.nav__btn-label .-close { opacity: 0; transform: translateY(6px); }
+.nav.is-open .nav__btn-label .-open { opacity: 0; transform: translateY(-6px); }
+.nav.is-open .nav__btn-label .-close { opacity: 1; transform: none; }
+.nav__cell { width: 26px; height: 26px; overflow: visible; transition: transform 0.7s var(--spring); }
+.nav__cell circle { fill: none; stroke: var(--ink); stroke-width: 1.2; vector-effect: non-scaling-stroke; transition: stroke 0.3s var(--soft), fill 0.3s var(--soft); }
+.nav__cell .-n { fill: var(--ink); stroke: none; }
+.nav.is-open .nav__cell { transform: scale(1.12); }
+.nav.is-open .nav__cell circle { stroke: var(--accent); }
+.nav.is-open .nav__cell .-n { fill: var(--accent); }
+@media (max-width: 759px) {
+  .nav__links { display: none; }
+  .nav__btn { display: flex; }
+  .nav__name { font-size: 18px; }
+  .nav__mark { width: 32px; height: 32px; }
+}
+@media (min-width: 760px) { .menu { display: none; } }
 
 .menu { position: fixed; inset: 0; z-index: 79; pointer-events: none; }
 .menu__veil { position: absolute; inset: 0; background: color-mix(in srgb, var(--paper) 90%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.4s var(--soft); }
@@ -127,6 +144,8 @@ html[data-page='home']:not(.past-hero) .nav:not(.is-open) .nav__name .-name { op
 .nav.is-open + .menu .menu__cell span { opacity: 1; transition: opacity 0.4s var(--soft) calc(0.55s + var(--i) * 60ms); }
 .menu__foot { position: absolute; left: var(--gutter); bottom: 22px; font-size: var(--fs-small); color: var(--ink-2); opacity: 0; transition: opacity 0.4s var(--soft) 0.2s; }
 .nav.is-open + .menu .menu__foot { opacity: 1; }
+
+html.js:not(.rm) { scroll-behavior: smooth; }
 
 /* ── footer: the tissue ──────────────────────────────── */
 .foot { position: relative; min-height: min(80svh, 740px); overflow: hidden; isolation: isolate; }

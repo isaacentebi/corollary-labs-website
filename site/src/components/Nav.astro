@@ -1,19 +1,30 @@
 ---
-// Navigation: the mark (a limaçon) in the corner. Pressed, it divides into one cell per page.
+// Navigation: the mark and the name (home), four links. On phones the links fold into the mark's
+// dividing menu: pressed, a cell divides into one daughter cell per link.
 import { nav, site, u } from '../config/site';
 import { limacon } from '../lib/mark';
 import { blob, hash } from '../lib/blob';
+import Mail from './Mail.astro';
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
-const isCur = (h: string) => { const hh = h.replace(/\/$/, '') || '/'; return hh === path || (hh !== u('').replace(/\/$/, '') && path.startsWith(hh)); };
+const isCur = (h: string) => !h.includes('#') && (h.replace(/\/$/, '') || '/') === path;
 const cells = nav.map((n, i) => {
   const s = hash(n.label);
-  return { ...n, i, wall: blob(s, 50, 50, 46, 0.012), wall2: blob(s, 50, 50, 43, 0.012), rx: 50, ry: 30 };
+  return { ...n, i, wall: blob(s, 50, 50, 46, 0.012), wall2: blob(s, 50, 50, 43, 0.012) };
 });
 ---
 <div class="nav" data-nav>
-  <button class="nav__btn" type="button" aria-expanded="false" aria-controls="menu" data-nav-btn>
+  <a class="nav__home" href={u('')} aria-label={`${site.name}, home`}>
     <svg class="nav__mark" viewBox="0 0 32 32" aria-hidden="true"><path d={limacon(3, 1, 260, 32, 2)} data-mark /></svg>
-    <span class="nav__name"><span class="-name">{site.name}</span><span class="-close" aria-hidden="true">Close</span></span>
+    <span class="nav__name">{site.name}</span>
+  </a>
+  <nav class="nav__links" aria-label="Main">
+    <ul>
+      {nav.map((n) => <li><a class="link-u" href={n.href} aria-current={isCur(n.href) ? 'page' : undefined}>{n.label}</a></li>)}
+    </ul>
+  </nav>
+  <button class="nav__btn" type="button" aria-expanded="false" aria-controls="menu" data-nav-btn>
+    <span class="nav__btn-label"><span class="-open">Menu</span><span class="-close" aria-hidden="true">Close</span></span>
+    <svg class="nav__cell" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" /><circle class="-n" cx="10" cy="10" r="2.4" /></svg>
     <span class="u-sr" data-nav-sr>Open menu</span>
   </button>
 </div>
@@ -22,29 +33,20 @@ const cells = nav.map((n, i) => {
   <ul class="menu__list">
     {cells.map((c) => (
       <li>
-        <a class="menu__cell" href={c.href} style={`--i:${c.i}`} aria-current={isCur(c.href) ? 'page' : undefined} tabindex="-1">
+        <a class="menu__cell" href={c.href} style={`--i:${c.i}`} aria-current={isCur(c.href) ? 'page' : undefined} tabindex="-1" data-menu-link>
           <svg viewBox="0 0 100 100" aria-hidden="true"><path class="wall" d={c.wall} /><path class="wall2" d={c.wall2} /></svg>
           <span><small>{String(c.i + 1).padStart(2, '0')}</small>{c.label}</span>
         </a>
       </li>
     ))}
   </ul>
-  <p class="menu__foot"><a class="link-u" href={`mailto:${site.email}`} tabindex="-1">{site.email}</a></p>
+  <p class="menu__foot"><Mail /></p>
 </nav>
 <style>
-  /* where the daughter cells settle: a loose tissue, different per breakpoint */
-  .menu__cell { --d: clamp(150px, 15vw, 230px); }
-  li:nth-child(1) .menu__cell { --x: 30%; --y: 36%; }
-  li:nth-child(2) .menu__cell { --x: 50%; --y: 27%; }
-  li:nth-child(3) .menu__cell { --x: 68%; --y: 46%; }
-  li:nth-child(4) .menu__cell { --x: 47%; --y: 60%; }
-  li:nth-child(5) .menu__cell { --x: 28%; --y: 70%; }
-  @media (max-width: 700px) {
-    .menu__cell { --d: 136px; font-size: 22px; }
-    li:nth-child(1) .menu__cell { --x: 31%; --y: 25%; }
-    li:nth-child(2) .menu__cell { --x: 70%; --y: 31%; }
-    li:nth-child(3) .menu__cell { --x: 33%; --y: 49%; }
-    li:nth-child(4) .menu__cell { --x: 70%; --y: 57%; }
-    li:nth-child(5) .menu__cell { --x: 40%; --y: 74%; }
-  }
+  /* where the daughter cells settle: a loose tissue */
+  .menu__cell { --d: 140px; font-size: 22px; }
+  li:nth-child(1) .menu__cell { --x: 32%; --y: 27%; }
+  li:nth-child(2) .menu__cell { --x: 70%; --y: 34%; }
+  li:nth-child(3) .menu__cell { --x: 34%; --y: 52%; }
+  li:nth-child(4) .menu__cell { --x: 68%; --y: 62%; }
 </style>

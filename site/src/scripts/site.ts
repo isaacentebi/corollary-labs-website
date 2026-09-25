@@ -28,6 +28,7 @@ function initMenu() {
   };
   set(false);
   btn.addEventListener('click', () => set(!nav.classList.contains('is-open')));
+  menu.querySelectorAll('[data-menu-link]').forEach((a) => a.addEventListener('click', () => set(false)));
   menu.querySelector('[data-nav-close]')?.addEventListener('click', () => set(false));
   addEventListener('keydown', (e) => { if (e.key === 'Escape' && nav.classList.contains('is-open')) { set(false); btn.focus(); } });
 }
@@ -55,7 +56,7 @@ function initReveals() {
 export function tissueCanvas(canvas: HTMLCanvasElement, opts: { cell?: number; seed?: number; stainFrom?: number; stainSpeed?: number } = {}) {
   const ctx = canvas.getContext('2d')!; const P = palette();
   let T: Tissue; let w = 0, h = 0, dpr = 1, unit = 1;
-  let t = 0, st = opts.stainFrom ?? 0, last = 0, raf = 0, running = false, hot = -1, px = -1e9, py = -1e9;
+  let t = 0, st = opts.stainFrom ?? 0, last = 0, raf = 0, running = false, hot = -1, px = -1e9, py = -1e9, until = 0, seen = false;
   const build = () => {
     const r = canvas.getBoundingClientRect(); w = r.width; h = r.height; dpr = Math.min(2, devicePixelRatio || 1);
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
@@ -74,19 +75,21 @@ export function tissueCanvas(canvas: HTMLCanvasElement, opts: { cell?: number; s
     if (!running) return;
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
     t += dt; st = clamp(st + dt * (opts.stainSpeed ?? 0.03), 0, 0.95);
-    draw(); raf = requestAnimationFrame(loop);
+    draw();
+    if (st < 0.95 || now < until) raf = requestAnimationFrame(loop); else running = false;
   };
   build();
   if (RM) { st = 0.95; draw(); }
   else draw();
-  const start = () => { if (running || RM) return; running = true; last = performance.now(); raf = requestAnimationFrame(loop); };
-  const stop = () => { running = false; cancelAnimationFrame(raf); };
+  const wake = (ms: number) => { until = Math.max(until, performance.now() + ms); if (running || RM || !seen) return; running = true; last = performance.now(); raf = requestAnimationFrame(loop); };
+  const start = () => { seen = true; wake(3000); };
+  const stop = () => { seen = false; running = false; cancelAnimationFrame(raf); };
   const io = new IntersectionObserver(([en]) => (en.isIntersecting ? start() : stop()));
   io.observe(canvas);
   let rz = 0; addEventListener('resize', () => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { build(); draw(); }); });
   const host = canvas.parentElement!;
-  host.addEventListener('pointermove', (e) => { const r = canvas.getBoundingClientRect(); px = e.clientX - r.left; py = e.clientY - r.top; if (RM) draw(); });
-  host.addEventListener('pointerleave', () => { px = py = -1e9; if (RM) draw(); });
+  host.addEventListener('pointermove', (e) => { const r = canvas.getBoundingClientRect(); px = e.clientX - r.left; py = e.clientY - r.top; if (RM) draw(); else wake(1200); });
+  host.addEventListener('pointerleave', () => { px = py = -1e9; if (RM) draw(); else wake(600); });
   return { start, stop };
 }
 

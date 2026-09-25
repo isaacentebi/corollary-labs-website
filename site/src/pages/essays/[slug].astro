@@ -21,7 +21,7 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 
   <article class="essay" data-essay>
     <aside class="rail" aria-label="Essay information">
       <div class="rail__in">
-        <a class="rail__back t-label link-u" href={u('essays/')}>← Essays</a>
+        <a class="rail__back t-label link-u" href={u('essays/')}>← Research</a>
         <svg class="rail__slide" viewBox="0 0 200 200" aria-hidden="true" set:html={slideSVG(entry.id, i % 3)} />
         {sections.length > 0 && (
           <nav class="toc" aria-label="Contents">

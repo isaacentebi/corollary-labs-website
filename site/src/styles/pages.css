@@ -85,3 +85,11 @@
 .contact__rows { margin-top: clamp(32px, 4vw, 56px); display: grid; gap: 10px; max-width: 30em; }
 .contact__rows div { display: grid; grid-template-columns: 8em 1fr; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); align-items: baseline; }
 @media (max-width: 860px) { .contact__grid { grid-template-columns: 1fr; } }
+
+/* research index intro, about → team, contact line */
+.page__intro { margin-top: 22px; max-width: 30em; font-size: var(--fs-body); color: var(--ink-2); }
+.about__team { margin-top: clamp(80px, 10vw, 150px); }
+.about__h { font-size: clamp(42px, 4.8vw, 78px); padding-top: 18px; border-top: 2px solid var(--ink); }
+.about__more { display: inline-block; margin-top: clamp(24px, 3vw, 40px); font-size: var(--fs-body); }
+.contact__line { margin-top: clamp(24px, 3vw, 40px); max-width: 14em; font-family: var(--f-display); font-variation-settings: 'SOFT' 100; font-weight: 320; font-size: clamp(30px, 3.4vw, 54px); line-height: 1.06; letter-spacing: -0.015em; }
+.contact__mail { font-family: var(--f-mono); font-size: clamp(16px, 1.3vw, 20px); letter-spacing: 0.04em; }

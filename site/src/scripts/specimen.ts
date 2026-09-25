@@ -46,7 +46,7 @@ const quadD = (a: V, c: V, b: V, t: number): V => [2 * (1 - t) * (c[0] - a[0]) +
 
 export interface Label { id: string; text: string; letter: string; key: boolean; x: number; y: number; ax: number; ay: number; a: number }
 export type LayoutFn = (w: number, h: number, compose: number) => { cx: number; cy: number; R: number };
-export interface SpecimenOpts { canvas: HTMLCanvasElement; plate?: number; reduced?: boolean; layout?: LayoutFn; labels?: boolean }
+export interface SpecimenOpts { canvas: HTMLCanvasElement; plate?: number; reduced?: boolean; layout?: LayoutFn; labels?: boolean; closed?: boolean }
 type St = ReturnType<Specimen['st']>;
 
 export class Specimen {
@@ -54,7 +54,7 @@ export class Specimen {
   w = 0; h = 0; dpr = 1; cx = 0; cy = 0; R = 1;
   s = -1; sTarget = -1; t = 0; phase = 0; born = 0;
   running = false; raf = 0; last = 0;
-  reduced: boolean; plate?: number; withLabels: boolean;
+  reduced: boolean; plate?: number; withLabels: boolean; closed: boolean;
   pointer = { x: 9, y: 9, on: 0, tx: 9, ty: 9 };
   tissue: Tissue; granules: [number, number, number][] = [];
   layoutFn?: LayoutFn;
@@ -63,7 +63,7 @@ export class Specimen {
 
   constructor(o: SpecimenOpts) {
     this.c = o.canvas; this.ctx = o.canvas.getContext('2d')!; this.P0 = palette(); this.P = this.P0;
-    this.reduced = !!o.reduced; this.plate = o.plate; this.layoutFn = o.layout; this.withLabels = !!o.labels;
+    this.reduced = !!o.reduced; this.plate = o.plate; this.layoutFn = o.layout; this.withLabels = !!o.labels; this.closed = !!o.closed;
     if (o.plate != null) { this.s = this.sTarget = o.plate; }
     this.tissue = makeTissue(7, 38, 26, 1.9, { divide: 0.16, shrink: 0.12, reach: 9 });
     const G = rng(23);
@@ -127,7 +127,7 @@ export class Specimen {
       lobe: ss(3.4, 3.8, s), newOut: ss(3.62, 3.9, s), loop: ss(3.4, 3.8, s),
       simplify: ss(4.0, 4.1, s), detail: 1 - ss(4.08, 4.18, s), tissueA: ss(4.08, 4.18, s),
       zoom: ss(4.16, 4.52, s), others: ss(4.41, 4.56, s),
-      stain: 0.85 * clamp((s - 4.45) / 0.7) + 0.15 * clamp(s - 5.15), open: ss(4.58, 4.98, s),
+      stain: 0.85 * clamp((s - 4.45) / 0.7) + 0.15 * clamp(s - 5.15), open: this.closed ? 0 : ss(4.58, 4.98, s),
     };
   }
 

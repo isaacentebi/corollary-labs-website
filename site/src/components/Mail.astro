@@ -1,0 +1,6 @@
+---
+// The address: a mailto link once a real one exists, plain text while it is a placeholder.
+import { site, mailHref } from '../config/site';
+const { class: cls, ...rest } = Astro.props;
+---
+{mailHref ? <a class:list={[cls, 'link-u']} href={mailHref} {...rest}>{site.email}</a> : <span class={cls}>{site.email}</span>}

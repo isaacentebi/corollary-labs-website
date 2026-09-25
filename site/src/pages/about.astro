@@ -1,39 +1,50 @@
 ---
-// About: statement, a live plate of figure 4 (the reorganised firm), and the colophon set as a specimen label.
-// Everything in [brackets] is a placeholder, to be written with the founder.
+// About (the "Company" page): the paragraph, a live plate of the reorganised organisation, the details
+// set as a specimen label, and the team. Everything in [brackets] is a placeholder, to be written with the founder.
 import Base from '../layouts/Base.astro';
-import { site, figs } from '../config/site';
+import Mail from '../components/Mail.astro';
+import { beats, team, u } from '../config/site';
 import '../styles/pages.css';
 
 const rows = [
   { k: 'Entity', v: '[Entity]' },
   { k: 'Founded', v: '[Year]' },
   { k: 'Location', v: '[City]' },
-  { k: 'Contact', v: site.email, href: `mailto:${site.email}` },
 ];
+const fig = beats[2];
 ---
-<Base page="about" title="About" description="[Meta description]">
+<Base page="about" title="About">
   <article class="page about" aria-labelledby="about-title">
+    <p class="page__kicker t-label" data-reveal>Company</p>
     <h1 class="page__title t-display" id="about-title" data-reveal>About</h1>
     <div class="about__grid">
       <p class="about__statement" data-reveal>
-        <span class="ph">[About — one paragraph]</span>
+        Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span>
       </p>
       <figure class="plate" data-reveal style="--rd:0.15s">
-        <canvas data-plate="4" role="img" aria-label={`Figure 2, ${figs[1].title}`}></canvas>
-        <figcaption class="t-label">Fig. 2, {figs[1].title}</figcaption>
+        <canvas data-plate={fig.s} role="img" aria-label={`${fig.n} ${fig.title}`}></canvas>
+        <figcaption class="t-label">{fig.n} {fig.title}</figcaption>
       </figure>
       <section class="label" aria-label="Details" data-reveal>
         <dl>
-          {rows.map((r) => (
-            <div>
-              <dt>{r.k}</dt>
-              <dd class:list={{ ph: r.v.startsWith('[') }}>{r.href ? <a class="link-u" href={r.href}>{r.v}</a> : r.v}</dd>
-            </div>
-          ))}
+          {rows.map((r) => (<div><dt>{r.k}</dt><dd class="ph">{r.v}</dd></div>))}
+          <div><dt>Contact</dt><dd><Mail /></dd></div>
         </dl>
       </section>
     </div>
+    <section class="about__team" aria-labelledby="team-title">
+      <h2 class="about__h t-title" id="team-title" data-reveal>Team</h2>
+      <ol class="people">
+        {team.map((p, i) => (
+          <li class="person" data-reveal style={`--rd:${i * 0.1}s`}>
+            <div class="person__frame" aria-hidden="true"><span>[Portrait]</span></div>
+            <p class="person__name t-title ph">{p.name}</p>
+            <span class="person__role t-label ph">{p.role}</span>
+          </li>
+        ))}
+      </ol>
+      <a class="about__more link-u" href={u('team/')} data-reveal>Team →</a>
+    </section>
   </article>
   <script>
     import { initPlates } from '../scripts/plate';

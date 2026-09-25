@@ -1,22 +1,23 @@
 ---
 // Contact: the address, large, beside the firm as it is drawn at the top of the home page.
 import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
+import Mail from '../components/Mail.astro';
 import '../styles/pages.css';
 ---
-<Base page="contact" title="Contact" description="[Meta description]">
+<Base page="contact" title="Contact">
   <article class="page contact" aria-labelledby="contact-title">
     <div class="contact__grid">
       <div>
         <h1 class="page__title t-display" id="contact-title" data-reveal>Contact</h1>
-        <a class="contact__mail link-u" href={`mailto:${site.email}`} data-reveal style="--rd:0.1s">{site.email}</a>
+        <p class="contact__line" data-reveal style="--rd:0.05s">Deploying agents in your organisation? Talk to us.</p>
+        <p class="contact__mail" data-reveal style="--rd:0.1s"><Mail /></p>
         <dl class="label contact__label" data-reveal style="--rd:0.2s">
           <div><dt>Location</dt><dd class="ph">[City]</dd></div>
           <div><dt>Press</dt><dd class="ph">[Press contact]</dd></div>
         </dl>
       </div>
       <figure class="plate" data-reveal style="--rd:0.15s">
-        <canvas data-plate="-1" role="img" aria-label="Figure 1, The firm"></canvas>
+        <canvas data-plate="-1" role="img" aria-label="01 The organisation"></canvas>
       </figure>
     </div>
   </article>
