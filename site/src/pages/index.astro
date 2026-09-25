@@ -1,25 +1,51 @@
 ---
+// Home: the company. Hero (what it is) → Capabilities → Approach (the diagram) → Research → Company → Contact.
 import Base from '../layouts/Base.astro';
-import Story from '../components/Story.astro';
+import Hero from '../components/Hero.astro';
+import Approach from '../components/Approach.astro';
 import { getCollection, render } from 'astro:content';
 import { site, url } from '../config/site';
 import '../styles/landing.css';
 
-// the business, reached quickly after the story: About, the latest essays, and the index
 const essays = (await getCollection('essays', ({ data }) => !data.draft)).sort((a, b) => +b.data.date - +a.data.date).slice(0, 3);
 const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e)).remarkPluginFrontmatter })));
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
+const pad = (n: number) => String(n).padStart(2, '0');
+
+const capabilities = [
+  { t: 'Agent deployment.', d: 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.' },
+  { t: 'Model fine-tuning.', d: 'Models adapted and evaluated on your data for the specific tasks your agents perform.' },
+  { t: 'Systems integration.', d: 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.' },
+  { t: 'Evaluation and governance.', d: 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.' },
+];
+const team = Array.from({ length: 4 }, () => ({ name: '[Name]', role: '[Role]' }));
 ---
 <Base page="home">
-  <Story />
+  <Hero />
 
-  <section class="home-block home-about" aria-labelledby="home-about-k">
-    <p class="home-block__k" id="home-about-k" style="grid-column: 1 / -1">About</p>
-    <p class="home-about__p" data-reveal="lines">[About — one paragraph]</p>
+  <section class="sec caps" id="capabilities" aria-labelledby="caps-title">
+    <header class="sec__head">
+      <h2 class="sec__k" id="caps-title">Capabilities</h2>
+    </header>
+    <ol class="caps__list" data-caps>
+      {capabilities.map((c, i) => (
+        <li class="cap" data-cap>
+          <span class="cap__node" aria-hidden="true"></span>
+          <span class="cap__n">{pad(i + 1)}</span>
+          <h3 class="cap__t">{c.t}</h3>
+          <p class="cap__d">{c.d}</p>
+        </li>
+      ))}
+    </ol>
   </section>
 
-  <section class="home-block home-essays" aria-labelledby="home-essays-k">
-    <p class="home-block__k" id="home-essays-k">Essays</p>
+  <Approach />
+
+  <section class="sec research" id="research" aria-labelledby="research-title">
+    <header class="sec__head">
+      <h2 class="sec__k" id="research-title">Research</h2>
+      <p class="sec__intro -small" data-reveal="lines">Essays on agents, organisations and how new technology spreads.</p>
+    </header>
     <ol class="home-essays__list" data-reveal="rows">
       {rows.map(({ e, fm }) => (
         <li>
@@ -32,14 +58,35 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
         </li>
       ))}
     </ol>
-    <p class="home-essays__more"><a class="pill" href={url('/essays/')}>Essays <i aria-hidden="true">→</i></a></p>
+    <p class="sec__more"><a class="pill" href={url('/essays/')}>All research <i aria-hidden="true">→</i></a></p>
   </section>
 
-  <section class="home-block home-index" aria-label="Index">
-    <ul class="home-index__list" data-reveal="rows">
-      <li><a class="home-link" href={url('/about/')}><span class="home-link__label">About</span><span class="home-link__dot" aria-hidden="true"></span></a></li>
-      <li><a class="home-link" href={url('/team/')}><span class="home-link__label">Team</span><span class="home-link__dot" aria-hidden="true"></span></a></li>
-      <li><a class="home-link" href={`mailto:${site.email}`}><span class="home-link__label">Contact</span><span class="home-link__dot" aria-hidden="true"></span></a></li>
-    </ul>
+  <section class="sec company" id="company" aria-labelledby="company-title">
+    <header class="sec__head">
+      <h2 class="sec__k" id="company-title">Company</h2>
+    </header>
+    <div class="company__grid">
+      <div class="company__about">
+        <h3 class="company__h">About</h3>
+        <p class="company__p" data-reveal="lines">{site.name} is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
+      </div>
+      <div class="company__team">
+        <h3 class="company__h">Team</h3>
+        <ul class="team-mini" data-reveal="rows">
+          {team.map((p) => <li class="team-mini__row"><span class="ph">{p.name}</span><span class="team-mini__role ph">{p.role}</span></li>)}
+        </ul>
+      </div>
+    </div>
+    <p class="sec__more"><a class="pill" href={url('/about/')}>About the company <i aria-hidden="true">→</i></a></p>
+  </section>
+
+  <section class="sec contact" id="contact" aria-labelledby="contact-title">
+    <header class="sec__head">
+      <h2 class="sec__k" id="contact-title">Contact</h2>
+    </header>
+    <div class="contact__body">
+      <p class="contact__line" data-reveal="lines">Deploying agents in your organisation? Talk to us.</p>
+      <p class="contact__email">{site.email}</p>
+    </div>
   </section>
 </Base>

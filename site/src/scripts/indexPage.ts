@@ -8,7 +8,7 @@ export function initIndex(_introDone: Promise<void>) {
   if (band) {
     const f = new DiffusionField(band, {
       mode: 'auto', spacing: innerWidth < 700 ? 18 : 24, autoSpeed: 0.02, autoMax: 0.34, staticT: 0.34, seed: 29, word: true, wordBase: 0.72,
-      wordLayout: { text: band.dataset.word ?? 'Essays', wFrac: innerWidth < 700 ? 0.78 : 0.56, hFrac: 0.62, baseFrac: 0.7 },
+      wordLayout: { text: band.dataset.word ?? 'Research', wFrac: innerWidth < 700 ? 0.78 : 0.56, hFrac: 0.62, baseFrac: 0.7 },
       // seeds keep their clusters clear of the band's bottom-right label
       seeds: [[0.1, 0.3], [0.55, 0.15], [0.9, 0.22]],
     });

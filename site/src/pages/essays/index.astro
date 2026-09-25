@@ -10,12 +10,12 @@ const rows = await Promise.all(essays.map(async (e) => ({ e, fm: (await render(e
 const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).replaceAll('/', '.');
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
-<Base page="index" title="Essays" description="[Meta description]">
+<Base page="index" title="Research">
   <section class="index o-container" aria-labelledby="index-title">
     <header class="index-band" aria-labelledby="index-title">
-      <canvas class="field index-band__field" data-field="index" aria-hidden="true"></canvas>
-      <h1 class="u-sr" id="index-title">Essays</h1>
-      <span class="index-band__count t-label" aria-hidden="true" data-reveal="scramble">{String(rows.length).padStart(2, '0')} essays</span>
+      <canvas class="field index-band__field" data-field="index" data-word="Research" aria-hidden="true"></canvas>
+      <h1 class="u-sr" id="index-title">Research</h1>
+      <span class="index-band__count t-label" aria-hidden="true" data-reveal="scramble">Research — {String(rows.length).padStart(2, '0')}</span>
     </header>
     <div class="rule" data-reveal="rule"></div>
     <ol class="index-list" data-reveal="rows">

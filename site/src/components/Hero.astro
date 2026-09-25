@@ -1,0 +1,18 @@
+---
+// Hero: the company in one screen. The soft diffusion field is the living backdrop (cursor pushes it, a click sends a ring).
+import { site, contactHref } from '../config/site';
+import Mark from './Mark.astro';
+---
+<section class="hero" data-hero aria-labelledby="hero-title">
+  <canvas class="field hero__field" data-field="hero" aria-hidden="true"></canvas>
+  <div class="hero__copy">
+    <h1 class="hero__name" id="hero-title"><Mark class="hero__mark" />{site.name}</h1>
+    <p class="hero__headline">We deploy AI agents inside organisations and rebuild the operations around them.</p>
+    <p class="hero__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
+    <div class="hero__actions">
+      <a class="pill -primary" href={contactHref}>Contact us</a>
+      <a class="pill" href="#approach">Our approach <i aria-hidden="true">↓</i></a>
+    </div>
+  </div>
+  <span class="hero__cue" aria-hidden="true" data-hero-scroll><i></i></span>
+</section>

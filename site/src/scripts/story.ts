@@ -1,12 +1,10 @@
-// The home story (Plotsoft) — one stage, one scroll progress p ∈ [0,1], compressed to ~4 screen heights.
-//
-//   0.00–0.07  HERO        the soft field; the name lives in it (cursor reveals, clicks send soft rings)
-//   0.07–0.15  DIVE        the camera falls into one node; it resolves into the firm
-//   0.15–0.60  FIGS 1–3    the firm → an agent enters with the inputs and its instructions become one goal → reorganisation
-//   0.60–0.67  PULL BACK   the recomposed firm shrinks back into its node; the field returns around it
-//   0.67–0.80  FIG 4       diffusion: the same reorganisation spreads node to node through the field
-//   0.80–0.84  LIFT        the lattice is seen from above, then tilts into 3D
-//   0.84–1.00  CODA        homotopy: the sheet twists, tears and re-glues into a torus, which turns jade
+// Home (Plotsoft, company IA). Two pieces:
+//   initHero      the soft diffusion field behind the company statement (pointer pushes it, clicks send rings; it sleeps when idle)
+//   initApproach  one short sticky stage, one scroll progress p ∈ [0,1], labelled by the legend 01–04:
+//     0.10–0.56  01–03   the firm → an agent enters and its instructions become one goal → reorganisation
+//     0.56–0.66  04      pull back: the recomposed firm shrinks into its node; the field returns around it
+//     0.58–0.80  04      diffusion: the same reorganisation spreads node to node through the field
+//     0.80–1.00  04      the lattice lifts into 3D and closes into a torus, which turns jade
 //
 // Plotter's geometry and timeline are kept; the drawing is softened: a breathing rounded boundary with a tonal wash instead
 // of a hatched rectangle, curved wires and hanging instruction cords, round points, glowing agents, springy easing, and a
@@ -24,7 +22,7 @@ const mobile = () => innerWidth < 700;
 const css = (n: string) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 // scenes overlap: the network starts growing round the firm while it is still shrinking into its node
-const P = { dive: [0.07, 0.15], figs: [0.15, 0.58], back: [0.58, 0.68], diff: [0.6, 0.8], lift: [0.8, 0.85], coda: [0.85, 1] } as const;
+const P = { figs: [0.1, 0.56], back: [0.56, 0.66], diff: [0.58, 0.8], lift: [0.8, 0.85], coda: [0.85, 1] } as const;
 
 type Pt = { x: number; y: number };
 const polyLen = (pts: Pt[]) => { let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); return L; };
@@ -341,89 +339,86 @@ function makeDiagram(root: SVGGElement, small = false) {
   return { S, tl, render, home, figStarts, setDetail, boundaryCenter: () => { const bb = box(wall()); return { x: bb.x + bb.w / 2, y: bb.y + bb.h / 2, r: Math.max(bb.w, bb.h) / 2 }; } };
 }
 
-export function initStory(introDone: Promise<void>, arrived: boolean) {
+export function initHero(introDone: Promise<void>) {
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  const c = hero?.querySelector<HTMLCanvasElement>('[data-field="hero"]');
+  if (!hero || !c) return;
+  const A = new DiffusionField(c, { spacing: mobile() ? 20 : 26, seed: 11, mode: 'progress', staticT: 0.2, global: true, sleep: 7,
+    seeds: mobile() ? [[0.2, 0.9], [0.85, 0.72], [0.7, 0.1]] : [[0.62, 0.2], [0.86, 0.58], [0.55, 0.86], [0.12, 0.08]] });
+  onDispose(() => A.destroy());
+  if (reduced()) return;
+  // adoption grows a little as the hero is scrolled away (reversible)
+  A.setProgress(0.12);
+  const st = ScrollTrigger.create({ trigger: hero, start: 'top top', end: 'bottom top', onUpdate: (s) => A.setProgress(0.12 + 0.16 * sm(s.progress)) });
+  onDispose(() => st.kill());
+  const cue = hero.querySelector<HTMLElement>('[data-hero-scroll]');
+  if (cue) {
+    gsap.set(cue, { opacity: 0 });
+    introDone.then(() => gsap.to(cue, { opacity: 1, duration: 1.2, delay: 1.6, ease: 'sine.out' }));
+    const hide = ScrollTrigger.create({ trigger: hero, start: 'top top', end: '+=120', onUpdate: (s) => { cue.style.visibility = s.progress > 0.5 ? 'hidden' : 'visible'; } });
+    onDispose(() => hide.kill());
+  }
+}
+
+export function initApproach() {
   const sec = document.querySelector<HTMLElement>('[data-story]');
   if (!sec) return;
   const RM = reduced();
-  const cA = sec.querySelector<HTMLCanvasElement>('[data-field="hero"]')!;
   const cB = sec.querySelector<HTMLCanvasElement>('[data-field="diffuse"]')!;
   const svg = sec.querySelector<SVGSVGElement>('[data-diagram]')!;
   const dg = svg.querySelector<SVGGElement>('[data-dg]')!;
   const inkG = svg.querySelector<SVGGElement>('[data-ink]')!;
   const cS = sec.querySelector<HTMLCanvasElement>('[data-surface]')!;
-  const figs = [...sec.querySelectorAll<HTMLElement>('[data-fig]')];
-  const cue = sec.querySelector<HTMLElement>('[data-hero-scroll]');
-  const stmt = sec.querySelector<HTMLElement>('.story__statement');
+  const beats = [...sec.querySelectorAll<HTMLElement>('[data-beat]')];
   svg.setAttribute('viewBox', mobile() ? '295 -20 500 690' : '180 160 820 400');
-  if (!mobile()) svg.setAttribute('preserveAspectRatio', 'xMidYMin meet'); // the diagram's top lines up with the statement
+  if (!mobile()) svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
-  const opts = { spacing: mobile() ? 20 : 26, seed: 11 };
-  const A = new DiffusionField(cA, { ...opts, mode: 'progress', staticT: 0.34, word: true, wordBase: 0.72, global: true, seeds: [[0.14, 0.34], [0.62, 0.2], [0.86, 0.58], [0.4, 0.82]] });
-  (window as any).__heroField = A;
-  const focus = A.nearest(A.w * 0.46, A.h * 0.5);
-  // the diffusion: half the hero's density, no old lattice, adopted nodes stay jade over a pale wash; the firm is marked
-  const B = new DiffusionField(cB, { spacing: mobile() ? 27 : 36, seed: 11, mode: 'progress', staticT: 0.62, pointer: true, drawLattice: false, adoptedSignal: true, seeds: [[focus.x / A.w, focus.y / A.h]] });
-  B.mark = B.nearest(focus.x, focus.y).k;
-  const surf = new HomotopySurface(cS);
   const D = makeDiagram(inkG, mobile());
   const F = D.home;
-  onDispose(() => { A.destroy(); B.destroy(); surf.destroy(); if ((window as any).__heroField === A) delete (window as any).__heroField; });
+  const toScreen = (x: number, y: number) => { const m = svg.getScreenCTM()!, r = svg.getBoundingClientRect(); const pt = new DOMPoint(x, y).matrixTransform(m); return { x: pt.x - r.left, y: pt.y - r.top, k: m.a }; };
+  const toSvg = (x: number, y: number) => { const m = svg.getScreenCTM()!.inverse(), r = svg.getBoundingClientRect(); const pt = new DOMPoint(x + r.left, y + r.top).matrixTransform(m); return { x: pt.x, y: pt.y }; };
+  // the diffusion starts from the node where the firm sits on screen, and that node is marked
+  const home = toScreen(F.x, F.y), sr = svg.getBoundingClientRect();
+  const B = new DiffusionField(cB, { spacing: mobile() ? 27 : 36, seed: 11, mode: 'progress', staticT: 0.62, pointer: true, drawLattice: false, adoptedSignal: true, sleep: 4,
+    seeds: [[home.x / Math.max(1, sr.width), home.y / Math.max(1, sr.height)]] });
+  B.mark = B.nearest(home.x, home.y).k;
+  const surf = new HomotopySurface(cS);
+  surf.enabled = false; surf.stop();
+  if (mobile()) surf.cy = 0.56; else surf.cx = 0.62; // clear of the legend
+  onDispose(() => { B.destroy(); surf.destroy(); });
 
-  const setFig = (k: number) => figs.forEach((f, i) => f.classList.toggle('is-active', i === k));
+  let curBeat = -2;
+  const setBeat = (k: number) => { if (k === curBeat) return; curBeat = k; beats.forEach((b, i) => { b.classList.toggle('is-active', i === k); b.classList.toggle('is-past', i < k); }); };
 
   if (RM) {
+    // reduced motion: one calm, composed frame — the reorganised firm, with the whole legend readable
     D.tl.progress(1); D.render();
-    // reduced motion: one calm, composed frame — the reorganised firm over a faint field, with its caption
-    // the field stays to the right of the text column (CSS mask)
-    cA.style.opacity = mobile() ? '0' : '0.55'; cB.style.opacity = '0'; cS.style.opacity = '0'; svg.style.opacity = '1'; if (stmt) stmt.style.opacity = '1';
-    setFig(2);
+    cB.style.opacity = '0'; cS.style.opacity = '0'; svg.style.opacity = '1';
+    beats.forEach((b) => b.classList.add('is-active'));
     return;
   }
 
-  if (arrived) {
-    A.reveal = 1; A.sweep = -1;
-    const box = { x: -260 };
-    gsap.to(box, { x: innerWidth + 260, duration: 2.2, delay: 0.7, ease: 'sine.inOut', onUpdate: () => { A.sweep = box.x; }, onComplete: () => { A.reveal = 0; A.sweep = -1; } });
-  }
-
-  const toScreen = (x: number, y: number) => { const m = svg.getScreenCTM()!, r = svg.getBoundingClientRect(); const pt = new DOMPoint(x, y).matrixTransform(m); return { x: pt.x - r.left, y: pt.y - r.top, k: m.a }; };
-  const toSvg = (x: number, y: number) => { const m = svg.getScreenCTM()!.inverse(), r = svg.getBoundingClientRect(); const pt = new DOMPoint(x + r.left, y + r.top).matrixTransform(m); return { x: pt.x, y: pt.y }; };
-
-  let p = 0, curFig = -2;
+  let p = 0, inView = false;
   const apply = () => {
-    const dive = sm(seg(p, P.dive[0], P.dive[1]));
     const back = sm(seg(p, P.back[0], P.back[1]));
-    const inFirm = p >= P.dive[0] && p < P.back[1];
-    A.wordMul = 1 - sm(seg(p, 0.012, 0.06));
-    A.setProgress(0.06 + sm(seg(p, 0, P.dive[0])) * 0.06);
+    const inFirm = p < P.back[1];
     const bc = D.boundaryCenter();
-    const bcs = toScreen(F.x, F.y);
-    A.camFocus = [focus.x, focus.y];
-    A.camTo = [lerp(focus.x, bcs.x, dive), lerp(focus.y, bcs.y, dive)];
-    A.camScale = lerp(1, 9, dive * dive);
-    cA.style.opacity = String(p < P.back[0] ? 1 - sm(seg(dive, 0.45, 0.9)) : 0);
-    const nodeSvg = toSvg(focus.x, focus.y);
     // on the way out the firm IS the diffusion's marked node: the field's camera zooms out about that node while carrying it from
     // where the firm sits to where the node belongs, and the firm drawing rides on exactly the same point
     const es = 1 - (1 - back) ** 2.2, mk = B.mark, mx0 = B.sx.length > mk ? B.sx[mk] : B.nx[mk], my0 = B.sy.length > mk ? B.sy[mk] : B.ny[mk];
     const bcS = toScreen(bc.x, bc.y), camTo: [number, number] = [lerp(bcS.x, mx0, es), lerp(bcS.y, my0, es)];
     const markSvg = toSvg(camTo[0], camTo[1]);
-    const s0 = 3 / Math.max(1, bcs.k * F.r), sEnd = 11 / Math.max(1, bcs.k * F.r); // the firm lands as a node the size of the marked ring
-    let s = 1, tx = 0, ty = 0, dop = 0;
-    if (p < P.back[0]) { const e = dive; s = lerp(s0, 1, e * e); tx = lerp(nodeSvg.x - F.x, 0, e); ty = lerp(nodeSvg.y - F.y, 0, e); dop = sm(seg(e, 0.02, 0.3)); }
-    else { const e = back; s = lerp(1, sEnd * (F.r / bc.r), 1 - (1 - e) ** 2.2); tx = markSvg.x - bc.x; ty = markSvg.y - bc.y; dop = 1 - sm(seg(e, 0.72, 0.98)); }
+    const sEnd = 11 / Math.max(1, bcS.k * F.r); // the firm lands as a node the size of the marked ring
+    let s = 1, tx = 0, ty = 0, dop = 1;
+    if (p >= P.back[0]) { s = lerp(1, sEnd * (F.r / bc.r), es); tx = markSvg.x - bc.x; ty = markSvg.y - bc.y; dop = 1 - sm(seg(back, 0.72, 0.98)); }
     const ox = p < P.back[0] ? F.x : bc.x, oy = p < P.back[0] ? F.y : bc.y;
-    dg.setAttribute('transform', `translate(${(ox + tx).toFixed(2)} ${(oy + ty).toFixed(2)}) scale(${s.toFixed(4)}) translate(${-ox} ${-oy})`);
+    dg.setAttribute('transform', p < P.back[0] ? '' : `translate(${(ox + tx).toFixed(2)} ${(oy + ty).toFixed(2)}) scale(${s.toFixed(4)}) translate(${-ox} ${-oy})`);
     // once the firm is smaller than ~120px on screen its internals fade and it reads as the marked node
-    const wPx = s * bc.r * 2 * bcs.k, detail = p < P.back[0] ? 1 : sm(seg(wPx, 60, 125));
+    const wPx = s * bc.r * 2 * bcS.k, detail = p < P.back[0] ? 1 : sm(seg(wPx, 60, 125));
     D.setDetail(detail);
     if (p >= P.back[0]) dop = Math.min(dop, sm(seg(wPx, 20, 60)));
     svg.style.opacity = String(inFirm ? dop : 0);
-    if (stmt) { const so = inFirm ? sm(seg(dive, 0.55, 1)) * (1 - sm(seg(back, 0, 0.35))) : 0; stmt.style.opacity = String(so); stmt.style.filter = so < 0.99 ? `blur(${((1 - so) * 8).toFixed(1)}px)` : ''; }
-    D.tl.progress(seg(p, P.dive[0] + 0.02, P.figs[1]));
-    if (p < P.back[0]) D.S.fa = Math.max(D.S.fa, sm(seg(dive, 0, 0.25)));
-    A.running && !(p < P.back[0]) && A.stop();
-    if (p < P.back[0] && !A.running && A.visible) A.start();
+    D.tl.progress(seg(p, P.figs[0], P.figs[1]));
     const bIn = p >= P.back[0];
     B.camFocus = [mx0, my0]; B.camTo = camTo;
     B.camScale = lerp(9, 1, es);
@@ -431,40 +426,37 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
     B.setProgress(sm(seg(p, P.diff[0], P.diff[1])));
     B.markA = (1 - sm(seg(wPx, 40, 110))) * (1 - sm(seg(p, P.lift[0] - 0.01, P.lift[0] + 0.01)));
     cB.style.opacity = String(bIn ? sm(seg(back, 0, 0.35)) * (1 - sm(seg(p, P.lift[0] + 0.004, P.lift[0] + 0.016))) : 0);
-    if (bIn && !B.running) B.start(); if (!bIn && B.running) B.stop();
+    if (bIn && inView && !B.running) B.start(); if ((!bIn || !inView) && B.running) B.stop();
     cS.style.opacity = String(sm(seg(p, P.lift[0] - 0.004, P.lift[0] + 0.012)));
     surf.tilt = sm(seg(p, P.lift[0] + 0.012, P.lift[1] + 0.02));
     surf.setProgress(sm(seg(p, P.coda[0], P.coda[1] - 0.04)));
-    if (p >= P.lift[0]) { if (!surf.running) surf.start(); } else if (surf.running) surf.stop();
-    let k = -1;
-    if (p >= P.figs[0] - 0.01 && p < P.back[0] + 0.05) { const t = D.tl.time(); k = D.figStarts.filter((s1) => t >= s1).length - 1; }
-    else if (p >= P.back[0] + 0.05 && p < P.lift[0]) k = 3;
-    else if (p >= P.lift[0]) k = 4;
-    if (k !== curFig) { curFig = k; setFig(k); }
+    surf.enabled = p >= P.lift[0] && inView;
+    if (surf.enabled) { if (!surf.running) { surf.idle = 0; surf.start(); } } else if (surf.running) surf.stop();
+    let k = 0;
+    if (p < P.back[0]) { const t = D.tl.time(); k = Math.max(0, D.figStarts.filter((s1) => t >= s1).length - 1); }
+    else k = 3;
+    setBeat(k);
   };
 
   // a critically damped spring sits between the scroll and the scene, so every change glides in
   let pT = 0, pv = 0;
-  const st = ScrollTrigger.create({ trigger: sec, start: 'top top', end: 'bottom bottom', onUpdate: (s) => { pT = s.progress; } });
-  onDispose(() => st.kill());
+  const st = ScrollTrigger.create({ trigger: sec, start: 'top 60%', end: 'bottom bottom', onUpdate: (s) => { pT = s.progress; } });
+  const vis = ScrollTrigger.create({ trigger: sec, start: 'top bottom', end: 'bottom top', onToggle: (s) => { inView = s.isActive; apply(); } });
+  onDispose(() => { st.kill(); vis.kill(); });
+  inView = vis.isActive;
   pT = p = st.progress;
   const tick = (_t: number, dms: number) => {
+    if (!inView) return;
     const dt = Math.min(0.05, dms / 1000), W = 7.5;
     if (Math.abs(pT - p) > 1e-5 || Math.abs(pv) > 1e-5) {
       pv += (W * W * (pT - p) - 2 * W * pv) * dt; p += pv * dt;
       if (Math.abs(pT - p) < 1e-5 && Math.abs(pv) < 1e-4) { p = pT; pv = 0; }
       apply();
     }
+    // the diagram breathes only while it is on screen
     if (svg.style.opacity !== '0') D.render();
   };
   gsap.ticker.add(tick);
   onDispose(() => gsap.ticker.remove(tick));
   D.render(); apply();
-
-  if (cue) {
-    gsap.set(cue, { opacity: 0 });
-    introDone.then(() => gsap.to(cue, { opacity: 1, duration: 1.2, delay: 1.2, ease: 'sine.out' }));
-    const hide = ScrollTrigger.create({ trigger: sec, start: 'top top', end: '+=160', onUpdate: (s) => { cue.style.visibility = s.progress > 0.5 ? 'hidden' : 'visible'; } });
-    onDispose(() => hide.kill());
-  }
 }

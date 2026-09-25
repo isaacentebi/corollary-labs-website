@@ -1,25 +1,23 @@
 ---
+// The company's main nav: Capabilities · Approach · Company · Contact. Research is deliberately not here (footer only).
 import Wordmark from './Wordmark.astro';
-import { site } from '../config/site';
+import { site, url } from '../config/site';
 const path = Astro.url.pathname;
-const current = (href: string) => (href.startsWith('/essays') && path.startsWith('/essays')) ? 'page' : undefined;
+const current = (label: string) => ((label === 'Company' && /\/(about|team)\/?$/.test(path)) ? 'page' : undefined);
 ---
-<a class="skip-link" href="#main">Skip to content</a>
 <div class="c-header__bg" aria-hidden="true"></div>
 <header class="c-header" data-header>
-  <div class="c-header__logo"><Wordmark /></div>
+  <div class="c-header__logo"><Wordmark href={url('/')} /></div>
   <nav class="c-header__nav" aria-label="Primary">
     <ul>
-      {site.nav.map((n) => <li><a href={n.href} data-shuffle-hover aria-current={current(n.href)}>{n.label}</a></li>)}
+      {site.nav.map((n) => <li class:list={{ '-contact': n.label === 'Contact' }}><a href={n.href} aria-current={current(n.label)}>{n.label}</a></li>)}
     </ul>
   </nav>
-  <a class="c-header__cta link" href={site.cta.href} data-shuffle-hover>{site.cta.label}</a>
   <button class="c-header__toggle" type="button" aria-expanded="false" aria-controls="menu" data-menu-toggle><span data-menu-label>Menu</span></button>
 </header>
 <div class="c-menu" id="menu" data-menu aria-hidden="true">
   <ul class="c-menu__list">
     {site.nav.map((n) => <li><a href={n.href} data-menu-link>{n.label}</a></li>)}
-    <li><a href={site.cta.href} data-menu-link>{site.cta.label}</a></li>
   </ul>
   <div class="c-menu__foot"><span>{site.email}</span><span>©{site.year}</span></div>
 </div>

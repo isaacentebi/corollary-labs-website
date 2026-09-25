@@ -28,6 +28,7 @@ export interface FieldOptions {
   drawLattice?: boolean; // draw the old rectilinear lattice under the network
   adoptedSignal?: boolean; // adopted nodes and links stay jade (at lower intensity) over a pale wash
   glow?: number; // scale of the front's glow
+  sleep?: number; // seconds without input after which a settled field stops drawing (0 = never)
 }
 
 const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -72,13 +73,13 @@ export class DiffusionField {
     this.ctx = canvas.getContext('2d', { alpha: true })!;
     this.o = {
       mode: 'auto', spacing: 26, seeds: [[0.18, 0.62], [0.52, 0.3], [0.8, 0.72]], autoSpeed: 0.012, autoMax: 0.24,
-      staticT: 0.35, curve: false, lattice: 4, seed: 7, pointer: true, label: false, curveRect: null, word: false, wordLayout: {}, wordBase: 0.2, global: false, drawLattice: true, adoptedSignal: false, glow: 0.6, ...opts,
+      staticT: 0.35, curve: false, lattice: 4, seed: 7, pointer: true, label: false, curveRect: null, word: false, wordLayout: {}, wordBase: 0.2, global: false, drawLattice: true, adoptedSignal: false, glow: 0.6, sleep: 0, ...opts,
     } as Required<FieldOptions>;
     this.colors = { ink: css('--ink'), ink3: css('--ink-3'), rule: css('--rule'), signal: css('--signal'), paper: css('--paper'), ink2: css('--ink-2'), glow: css('--glow') };
     this.build();
     this.ro = new ResizeObserver(() => { const r = canvas.getBoundingClientRect(); if (Math.abs(r.width - this.w) > 2 || Math.abs(r.height - this.h) > 2) { this.build(); this.draw(); } });
     this.ro.observe(canvas);
-    this.io = new IntersectionObserver((e) => { this.visible = e[0].isIntersecting; this.visible ? this.start() : this.stop(); }, { rootMargin: '10% 0px' });
+    this.io = new IntersectionObserver((e) => { this.visible = e[0].isIntersecting; if (this.visible) { this.idle = 0; this.start(); } else this.stop(); }, { rootMargin: '10% 0px' });
     this.io.observe(canvas);
     if (this.o.pointer) {
       const host: any = this.o.global ? window : canvas.parentElement || canvas;
@@ -96,6 +97,7 @@ export class DiffusionField {
     this.px = nx; this.py = ny;
     this.pEnergy = Math.min(1, this.pEnergy + (isFinite(d) ? d / 400 : 0));
     this.idle = 0;
+    if (!this.running && this.visible && this.o.sleep) this.start(); // wake on input
     if (this.o.word && isFinite(d)) this.addHeat(nx, ny, Math.min(0.5, 0.06 + d / 120));
   };
   idle = 99;
@@ -328,7 +330,7 @@ export class DiffusionField {
     return lo / a.length;
   }
 
-  setProgress(t: number) { this.target = t; if (DiffusionField.reduced) { this.t = this.o.staticT; this.draw(); } else if (!this.running && this.visible) this.start(); }
+  setProgress(t: number) { const moved = Math.abs(t - this.target) > 1e-4; this.target = t; if (DiffusionField.reduced) { this.t = this.o.staticT; this.draw(); } else if (!this.running && this.visible && (moved || !this.o.sleep)) { if (moved) this.idle = 0; this.start(); } }
 
   start() {
     if (this.running || DiffusionField.reduced) return;
@@ -355,6 +357,9 @@ export class DiffusionField {
         this.drawWord(dt);
       }
       this.onFrame?.(this);
+      if (!this.o.word) this.idle += dt;
+      // render on demand: once settled and untouched for a while, stop drawing (input or setProgress wakes it)
+      if (this.o.sleep && this.idle > this.o.sleep && Math.abs(this.target - this.t) < 1e-3 && !this.pulses.length && this.kick < 0.01) { this.stop(); return; }
       this.raf = requestAnimationFrame(loop);
     };
     this.raf = requestAnimationFrame(loop);

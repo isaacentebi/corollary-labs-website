@@ -1,12 +1,12 @@
 ---
 // Team — placeholders until names, roles and portraits are chosen. Same band + hairline system as About and Essays.
 import Base from '../layouts/Base.astro';
-import { site } from '../config/site';
+import { site, emailLive } from '../config/site';
 import '../styles/about.css';
 
 const people = Array.from({ length: 4 }, (_, i) => ({ n: String(i + 1).padStart(2, '0'), name: '[Name]', role: '[Role]', line: '[Placeholder — one line on their work.]' }));
 ---
-<Base page="team" title="Team" description="[Meta description]">
+<Base page="team" title="Team">
   <article class="about o-container" aria-labelledby="team-title">
     <header class="about-band">
       <canvas class="field about-band__field" data-field="index" data-word="Team" aria-hidden="true"></canvas>
@@ -33,7 +33,7 @@ const people = Array.from({ length: 4 }, (_, i) => ({ n: String(i + 1).padStart(
     <section class="about-colophon" aria-label="Contact">
       <dl>
         <div class="about-colophon__row"><dt class="t-label">JOIN</dt><dd class="ph">[Placeholder — how to get in touch about working here.]</dd></div>
-        <div class="about-colophon__row"><dt class="t-label">CONTACT</dt><dd><a href={`mailto:${site.email}`}>{site.email}</a></dd></div>
+        <div class="about-colophon__row"><dt class="t-label">CONTACT</dt><dd>{emailLive ? <a href={`mailto:${site.email}`}>{site.email}</a> : site.email}</dd></div>
       </dl>
     </section>
   </article>

@@ -1,35 +1,31 @@
 ---
-import { site, url } from '../config/site';
+import { site, url, emailLive } from '../config/site';
 import Mark from './Mark.astro';
-const base = url('/');
 const path = Astro.url.pathname.replace(/\/?$/, '/');
-const cur = (h: string) => { const u = url(h); return (h === '/' ? path === base : path.startsWith(u)) ? 'page' : undefined; };
+const cur = (h: string) => (!h.includes('#') && path.startsWith(h.replace(/\/?$/, '/')) ? 'page' : undefined);
 ---
-<footer class="c-footer" id="contact" data-footer>
+<footer class="c-footer" data-footer>
   <nav class="c-footer__menus" aria-label="Site">
     <div class="c-footer__menu -main">
-      <p class="c-footer__title" data-reveal="scramble">Index</p>
-      <ul class="c-footer__list" data-reveal="rows">
-        <li><a href={url('/')} aria-current={cur('/')}>Home</a></li>
-        <li><a href={url('/essays/')} aria-current={cur('/essays/')}>Essays</a></li>
-        <li><a href={url('/about/')} aria-current={cur('/about/')}>About</a></li>
-        <li><a href={url('/team/')} aria-current={cur('/team/')}>Team</a></li>
-        <li><a href="#contact">Contact</a></li>
+      <p class="c-footer__title">Index</p>
+      <ul class="c-footer__list">
+        {site.footer.slice(0, 3).map((n) => <li><a href={n.href} aria-current={cur(n.href)}>{n.label}</a></li>)}
       </ul>
-      <ul class="c-footer__list -b" data-reveal="rows">
-        <li><a href="#top" data-to-top>Back to top ↑</a></li>
+      <ul class="c-footer__list -b">
+        {site.footer.slice(3).map((n) => <li><a href={n.href} aria-current={cur(n.href)}>{n.label}</a></li>)}
       </ul>
     </div>
     <div class="c-footer__menu -contact">
-      <p class="c-footer__title" data-reveal="scramble">Contact</p>
-      <ul class="c-footer__list" data-reveal="rows">
-        <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+      <p class="c-footer__title">Contact</p>
+      <ul class="c-footer__list">
+        <li>{emailLive ? <a href={`mailto:${site.email}`}>{site.email}</a> : <span>{site.email}</span>}</li>
+        <li><a href="#top" data-to-top>Back to top ↑</a></li>
       </ul>
     </div>
   </nav>
   <div class="c-footer__sign">
     <Mark class="c-footer__mark" />
-    <p class="c-footer__big" data-reveal="lines">{site.name}</p>
+    <p class="c-footer__big">{site.name}</p>
   </div>
   <p class="c-footer__copy">©{site.year} {site.name}</p>
 </footer>

@@ -23,6 +23,8 @@ export class HomotopySurface {
   io?: IntersectionObserver; ro?: ResizeObserver;
   proj = new Float32Array(); depth = new Float32Array();
   static reduced = false;
+  cx = 0.5; cy = 0.5; // where the lifted torus settles (fractions of the canvas); flat, it is centred
+  enabled = true; idle = 0; // render on demand: the owner enables it; it stops itself after a quiet spell
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d')!;
@@ -30,7 +32,7 @@ export class HomotopySurface {
     this.proj = new Float32Array(this.NU * this.NV * 2); this.depth = new Float32Array(this.NU * this.NV);
     this.resize();
     this.ro = new ResizeObserver(() => { this.resize(); this.draw(); }); this.ro.observe(canvas);
-    this.io = new IntersectionObserver((e) => { this.visible = e[0].isIntersecting; this.visible ? this.start() : this.stop(); });
+    this.io = new IntersectionObserver((e) => { this.visible = e[0].isIntersecting; if (this.visible && this.enabled) { this.idle = 0; this.start(); } else this.stop(); });
     this.io.observe(canvas);
     addEventListener('pointermove', this.onMove, { passive: true });
     canvas.addEventListener('pointerdown', this.onDown);
@@ -44,10 +46,12 @@ export class HomotopySurface {
   onMove = (e: PointerEvent) => {
     const r = this.canvas.getBoundingClientRect();
     if (e.clientY < r.top || e.clientY > r.bottom) return;
+    this.idle = 0; if (!this.running && this.visible && this.enabled) this.start();
     this.yawT = 0.6 + ((e.clientX - r.left) / r.width - 0.5) * 1.1;
     this.pitchT = 0.5 + ((e.clientY - r.top) / r.height - 0.5) * 0.6;
   };
   onDown = (e: PointerEvent) => {
+    this.idle = 0; if (!this.running && this.enabled) this.start();
     // ripple from the nearest projected vertex
     const r = this.canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
     let best = 0, bd = 1e12;
@@ -55,7 +59,7 @@ export class HomotopySurface {
     this.ripples.push({ u: (best % this.NU) / (this.NU - 1), v: Math.floor(best / this.NU) / (this.NV - 1), t0: this.clock });
     if (this.ripples.length > 5) this.ripples.shift();
   };
-  setProgress(h: number) { this.target = h; if (HomotopySurface.reduced) { this.hp = 0.4; this.draw(); } }
+  setProgress(h: number) { if (Math.abs(h - this.target) > 1e-4) { this.idle = 0; if (!this.running && this.visible && this.enabled) this.start(); } this.target = h; if (HomotopySurface.reduced) { this.hp = 0.4; this.draw(); } }
 
   start() {
     if (this.running || HomotopySurface.reduced) return;
@@ -70,6 +74,8 @@ export class HomotopySurface {
       this.pitch += (pt - this.pitch) * (1 - Math.exp(-dt * 3));
       this.ripples = this.ripples.filter((q) => this.clock - q.t0 < 3.5);
       this.draw();
+      this.idle += dt;
+      if (this.idle > 6 && Math.abs(this.target - this.hp) < 1e-3 && !this.ripples.length) { this.stop(); return; }
       this.raf = requestAnimationFrame(loop);
     };
     this.raf = requestAnimationFrame(loop);
@@ -143,6 +149,7 @@ export class HomotopySurface {
     const base = Math.min(this.w, this.h) * 0.32 * (this.w < 700 ? 0.96 : 1);
     const cover = Math.max((this.w / this.h) * 1.25, this.h / (1.45 * base) - 1);
     const scale = base * (1 + (1 - this.tilt) * cover), cam = 4.2;
+    const ox = this.w * (0.5 + (this.cx - 0.5) * this.tilt), oy = this.h * (0.5 + (this.cy - 0.5) * this.tilt);
     const P = this.proj, D = this.depth, C3 = this.cam3, tmp = [0, 0, 0], J = this.jit;
     const du = 1 / (NU - 1), dv = 1 / (NV - 1);
     const jf = 1 - sm(seg(this.hp, 0.6, 0.95)); // jitter fades out as the surface becomes the torus (the new order is regular)
@@ -154,7 +161,7 @@ export class HomotopySurface {
       const x1 = x * cy - z * sy, z1 = x * sy + z * cy;
       const y2 = y * cp - z1 * sp, z2 = y * sp + z1 * cp;
       const f = cam / (cam + z2);
-      P[k * 2] = this.w / 2 + x1 * f * scale; P[k * 2 + 1] = this.h / 2 - y2 * f * scale; D[k] = z2;
+      P[k * 2] = ox + x1 * f * scale; P[k * 2 + 1] = oy - y2 * f * scale; D[k] = z2;
       C3[k * 3] = x1; C3[k * 3 + 1] = y2; C3[k * 3 + 2] = z2;
     }
     // how squarely each vertex faces the camera (1 = face on, 0 = edge on): edge-on parts are drawn fainter, so silhouettes don't clot

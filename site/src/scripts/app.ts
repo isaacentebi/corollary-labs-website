@@ -109,12 +109,13 @@ function boot() {
     const a = (e.target as HTMLElement).closest?.('a[href]') as HTMLAnchorElement | null;
     if (!a) return;
     const url = new URL(a.href, location.href);
-    if (url.pathname === location.pathname && url.hash) {
+    const norm = (x: string) => x.replace(/\/$/, '');
+    if (norm(url.pathname) === norm(location.pathname) && url.hash) {
       const t = url.hash === '#top' ? document.body : document.querySelector(url.hash);
       if (t) {
         e.preventDefault();
         root.classList.remove('menu-open');
-        if (lenis) lenis.scrollTo(t as HTMLElement, { offset: url.hash === '#top' ? 0 : -40, duration: 1.4 });
+        if (lenis) lenis.scrollTo(t as HTMLElement, { offset: url.hash === '#top' ? 0 : -24, duration: 1.4 });
         else (t as HTMLElement).scrollIntoView();
         history.replaceState(null, '', url.hash === '#top' ? url.pathname : url.hash);
       }

@@ -59,3 +59,9 @@
   .about-fig__d { display: none !important; }
   .about-fig__m { display: block !important; max-width: 340px; margin: 0 auto; }
 }
+
+/* About: the team, in brief (Company = About with Team) */
+.about-team { margin-top: var(--space-big); }
+.about-team__k { color: var(--ink-2); margin-bottom: 1rem; }
+.about-team .team-list { margin-bottom: 1.2rem; }
+.about-team__more { font-size: var(--fs-h5); margin-bottom: var(--space-big); }

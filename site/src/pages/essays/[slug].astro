@@ -19,16 +19,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
 ---
 <Base page="essay" title={entry.data.title} description={entry.data.dek}>
   <article class="essay" data-essay>
-    <aside class="essay-rail" data-rail aria-label="Essay information">
+    <aside class="essay-rail" data-rail aria-label="Research">
       <div class="rail-card" data-reveal="rise" data-start="top 100%">
         <div class="rail-card__top">
           <a class="rail-card__home" href={url('/')}><Mark class="rail-card__mark" />{site.name}</a>
-          <a class="rail-card__back link" href={url('/essays/')}>Essays</a>
+          <a class="rail-card__back link" href={url('/essays/')}>Research</a>
         </div>
         <p class="rail-card__title">{entry.data.title}</p>
         <p class="rail-card__by">by {site.author}</p>
         <div class="rail-card__meta"><time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time><span>{fm.minutesRead} min read</span></div>
-        {entry.data.placeholder && <p class="rail-card__flag">Placeholder essay</p>}
+        {entry.data.placeholder && <p class="rail-card__flag">Placeholder</p>}
         <div class="rail-card__progress" aria-hidden="true"><i data-read-progress></i></div>
       </div>
       {sections.length > 0 && (
@@ -44,10 +44,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
     </aside>
 
     <header class="essay-head">
-      <p class="essay-head__kicker t-mono" data-reveal="scramble">Essay — {fmt(entry.data.date)} — {fm.minutesRead} min</p>
+      <p class="essay-head__kicker t-mono" data-reveal="scramble">Research — {fmt(entry.data.date)} — {fm.minutesRead} min</p>
       <h1 class="essay-head__title" data-reveal="chars">{entry.data.title}</h1>
       <p class="essay-head__dek" data-reveal="lines" data-delay="0.2">{entry.data.dek}</p>
-      {entry.data.placeholder && <p class="essay-head__flag t-mono" data-reveal="scramble" data-delay="0.3">[PLACEHOLDER ESSAY — written to prove the reading template]</p>}
+      {entry.data.placeholder && <p class="essay-head__flag t-mono" data-reveal="scramble" data-delay="0.3">[PLACEHOLDER — written to prove the reading template]</p>}
       <div class="rule essay-head__rule" data-reveal="rule" data-delay="0.1"></div>
     </header>
 
@@ -59,7 +59,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
       <p class="essay-end__sign t-mono" data-reveal="scramble">— {site.author}, {fmt(entry.data.date)}</p>
       {next && next.id !== entry.id && (
         <a class="next-essay" href={url(`/essays/${next.id}/`)} data-shuffle-hover data-reveal="rise">
-          <span class="next-essay__label t-mono">Next essay</span>
+          <span class="next-essay__label t-mono">Next</span>
           <span class="next-essay__title" data-shuffle-target>{next.data.title}</span>
           <span class="next-essay__dek">{next.data.dek}</span>
           <span class="next-essay__arrow" aria-hidden="true">→</span>

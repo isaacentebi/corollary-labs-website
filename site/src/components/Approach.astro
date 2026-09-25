@@ -1,0 +1,41 @@
+---
+// Approach: the firm → an agent enters → it reorganises → the change spreads (diffusion, then the lattice closes into a torus).
+// One short sticky stage; scripts/story.ts drives it from the scroll. The legend names each beat in plain words.
+const beats = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
+const principles = [
+  { t: 'Workflow first.', d: 'We map how work is actually done before choosing a model.' },
+  { t: 'Design the reorganisation.', d: 'Roles, handoffs and controls change when agents arrive. We plan that change.' },
+  { t: 'Measure in production.', d: 'Every deployment reports on accuracy, cost and time saved.' },
+];
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+<section class="sec approach" id="approach" aria-labelledby="approach-title">
+  <header class="sec__head">
+    <h2 class="sec__k" id="approach-title">Approach</h2>
+    <p class="sec__intro" data-reveal="lines">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+  </header>
+  <div class="story" data-story>
+    <div class="story__stage" data-stage>
+      <canvas class="field story__layer" data-field="diffuse" aria-hidden="true"></canvas>
+      <svg class="story__diagram story__layer" viewBox="0 0 1200 700" data-diagram role="img"
+        aria-label={`Diagram in four steps: ${beats.map((b, i) => `${pad(i + 1)} ${b}`).join(', ')}.`}>
+        <defs>
+          <filter id="dg-blur" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="9" /></filter>
+          <filter id="dg-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" /></filter>
+        </defs>
+        <g data-dg><g data-ink></g></g>
+      </svg>
+      <canvas class="story__layer story__surface" data-surface aria-hidden="true"></canvas>
+      <ol class="legend" data-legend aria-label="Legend">
+        {beats.map((b, i) => (
+          <li class="legend__i" data-beat={i}><span class="legend__n">{pad(i + 1)}</span><span class="legend__t">{b}</span></li>
+        ))}
+      </ol>
+    </div>
+  </div>
+  <ol class="principles" data-reveal="rows">
+    {principles.map((p, i) => (
+      <li class="principle"><span class="principle__n">{pad(i + 1)}</span><p><strong>{p.t}</strong> {p.d}</p></li>
+    ))}
+  </ol>
+</section>
