@@ -42,3 +42,11 @@
   .sheet > * { grid-column: 1; }
   .thr--index { grid-template-columns: 2.4em 1fr; }
 }
+
+/* About: the team, short */
+.sheet__h { margin: clamp(56px, 10vh, 112px) 0 0; padding-bottom: 6px; justify-self: start; background: linear-gradient(var(--saffron), var(--saffron)) 0 100% / 22px 2px no-repeat; }
+.roster { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px 28px; }
+.roster li { border-top: 1px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.roster__name { font-size: 21px; line-height: 1.2; color: var(--ink-3); }
+.roster__role { color: var(--ink-3); }
+.sheet__more { justify-self: start; }

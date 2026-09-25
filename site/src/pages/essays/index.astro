@@ -10,11 +10,11 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const essays = await essayThreads();
 const threads = essays.map(({ af, vc }) => ({ af, vc: vc + 6, R: 16 }));
 ---
-<Base title="Essays" page="essays">
-  <WovenTitle text="Essays" cap={26} width="620px" />
+<Base title="Research" page="essays">
+  <WovenTitle text="Research" cap={26} width="760px" />
   <section class="wrap">
     <div class="shelf" data-shelf>
-      <Loom id="essay-loom" rows={30} cellCss={4} threads={threads} grow ms={2000} label="Every essay as a thread in one cloth" />
+      <Loom id="essay-loom" rows={30} cellCss={4} threads={threads} grow ms={2000} label="Every research essay as a thread in one cloth" />
       <ol class="shelf__ticks mono">
         {essays.map(({ e, n, af }, k) => <li style={`left:${(af * 100).toFixed(2)}%`}><a href={`${base}essays/${e.id}/`} data-k={k} aria-label={`${pad(n)} — ${e.data.title}`}>{pad(n)}</a></li>)}
       </ol>

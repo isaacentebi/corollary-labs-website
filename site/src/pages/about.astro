@@ -17,6 +17,13 @@ import '../styles/pages.css';
     <Loom rows={46} cellCss={6} threads={[{ af: 0.24, vc: 16, R: 44 }, { af: 0.62, vc: 30, R: 52 }, { af: 0.86, vc: 10, R: 30 }]} grow ms={3200} label="A cloth with three new threads; the weave re-forms around each" />
     <p class="plate__cap mono"><span>Fig.</span> <span class="ph">[Caption — one line]</span></p>
   </section>
+  <section class="wrap sheet" aria-labelledby="h-team">
+    <h2 class="mono sheet__h" id="h-team">Team</h2>
+    <ul class="roster">
+      {[0, 1, 2, 3].map(() => <li><span class="roster__name">[Name]</span><span class="mono roster__role">[Role]</span></li>)}
+    </ul>
+    <a class="lnk mono sheet__more" href={`${import.meta.env.BASE_URL.replace(/\/?$/, '/')}team/`}>Team →</a>
+  </section>
   <section class="wrap sheet">
     <dl class="colophon">
       <div><dt class="mono">Entity</dt><dd>[Legal name]</dd></div>

@@ -21,7 +21,7 @@ const threads = all.map((o) => ({ af: o.af, vc: 7, R: o.e.id === entry.id ? 48 :
 <Base page="essays" title={entry.data.title} description={entry.data.dek}>
   <article class="essay">
     <header class="essay__head">
-      <p class="mono essay__kicker"><a href={`${base}essays/`}>Essays</a> <span aria-hidden="true">/</span> {pad(it.n)} <span aria-hidden="true">/</span> <time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time> <span aria-hidden="true">/</span> {fm.minutesRead} min</p>
+      <p class="mono essay__kicker"><a href={`${base}essays/`}>Research</a> <span aria-hidden="true">/</span> {pad(it.n)} <span aria-hidden="true">/</span> <time datetime={entry.data.date.toISOString()}>{fmt(entry.data.date)}</time> <span aria-hidden="true">/</span> {fm.minutesRead} min</p>
       <h1 class="essay__title">{entry.data.title}</h1>
       <p class="essay__dek">{entry.data.dek}</p>
       {entry.data.placeholder && <p class="mono ph">[Placeholder essay]</p>}
@@ -32,9 +32,9 @@ const threads = all.map((o) => ({ af: o.af, vc: 7, R: o.e.id === entry.id ? 48 :
     </div>
     <footer class="essay__end">
       {next && next.e.id !== entry.id && (
-        <a class="essay__next" href={`${base}essays/${next.e.id}/`}><span class="mono">Next essay — {pad(next.n)}</span><span class="essay__next-t">{next.e.data.title}</span></a>
+        <a class="essay__next" href={`${base}essays/${next.e.id}/`}><span class="mono">Next — {pad(next.n)}</span><span class="essay__next-t">{next.e.data.title}</span></a>
       )}
-      <a class="lnk mono" href={`${base}essays/`}>All essays</a>
+      <a class="lnk mono" href={`${base}essays/`}>All research</a>
     </footer>
   </article>
 </Base>

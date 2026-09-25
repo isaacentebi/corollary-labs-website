@@ -1,66 +1,157 @@
 ---
 import Base from '../layouts/Base.astro';
+import Loom from '../components/Loom.astro';
 import { essayThreads, fmt, pad } from '../lib/essays';
 import '../styles/home.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const essays = (await essayThreads()).slice(0, 3);
+
+const capabilities = [
+  { t: 'Agent deployment.', d: 'Agents that execute defined workflows inside existing systems, with permissions, logging and human review.' },
+  { t: 'Model fine-tuning.', d: 'Models adapted and evaluated on your data for the specific tasks your agents perform.' },
+  { t: 'Systems integration.', d: 'Connections to the systems where work already happens: ERP, CRM, data warehouses and internal tools.' },
+  { t: 'Evaluation and governance.', d: 'Continuous measurement of accuracy, cost and risk, with an audit trail for every action an agent takes.' },
+];
+// each capability is a thread in one cloth, set above its column
+const capThreads = capabilities.map((_, k) => ({ af: k / 4 + 0.006, vc: [7, 15, 10, 17][k], R: [22, 26, 20, 24][k] }));
+const beats = ['The organisation', 'An agent enters', 'It reorganises', 'The change spreads'];
+const principles = [
+  { t: 'Workflow first.', d: 'We map how work is actually done before choosing a model.' },
+  { t: 'Design the reorganisation.', d: 'Roles, handoffs and controls change when agents arrive. We plan that change.' },
+  { t: 'Measure in production.', d: 'Every deployment reports on accuracy, cost and time saved.' },
+];
 ---
-<Base over page="home">
-  <section class="story" aria-label="Corollary Labs">
-    <div class="stage" data-stage data-state="0">
-      <canvas class="cloth" role="img" aria-label="Corollary Labs, woven. Click the cloth to insert a thread."></canvas>
-      <h1 class="sr">Corollary Labs</h1>
-      <div class="draft" data-draft aria-hidden="true">
-        <span class="draft__l draft__l--thr">Threading</span>
-        <span class="draft__l draft__l--tie">Tie-up</span>
-        <span class="draft__l draft__l--tre">Treadling</span>
-      </div>
-      <div class="band">
-        <div class="caps">
-          <p class="cap cap--0 mono">[Statement]</p>
-          <p class="cap cap--1 mono">[Caption 1 — one line]</p>
-          <p class="cap cap--2 mono">[Caption 2 — one line]</p>
-          <p class="cap cap--3 mono">[Caption 3 — one line]</p>
-        </div>
-        <div class="tools">
-          <button class="ins mono" type="button" data-insert>Insert thread</button>
-          <span class="count mono" data-count aria-live="polite"></span>
-        </div>
+<Base over page="home" description="Corollary Labs deploys AI agents inside organisations and rebuilds the operations around them.">
+  <section class="hero" data-hero aria-labelledby="hero-name">
+    <canvas class="cloth" aria-hidden="true"></canvas>
+    <div class="hero__in">
+      <h1 class="hero__name" id="hero-name" data-name><span class="sr">Corollary Labs</span></h1>
+      <div class="hero__copy" data-copy>
+        <p class="hero__head">We deploy AI agents inside organisations and rebuild the operations around them.</p>
+        <p class="hero__sub">Agent design, model fine-tuning, systems integration and evaluation, from first workflow to production.</p>
+        <p class="hero__act">
+          <a class="btn btn--p mono" href="#contact">Contact us</a>
+          <a class="btn btn--s mono" href="#approach">Our approach <span aria-hidden="true">↓</span></a>
+        </p>
       </div>
     </div>
   </section>
 
-  <section class="about wrap" aria-label="About">
-    <a class="kick mono" href={`${base}about/`}>About <span aria-hidden="true">→</span></a>
-    <p class="about__p">[About — one paragraph]</p>
+  <section class="sec caps wrap" id="capabilities" aria-labelledby="h-caps">
+    <h2 class="sec__h mono" id="h-caps">Capabilities</h2>
+    <div class="caps__body">
+      <div class="caps__cloth">
+        <Loom rows={22} cellCss={5} threads={capThreads} grow ms={2600} label="One cloth with four new threads, one for each capability" />
+        <ol class="caps__ticks mono" aria-hidden="true">
+          {capThreads.map((t, k) => <li style={`left:${(t.af * 100).toFixed(2)}%`}>{pad(k + 1)}</li>)}
+        </ol>
+      </div>
+      <ol class="caps__list">
+        {capabilities.map((c, k) => (
+          <li>
+            <span class="caps__n mono">{pad(k + 1)}</span>
+            <h3 class="caps__t">{c.t}</h3>
+            <p class="caps__d">{c.d}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
   </section>
 
-  <section class="latest wrap" aria-label="Essays">
-    <a class="kick mono" href={`${base}essays/`}>Essays <span aria-hidden="true">→</span></a>
-    <ol class="threads">
-      {essays.map(({ e, n, af }) => (
+  <section class="sec approach" id="approach" aria-labelledby="h-appr">
+    <div class="wrap approach__head">
+      <h2 class="sec__h mono" id="h-appr">Approach</h2>
+      <p class="sec__intro">We start from the workflow: its inputs, its outputs and the decisions made inside it. We then design the organisation that works with the agents, not only the agents.</p>
+    </div>
+    <div class="story" data-story>
+      <div class="stage" data-stage data-state="0">
+        <canvas class="cloth" role="img" aria-label="A cloth. A new thread is drawn in, the weave around it re-forms, then other threads re-form the wider cloth."></canvas>
+        <div class="draft" data-draft aria-hidden="true">
+          <span class="draft__l draft__l--thr">Threading</span>
+          <span class="draft__l draft__l--tie">Tie-up</span>
+          <span class="draft__l draft__l--tre">Treadling</span>
+        </div>
+        <ol class="legend" aria-label="Approach, in four steps">
+          {beats.map((b, k) => (
+            <li><button class="legend__b" type="button" data-beat={k}><span class="mono legend__n">{pad(k + 1)}</span><span class="legend__t">{b}</span></button></li>
+          ))}
+        </ol>
+      </div>
+    </div>
+    <ol class="principles wrap">
+      {principles.map((pr, k) => (
         <li>
-          <a class="thr" href={`${base}essays/${e.id}/`}>
-            <span class="thr__n mono">{pad(n)}</span>
-            <span class="thr__t">{e.data.title}</span>
-            <time class="thr__d mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
-            <span class="thr__rule" aria-hidden="true"><i style={`left:${(af * 100).toFixed(2)}%`}></i></span>
-          </a>
+          <span class="mono principles__n">{pad(k + 1)}</span>
+          <h3 class="principles__t">{pr.t}</h3>
+          <p class="principles__d">{pr.d}</p>
         </li>
       ))}
     </ol>
   </section>
 
-  <nav class="pages wrap" aria-label="Pages">
-    <a href={`${base}about/`}><span class="mono">About</span><span class="pages__arrow" aria-hidden="true">→</span></a>
-    <a href={`${base}team/`}><span class="mono">Team</span><span class="pages__arrow" aria-hidden="true">→</span></a>
-    <a href={`${base}contact/`}><span class="mono">Contact</span><span class="pages__arrow" aria-hidden="true">→</span></a>
-  </nav>
+  <section class="sec research wrap" id="research" aria-labelledby="h-res">
+    <h2 class="sec__h mono" id="h-res">Research</h2>
+    <div>
+      <p class="sec__intro">Essays on agents, organisations and how new technology spreads.</p>
+      <ol class="threads">
+        {essays.map(({ e, n, af }) => (
+          <li>
+            <a class="thr" href={`${base}essays/${e.id}/`}>
+              <span class="thr__n mono">{pad(n)}</span>
+              <span class="thr__t">{e.data.title}</span>
+              <time class="thr__d mono" datetime={e.data.date.toISOString()}>{fmt(e.data.date)}</time>
+              <span class="thr__rule" aria-hidden="true"><i style={`left:${(af * 100).toFixed(2)}%`}></i></span>
+            </a>
+          </li>
+        ))}
+      </ol>
+      <a class="kick mono" href={`${base}essays/`}>All research <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <section class="sec company wrap" id="company" aria-labelledby="h-co">
+    <h2 class="sec__h mono" id="h-co">Company</h2>
+    <div>
+      <p class="company__p">Corollary Labs is an AI company. <span class="ph">[About — founding story and team, one paragraph]</span></p>
+      <ul class="team">
+        {[0, 1, 2, 3].map(() => (
+          <li><span class="team__name">[Name]</span><span class="team__role mono">[Role]</span></li>
+        ))}
+      </ul>
+      <a class="kick mono" href={`${base}about/`}>About the company <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <section class="sec contact wrap" id="contact" aria-labelledby="h-ct">
+    <h2 class="sec__h mono" id="h-ct">Contact</h2>
+    <div>
+      <p class="contact__line">Deploying agents in your organisation? Talk to us.</p>
+      <p class="contact__email">[EMAIL]</p>
+      <div class="contact__cloth"><Loom rows={14} cellCss={5} threads={[{ af: 0.62, vc: 7, R: 30 }]} grow ms={2600} /></div>
+    </div>
+  </section>
 
   <script>
-    import { mountCloth } from '../scripts/cloth';
+    import { mountCloth, BEATS } from '../scripts/cloth';
+    const heroEl = document.querySelector<HTMLElement>('[data-hero]')!;
+    mountCloth(heroEl, heroEl.querySelector('canvas')!, {
+      mode: 'hero',
+      name: heroEl.querySelector<HTMLElement>('[data-name]'),
+      copy: heroEl.querySelector<HTMLElement>('[data-copy]'),
+    });
     const stage = document.querySelector<HTMLElement>('[data-stage]')!;
-    mountCloth(stage, stage.querySelector('canvas')!);
+    mountCloth(stage, stage.querySelector('canvas')!, { mode: 'story' });
+    // the legend is also the figure's navigation: each step scrolls the story to it
+    const story = document.querySelector<HTMLElement>('[data-story]')!;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    for (const b of stage.querySelectorAll<HTMLButtonElement>('[data-beat]')) {
+      b.addEventListener('click', () => {
+        const k = Number(b.dataset.beat);
+        const top = story.getBoundingClientRect().top + scrollY;
+        const run = story.offsetHeight - innerHeight;
+        scrollTo({ top: top + run * BEATS[k] + (k === 3 ? 2 : 0), behavior: reduce ? 'auto' : 'smooth' });
+      });
+    }
   </script>
 </Base>

@@ -3,10 +3,9 @@ import '../styles/global.css';
 import Footer from '../components/Footer.astro';
 import Mark from '../components/Mark.astro';
 interface Props { title?: string; description?: string; page?: string; over?: boolean }
-const { title, description = '[Meta description]', page = '', over = false } = Astro.props;
+const { title, description = 'Corollary Labs deploys AI agents inside organisations and rebuilds the operations around them.', page = '', over = false } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const full = title ? `${title} — Corollary Labs` : 'Corollary Labs';
-const is = (p: string) => (page === p ? 'page' : undefined);
 ---
 <!doctype html>
 <html lang="en">
@@ -21,12 +20,12 @@ const is = (p: string) => (page === p ? 'page' : undefined);
   <body data-page={page}>
     <div id="top"></div>
     <header class:list={['hdr', { 'hdr--over': over }]} data-header>
-      <a class="hdr__home" href={base} aria-label="Corollary Labs, home">{!over && <Mark size={24} />}<span class="hdr__name">Corollary Labs</span></a>
-      <nav class="mono" aria-label="Pages">
-        <a href={`${base}essays/`} aria-current={is('essays')}>Essays</a>
-        <a href={`${base}about/`} aria-current={is('about')}>About</a>
-        <a href={`${base}team/`} aria-current={is('team')}>Team</a>
-        <a href={`${base}contact/`} aria-current={is('contact')}>Contact</a>
+      <a class="hdr__home" href={base} aria-label="Corollary Labs, home"><Mark size={22} /><span class="hdr__name">Corollary Labs</span></a>
+      <nav class="mono" aria-label="Main">
+        <a href={`${base}#capabilities`}>Capabilities</a>
+        <a href={`${base}#approach`}>Approach</a>
+        <a href={`${base}about/`} aria-current={page === 'about' || page === 'team' ? 'page' : undefined}>Company</a>
+        <a href={`${base}#contact`}>Contact</a>
       </nav>
     </header>
     <main><slot /></main>

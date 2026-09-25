@@ -133,7 +133,7 @@ vec3 shade(vec2 sp) {
     }
     else {
       oldUp = gUp(i, j); newUp = oldUp; ground = true;
-      if (fig < 0.25) {   // the halo around each glyph stays ground
+      if (fig < 0.25 && !protectedCell(i, j)) {   // the halo around each glyph (and the text block) stays ground
         float fdx, fdy, fmg; front(i, j, tFlip, fdx, fdy, side, fmg);
         if (tFlip > 0.0) newUp = staged(fmg, fdx, fdy);
       }
@@ -284,7 +284,20 @@ type Agent = { a: number; vc: number; tip: number; R: number; g: number; b: numb
 type UserAgent = Agent & { t0: number; tipFrom: number; tipTo: number; Rmax: number };
 type Cam = { cx: number; cy: number; pitch: number };
 
-export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
+export type ClothMode = 'hero' | 'story';
+export type ClothOpts = {
+  mode: ClothMode;
+  /** hero: the element whose box the woven name fills (the real <h1>, its text kept for readers) */
+  name?: HTMLElement | null;
+  /** hero: the text block; the re-weave never runs under it */
+  copy?: HTMLElement | null;
+};
+
+/** Story beats (scroll positions of the Approach figure). */
+export const BEATS = [0, 0.49, 0.72, 1];
+
+export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement, opts: ClothOpts) {
+  const hero = opts.mode === 'hero';
   const gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'high-performance' });
   if (!gl) { stage.classList.add('no-gl'); return; }
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -352,50 +365,71 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     gl.viewport(0, 0, canvas.width, canvas.height);
     const wide = W >= 900;
-    pitch0 = wide ? clamp(W / 230, 5.2, 7) : clamp(W / 118, 3, 4.4);
-    pitch1 = wide ? 34 : 26;
-    pitch2 = pitch0 * (wide ? 0.46 : 0.6);
-    // the name, woven at thread resolution
-    const targetW = (wide ? Math.min(W * 0.6, 980) : W * 0.7) / pitch0;
-    const wt = wide ? 560 : 620;
-    cap = Math.round(targetW / 5.6);
-    let m = await textMask(['Corollary', 'Labs'], cap, wt, 0.3);
-    if (Math.abs(m.w - targetW) > 3) { cap = Math.round((cap * targetW) / m.w); m = await textMask(['Corollary', 'Labs'], cap, wt, 0.3); }
-    // phones: the name anchors in the upper third; the first thread enters the open cloth below it
-    cy0 = (wide ? H * 0.02 : H * 0.2) / pitch0;
-    const gutter = clamp(W * 0.04, 16, 56);
-    const x0 = Math.round(-W / pitch0 / 2 + gutter / pitch0), y0 = -Math.floor(m.h / 2);
-    tex(1, 'uMask', m.w, m.h, gl.LUMINANCE, m.data.map((x) => (x === 1 ? 255 : x === 2 ? 128 : 0)));
-    gl.uniform4f(u.maskRect, x0, y0, m.w, m.h);
-    // columns that cross the name without touching a letter (or its halo): threads may run there
-    gapCols = [];
-    for (let c = 0; c < m.w; c++) { let clear = true; for (let r = 0; r < m.h; r++) if (m.data[r * m.w + c]) { clear = false; break; } if (clear) gapCols.push(x0 + c); }
-    nameSpan = [x0, x0 + m.w];
-    const pad = Math.round(cap * 0.35);
-    nameBox = { x0: x0 - pad, y0: y0 - pad, x1: x0 + m.w + pad, y1: y0 + m.h + pad };
-    gl.uniform4f(u.protect, 1e6, 1e6, 1e6, 1e6);
-    maskReady = true;
-    F0 = { x: Math.round(x0 + m.w * 0.3), y: Math.round(y0 + m.h + Math.max(50, (H * 0.34) / pitch0)) };
-    F = { ...F0 };
-    // the first thread runs down the free third to the right of the name
-    const right = W / pitch0 / 2;
-    auto.a = Math.round(x0 + m.w + (right - (x0 + m.w)) * (wide ? 0.42 : 0.3));
-    auto.vc = Math.round(wide ? cy0 + (H * 0.12) / pitch0 : y0 + m.h + (H * 0.3) / pitch0);
-    auto.Rmax = wide ? 58 : 50;
-    chooseF();
-    const sx = W / pitch2 / 2, sy = H / pitch2 / 2;
-    const pts = wide
-      ? [[-0.74, -0.6], [0.76, -0.58], [-0.84, 0.42], [0.6, 0.66], [0.9, 0.08], [-0.52, -0.92]]
-      : [[-0.6, -0.72], [0.62, -0.5], [-0.66, 0.46], [0.5, 0.74], [0.0, -0.9], [0.64, 0.12]];
-    far = pts.map(([px, py], n) => ({ a: between(Math.round(px * sx), 14), vc: Math.round(py * sy), Rmax: (56 + ((n * 37) % 5) * 10) * (wide ? 1 : 0.5), d: n * 0.018 }));
-    // draft geometry, below the header
-    const hh = header ? header.getBoundingClientRect().height : 60;
-    const rh = wide ? 10 : 7, lab = wide ? 18 : 16;
-    geo = { top0: Math.round(hh + (wide ? 10 : 6)), rh, lab, right0: W - 24 - 8 * rh, bottom: H - 120 };
-    if (labels) {
-      labels.style.setProperty('--top0', `${geo.top0}px`); labels.style.setProperty('--bh', `${8 * rh}px`);
-      labels.style.setProperty('--lab', `${lab}px`); labels.style.setProperty('--right0', `${geo.right0}px`);
-      labels.style.setProperty('--bottom', `${geo.bottom}px`); labels.style.setProperty('--rh', `${rh}px`);
+    const sr = stage.getBoundingClientRect();
+    const box = (el?: HTMLElement | null) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { l: r.left - sr.left, t: r.top - sr.top, r: r.right - sr.left, b: r.bottom - sr.top, w: r.width, h: r.height };
+    };
+    if (hero) {
+      pitch0 = wide ? clamp(W / 230, 5.2, 7) : clamp(W / 118, 3, 4.4);
+      cy0 = 0;
+      // the name, woven at thread resolution into the box of the real <h1>
+      const nb = box(opts.name) ?? { l: W * 0.04, t: H * 0.2, r: W * 0.6, b: H * 0.4, w: W * 0.56, h: H * 0.2 };
+      const lines = W < 640 ? ['Corollary', 'Labs'] : ['Corollary Labs'];
+      const targetW = nb.w / pitch0, targetH = nb.h / pitch0;
+      const wt = wide ? 560 : 620;
+      cap = Math.round(targetW / (lines.length > 1 ? 5.6 : 8.6));
+      let m = await textMask(lines, cap, wt, 0.3);
+      const k = Math.min(targetW / m.w, targetH / m.h);
+      if (Math.abs(k - 1) > 0.03) { cap = Math.max(6, Math.round(cap * k)); m = await textMask(lines, cap, wt, 0.3); }
+      const x0 = Math.round((nb.l - W / 2) / pitch0), y0 = Math.round((nb.t - H / 2) / pitch0);
+      tex(1, 'uMask', m.w, m.h, gl.LUMINANCE, m.data.map((x) => (x === 1 ? 255 : x === 2 ? 128 : 0)));
+      gl.uniform4f(u.maskRect, x0, y0, m.w, m.h);
+      gapCols = [];
+      for (let c = 0; c < m.w; c++) { let clear = true; for (let r = 0; r < m.h; r++) if (m.data[r * m.w + c]) { clear = false; break; } if (clear) gapCols.push(x0 + c); }
+      nameSpan = [x0, x0 + m.w];
+      // the text block keeps the original cloth: the re-weave stops at its edge
+      const cb = box(opts.copy);
+      if (cb) {
+        const e = 10;
+        gl.uniform4f(u.protect, Math.floor((cb.l - e - W / 2) / pitch0), Math.floor((cb.t - e - H / 2) / pitch0), Math.ceil((cb.r + e - W / 2) / pitch0), Math.ceil((cb.b + e - H / 2) / pitch0));
+      } else gl.uniform4f(u.protect, 1e6, 1e6, 1e6, 1e6);
+      // the first thread runs down the free cloth beside the text
+      const textR = Math.max(nb.l + m.w * pitch0, cb ? cb.r : 0);
+      const ax = wide ? textR + (W - textR) * 0.5 : W - 16;
+      auto.a = Math.round((ax - W / 2) / pitch0);
+      const vy = wide ? H * 0.56 : cb ? Math.min(H - 60, (cb.b + H) / 2) : H * 0.75;
+      auto.vc = Math.round((vy - H / 2) / pitch0);
+      auto.Rmax = wide ? 50 : 40;
+      maskReady = true;
+    } else {
+      // the Approach figure: a plain cloth, no name
+      pitch0 = wide ? clamp(W / 100, 11, 15) : clamp(W / 50, 7, 9);
+      pitch1 = wide ? 34 : 26;
+      pitch2 = wide ? 4 : 3.2;
+      cy0 = 0;
+      gl.uniform4f(u.maskRect, 1e6, 1e6, 1, 1);
+      gl.uniform4f(u.protect, 1e6, 1e6, 1e6, 1e6);
+      gapCols = []; nameSpan = [1e9, -1e9];
+      F0 = { x: 0, y: 0 }; F = { ...F0 };
+      const sx = W / pitch2 / 2, sy = H / pitch2 / 2;
+      const pts = wide
+        ? [[-0.74, -0.6], [0.76, -0.58], [-0.84, 0.42], [0.6, 0.66], [0.9, 0.08], [-0.52, -0.92]]
+        : [[-0.6, -0.72], [0.62, -0.5], [-0.66, 0.46], [0.5, 0.74], [0.0, -0.9], [0.64, 0.12]];
+      far = pts.map(([px, py], n) => ({ a: Math.round(px * sx), vc: Math.round(py * sy), Rmax: (56 + ((n * 37) % 5) * 10) * (wide ? 1 : 0.5), d: n * 0.018 }));
+      // draft geometry: below the (paper) header, above the legend band
+      const hh = header ? header.getBoundingClientRect().height : 60;
+      const rh = wide ? 10 : 7, lab = wide ? 18 : 16;
+      const lg = stage.querySelector<HTMLElement>('.legend');
+      const bandH = lg ? lg.offsetHeight : 56;
+      geo = { top0: Math.round(hh + (wide ? 10 : 6)), rh, lab, right0: W - 24 - 8 * rh, bottom: H - bandH - 24 };
+      if (labels) {
+        labels.style.setProperty('--top0', `${geo.top0}px`); labels.style.setProperty('--bh', `${8 * rh}px`);
+        labels.style.setProperty('--lab', `${lab}px`); labels.style.setProperty('--right0', `${geo.right0}px`);
+        labels.style.setProperty('--bottom', `${geo.bottom}px`); labels.style.setProperty('--rh', `${rh}px`);
+      }
+      maskReady = true;
     }
     request();
   };
@@ -414,34 +448,10 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
     for (const g of gapCols) { const e = Math.abs(g - a); if (e < d) { d = e; best = g; } }
     return d <= reach ? best : a;
   };
-  // keep the story's close-up on its own: frame it where no other thread's re-weave can reach
-  function chooseF() {
-    if (!W) return;
-    const hc = W / pitch1 / 2 + 3, hr = H / pitch1 / 2 + 3;
-    const others = [auto, ...users];
-    const score = (x: number, y: number) => Math.min(1e9, ...others.map((o) => {
-      const dx = Math.max(0, Math.abs(x - o.a) - hc), dy = Math.max(0, Math.abs(y - o.vc) - hr);
-      return Math.abs(x - o.a) < hc + 4 ? -1e3 : 0.75 * dx + 0.95 * dy - o.Rmax - 4;
-    }));
-    // candidates: gaps between letters first, then columns outside the name
-    const cands = [...gapCols, ...Array.from({ length: 80 }, (_, k) => nameSpan[0] - 2 - k * 4), ...Array.from({ length: 80 }, (_, k) => nameSpan[1] + 2 + k * 4)]
-      .sort((a, b) => Math.abs(a - F0.x) - Math.abs(b - F0.x));
-    let best = { x: cands[0] ?? F0.x, y: F0.y, s: score(cands[0] ?? F0.x, F0.y) };
-    if (best.s < 0) {
-      outer: for (const dy of [0, 24, 48, 80]) for (const x of cands) {
-        {
-          const y = F0.y + dy, sc = score(x, y);
-          if (sc >= 0) { best = { x, y, s: sc }; break outer; }
-          if (sc > best.s) best = { x, y, s: sc };
-        }
-      }
-    }
-    F = { x: best.x, y: best.y };
-  }
   let hover = { u: 0, a: 0 };
   let wovenT0 = 0;
-  let introDone = reduce;
-  if (reduce) stage.classList.add('is-woven');
+  let introDone = reduce || !hero;
+  if (introDone) stage.classList.add('is-woven');
 
   const camera = (): Cam => {
     const zin = ease(seg(p, 0.06, 0.34)), zout = ease(seg(p, 0.76, 1));
@@ -511,14 +521,14 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
       a.R = a.Rmax * out(clamp((t - tc) / growS, 0, 1));
       if (t < tc + growS) animating = true;
     };
-    if (introDone && !auto.t0) {
+    if (hero && introDone && !auto.t0) {
       auto.t0 = now + (reduce ? 0 : 350);
       const vt = cy0 - H / pitch0 / 2;
       auto.tipFrom = vt - 12; auto.tipTo = cy0 + H / pitch0 / 2 + 14;
     }
     if (auto.t0) { run(auto, 2.4, 3.4); if (!reduce && now < auto.t0) animating = true; }
     for (const a of users) run(a, 1.2, 2.6);
-    const agents = [...storyAgents(), ...(auto.t0 ? [auto] : []), ...users].slice(0, MAXA);
+    const agents = (hero ? [...(auto.t0 ? [auto] : []), ...users] : storyAgents()).slice(0, MAXA);
     const A = new Float32Array(MAXA * 4), G = new Float32Array(MAXA * 2);
     agents.forEach((a, n) => { A.set([a.a, a.vc, a.tip, a.R], n * 4); G.set([a.g, a.b], n * 2); });
     gl.uniform2f(u.res, canvas.width, canvas.height);
@@ -526,8 +536,8 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
     gl.uniform1f(u.pitch, cam.pitch * dpr);
     gl.uniform1f(u.dpr, dpr);
     gl.uniform4fv(u.A, A); gl.uniform2fv(u.G, G); gl.uniform1f(u.N, agents.length);
-    const bands = seg(p, 0.3, 0.37) * (1 - seg(p, 0.73, 0.78));
-    gl.uniform3f(u.hover, hover.u, fine && introDone && bands < 0.5 ? hover.a : 0, users.length >= MAXU ? 1 : 0);
+    const bands = hero ? 0 : seg(p, 0.3, 0.37) * (1 - seg(p, 0.73, 0.78));
+    gl.uniform3f(u.hover, hover.u, hero && fine && introDone ? hover.a : 0, users.length >= MAXU ? 1 : 0);
     gl.uniform1f(u.bands, bands);
     gl.uniform1f(u.narrow, W < 700 ? 1 : 0);
     gl.uniform4f(u.geo, geo.top0 * dpr, geo.rh * dpr, geo.right0 * dpr, geo.lab * dpr);
@@ -542,11 +552,11 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
 
   // ---------------------------------------------------------------------------------------------
   const onScroll = () => {
-    const r = stage.parentElement!.getBoundingClientRect();
+    const r = (hero ? stage : stage.parentElement!).getBoundingClientRect();
+    if (hero) { if (header) header.dataset.tone = r.bottom < 70 ? 'light' : 'dark'; return; }
     const run = r.height - innerHeight;
     let np = clamp(-r.top / Math.max(1, run), 0, 1);
-    if (reduce) { const keys = [0, 0.5, 0.74, 1]; np = keys.reduce((b, k2) => (Math.abs(k2 - np) < Math.abs(b - np) ? k2 : b), 0); }
-    if (header) header.dataset.tone = r.bottom < 70 ? 'light' : 'dark';
+    if (reduce) np = BEATS.reduce((b, k2) => (Math.abs(k2 - np) < Math.abs(b - np) ? k2 : b), 0);
     if (np !== p) {
       p = np;
       stage.dataset.state = String(p < 0.2 ? 0 : p < 0.5 ? 1 : p < 0.76 ? 2 : 3);
@@ -561,10 +571,10 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
     return (y >= geo.top0 && y < geo.top0 + 8 * geo.rh + geo.lab) || (W >= 700 && x >= geo.right0 && y < geo.bottom);
   };
   canvas.addEventListener('pointermove', (e) => {
-    if (!fine) return;
+    if (!fine || !hero) return;
     const { x, y } = local(e);
     const c = clothAt(x, y, lastCam, lastAgents);
-    const nu = Math.round(c.u), na = c.inside || inDraft(x, y) || y > H - 72 ? 0 : 1;
+    const nu = Math.round(c.u), na = c.inside ? 0 : 1;
     if (nu !== hover.u || na !== hover.a) { hover = { u: nu, a: na }; request(); }
   });
   canvas.addEventListener('pointerleave', () => { if (hover.a) { hover.a = 0; request(); } });
@@ -587,12 +597,12 @@ export function mountCloth(stage: HTMLElement, canvas: HTMLCanvasElement) {
     const viewTop = cam.cy - H / cam.pitch / 2, viewBot = cam.cy + H / cam.pitch / 2;
     const Rmax = clamp((Math.min(W, H) / cam.pitch) * 0.3, 14, 56);
     users.push({ a, vc: Math.floor(c.v), tip: viewTop - 12, R: 0, g: 0, b: 0, t0: performance.now(), tipFrom: viewTop - 12, tipTo: viewBot + 14, Rmax });
-    if (p < 0.06) chooseF();
     updateCount(users.length >= MAXU);
     request();
     return true;
   };
   canvas.addEventListener('click', (e) => {
+    if (!hero) return;
     const { x, y } = local(e);
     if (inDraft(x, y)) return;
     insertAt(x, y);
