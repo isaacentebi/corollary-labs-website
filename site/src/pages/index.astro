@@ -29,7 +29,16 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
 
   <section class="section grid home-about" aria-labelledby="about-h">
     <h2 class="section__label label" id="about-h">About</h2>
-    <p class="home-about__text lead ph">[About — one paragraph]</p>
+    <p class="home-about__lead lead ph">[About — the company in two sentences]</p>
+    <div class="home-about__cols ph">
+      <p>[About — first paragraph: what Corollary Labs studies]</p>
+      <p>[About — second paragraph: how it works with firms]</p>
+    </div>
+    <dl class="home-about__facts">
+      <div><dt class="label">Founded</dt><dd class="ph">[Year]</dd></div>
+      <div><dt class="label">Location</dt><dd class="ph">[Location]</dd></div>
+      <div><dt class="label">Email</dt><dd class="ph">[Email]</dd></div>
+    </dl>
   </section>
 
   <section class="section grid home-essays" aria-labelledby="essays-h">
@@ -49,11 +58,6 @@ const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 
     <a class="home-essays__all textlink" href={url('essays/')}>All essays</a>
   </section>
 
-  <section class="section grid home-links" aria-label="Pages">
-    {nav.slice(1).map((n) => (
-      <a class="biglink" href={n.href}><span class="biglink__m" aria-hidden="true"></span><span class="biglink__t">{n.label}</span></a>
-    ))}
-  </section>
 
   <script>
     import { mountProgramme } from '../scripts/programme';

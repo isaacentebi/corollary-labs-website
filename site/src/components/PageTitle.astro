@@ -5,7 +5,7 @@ const { text, id, class: cls = '' } = Astro.props;
 let i = 0;
 const words = text.split(' ').map((w) => [...w].map((c) => ({ c, i: i++ })));
 ---
-<h1 class={`ptitle ${cls}`} id={id} aria-label={text}>
+<h1 class={`ptitle ${cls}`} id={id} aria-label={text}><i class="ptitle__m" aria-hidden="true"></i>
   {words.map((w, k) => (
     <Fragment><span class="w" aria-hidden="true">{w.map((ch) => <span class="ch" style={`--i:${ch.i}`}>{ch.c}</span>)}</span>{k < words.length - 1 ? ' ' : ''}</Fragment>
   ))}

@@ -1,7 +1,7 @@
 /* Home: the programme stage, then the short tail. */
 html[data-page='home'] .gridlines { display: none; }
 
-.story { position: relative; height: calc(100svh + 170vh); }
+.story { position: relative; height: calc(100svh + 150vh); }
 .stage {
   position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
   background: var(--sheet); touch-action: pan-y;
@@ -39,27 +39,20 @@ html[data-page='home'] .gridlines { display: none; }
 }
 .homebar.is-on { transform: none; }
 
-/* tail */
-.home-about .home-about__text { grid-column: 1 / -1; }
-.home-about .home-about__more { grid-column: 1 / -1; justify-self: start; font-size: var(--t-s); }
+/* tail: About as a block on the grid (statement, two columns, facts), then essays */
+.home-about { border-top: 2px solid var(--ink); margin: calc(var(--lh) * 4) var(--mx) 0; padding-inline: 0; padding-top: 12px; }
+.home-about .section__label { grid-column: 1 / -1; }
+.home-about__lead { grid-column: 1 / -1; }
+.home-about__cols { grid-column: 1 / -1; display: grid; gap: var(--lh); column-gap: var(--g); font-size: var(--t-m); line-height: 1.45; }
+.home-about__facts { grid-column: 1 / -1; margin: calc(var(--lh) * 0.5) 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--g); }
+.home-about__facts > div { border-top: 1px solid var(--rule); padding-top: 8px; }
+.home-about__facts dd { margin: 4px 0 0; font-size: var(--t-s); }
 .home-essays .home-essays__all { grid-column: 1 / -1; justify-self: start; font-size: var(--t-s); margin-top: 4px; }
 @media (min-width: 820px) {
-  .home-about .home-about__text { grid-column: 4 / span 7; }
-  .home-about .home-about__more { grid-column: 4 / span 3; }
+  .home-about { row-gap: calc(var(--lh) * 1.5); }
+  .home-about .section__label { grid-column: 1 / span 3; grid-row: 1 / span 3; }
+  .home-about__lead { grid-column: 4 / span 8; font-size: clamp(28px, 2.9vw, 44px); line-height: 1.12; letter-spacing: -0.02em; }
+  .home-about__cols { grid-column: 4 / span 8; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-about__facts { grid-column: 4 / span 8; }
   .home-essays .home-essays__all { grid-column: 4 / span 3; }
-}
-
-.home-links { row-gap: 0; }
-.biglink {
-  grid-column: 1 / -1; display: flex; align-items: center; gap: 0;
-  font-size: clamp(44px, 6.1vw, 112px); line-height: 1.04; font-weight: 780; letter-spacing: -0.035em;
-  border-top: 2px solid var(--ink); padding: 6px 0 10px;
-  font-variation-settings: 'wdth' 100; transition: font-variation-settings 0.7s var(--ease-out);
-}
-.biglink__m { display: inline-block; height: 0.7em; width: 0; background: var(--signal); transition: width 0.55s var(--ease-out), margin 0.55s var(--ease-out); }
-.biglink:hover, .biglink:focus-visible { font-variation-settings: 'wdth' 76; }
-.biglink:hover .biglink__m, .biglink:focus-visible .biglink__m { width: 0.55em; margin-right: 0.18em; }
-@media (min-width: 820px) {
-  .home-links { column-gap: var(--g); }
-  .biglink { grid-column: span 4; }
 }

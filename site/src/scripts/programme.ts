@@ -133,19 +133,35 @@ function lettersOf(lines: TLine[]): Letter[] {
 
 /* ---------------- text stream and flow ---------------- */
 const CHARS = [1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 8, 8, 9, 10, 11, 12];
-// the text of the origin page is set from the placeholders themselves
-const VOCAB = ['[Text]', '[Text]', '[Text]', '[Sentence]', '[Sentence]', '[Word]', '[Word]', '[Line]', '[Clause]', '[Phrase]', '[Text]', '[Term]'];
+// the text columns carry running prose (the essays' placeholder Latin until real excerpts exist)
+const PROSE = ('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ' +
+  'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ' +
+  'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. ' +
+  'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. ' +
+  'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. ' +
+  'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. ' +
+  'Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. ' +
+  'Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur. ' +
+  'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur. ' +
+  'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident. ' +
+  'Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. ' +
+  'Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. ' +
+  'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae.').split(' ');
 function makeStream(n: number, fs: number, seed: number, measure?: (s: string) => number): Tok[] {
   const r = rng(seed);
   const out: Tok[] = [];
   let para = 30 + Math.floor(r() * 50);
+  let wi = Math.floor(r() * 40);
   for (let i = 0; i < n; i++) {
-    const end = --para <= 0;
-    if (end) para = (measure ? 14 : 34) + Math.floor(r() * (measure ? 26 : 56));
     if (measure) {
-      const s = VOCAB[Math.floor(r() * VOCAB.length)];
+      const s = PROSE[wi++ % PROSE.length];
+      // paragraphs end on a full stop, after 40–90 words
+      const end = --para <= 0 && s.endsWith('.');
+      if (end) para = 40 + Math.floor(r() * 50);
       out.push({ id: i, s, w: measure(s), kind: 0, pEnd: end, born: 0, ox: 0, oy: 0, at: 0, dur: 0 });
     } else {
+      const end = --para <= 0;
+      if (end) para = 34 + Math.floor(r() * 56);
       const c = CHARS[Math.floor(r() * CHARS.length)];
       out.push({ id: i, w: c * fs * 0.52, kind: 0, pEnd: end, born: 0, ox: 0, oy: 0, at: 0, dur: 0 });
     }
@@ -231,34 +247,39 @@ function originLayout(W: number, H: number, leadH: (w: number) => number, measur
 
   if (!mobile) {
     // S0: name on one line across 9 columns; statement in 4; two text columns of 4; links in the last column
+    // tall windows (portrait tablets): the name takes two lines across ten columns
+    const portrait = H > W * 1.05;
     const wt0 = 760;
-    const m0 = G0.span(9), size0 = Math.min((m0 / lineW(0, 14, 100, wt0)) * 100, H * 0.2);
-    const base0 = top + ASC * size0;
-    T[0] = [{ a: 0, b: 14, x: G0.x(0), base: base0, size: size0, wd: 100, wt: wt0 }];
-    const bodyTop = snap(Math.max(base0 + size0 * 0.26 + lh * 3, H * 0.34));
+    const m0 = G0.span(portrait ? 10 : 9);
+    const size0 = portrait ? Math.min((m0 / lineW(0, 9, 100, wt0)) * 100, H * 0.16) : Math.min((m0 / lineW(0, 14, 100, wt0)) * 100, H * 0.2);
+    const base0 = top + ASC * size0, baseL = base0 + size0 * 0.92;
+    T[0] = portrait
+      ? [{ a: 0, b: 9, x: G0.x(0), base: base0, size: size0, wd: 100, wt: wt0 }, { a: 10, b: 14, x: G0.x(0), base: baseL, size: size0, wd: 100, wt: wt0 }]
+      : [{ a: 0, b: 14, x: G0.x(0), base: base0, size: size0, wd: 100, wt: wt0 }];
+    const bodyTop = portrait ? snap(baseL + size0 * 0.12 + lh * 3) : snap(Math.max(base0 + size0 * 0.26 + lh * 3, H * 0.34));
     lead[0] = { x: G0.x(0), y: bodyTop - 6, w: G0.span(4), h: 0 };
     boxes[0] = [{ x: G0.x(4), y: bodyTop, w: G0.span(4), h: bottom - bodyTop }, { x: G0.x(8), y: bodyTop, w: G0.span(4), h: bottom - bodyTop }];
-    const nc = W < 1000 ? 10 : 11; // the links' column: one from the edge, two when columns are narrow
+    const nc = W < 1000 || portrait ? 10 : 11; // the links' column: one from the edge, two when columns are narrow
     nav[0] = Array.from({ length: navItems }, (_, k) => ({ x: G0.x(nc), y: top - 3 + k * navLh }));
     // S1: same column counts on the 13-column grid; the name keeps its size and yields width
-    const m1 = G1.span(9);
-    const wd1 = solveWd(0, 14, size0, wt0, m1);
-    T[1] = [{ a: 0, b: 14, x: G1.x(0), base: base0, size: size0, wd: wd1, wt: wt0 }];
+    const m1 = G1.span(portrait ? 10 : 9);
+    const wd1 = portrait ? solveWd(0, 9, size0, wt0, m1) : solveWd(0, 14, size0, wt0, m1);
+    T[1] = T[0].map((L) => ({ ...L, x: G1.x(0), wd: wd1 }));
     lead[1] = { x: G1.x(0), y: bodyTop - 6, w: G1.span(4), h: 0 };
     boxes[1] = [{ x: G1.x(map(4)), y: bodyTop, w: G1.span(4), h: bottom - bodyTop }, { x: G1.x(map(8)), y: bodyTop, w: G1.span(4), h: bottom - bodyTop }];
     nav[1] = nav[0].map((n: any) => ({ x: G1.x(nc + 1), y: n.y }));
     col = { x: G1.x(A), y: bodyTop - 6, w: G1.colW, h: bottom - bodyTop + 6 };
     // between S1 and S2 "Labs" first drops, rigid, to its own line under "Corollary"
-    Tmid = [
+    if (!portrait) Tmid = [
       { a: 0, b: 9, x: G1.x(0), base: base0, size: size0, wd: wd1, wt: wt0 },
       { a: 10, b: 14, x: G1.x(0), base: base0 + size0 * 0.3 + CAP * size0, size: size0, wd: wd1, wt: wt0 },
     ];
     // S2: re-organised. The name re-breaks into a justified block over 7 columns;
     // the statement moves up beside it; the text re-flows into three columns.
-    const wt2 = 820, m2 = G1.span(7);
-    const size2a = Math.min((m2 / lineW(0, 9, 100, wt2)) * 100, H * 0.2);
+    const wt2 = 820, m2 = G1.span(portrait ? 10 : 7);
+    const size2a = Math.min((m2 / lineW(0, 9, 100, wt2)) * 100, H * (portrait ? 0.14 : 0.2));
     const base2a = top + ASC * size2a;
-    const size2b = Math.min(size2a * 1.55, H * 0.3);
+    const size2b = Math.min(size2a * 1.55, H * (portrait ? 0.2 : 0.3));
     const wd2b = solveWd(10, 14, size2b, wt2, m2);
     const base2b = base2a + size2a * 0.24 + CAP * size2b + size2a * 0.08;
     T[2] = [
@@ -266,13 +287,17 @@ function originLayout(W: number, H: number, leadH: (w: number) => number, measur
       { a: 10, b: 14, x: G1.x(0), base: base2b, size: size2b, wd: wd2b, wt: wt2 },
     ];
     lead[2] = { x: G1.x(8), y: top - 6, w: G1.span(nc - 7), h: 0 };
-    const top2 = snap(Math.max(base2b + lh * 2, H * 0.34));
-    boxes[2] = [
+    const top2 = snap(Math.max(base2b + lh * 2, portrait ? 0 : H * 0.34));
+    if (portrait) {
+      lead[2] = { x: G1.x(0), y: top2 - 6, w: G1.span(6), h: 0 };
+      const tb = snap(top2 + leadH(G1.span(6)) + lh * 2);
+      boxes[2] = [0, 4, 8].map((c) => ({ x: G1.x(c), y: tb, w: G1.span(c === 8 ? 5 : 4), h: bottom - tb })) as Rect[];
+    } else boxes[2] = [
       { x: G1.x(0), y: top2, w: G1.span(4), h: bottom - top2 },
       { x: G1.x(4), y: top2, w: G1.span(4), h: bottom - top2 },
       { x: G1.x(8), y: snap(top + Math.max(leadH(G1.span(nc - 7)), navLh * 4) + lh * 2), w: G1.span(4), h: 0 },
     ];
-    boxes[2][2].h = bottom - boxes[2][2].y;
+    if (!portrait) boxes[2][2].h = bottom - boxes[2][2].y;
     nav[2] = nav[1];
   } else {
     // phones: one row of links at the top that never moves; the name in two lines below it
@@ -297,7 +322,7 @@ function originLayout(W: number, H: number, leadH: (w: number) => number, measur
     const bodyTop1 = snap(leadY + leadH(G1.span(6)) + lh * 2);
     boxes[1] = [{ x: G1.x(0), y: bodyTop1, w: G1.span(3), h: bottom - bodyTop1 }, { x: G1.x(4), y: bodyTop1, w: G1.span(3), h: bottom - bodyTop1 }];
     col = { x: G1.x(A), y: bodyTop1 - 4, w: G1.colW, h: bottom - bodyTop1 + 4 };
-    // S2: justified block over 7 columns ("Labs" widens to the measure), text in 5 + 2 columns
+    // S2: justified block over 7 columns ("Labs" widens to the measure), text still in two columns
     const wt2 = 820, m2 = G1.span(7);
     const s2a = (m2 / lineW(0, 9, 100, wt2)) * 100;
     const s2b = Math.min((m2 / lineW(10, 14, 116, wt2)) * 100, H * 0.16);
@@ -307,9 +332,9 @@ function originLayout(W: number, H: number, leadH: (w: number) => number, measur
       { a: 10, b: 14, x: G1.x(0), base: c2, size: s2b, wd: solveWd(10, 14, s2b, wt2, m2), wt: wt2 },
     ];
     const leadY2 = snap(c2 + lh * 2);
-    lead[2] = { x: G1.x(0), y: leadY2 - 4, w: G1.span(5), h: 0 };
-    const body2 = snap(leadY2 + leadH(G1.span(5)) + lh * 2);
-    boxes[2] = [{ x: G1.x(0), y: body2, w: G1.span(5), h: bottom - body2 }, { x: G1.x(5), y: snap(leadY2), w: G1.span(2), h: bottom - snap(leadY2) }];
+    lead[2] = { x: G1.x(0), y: leadY2 - 4, w: G1.span(6), h: 0 };
+    const body2 = snap(leadY2 + leadH(G1.span(6)) + lh * 2);
+    boxes[2] = [{ x: G1.x(0), y: body2, w: G1.span(4), h: bottom - body2 }, { x: G1.x(4), y: body2, w: G1.span(3), h: bottom - body2 }];
   }
   const Lo: Layout = { W, H, top, lh, fs, nWords: mobile ? 900 : 1500, seed: 11, K: mobile ? 9 : 14, G0, G1, A, boxes, col: col!, measure };
   return { Lo, T, Tmid, lead, nav };
@@ -381,6 +406,16 @@ const easeBack = (t: number) => { const c1 = 1.25, c3 = c1 + 1; return 1 + c3 * 
 const lerpLines = (A: TLine[], B: TLine[], t: number): TLine[] =>
   A.map((a, k) => { const b = B[k]; return { a: a.a, b: a.b, x: lerp(a.x, b.x, t), base: lerp(a.base, b.base, t), size: lerp(a.size, b.size, t), wd: lerp(a.wd, b.wd, t), wt: lerp(a.wt, b.wt, t) }; });
 
+/*
+  Sequencing of one re-setting (S0→S1 at load, S1→S2 on scroll), so nothing ever doubles up:
+    OUT   words that will move leave, in a wave (by column at load, in reading order on scroll)
+    FLY   (S1→S2 only) the column's pieces condense and travel across the cleared grid
+    IN    words are set in their new places, in a second wave, around the pieces that have landed
+*/
+const OUT1 = [0, 0.3, 0.2] as const, IN1 = [0.5, 0.3, 0.2] as const;   // start, spread, duration (S0→S1)
+const OUT2 = [0, 0.24, 0.12] as const, IN2 = [0.58, 0.28, 0.12] as const; // (S1→S2)
+const FLY = [0.3, 0.14, 0.2] as const;
+
 export function mountProgramme(root: HTMLElement) {
   const story = root;
   const stage = root.querySelector<HTMLElement>('[data-stage]')!;
@@ -395,7 +430,7 @@ export function mountProgramme(root: HTMLElement) {
     sheet: css.getPropertyValue('--sheet').trim() || '#ecece8',
     ground: css.getPropertyValue('--ground').trim() || '#d9d9d4',
     ink: css.getPropertyValue('--ink').trim() || '#0e0e0d',
-    signal: css.getPropertyValue('--signal').trim() || '#ffc800',
+    signal: css.getPropertyValue('--signal').trim() || '#d4213d',
   };
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -415,7 +450,11 @@ export function mountProgramme(root: HTMLElement) {
   let navR: any;
   let p = 0;
   let raf = 0;
-  let intro = REDUCED ? -1 : performance.now();
+  const t0 = performance.now();
+  let intro = REDUCED ? -1 : t0;
+  // the column's entry plays once, by itself, after the page has been set
+  let entryAt = REDUCED ? -1 : t0 + 1500;
+  const ENTRY_MS = 2300;
   let hover: { x: number; y: number; idx: number } | null = null;
   let inserted = 0;
   const shown = new Map<number, { x: number; y: number }>();
@@ -462,146 +501,146 @@ export function mountProgramme(root: HTMLElement) {
     return m;
   }
 
-  /* ---------- timeline ---------- */
-  function phases() {
-    let u1 = clamp((p - 0.04) / 0.28), u2 = clamp((p - 0.36) / 0.28), q = clamp((p - 0.66) / 0.34);
+  /* ---------- timeline: S0→S1 is time (plays at load), S1→S2 and the field are scroll ---------- */
+  function phases(now = performance.now()) {
+    let u1 = entryAt < 0 ? 1 : clamp((now - entryAt) / ENTRY_MS);
+    let u2 = clamp((p - 0.03) / 0.5), q = clamp((p - 0.56) / 0.44);
+    if (p > 0.02) u1 = 1; // scrolling past the hero completes the entry
     if (REDUCED) {
-      const s = p < 0.18 ? 0 : p < 0.46 ? 1 : p < 0.74 ? 2 : 3;
-      u1 = s >= 1 ? 1 : 0; u2 = s >= 2 ? 1 : 0; q = s >= 3 ? 1 : 0;
+      const s = p < 0.3 ? 1 : p < 0.7 ? 2 : 3;
+      u1 = 1; u2 = s >= 2 ? 1 : 0; q = s >= 3 ? 1 : 0;
     }
     return { u1, u2, q };
   }
 
-  /* local progress of one element: spatial delay for S0→S1, reading-order delay for S1→S2 */
-  const SPREAD = 0.5;
-  function stageT(u1: number, u2: number, d1: number, d2: number) {
-    if (REDUCED) return u2 > 0 ? 1 + u2 : u1;
-    if (u2 > 0) return 1 + seg(u2, d2 * SPREAD, 1 - SPREAD);
-    return seg(u1, d1 * SPREAD, 1 - SPREAD);
-  }
-
-  function posAt(pg: Page, i: number, st: number, out: { x: number; y: number; w: number; a: number }) {
-    const k = st <= 1 ? 0 : 1, t = st <= 1 ? st : st - 1;
+  /* where a word is, and how visible, while its page re-sets */
+  function wordAt(pg: Page, i: number, u1: number, u2: number, d: number, out: { x: number; y: number; w: number; a: number }) {
+    const k = u2 > 0 ? 1 : 0, u = k ? u2 : u1;
     const A = pg.L[k][i], B = pg.L[k + 1][i];
     if (!A || !B) return false;
-    if (A.v && B.v && (A.c !== B.c || A.y !== B.y)) {
-      // a word that changes line is re-set, never dragged across other words:
-      // it leaves with a short drift towards its new place and arrives the same way
-      const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || 1, k = Math.min(d, 18) / d;
-      if (t < 0.5) { const f = sm(clamp(t / 0.45)); out.x = A.x + dx * k * f; out.y = A.y + dy * k * f; out.w = A.w; out.a = 1 - f; }
-      else { const f = sm(clamp((t - 0.55) / 0.45)); out.x = B.x - dx * k * (1 - f); out.y = B.y - dy * k * (1 - f); out.w = B.w; out.a = f; }
-    } else if (A.v && B.v) {
-      out.x = lerp(A.x, B.x, pathX(t)); out.y = lerp(A.y, B.y, pathY(t)); out.w = lerp(A.w, B.w, t);
-      // words in transit recede, so the settled text always reads first
-      out.a = A.x === B.x && A.y === B.y ? 1 : 1 - 0.6 * Math.sin(Math.PI * t);
-    } else if (A.v) { out.x = A.x; out.y = A.y; out.w = A.w; out.a = 1 - t; }
-    else if (B.v) { out.x = B.x; out.y = B.y; out.w = B.w; out.a = t; }
-    else return false;
-    return true;
+    const moved = A.v && B.v && (Math.abs(A.x - B.x) > 0.3 || Math.abs(A.y - B.y) > 0.3);
+    if (A.v && B.v && !moved) { out.x = A.x; out.y = A.y; out.w = A.w; out.a = 1; return true; }
+    const O = k ? OUT2 : OUT1, I = k ? IN2 : IN1;
+    const fo = REDUCED ? (u >= 1 ? 1 : 0) : sm(clamp((u - O[0] - d * O[1]) / O[2]));
+    const fi = REDUCED ? (u >= 1 ? 1 : 0) : sm(clamp((u - I[0] - d * I[1]) / I[2]));
+    const dx = A.v && B.v ? B.x - A.x : 0, dy = A.v && B.v ? B.y - A.y : 0;
+    const len = Math.hypot(dx, dy) || 1, kk = Math.min(len, 4) / len;
+    if (A.v && fo < 1) { out.x = A.x + dx * kk * fo; out.y = A.y + dy * kk * fo; out.w = A.w; out.a = 1 - fo; return true; }
+    if (B.v && fi > 0) { out.x = B.x - dx * kk * (1 - fi); out.y = B.y - dy * kk * (1 - fi); out.w = B.w; out.a = fi; return true; }
+    return false;
+  }
+  /* reading-order distance for scroll, column distance for the entry */
+  function delayOf(pg: Page, i: number, u2: number) {
+    if (u2 > 0) return clamp(i / pg.nvis);
+    const P0 = pg.L[0][i];
+    const bx = P0 && P0.c !== undefined ? pg.specBoxes[0][P0.c] : null;
+    return bx ? clamp(Math.abs(bx.x + bx.w / 2 - pg.agentX) / pg.W * 1.6) : 0;
   }
 
   /* ---------- drawing ---------- */
   const tmp = { x: 0, y: 0, w: 0, a: 1 };
   function drawPage(pg: Page, u1: number, u2: number, now: number, origin: boolean, gridA: number): boolean {
     let busy = false;
-    const { lh, barH } = pg;
-    const fs = origin ? FS : lh * 0.68;
+    const { barH } = pg;
+    const fs = origin ? FS : pg.lh * 0.68;
     const chip = (x: number, baseline: number, w: number) => ctx.fillRect(x - 1, baseline - fs * 0.9, w + 2, fs * 1.14);
     if (gridA > 0.01) {
-      ctx.fillStyle = C.ink;
-      ctx.globalAlpha = 0.06 * gridA;
+      // the grid re-divides: every line moves to its place on 13 columns; the new pair opens from a gutter
       const [e0, e1] = pg.edges;
+      const t = u2 > 0 ? 1 : REDUCED ? u1 : ease(clamp(u1 / 0.45));
+      ctx.fillStyle = C.ink;
       for (let i = 0; i < e0.length; i++) {
-        const d = Math.abs(e0[i] - pg.agentX) / pg.W;
-        const t = u2 > 0 ? 1 : REDUCED ? u1 : seg(u1, d * SPREAD, 1 - SPREAD);
+        const isNew = i >= e0.length - 2;
+        ctx.globalAlpha = (isNew ? 0.07 + 0.25 * Math.sin(Math.PI * clamp(u1 / 0.5)) * (u2 > 0 ? 0 : 1) : 0.06) * gridA;
         ctx.fillRect(Math.round(lerp(e0[i], e1[i], t)), 0, 1, pg.H);
       }
       ctx.globalAlpha = 1;
     }
     if (pg.titleBars) {
       ctx.fillStyle = C.ink;
+      ctx.globalAlpha = 0.3;
       const [a0, a1, a2] = pg.titleBars;
-      const st = stageT(u1, u2, 0, 0);
-      const A = st <= 1 ? a0 : a1, B = st <= 1 ? a1 : a2, t = st <= 1 ? st : st - 1;
+      const k = u2 > 0 ? 1 : 0, t = k ? u2 : u1;
+      const A = k ? a1 : a0, B = k ? a2 : a1;
       const n = Math.max(A.length, B.length);
       for (let i = 0; i < n; i++) {
-        const a = A[Math.min(i, A.length - 1)], b = B[Math.min(i, B.length - 1)];
-        ctx.fillRect(lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.w, b.w, t), lerp(a.h, b.h, t));
+        const a = A[Math.min(i, A.length - 1)], b = B[Math.min(i, B.length - 1)], e = ease(t);
+        ctx.fillRect(lerp(a.x, b.x, e), lerp(a.y, b.y, e), lerp(a.w, b.w, e), lerp(a.h, b.h, e) * 0.62);
       }
+      ctx.globalAlpha = 1;
     }
     const N = pg.stream.length;
     const introOn = origin && intro > 0;
     if (origin) { ctx.font = font(); ctx.textBaseline = 'alphabetic'; }
     ctx.fillStyle = C.ink;
     let ki = 0;
+    const col = pg.col[1];
     for (let i = 0; i < N; i++) {
       const tk = pg.stream[i];
       if (tk.kind === 1) {
-        // slice k of the new column becomes inline element k, snapped to its word box and baseline
+        // slice k of the new column is absorbed into the text as inline element k
         const A = pg.L[2][i];
         const k = ki++;
-        const x1 = pg.col[1].x, w1 = pg.col[1].w, sh = pg.col[1].h / pg.K, y1 = pg.col[1].y + k * sh;
-        const x0 = pg.col[0].x;
+        const sh = col.h / pg.K, y1 = col.y + k * sh;
         let x: number, y: number, w: number, h: number;
-        if (u2 <= 0 || !A || !A.v) {
-          const tg = REDUCED ? u1 : seg(u1, 0, 1 - SPREAD);
-          const front = REDUCED ? pg.K : clamp((u1 - 0.18) / 0.62) * pg.K; const tf = clamp(front - k);
-          x = lerp(x0, x1, tg); w = lerp(0, w1, tg); y = y1; h = (sh + 0.5) * tf;
-          if (u2 > 0 && A && !A.v) w *= 1 - u2;
+        const ft = REDUCED ? (u2 > 0 ? 1 : 0) : clamp((u2 - FLY[0] - (k / pg.K) * FLY[1]) / FLY[2]);
+        if (u2 <= 0 || ft <= 0 || !A || !A.v) {
+          // entry: the column opens with the grid and pours down, slice by slice
+          const tg = REDUCED ? u1 : ease(clamp(u1 / 0.45));
+          const front = REDUCED ? pg.K : clamp((u1 - 0.12) / 0.45) * pg.K; const tf = clamp(front - k);
+          x = lerp(pg.col[0].x, col.x, tg); w = lerp(0, col.w, tg); y = y1; h = (sh + 0.5) * tf;
+          if (u2 > 0 && (!A || !A.v)) w *= 1 - clamp(u2 / 0.4);
         } else {
-          const t = REDUCED ? 1 : seg(u2, clamp(i / pg.nvis) * SPREAD, 1 - SPREAD);
           const hy = A.y - fs * 0.9, hh = fs * 1.14;
-          const sq = clamp(t / 0.3); // first it condenses to a word, then it travels
-          w = lerp(w1, A.w + 2, sq); h = lerp(sh + 0.5, hh, sq);
-          x = lerp(x1 + (w1 - w) / 2, A.x - 1, pathX(clamp((t - 0.2) / 0.8)));
-          y = lerp(y1 + (sh - h) / 2, hy, pathY(clamp((t - 0.2) / 0.8)));
+          const sq = sm(clamp(ft / 0.35)); // condenses to a word, then travels
+          const tr = sm(clamp((ft - 0.3) / 0.7));
+          w = lerp(col.w, A.w + 2, sq); h = lerp(sh + 0.5, hh, sq);
+          x = lerp(col.x + (col.w - w) / 2, A.x - 1, tr);
+          y = lerp(y1 + (sh - h) / 2, hy, tr);
         }
         if (w > 0.2 && h > 0.2) { ctx.fillStyle = C.signal; ctx.fillRect(x, y, w, h); ctx.fillStyle = C.ink; }
         continue;
       }
-      const P0 = pg.L[0][i];
-      // S0→S1: a whole text column re-sets together, nearest to the new column first
-      const bx = P0 && P0.c !== undefined ? pg.specBoxes[0][P0.c] : null;
-      const d1 = bx ? Math.abs(bx.x + bx.w / 2 - pg.agentX) / pg.W : 0;
-      const st = stageT(u1, u2, d1, clamp(i / pg.nvis));
-      if (!posAt(pg, i, st, tmp)) continue;
+      if (!wordAt(pg, i, u1, u2, delayOf(pg, i, u2), tmp)) continue;
       let a = tmp.a, w = tmp.w, x = tmp.x, y = tmp.y;
       if (tk.at) {
         const e = (now - tk.at) / tk.dur;
         if (e < 1) {
           busy = true;
           if (tk.oy) {
-            // a word pushed onto the next line is re-set there: out, then in
-            if (e < 0.35) { x += tk.ox; y += tk.oy; a *= e <= 0 ? 1 : 1 - e / 0.35; }
-            else { const f = (e - 0.35) / 0.65; a *= f; x -= 8 * (1 - easeOut(f)); }
+            // a word pushed onto the next line is re-set there: out, a pause, then in
+            if (e < 0.3) { x += tk.ox; y += tk.oy; a *= e <= 0 ? 1 : 1 - e / 0.3; }
+            else if (e < 0.55) a = 0;
+            else { const f = (e - 0.55) / 0.45; a *= f; x -= 6 * (1 - easeOut(f)); }
           } else if (e > 0) { const f = 1 - easeBack(clamp(e)); x += tk.ox * f; }
           else x += tk.ox;
-        }
-        else tk.at = 0;
-      }
-      if (tk.born) {
-        const e = (now - tk.born) / 460;
-        if (e < 1) { w = lerp(tk.w0 || 0, w, easeOut(clamp(e))); busy = true; } else tk.born = 0;
+        } else tk.at = 0;
       }
       if (introOn) {
-        const e = (now - intro - 300 - i * 0.9) / 240;
+        const e = (now - intro - 300 - i * 0.8) / 240;
         if (e < 1) { busy = true; if (e <= 0) continue; a *= clamp(e); }
       }
       if (origin) shown.set(tk.id, { x, y });
       if (a < 0.01) continue;
       if (tk.kind === 2) {
-        ctx.fillStyle = C.signal; ctx.globalAlpha = Math.min(1, a * 1.4);
-        chip(x, y, w);
-        ctx.fillStyle = C.ink; ctx.globalAlpha = 1;
+        // a piece taken from the column: it flies there first, then the text makes room
+        let cx = x, cy = y - fs * 0.9, cw = w + 2, chh = fs * 1.14;
+        if (tk.born) {
+          const e = (now - tk.born) / 520;
+          if (e < 0) { busy = true; continue; }
+          if (e < 1) {
+            busy = true;
+            const f = sm(clamp(e)), sy = clamp(y - fs, col.y, col.y + col.h - 20);
+            cx = lerp(col.x, x - 1, f); cy = lerp(sy, y - fs * 0.9, f); cw = lerp(col.w, w + 2, sm(clamp(e / 0.4))); chh = lerp(20, fs * 1.14, sm(clamp(e / 0.4)));
+          } else tk.born = 0;
+        }
+        ctx.fillStyle = C.signal; ctx.globalAlpha = 1;
+        ctx.fillRect(cx - 1, cy, cw, chh);
+        ctx.fillStyle = C.ink;
         continue;
       }
-      if (tk.s && origin) {
-        ctx.globalAlpha = a * 0.56;
-        ctx.fillText(tk.s, x, y);
-      } else {
-        ctx.globalAlpha = a * 0.62;
-        ctx.fillRect(x, y - barH, w, barH);
-      }
+      if (tk.s && origin) { ctx.globalAlpha = a * 0.62; ctx.fillText(tk.s, x, y); }
+      else { ctx.globalAlpha = a * 0.5; ctx.fillRect(x, y - barH, w, barH); }
       ctx.globalAlpha = 1;
     }
     ctx.globalAlpha = 1;
@@ -610,8 +649,8 @@ export function mountProgramme(root: HTMLElement) {
 
   /* the name: always set as whole lines, so letters keep their spacing and never cross */
   function titleLines(u1: number, u2: number): TLine[] {
-    if (REDUCED) return u2 > 0 ? T[2] : u1 > 0 ? T[1] : T[0];
-    if (u2 <= 0) return lerpLines(T[0], T[1], ease(u1));
+    if (REDUCED) return u2 > 0 ? T[2] : T[1];
+    if (u2 <= 0) return lerpLines(T[0], T[1], ease(clamp(u1 / 0.6)));
     if (!Tmid) return lerpLines(T[1], T[2], ease(u2));
     const ta = clamp(u2 / 0.42), tb = clamp((u2 - 0.42) / 0.58);
     if (tb > 0) return lerpLines(Tmid, T[2], ease(tb));
@@ -641,32 +680,35 @@ export function mountProgramme(root: HTMLElement) {
       el.style.fontVariationSettings = `'wdth' ${L.wd.toFixed(2)}, 'wght' ${L.wt.toFixed(1)}`;
       el.style.opacity = String(L.v ? op : 0);
     }
-    // statement and links: S0→S1 they slide with the grid; S1→S2 they are re-set in their new
-    // place (out, then in), so they never cross the name as it re-breaks
-    const place = (el: HTMLElement, A: any, B: any, t: number, reset: boolean, fade: number) => {
-      let x: number, y: number, o = 1, w = A.w || 0;
-      if (reset && Math.abs(A.x - B.x) + Math.abs(A.y - B.y) > 2) {
-        const side = t < 0.5 ? A : B;
-        x = side.x; y = side.y; w = side.w || 0;
-        o = t < 0.5 ? 1 - clamp(t / 0.35) : clamp((t - 0.65) / 0.35);
-      } else { x = lerp(A.x, B.x, t); y = lerp(A.y, B.y, t); if (A.w && B.w) w = lerp(A.w, B.w, t); }
-      if (w) el.style.width = w.toFixed(1) + 'px';
-      el.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0)`;
-      el.style.opacity = String(o * fade);
-    };
     const fade = intro > 0 ? clamp((now - intro - 500) / 700) : 1;
     if (fade < 1) busy = true;
-    const lt = stageT(u1, u2, Math.abs(leadR[0].x + leadR[0].w / 2 - page.agentX) / W, 0);
-    const lk = lt <= 1 ? 0 : 1;
-    place(leadEl, leadR[lk], leadR[lk + 1], lt <= 1 ? lt : lt - 1, lk === 1, fade);
-    const nt = REDUCED ? (u2 > 0 ? 2 : u1) : u2 > 0 ? 1 + ease(u2) : ease(u1);
-    const nk = nt <= 1 ? 0 : 1;
-    navEls.forEach((el, k) => place(el, navR[nk][k], navR[nk + 1][k], nt <= 1 ? nt : nt - 1, false, fade));
+    // the statement slides with the grid at entry; on scroll it leaves first and is re-set last
+    const setAt = (el: HTMLElement, R: any, o: number) => {
+      if (R.w) el.style.width = R.w.toFixed(1) + 'px';
+      el.style.transform = `translate3d(${R.x.toFixed(2)}px,${R.y.toFixed(2)}px,0)`;
+      el.style.opacity = String(o * fade);
+    };
+    if (u2 <= 0) {
+      const t = REDUCED ? 1 : ease(clamp(u1 / 0.6));
+      const A = leadR[0], B = leadR[1];
+      setAt(leadEl, { x: lerp(A.x, B.x, t), y: lerp(A.y, B.y, t), w: lerp(A.w, B.w, t) }, 1);
+    } else {
+      const same = Math.abs(leadR[1].x - leadR[2].x) + Math.abs(leadR[1].y - leadR[2].y) < 2;
+      if (same) setAt(leadEl, { ...leadR[2], w: lerp(leadR[1].w, leadR[2].w, u2) }, 1);
+      else if (u2 < 0.4) setAt(leadEl, leadR[1], 1 - sm(clamp(u2 / 0.16)));
+      else setAt(leadEl, leadR[2], sm(clamp((u2 - 0.62) / 0.18)));
+    }
+    const nt = u2 > 0 ? 1 + ease(u2) : REDUCED ? 1 : ease(clamp(u1 / 0.6));
+    const nk = nt <= 1 ? 0 : 1, ntt = nt <= 1 ? nt : nt - 1;
+    navEls.forEach((el, k) => {
+      const a = navR[nk][k], b = navR[nk + 1][k];
+      setAt(el, { x: lerp(a.x, b.x, ntt), y: lerp(a.y, b.y, ntt) }, 1);
+    });
     return busy;
   }
 
   function draw(now: number) {
-    const { u1, u2, q } = phases();
+    const { u1, u2, q } = phases(now);
     const mobile = W < 820;
     const G = W * 0.06;
     const sf = mobile ? W / (2.35 * (W + G)) : W / (4.1 * (W + G));
@@ -677,7 +719,7 @@ export function mountProgramme(root: HTMLElement) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = z > 0 ? C.ground : C.sheet;
     ctx.fillRect(0, 0, W, H);
-    let busy = false;
+    let busy = entryAt > 0 && u1 < 1 && p <= 0.02;
     ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * cam.tx, dpr * cam.ty);
     if (z > 0) {
       const r = REDUCED ? q : clamp((q - 0.12) / 0.88);
@@ -712,13 +754,14 @@ export function mountProgramme(root: HTMLElement) {
     } else {
       busy = drawPage(page, u1, u2, now, true, 1) || busy;
     }
-    if (hover && z === 0 && u1 === 0) {
+    if (hover && z === 0 && u2 === 0) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.fillStyle = C.signal;
-      ctx.fillRect(hover.x - 1.5, hover.y - LH * 0.95, 3, LH * 1.2);
+      ctx.fillRect(hover.x - 1, hover.y - LH * 0.95, 2, LH * 1.2);
     }
     busy = placeDom(u1, u2, now, cam) || busy;
     if (intro > 0 && now - intro > 2600) intro = 0;
+    if (entryAt > 0 && u1 >= 1) { entryAt = -1; onEntered(); }
     return busy || intro > 0;
   }
 
@@ -732,25 +775,25 @@ export function mountProgramme(root: HTMLElement) {
     if (np !== p) { p = np; if (p > 0.02) hover = null; req(); }
   }
 
-  /* ---------- a visitor inserts an element: the text downstream re-flows, in reading order ---------- */
+  /* ---------- a visitor takes a piece of the column and sets it into the text ---------- */
+  function ready() { const { u1, u2 } = phases(); return u1 >= 1 && u2 === 0 && p <= 0.03; }
   function locate(mx: number, my: number) {
-    const { u1 } = phases();
-    if (u1 > 0 || p > 0.03) return null;
-    const L0 = page.L[0];
+    if (!ready()) return null;
+    const L1 = page.L[1];
     let bestDy = 1e9;
     for (let i = 0; i < page.stream.length; i++) {
-      const P0 = L0[i];
-      if (!P0 || !P0.v || mx < P0.x - 30 || mx > P0.x + P0.w + 30) continue;
-      bestDy = Math.min(bestDy, Math.abs(P0.y - FS * 0.35 - my));
+      const P1 = L1[i];
+      if (!P1 || !P1.v || mx < P1.x - 30 || mx > P1.x + P1.w + 30) continue;
+      bestDy = Math.min(bestDy, Math.abs(P1.y - FS * 0.35 - my));
     }
     if (bestDy > LH * 1.2) return null;
     let best = -1, bx = 0, by = 0, bd = 1e9;
     for (let i = 0; i < page.stream.length; i++) {
-      const P0 = L0[i];
-      if (!P0 || !P0.v || Math.abs(Math.abs(P0.y - FS * 0.35 - my) - bestDy) > 0.5) continue;
-      const dl = Math.abs(P0.x - mx), dr = Math.abs(P0.x + P0.w - mx);
-      if (dl < bd) { bd = dl; best = i; bx = P0.x - page.sp / 2; by = P0.y; }
-      if (dr < bd) { bd = dr; best = i + 1; bx = P0.x + P0.w + page.sp / 2; by = P0.y; }
+      const P1 = L1[i];
+      if (!P1 || !P1.v || Math.abs(Math.abs(P1.y - FS * 0.35 - my) - bestDy) > 0.5) continue;
+      const dl = Math.abs(P1.x - mx), dr = Math.abs(P1.x + P1.w - mx);
+      if (dl < bd) { bd = dl; best = i; bx = P1.x - page.sp / 2; by = P1.y; }
+      if (dr < bd) { bd = dr; best = i + 1; bx = P1.x + P1.w + page.sp / 2; by = P1.y; }
     }
     if (best < 0 || bd > 30) return null;
     return { x: bx, y: by, idx: best };
@@ -758,32 +801,31 @@ export function mountProgramme(root: HTMLElement) {
   function insertAt(idx: number) {
     const now = performance.now();
     const st = page.stream;
-    // a click beside an existing element grows it (to a limit) instead of stacking a new one
+    // beside an existing piece: that piece grows (to a limit) instead of a new one stacking up
     const near = st[idx - 1]?.kind === 2 ? st[idx - 1] : st[idx]?.kind === 2 ? st[idx] : null;
     let tok: Tok;
     if (near) {
       if (near.w > FS * 6) return;
-      near.w0 = near.w; near.w += FS * 1.6; near.born = REDUCED ? 0 : now; tok = near;
+      near.w += FS * 1.6; tok = near;
     } else {
       if (inserted >= 12) return;
       inserted++;
-      tok = { id: 500000 + inserted, w: (3 + Math.floor(Math.random() * 3)) * FS * 0.55, w0: 0, kind: 2, pEnd: false, born: REDUCED ? 0 : now, ox: 0, oy: 0, at: 0, dur: 0 };
+      tok = { id: 500000 + inserted, w: (3 + Math.floor(Math.random() * 3)) * FS * 0.55, kind: 2, pEnd: false, born: REDUCED ? 0 : now + 380, ox: 0, oy: 0, at: 0, dur: 0 };
       st.splice(idx, 0, tok);
     }
     const old = new Map(shown);
     relayout();
     if (!REDUCED) {
-      const { u1, u2 } = phases();
       const newIdx = page.stream.indexOf(tok);
-      const s0 = stageT(u1, u2, 0, 0);
+      const lag = 0; // the text makes room first; the piece arrives into the gap
       page.stream.forEach((t, i) => {
         const was = old.get(t.id);
-        if (!was || t === tok) return;
-        if (!posAt(page, i, s0, tmp)) return;
-        const dx = was.x - tmp.x, dy = was.y - tmp.y;
+        const P1 = page.L[1][i];
+        if (!was || t === tok || !P1 || !P1.v) return;
+        const dx = was.x - P1.x, dy = was.y - P1.y;
         if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
-        t.ox = dx; t.oy = Math.abs(dy) < 0.5 ? 0 : dy; t.dur = t.oy ? 420 : 560;
-        t.at = now + Math.min(1100, Math.max(0, i - newIdx) * 5);
+        t.ox = dx; t.oy = Math.abs(dy) < 0.5 ? 0 : dy; t.dur = t.oy ? 700 : 560;
+        t.at = now + lag + Math.min(1100, Math.max(0, i - newIdx) * 5);
       });
     }
     req();
@@ -806,6 +848,21 @@ export function mountProgramme(root: HTMLElement) {
     if (h) { insertAt(h.idx); hover = null; req(); }
   });
 
+  // after the entry, one piece is taken from the column and set into the text by itself
+  function onEntered() {
+    setTimeout(() => {
+      if (!ready() || inserted > 0) return;
+      const b = page.specBoxes[1][page.specBoxes[1].length - 1];
+      const L1 = page.L[1];
+      const idx = page.stream.findIndex((t, i) => { const P = L1[i]; return t.kind === 0 && !!P && P.v === 1 && P.c === page.specBoxes[1].length - 1 && P.y > b.y + LH * 6 && P.x > b.x + b.w * 0.35; });
+      if (idx < 0) return;
+      const P = L1[idx]!;
+      hover = { x: P.x - page.sp / 2, y: P.y, idx };
+      req();
+      setTimeout(() => { hover = null; if (!ready()) { req(); return; } insertAt(idx); }, 600);
+    }, 700);
+  }
+
   let lastW = 0, lastH = 0;
   const ro = new ResizeObserver(() => {
     const r = stage.getBoundingClientRect();
@@ -821,19 +878,4 @@ export function mountProgramme(root: HTMLElement) {
   ro.observe(stage);
   onScroll();
   root.classList.add('is-live');
-
-  // one insertion plays by itself, so the hero shows its rule before anyone scrolls
-  if (!REDUCED) {
-    setTimeout(() => {
-      if (p > 0.01 || inserted > 0) return;
-      const b = page.specBoxes[0][0];
-      const L0 = page.L[0];
-      const idx = page.stream.findIndex((t, i) => { const P0 = L0[i]; return t.kind === 0 && !!P0 && P0.v === 1 && P0.y > b.y + LH * 4 && P0.x > b.x + b.w * 0.4; });
-      if (idx < 0) return;
-      const P0 = L0[idx]!;
-      hover = { x: P0.x - page.sp / 2, y: P0.y, idx };
-      req();
-      setTimeout(() => { hover = null; if (p > 0.01) { req(); return; } insertAt(idx); }, 650);
-    }, 1400);
-  }
 }
