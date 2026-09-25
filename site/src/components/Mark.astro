@@ -4,9 +4,8 @@ interface Props { class?: string; title?: string }
 const { class: cls = '', title } = Astro.props;
 ---
 <svg class:list={['mark', cls]} viewBox="-26 -16 52 32" role={title ? 'img' : undefined} aria-hidden={title ? undefined : 'true'} aria-label={title}>
-  <ellipse class="mark__ring" rx="22" ry="12.5" />
-  <path class="mark__ring -in" d="M-10.5 -1.2 C-7 4.2 7 4.2 10.5 -1.2" />
-  <path class="mark__ring -in" d="M-8 1 C-4.5 -2.6 4.5 -2.6 8 1" />
+  <ellipse class="mark__ring" rx="22" ry="13" />
+  <ellipse class="mark__ring -in" cy="-1.6" rx="10" ry="4.6" />
   <circle class="mark__glow" cx="16.6" cy="-8.2" r="6" />
   <circle class="mark__node" cx="16.6" cy="-8.2" r="2.9" />
 </svg>

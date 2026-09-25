@@ -26,8 +26,12 @@ export function sampleWord(w: number, h: number, L: WordLayout = {}) {
   const step = Math.max(3, Math.round(S / 58)); // denser point cloud → clearer name
   const data = g.getImageData(0, 0, c.width, c.height).data;
   const pts: number[] = [];
+  // sampled on an offset grid, then each point is nudged by a fixed pseudo-random amount: an even but organic scatter
+  let sd = 1234567; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647 - 0.5; };
   for (let y = 0; y < c.height; y += step) for (let x = (y / step) % 2 ? step / 2 : 0; x < c.width; x += step) {
-    const xi = x | 0; if (data[(y * c.width + xi) * 4 + 3] > 140) pts.push(xi, y);
+    const jx = rnd() * step * 0.62, jy = rnd() * step * 0.62;
+    const xi = Math.min(c.width - 1, Math.max(0, (x + jx) | 0)), yi = Math.min(c.height - 1, Math.max(0, (y + jy) | 0));
+    if (data[(yi * c.width + xi) * 4 + 3] > 140) pts.push(x + jx, y + jy);
   }
   return { pts: Float32Array.from(pts), step, box: [x0, base - S * 0.8, ww + tw, S] as const };
 }

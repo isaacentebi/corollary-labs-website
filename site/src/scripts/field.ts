@@ -25,6 +25,9 @@ export interface FieldOptions {
   wordLayout?: import('./wordmask').WordLayout;
   wordBase?: number; // resting visibility of the word
   global?: boolean; // listen to the pointer on window (for a fixed full-screen stage behind content)
+  drawLattice?: boolean; // draw the old rectilinear lattice under the network
+  adoptedSignal?: boolean; // adopted nodes and links stay jade (at lower intensity) over a pale wash
+  glow?: number; // scale of the front's glow
 }
 
 const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -61,6 +64,7 @@ export class DiffusionField {
   cols = 0; rows = 0; sp = 26;
   tx: Float32Array = new Float32Array(); ty: Float32Array = new Float32Array(); hex: Uint32Array = new Uint32Array(); hexFresh: Uint8Array = new Uint8Array();
   pulses: Array<{ x: number; y: number; t0: number }> = []; pulseB: Float32Array = new Float32Array();
+  mark = -1; markA = 0; // a highlighted node (index) and its opacity
   reveal = 0; sweep = -1; // intro: full name at `reveal`, dissolving left→right behind `sweep` (px)
 
   constructor(canvas: HTMLCanvasElement, opts: FieldOptions = {}) {
@@ -68,7 +72,7 @@ export class DiffusionField {
     this.ctx = canvas.getContext('2d', { alpha: true })!;
     this.o = {
       mode: 'auto', spacing: 26, seeds: [[0.18, 0.62], [0.52, 0.3], [0.8, 0.72]], autoSpeed: 0.012, autoMax: 0.24,
-      staticT: 0.35, curve: false, lattice: 4, seed: 7, pointer: true, label: false, curveRect: null, word: false, wordLayout: {}, wordBase: 0.2, global: false, ...opts,
+      staticT: 0.35, curve: false, lattice: 4, seed: 7, pointer: true, label: false, curveRect: null, word: false, wordLayout: {}, wordBase: 0.2, global: false, drawLattice: true, adoptedSignal: false, glow: 0.6, ...opts,
     } as Required<FieldOptions>;
     this.colors = { ink: css('--ink'), ink3: css('--ink-3'), rule: css('--rule'), signal: css('--signal'), paper: css('--paper'), ink2: css('--ink-2'), glow: css('--glow') };
     this.build();
@@ -289,7 +293,7 @@ export class DiffusionField {
     ctx.fillStyle = colors.ink;
     buckets.forEach((p, i) => { ctx.globalAlpha = (i + 0.7) / B; ctx.fill(p); });
     // hot points glow in the accent
-    const g = this.sprite(), gs = s * 7;
+    const g = this.sprite(), gs = s * 4.4;
     ctx.globalAlpha = 0.5;
     for (let i = 0; i < n; i++) if (hot[i] && alpha[i] >= 0.03) ctx.drawImage(g, X[i] - gs / 2, Y[i] - gs / 2, gs, gs);
     const core = new Path2D();
@@ -341,7 +345,7 @@ export class DiffusionField {
       this.pulses = this.pulses.filter((p) => (this.clock - p.t0) * 520 < Math.hypot(this.w, this.h) + 200);
       this.dt = dt; this.draw(); this.dt = 0;
       if (this.o.word) {
-        this.base += ((this.reveal > 0 ? 0 : this.o.wordBase * this.wordMul) - this.base) * (1 - Math.exp(-dt * 0.8));
+        this.base += (this.o.wordBase * this.wordMul - this.base) * (1 - Math.exp(-dt * 0.8));
         this.idle += dt;
         // when nobody is steering, a slow ghost wanders through the name so it can still be found
         if (this.idle > 2.5 && this.reveal === 0 && this.wordMul > 0.5) {
@@ -436,35 +440,51 @@ export class DiffusionField {
     }
     this.sprung = true;
 
-    // 1) lattice — the old structure, drawn as softly bowed threads that shrink away under the front
-    const lat = new Path2D();
-    const L = this.sp * this.o.lattice;
-    for (let i = 0; i < this.nseg; i++) {
-      const d = Math.min(1, Math.max(0, (t - this.segT[i] - 0.02) / 0.16));
-      if (d >= 1) continue;
-      const x1 = this.segs[i * 4], y1 = this.segs[i * 4 + 1], x2 = this.segs[i * 4 + 2], y2 = this.segs[i * 4 + 3];
-      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, k = (1 - d) * 0.5;
-      let bx = 0, by = 0;
-      if (ptr) { const dx = mx - px, dy = my - py, dd = Math.hypot(dx, dy); if (dd < R && dd > 1) { const f = (1 - dd / R) ** 2 * 18 / dd; bx = dx * f; by = dy * f; } }
-      const horiz = y1 === y2, bow = Math.sin(clk * 0.3 + mx * 0.004 + my * 0.006) * L * 0.09;
-      const ax = mx + (x1 - mx) * k * 2 + bx * 0.5, ay = my + (y1 - my) * k * 2 + by * 0.5;
-      const cx = mx + bx + (horiz ? 0 : bow), cy = my + by + (horiz ? bow : 0);
-      lat.moveTo(ax, ay); lat.quadraticCurveTo(cx, cy, mx + (x2 - mx) * k * 2 + bx * 0.5, my + (y2 - my) * k * 2 + by * 0.5);
+    // 1) lattice — the old structure, drawn as softly bowed threads that shrink away under the front (hero and bands only)
+    if (this.o.drawLattice) {
+      const lat = new Path2D();
+      const L = this.sp * this.o.lattice;
+      for (let i = 0; i < this.nseg; i++) {
+        const d = Math.min(1, Math.max(0, (t - this.segT[i] - 0.02) / 0.16));
+        if (d >= 1) continue;
+        const x1 = this.segs[i * 4], y1 = this.segs[i * 4 + 1], x2 = this.segs[i * 4 + 2], y2 = this.segs[i * 4 + 3];
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, k = (1 - d) * 0.5;
+        let bx = 0, by = 0;
+        if (ptr) { const dx = mx - px, dy = my - py, dd = Math.hypot(dx, dy); if (dd < R && dd > 1) { const f = (1 - dd / R) ** 2 * 18 / dd; bx = dx * f; by = dy * f; } }
+        const horiz = y1 === y2, bow = Math.sin(clk * 0.3 + mx * 0.004 + my * 0.006) * L * 0.09;
+        const ax = mx + (x1 - mx) * k * 2 + bx * 0.5, ay = my + (y1 - my) * k * 2 + by * 0.5;
+        const cx = mx + bx + (horiz ? 0 : bow), cy = my + by + (horiz ? bow : 0);
+        lat.moveTo(ax, ay); lat.quadraticCurveTo(cx, cy, mx + (x2 - mx) * k * 2 + bx * 0.5, my + (y2 - my) * k * 2 + by * 0.5);
+      }
+      ctx.strokeStyle = colors.rule; ctx.lineWidth = 1 * zk; ctx.globalAlpha = 0.62; ctx.stroke(lat); ctx.globalAlpha = 1;
     }
-    ctx.strokeStyle = colors.rule; ctx.lineWidth = 1 * zk; ctx.globalAlpha = 0.62; ctx.stroke(lat); ctx.globalAlpha = 1;
 
-    // 2) new network: curved links grow from parent to child after adoption
-    const net = new Path2D();
+    const jade = this.o.adoptedSignal;
+    const glow = this.sprite(), GL = this.o.glow;
+    // 1b) a pale jade wash gathers under everything that has adopted (the diffusion figure only)
+    if (jade) {
+      const ws = this.sp * 3.4 * zr;
+      ctx.globalAlpha = 0.055;
+      for (let k = 0; k < n; k++) if (te[k] >= T[k]) ctx.drawImage(glow, pos[k * 2] - ws / 2, pos[k * 2 + 1] - ws / 2, ws, ws);
+      ctx.globalAlpha = 1;
+    }
+
+    // 2) new network: gently curved links grow from parent to child after adoption; settled links are a touch heavier
+    const netOld = new Path2D(), netNew = new Path2D();
     for (let k = 0; k < n; k++) {
       const p = parent[k]; if (p < 0) continue;
-      const g = (te[k] - T[k]) / 0.05; if (g <= 0) continue;
+      const age = te[k] - T[k], g = age / 0.05; if (g <= 0) continue;
       const f = Math.min(1, g);
       const x0 = pos[p * 2], y0 = pos[p * 2 + 1], x1 = x0 + (pos[k * 2] - x0) * f, y1 = y0 + (pos[k * 2 + 1] - y0) * f;
-      const bw = (phase[k] > Math.PI ? 0.13 : -0.13);
-      net.moveTo(x0, y0); net.quadraticCurveTo((x0 + x1) / 2 - (y1 - y0) * bw, (y0 + y1) / 2 + (x1 - x0) * bw, x1, y1);
+      const bw = (phase[k] > Math.PI ? 0.09 : -0.09);
+      const path = age > 0.22 ? netOld : netNew;
+      path.moveTo(x0, y0); path.quadraticCurveTo((x0 + x1) / 2 - (y1 - y0) * bw, (y0 + y1) / 2 + (x1 - x0) * bw, x1, y1);
     }
     const se = this.settle, sE = se * se * (3 - 2 * se);
-    ctx.globalAlpha = 0.21 * (1 - sE) * (1 - this.storm * 0.35); ctx.strokeStyle = colors.ink; ctx.lineWidth = 0.8 * zk; ctx.stroke(net); ctx.globalAlpha = 1;
+    const na = (1 - sE) * (1 - this.storm * 0.35);
+    ctx.strokeStyle = jade ? colors.signal : colors.ink;
+    ctx.globalAlpha = (jade ? 0.2 : 0.16) * na; ctx.lineWidth = 0.6 * zk; ctx.stroke(netNew);
+    ctx.globalAlpha = (jade ? 0.34 : 0.24) * na; ctx.lineWidth = 1.05 * zk; ctx.stroke(netOld); ctx.globalAlpha = 1;
     if (se > 0.02) {
       const main = new Path2D(), flash = new Path2D(), front = se * 1.3 - 0.15;
       for (let q = 0; q < this.hex.length; q += 2) {
@@ -479,23 +499,32 @@ export class DiffusionField {
       ctx.strokeStyle = colors.signal; ctx.globalAlpha = 0.9; ctx.lineWidth = 1.2; ctx.stroke(flash); ctx.globalAlpha = 1;
     }
 
-    // 3) nodes: waiting (small, pale), adopted (graphite), the front (a jade glow that swells and fades)
+    // 3) nodes: waiting (small, pale), adopted (graphite, or jade at lower intensity in the diffusion), the front (a jade glow)
     const wait = new Path2D(), done = new Path2D(), core = new Path2D();
-    const glow = this.sprite();
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = 0.45;
     for (let k = 0; k < n; k++) {
       const a = te[k] - T[k], x = pos[k * 2], y = pos[k * 2 + 1];
-      if (a < 0) { const r = zr; wait.moveTo(x + r, y); wait.arc(x, y, r, 0, 6.2832); }
+      if (a < 0) { const r = 1.1 * zr; wait.moveTo(x + r, y); wait.arc(x, y, r, 0, 6.2832); }
       else if (a >= FRONT) { const r = (1.5 + 0.3 * Math.sin(clk * 1.2 + phase[k])) * zr; done.moveTo(x + r, y); done.arc(x, y, r, 0, 6.2832); }
       else {
-        const f = 1 - a / FRONT, gs = (10 + 26 * f) * zr;
+        const f = 1 - a / FRONT, gs = (10 + 26 * f) * zr * GL;
         ctx.drawImage(glow, x - gs / 2, y - gs / 2, gs, gs);
-        const r = (1.6 + 2.2 * f) * zr; core.moveTo(x + r, y); core.arc(x, y, r, 0, 6.2832);
+        const r = (1.6 + 2 * f) * zr; core.moveTo(x + r, y); core.arc(x, y, r, 0, 6.2832);
       }
     }
-    ctx.globalAlpha = 0.5; ctx.fillStyle = colors.ink3; ctx.fill(wait);
-    ctx.globalAlpha = 0.92; ctx.fillStyle = colors.ink; ctx.fill(done);
+    ctx.globalAlpha = 0.55; ctx.fillStyle = colors.ink3; ctx.fill(wait);
+    ctx.globalAlpha = jade ? 0.72 : 0.92; ctx.fillStyle = jade ? colors.signal : colors.ink; ctx.fill(done);
     ctx.globalAlpha = 1; ctx.fillStyle = colors.signal; ctx.fill(core);
+
+    // 3a) the marked node (the firm the story dived into): a jade ring that holds its screen size
+    if (this.mark >= 0 && this.markA > 0.01) {
+      const x = pos[this.mark * 2], y = pos[this.mark * 2 + 1], cs = Math.max(1, this.camScale), mr = 11 / cs;
+      ctx.globalAlpha = 0.55 * this.markA; ctx.drawImage(glow, x - mr * 2.6, y - mr * 2.6, mr * 5.2, mr * 5.2);
+      ctx.globalAlpha = this.markA; ctx.fillStyle = colors.paper; ctx.beginPath(); ctx.arc(x, y, mr, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = colors.signal; ctx.lineWidth = 1.4 / cs; ctx.stroke();
+      ctx.fillStyle = colors.signal; ctx.beginPath(); ctx.arc(x, y, mr * 0.34, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
 
     // 3b) click shockwaves: a soft ring travels out; nodes it passes glow
     if (this.pulses.length) {
@@ -506,8 +535,8 @@ export class DiffusionField {
         ctx.strokeStyle = colors.signal; ctx.globalAlpha = 0.55 * fade; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.2832); ctx.stroke();
         ctx.globalAlpha = 0.6 * fade;
-        for (let k = 0; k < n; k++) { const d = Math.hypot(pos[k * 2] - p.x, pos[k * 2 + 1] - p.y); if (Math.abs(d - r) < 18) ctx.drawImage(glow, pos[k * 2] - 12, pos[k * 2 + 1] - 12, 24, 24); }
-        if (r < 40) { ctx.globalAlpha = 1 - r / 40; ctx.drawImage(glow, p.x - 30, p.y - 30, 60, 60); }
+        for (let k = 0; k < n; k++) { const d = Math.hypot(pos[k * 2] - p.x, pos[k * 2 + 1] - p.y); if (Math.abs(d - r) < 18) ctx.drawImage(glow, pos[k * 2] - 8, pos[k * 2 + 1] - 8, 16, 16); }
+        if (r < 40) { ctx.globalAlpha = 1 - r / 40; ctx.drawImage(glow, p.x - 20, p.y - 20, 40, 40); }
       }
       ctx.globalAlpha = 1;
     }

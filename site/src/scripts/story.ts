@@ -23,7 +23,8 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const mobile = () => innerWidth < 700;
 const css = (n: string) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-const P = { dive: [0.07, 0.15], figs: [0.15, 0.6], back: [0.6, 0.67], diff: [0.67, 0.8], lift: [0.8, 0.84], coda: [0.84, 1] } as const;
+// scenes overlap: the network starts growing round the firm while it is still shrinking into its node
+const P = { dive: [0.07, 0.15], figs: [0.15, 0.58], back: [0.58, 0.68], diff: [0.6, 0.8], lift: [0.8, 0.85], coda: [0.85, 1] } as const;
 
 type Pt = { x: number; y: number };
 const polyLen = (pts: Pt[]) => { let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); return L; };
@@ -111,18 +112,18 @@ function makeDiagram(root: SVGGElement, small = false) {
   const home = (() => { const b = box(W0); return { x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.max(b.w, b.h) / 2 }; })();
 
   // the boundary: a rounded outline in flow coordinates, walked from the output side's upper gap edge round to the lower one
-  const RAD = 62;
+  const RAD = 50;
   const outline = (w: ReturnType<typeof wall>, gA: number, gB: number, t: number): Pt[] => {
     const r = Math.min(RAD, (w.u1 - w.u0) / 2, (w.v1 - w.v0) / 2), pts: Pt[] = [];
     const line = (u0: number, v0: number, u1: number, v1: number) => { const n = Math.max(2, Math.ceil(Math.hypot(u1 - u0, v1 - v0) / 8)); for (let i = 0; i <= n; i++) pts.push({ x: lerp(u0, u1, i / n), y: lerp(v0, v1, i / n) }); };
     const arc = (cu: number, cv: number, a0: number, a1: number) => { for (let i = 1; i <= 10; i++) { const a = lerp(a0, a1, i / 10); pts.push({ x: cu + Math.cos(a) * r, y: cv + Math.sin(a) * r }); } };
-    const top = Math.max(w.v0 + r, Math.min(gA, w.v1 - r)), bot = Math.min(w.v1 - r, Math.max(gB, w.v0 + r));
-    line(w.u1, Math.min(gA, w.v1 - r), w.u1, w.v0 + r); arc(w.u1 - r, w.v0 + r, 0, -Math.PI / 2);
+    // the opening never reaches into the corners, so the wall always ends on its straight side
+    gA = Math.max(w.v0 + r, gA); gB = Math.min(w.v1 - r, gB);
+    line(w.u1, gA, w.u1, w.v0 + r); arc(w.u1 - r, w.v0 + r, 0, -Math.PI / 2);
     line(w.u1 - r, w.v0, w.u0 + r, w.v0); arc(w.u0 + r, w.v0 + r, -Math.PI / 2, -Math.PI);
     line(w.u0, w.v0 + r, w.u0, w.v1 - r); arc(w.u0 + r, w.v1 - r, Math.PI, Math.PI / 2);
     line(w.u0 + r, w.v1, w.u1 - r, w.v1); arc(w.u1 - r, w.v1 - r, Math.PI / 2, 0);
-    line(w.u1, w.v1 - r, w.u1, Math.max(gB, w.v0 + r));
-    void top; void bot;
+    line(w.u1, w.v1 - r, w.u1, gB);
     // breathing: a slow swell travels round the edge along its normal
     const out: Pt[] = []; let s = 0; const Ltot = polyLen(pts);
     for (let i = 0; i < pts.length; i++) {
@@ -139,9 +140,15 @@ function makeDiagram(root: SVGGElement, small = false) {
   const grad = (id: string, stops: [number, string, number][]) => { const g = el('radialGradient', { id, cx: '42%', cy: '40%', r: '75%' }, defs); stops.forEach(([o, c, a]) => el('stop', { offset: o, 'stop-color': c, 'stop-opacity': a }, g)); };
   grad('dg-warm', [[0, css('--haze-warm') || '#f8f1e7', 0.95], [1, css('--paper-2') || '#e9e5dd', 0.9]]);
   grad('dg-jade', [[0, '#f4faf7', 0.95], [1, css('--wash') || '#dcefe6', 0.95]]);
+  // the wash is feathered toward the output side as the wall opens (a mask whose gradient follows the wall)
+  const fade = el('linearGradient', { id: 'dg-fade', gradientUnits: 'userSpaceOnUse' }, defs);
+  el('stop', { offset: 0, 'stop-color': '#fff', 'stop-opacity': 1 }, fade); const fadeEnd = el('stop', { offset: 1, 'stop-color': '#fff', 'stop-opacity': 1 }, fade);
+  const mask = el('mask', { id: 'dg-fillmask', maskUnits: 'userSpaceOnUse', x: -2000, y: -2000, width: 6000, height: 6000 }, defs);
+  el('rect', { x: -2000, y: -2000, width: 6000, height: 6000, fill: 'url(#dg-fade)' }, mask);
   const gForm = el('g', {});
-  const fillWarm = el('path', { class: 'dg-fill', fill: 'url(#dg-warm)' }, gForm);
-  const fillJade = el('path', { class: 'dg-fill', fill: 'url(#dg-jade)' }, gForm);
+  const gFill = el('g', { mask: 'url(#dg-fillmask)' }, gForm);
+  const fillWarm = el('path', { class: 'dg-fill', fill: 'url(#dg-warm)' }, gFill);
+  const fillJade = el('path', { class: 'dg-fill', fill: 'url(#dg-jade)' }, gFill);
   const form = el('path', { class: 'dg-form' }, gForm);
   const title = el('g', { class: 'dg-chip' }); el('rect', { width: 84, height: 30, rx: 15 }, title); const titleT = el('text', { x: 42, y: 20, 'text-anchor': 'middle', class: 'dg-label -strong' }, title); titleT.textContent = 'FIRM';
 
@@ -204,6 +211,7 @@ function makeDiagram(root: SVGGElement, small = false) {
     form.setAttribute('d', d);
     const closed = d + ' Z';
     fillWarm.setAttribute('d', closed); fillJade.setAttribute('d', closed);
+    { const f0 = M(w.u1 - 110, mid), f1 = M(w.u1 + 6, mid); fade.setAttribute('x1', f0.x.toFixed(1)); fade.setAttribute('y1', f0.y.toFixed(1)); fade.setAttribute('x2', f1.x.toFixed(1)); fade.setAttribute('y2', f1.y.toFixed(1)); fadeEnd.setAttribute('stop-opacity', (1 - 0.97 * clamp(S.open)).toFixed(3)); }
     (form as SVGElement).style.opacity = String(S.fa);
     fillWarm.style.opacity = String(S.hatch * (1 - S.wash)); fillJade.style.opacity = String(S.hatch * S.wash);
     title.setAttribute('transform', `translate(${(b.x + (small ? 24 : 74)).toFixed(1)} ${(b.y - 15).toFixed(1)})`); title.style.opacity = String(S.title);
@@ -240,7 +248,8 @@ function makeDiagram(root: SVGGElement, small = false) {
     // people and agents (they breathe)
     S.people.forEach((p, i) => { const q = personPos(i); personEls[i].setAttribute('cx', q.x.toFixed(1)); personEls[i].setAttribute('cy', q.y.toFixed(1)); personEls[i].setAttribute('r', (PERSON_R * breathe(i + 3, 0.03)).toFixed(2)); personEls[i].style.opacity = String(p.a); });
     S.agents.forEach((a, i) => {
-      draw(agentEls[i].c, clamp(a.a), 1); agentEls[i].c.setAttribute('r', (AGENT_R * Math.max(0.2, a.a) * breathe(i)).toFixed(2));
+      // agents swell into place as whole circles (springy), rather than being traced
+      agentEls[i].c.style.opacity = a.a > 0.01 ? '1' : '0'; agentEls[i].c.setAttribute('r', (AGENT_R * Math.max(0.01, a.a) * breathe(i)).toFixed(2));
       agentEls[i].t.style.opacity = String(a.a > 0.9 ? 1 : 0);
       agentGlow[i].style.opacity = String(clamp(a.a) * (0.5 + 0.12 * Math.sin(clock * 1.5 + i * 1.9)));
       const pl = pulses[i]; pl.setAttribute('cx', String(ST[i].x)); pl.setAttribute('cy', String(ST[i].y)); pl.setAttribute('r', (AGENT_R + a.pulse * 52).toFixed(1));
@@ -314,7 +323,8 @@ function makeDiagram(root: SVGGElement, small = false) {
   S.mesh.forEach((m, i) => tl.to(m, { k: 1, duration: 0.5, ease: 'elastic.out(1, 0.6)' }, F + 0.31 + i * 0.04));
   tl.to(S, { spread: 1, duration: 0.3, ease: 'power1.in' }, F + 0.25).to(S, { w: 1, duration: 0.5, ease: 'back.inOut(1.1)' }, F + 0.25).to(S, { wash: 1, duration: 0.6, ease: 'sine.inOut' }, F + 0.45);
   S.people.forEach((p, i) => tl.to(p, { k2: 1, duration: 0.45, ease: 'back.inOut(1.2)' }, F + 0.37 + i * 0.05));
-  [0, 2].forEach((i) => tl.to(S.agents[i], { a: 1, duration: 0.3, ease: 'back.out(1.8)' }, F + 0.55).to(S.agents[i], { pulse: 1, duration: 0.5, ease: 'power2.out' }, F + 0.55));
+  // the outer steps become agents only once their people have moved clear
+  [0, 2].forEach((i) => tl.to(S.agents[i], { a: 1, duration: 0.3, ease: 'back.out(1.8)' }, F + 0.86).to(S.agents[i], { pulse: 1, duration: 0.5, ease: 'power2.out' }, F + 0.86));
   tl.to(S, { meshL: 1, duration: 0.25 }, F + 0.7)
     .to(S, { open: 1, duration: 0.25, ease: 'back.out(1.4)' }, F + 1.07)
     .to(S, { aFade: 0, duration: 0.35, ease: 'none' }, F + 0.9)
@@ -322,7 +332,8 @@ function makeDiagram(root: SVGGElement, small = false) {
     .to(S, { goalL: 1, revL: 1, duration: 0.15 }, F + 1.17).to(S, { fb: 1, duration: 0.25 }, F + 1.27)
     .to(S, { m: 0.85, fast: 1, duration: 0.2 }, F + 1.25);
   tl.to({}, { duration: 0.01 }, F + 1.75);
-  const figStarts = [0, 1.08, F];
+  // captions switch where each figure's change becomes visible: the agent settling, coordination collapsing
+  const figStarts = [0, 1.45, F + 0.15];
   return { S, tl, render, home, figStarts, boundaryCenter: () => { const bb = box(wall()); return { x: bb.x + bb.w / 2, y: bb.y + bb.h / 2, r: Math.max(bb.w, bb.h) / 2 }; } };
 }
 
@@ -339,13 +350,16 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
   const figs = [...sec.querySelectorAll<HTMLElement>('[data-fig]')];
   const cue = sec.querySelector<HTMLElement>('[data-hero-scroll]');
   const stmt = sec.querySelector<HTMLElement>('.story__statement');
-  svg.setAttribute('viewBox', mobile() ? '295 -20 500 690' : '175 140 830 420');
+  svg.setAttribute('viewBox', mobile() ? '295 -20 500 690' : '180 160 820 400');
+  if (!mobile()) svg.setAttribute('preserveAspectRatio', 'xMidYMin meet'); // the diagram's top lines up with the statement
 
   const opts = { spacing: mobile() ? 20 : 26, seed: 11 };
-  const A = new DiffusionField(cA, { ...opts, mode: 'progress', staticT: 0.34, word: true, global: true, seeds: [[0.14, 0.34], [0.62, 0.2], [0.86, 0.58], [0.4, 0.82]] });
+  const A = new DiffusionField(cA, { ...opts, mode: 'progress', staticT: 0.34, word: true, wordBase: 0.72, global: true, seeds: [[0.14, 0.34], [0.62, 0.2], [0.86, 0.58], [0.4, 0.82]] });
   (window as any).__heroField = A;
   const focus = A.nearest(A.w * 0.46, A.h * 0.5);
-  const B = new DiffusionField(cB, { ...opts, mode: 'progress', staticT: 0.5, pointer: true, seeds: [[focus.x / A.w, focus.y / A.h]] });
+  // the diffusion: half the hero's density, no old lattice, adopted nodes stay jade over a pale wash; the firm is marked
+  const B = new DiffusionField(cB, { spacing: mobile() ? 27 : 36, seed: 11, mode: 'progress', staticT: 0.62, pointer: true, drawLattice: false, adoptedSignal: true, seeds: [[focus.x / A.w, focus.y / A.h]] });
+  B.mark = B.nearest(focus.x, focus.y).k;
   const surf = new HomotopySurface(cS);
   const D = makeDiagram(inkG, mobile());
   const F = D.home;
@@ -356,7 +370,8 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
   if (RM) {
     D.tl.progress(1); D.render();
     // reduced motion: one calm, composed frame — the reorganised firm over a faint field, with its caption
-    cA.style.opacity = '0.35'; cB.style.opacity = '0'; cS.style.opacity = '0'; svg.style.opacity = '1'; if (stmt) stmt.style.opacity = '1';
+    // the field stays to the right of the text column (CSS mask)
+    cA.style.opacity = mobile() ? '0' : '0.55'; cB.style.opacity = '0'; cS.style.opacity = '0'; svg.style.opacity = '1'; if (stmt) stmt.style.opacity = '1';
     setFig(2);
     return;
   }
@@ -384,10 +399,15 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
     A.camScale = lerp(1, 9, dive * dive);
     cA.style.opacity = String(p < P.back[0] ? 1 - sm(seg(dive, 0.45, 0.9)) : 0);
     const nodeSvg = toSvg(focus.x, focus.y);
-    const s0 = 3 / Math.max(1, bcs.k * F.r);
+    // on the way out the firm IS the diffusion's marked node: the field's camera zooms out about that node while carrying it from
+    // where the firm sits to where the node belongs, and the firm drawing rides on exactly the same point
+    const es = 1 - (1 - back) ** 2.2, mk = B.mark, mx0 = B.sx.length > mk ? B.sx[mk] : B.nx[mk], my0 = B.sy.length > mk ? B.sy[mk] : B.ny[mk];
+    const bcS = toScreen(bc.x, bc.y), camTo: [number, number] = [lerp(bcS.x, mx0, es), lerp(bcS.y, my0, es)];
+    const markSvg = toSvg(camTo[0], camTo[1]);
+    const s0 = 3 / Math.max(1, bcs.k * F.r), sEnd = 11 / Math.max(1, bcs.k * F.r); // the firm lands as a node the size of the marked ring
     let s = 1, tx = 0, ty = 0, dop = 0;
     if (p < P.back[0]) { const e = dive; s = lerp(s0, 1, e * e); tx = lerp(nodeSvg.x - F.x, 0, e); ty = lerp(nodeSvg.y - F.y, 0, e); dop = sm(seg(e, 0.02, 0.3)); }
-    else { const e = back; s = lerp(1, s0 * (F.r / bc.r), e * e * 0.999 + 0.001 * e); tx = lerp(0, nodeSvg.x - bc.x, e); ty = lerp(0, nodeSvg.y - bc.y, e); dop = 1 - sm(seg(e, 0.35, 0.8)); }
+    else { const e = back; s = lerp(1, sEnd * (F.r / bc.r), 1 - (1 - e) ** 2.2); tx = markSvg.x - bc.x; ty = markSvg.y - bc.y; dop = 1 - sm(seg(e, 0.72, 0.98)); }
     const ox = p < P.back[0] ? F.x : bc.x, oy = p < P.back[0] ? F.y : bc.y;
     dg.setAttribute('transform', `translate(${(ox + tx).toFixed(2)} ${(oy + ty).toFixed(2)}) scale(${s.toFixed(4)}) translate(${-ox} ${-oy})`);
     svg.style.opacity = String(inFirm ? dop : 0);
@@ -397,18 +417,21 @@ export function initStory(introDone: Promise<void>, arrived: boolean) {
     A.running && !(p < P.back[0]) && A.stop();
     if (p < P.back[0] && !A.running && A.visible) A.start();
     const bIn = p >= P.back[0];
-    B.camFocus = [focus.x, focus.y]; B.camTo = [focus.x, focus.y];
-    B.camScale = lerp(9, 1, back);
-    B.setProgress(0.0 + sm(seg(p, P.diff[0], P.diff[1])) * 1.0);
-    cB.style.opacity = String(bIn ? sm(seg(back, 0.3, 0.8)) * (1 - sm(seg(p, P.lift[0] + 0.012, P.lift[1]))) : 0);
+    B.camFocus = [mx0, my0]; B.camTo = camTo;
+    B.camScale = lerp(9, 1, es);
+    // adoption is a pure function of scroll: it only grows as you scroll down
+    B.setProgress(sm(seg(p, P.diff[0], P.diff[1])));
+    B.markA = sm(seg(back, 0.62, 0.95)) * (1 - sm(seg(p, P.lift[0] - 0.01, P.lift[0] + 0.01)));
+    cB.style.opacity = String(bIn ? sm(seg(back, 0, 0.35)) * (1 - sm(seg(p, P.lift[0] + 0.004, P.lift[0] + 0.016))) : 0);
     if (bIn && !B.running) B.start(); if (!bIn && B.running) B.stop();
-    cS.style.opacity = String(sm(seg(p, P.lift[0] - 0.008, P.lift[0] + 0.022)));
-    surf.tilt = sm(seg(p, P.lift[1], P.coda[0] + 0.03));
+    cS.style.opacity = String(sm(seg(p, P.lift[0] - 0.004, P.lift[0] + 0.012)));
+    surf.tilt = sm(seg(p, P.lift[0] + 0.012, P.lift[1] + 0.02));
     surf.setProgress(sm(seg(p, P.coda[0], P.coda[1] - 0.04)));
     if (p >= P.lift[0]) { if (!surf.running) surf.start(); } else if (surf.running) surf.stop();
     let k = -1;
-    if (p >= P.figs[0] - 0.01 && p < P.figs[1]) { const t = D.tl.time(); k = D.figStarts.filter((s1) => t >= s1).length - 1; }
-    else if (p >= P.back[1] - 0.01 && p < P.lift[0]) k = 3;
+    if (p >= P.figs[0] - 0.01 && p < P.back[0] + 0.05) { const t = D.tl.time(); k = D.figStarts.filter((s1) => t >= s1).length - 1; }
+    else if (p >= P.back[0] + 0.05 && p < P.lift[0]) k = 3;
+    else if (p >= P.lift[0]) k = 4;
     if (k !== curFig) { curFig = k; setFig(k); }
   };
 

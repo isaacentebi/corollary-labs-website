@@ -6,12 +6,16 @@ html[data-page='home'] [data-page-root], html[data-page='home'] .c-footer { posi
 .story { position: relative; height: 430svh; }
 .story__stage { position: sticky; top: 0; height: 100svh; overflow: hidden; }
 .story__layer { position: absolute; inset: 0; width: 100%; height: 100%; }
-.story__diagram { opacity: 0; overflow: visible; padding: 10vh 2.5vw 10vh 44vw; }
-.story__statement { position: absolute; left: var(--grid-margin); top: 16vh; width: 34vw; opacity: 0; pointer-events: none;
+.story__diagram { opacity: 0; overflow: visible; padding: calc(16vh - 12px) 2vw 6vh 37vw; }
+/* reduced motion only: a static wordmark (the name never assembles from points without motion) */
+.story__mark { display: none; }
+html.rm .story__mark { display: flex; align-items: center; gap: 0.45em; position: absolute; left: var(--grid-margin); top: 6vh; font-family: var(--font-serif); font-weight: var(--serif-wght); font-size: 26px; letter-spacing: -0.015em; }
+.story__markicon { width: 1.5em; height: auto; }
+.story__statement { position: absolute; left: var(--grid-margin); top: 16vh; width: 31vw; opacity: 0; pointer-events: none;
   font-family: var(--font-serif); font-weight: var(--serif-wght); font-size: clamp(30px, 2.8vw, 52px); line-height: 1.06; letter-spacing: -0.02em; }
 .story__statement .ph { color: var(--ink-3); }
 .story__surface { opacity: 0; cursor: grab; }
-.story__caption { position: absolute; left: var(--grid-margin); width: 34vw; bottom: 13vh; display: grid; pointer-events: none; }
+.story__caption { position: absolute; left: var(--grid-margin); width: 31vw; bottom: 10vh; display: grid; pointer-events: none; }
 .story__fig { grid-area: 1 / 1; justify-self: start; padding: 0.9em 1.1em 1em; border-radius: 1.1rem;
   background: color-mix(in srgb, var(--paper) 72%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--rule) 70%, transparent), 0 12px 40px -18px rgba(42, 42, 46, 0.18);
@@ -60,6 +64,9 @@ html[data-page='home'] [data-page-root], html[data-page='home'] .c-footer { posi
 }
 html.rm .story { height: auto; }
 html.rm .story__statement { opacity: 1; }
+html.rm .story [data-field='hero'] { -webkit-mask-image: linear-gradient(to right, transparent 36%, #000 62%); mask-image: linear-gradient(to right, transparent 36%, #000 62%); }
+html.rm .story__cue { display: none; }
+@media (max-width: 699px) { html.rm .story__statement { top: 11svh; font-size: 21px; } html.rm .story__mark { top: 4svh; font-size: 22px; } html.rm .story__diagram { padding-top: 33svh; padding-bottom: 20svh; } }
 html.rm .story__stage { position: relative; height: 100svh; }
 
 /* ── after the story: the business, reached quickly ───────────────────────── */
@@ -68,7 +75,7 @@ html.rm .story__stage { position: relative; height: 100svh; }
 .home-block__k::before { content: ''; width: 0.5em; height: 0.5em; border-radius: 50%; background: var(--signal); box-shadow: 0 0 0 4px color-mix(in srgb, var(--glow) 40%, transparent); }
 .home-about { display: grid; grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr)); column-gap: var(--grid-gutter); align-items: end; }
 .home-about__p { grid-column: 1 / 10; font-family: var(--font-serif); font-weight: var(--serif-wght); font-size: clamp(30px, 3.6vw, 64px); line-height: 1.06; letter-spacing: -0.02em; color: var(--ink-3); }
-.home-about__more { grid-column: 11 / 13; justify-self: end; }
+
 .pill { display: inline-flex; align-items: center; gap: 0.6em; padding: 0.7em 1.15em 0.72em; border-radius: 999px; font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase;
   background: color-mix(in srgb, var(--paper) 60%, #fff); box-shadow: 0 0 0 1px var(--rule), 0 8px 24px -14px rgba(42, 42, 46, 0.25);
   transition: box-shadow 0.5s var(--ease-out), transform 0.6s var(--ease-spring), color 0.4s var(--ease-out); }

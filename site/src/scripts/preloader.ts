@@ -40,7 +40,7 @@ export function runPreloader(): Promise<void> {
       g = Math.sqrt((w * h) / (n * 1.15));
       cols = Math.ceil(w / g); rows = Math.ceil(h / g);
       const starts: [number, number][] = [];
-      for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) starts.push([(i + 0.5) * g, (j + 0.5) * g]);
+      for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) starts.push([(i + 0.5 + (Math.random() - 0.5) * 0.9) * g, (j + 0.5 + (Math.random() - 0.5) * 0.9) * g]);
       const tg: [number, number][] = []; for (let i = 0; i < n; i++) tg.push([pts[i * 2], pts[i * 2 + 1]]);
       starts.sort((a, b) => a[0] - b[0]); tg.sort((a, b) => a[0] - b[0]);
       const stride = starts.length / n;
@@ -56,14 +56,8 @@ export function runPreloader(): Promise<void> {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       const front = ((t - 0.35) / 0.95) * w; // the sweep, in px
-      // old lattice: appears, then dissolves behind the front
-      ctx.strokeStyle = C.rule; ctx.lineWidth = 1; ctx.lineCap = 'round';
-      const la = Math.min(1, t / 0.35);
-      ctx.beginPath();
-      for (let j = 0; j <= rows; j++) { const y = j * g; for (let i = 0; i < cols; i++) { const x = i * g; const f = Math.min(1, Math.max(0, (x - front + 120) / 240)); if (f <= 0) continue; const hl = (g / 2) * f * la; ctx.moveTo(x + g / 2 - hl, y); ctx.lineTo(x + g / 2 + hl, y); } }
-      for (let i = 0; i <= cols; i++) { const x = i * g; if (x < front - 120) continue; const f = Math.min(1, Math.max(0, (x - front + 120) / 240)); for (let j = 0; j < rows; j++) { const y = j * g, hl = (g / 2) * f * la; ctx.moveTo(x, y + g / 2 - hl); ctx.lineTo(x, y + g / 2 + hl); } }
-      ctx.stroke();
-      // particles
+      const la = Math.min(1, t / 0.35); void front;
+      // particles (a soft scatter from the first frame; no square lattice)
       const xs = new Float32Array(P.length), ys = new Float32Array(P.length), st = new Uint8Array(P.length);
       for (let i = 0; i < P.length; i++) {
         const p = P[i], u = Math.min(1, Math.max(0, (t - p.at) / 1.0)), e = ease(u);

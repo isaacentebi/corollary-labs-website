@@ -14,6 +14,7 @@ const cur = (h: string) => { const u = url(h); return (h === '/' ? path === base
         <li><a href={url('/essays/')} aria-current={cur('/essays/')}>Essays</a></li>
         <li><a href={url('/about/')} aria-current={cur('/about/')}>About</a></li>
         <li><a href={url('/team/')} aria-current={cur('/team/')}>Team</a></li>
+        <li><a href="#contact">Contact</a></li>
       </ul>
       <ul class="c-footer__list -b" data-reveal="rows">
         <li><a href="#top" data-to-top>Back to top ↑</a></li>

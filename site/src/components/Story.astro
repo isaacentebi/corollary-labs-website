@@ -4,8 +4,9 @@
 //   → the whole lattice lifts into 3D and changes shape (homotopy coda).
 // scripts/story.ts drives everything from one scroll progress.
 import { site } from '../config/site';
+import Mark from './Mark.astro';
 // Captions: placeholders until the copy is written.
-export const figs: { n: number; title: string; lines: string[] }[] = [1, 2, 3, 4].map((n) => ({ n, title: '[Title]', lines: ['[Caption — line 1]', '[Caption — line 2]'] }));
+export const figs: { n: number; title: string; lines: string[] }[] = [1, 2, 3, 4, 5].map((n) => ({ n, title: '[Title]', lines: ['[Caption — line 1]', '[Caption — line 2]'] }));
 ---
 <section class="story" data-story aria-labelledby="hero-title">
   <h1 class="u-sr" id="hero-title">{site.name}</h1>
@@ -21,6 +22,7 @@ export const figs: { n: number; title: string; lines: string[] }[] = [1, 2, 3, 4
       <g data-dg><g data-ink></g></g>
     </svg>
     <canvas class="story__layer story__surface" data-surface aria-hidden="true"></canvas>
+    <p class="story__mark" aria-hidden="true"><Mark class="story__markicon" />{site.name}</p>
     <p class="story__statement">
       {site.name} is a company. <span class="ph">[Placeholder — one sentence on what it studies.]</span> <span class="ph">[Placeholder — one sentence on what it builds.]</span>
     </p>

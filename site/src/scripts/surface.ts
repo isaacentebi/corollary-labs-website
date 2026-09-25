@@ -101,7 +101,8 @@ export class HomotopySurface {
     // S3 re-glue: close into a torus (u → major angle, v → minor angle)
     const tor = sm(seg(hp, 0.52, 0.95));
     if (tor > 0) {
-      const R = 1.05, r = 0.42, th = u * TAU, ph = v * TAU + t * 0.15;
+      // both angles are sampled evenly round the full turn, so the first and last rows/columns don't land on top of each other
+      const R = 1.05, r = 0.42, th = u * TAU * (this.NU - 1) / this.NU, ph = v * TAU * (this.NV - 1) / this.NV + t * 0.15;
       const tx = (R + r * Math.cos(ph)) * Math.cos(th), ty = r * Math.sin(ph), tz = (R + r * Math.cos(ph)) * Math.sin(th);
       x += (tx - x) * tor; y += (ty - y) * tor; z += (tz - z) * tor;
     }
@@ -130,20 +131,23 @@ export class HomotopySurface {
     }
   }
 
+  cam3 = new Float32Array(); face = new Float32Array();
   draw() {
     const { ctx, NU, NV, c } = this;
     if (!this.parent.length) this.buildNet();
+    if (this.cam3.length !== NU * NV * 3) { this.cam3 = new Float32Array(NU * NV * 3); this.face = new Float32Array(NU * NV); }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, this.w, this.h);
     const cy = Math.cos(this.yaw), sy = Math.sin(this.yaw), cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
-    // seen from above at tilt 0 the sheet fills the screen like the field it replaces, then pulls back as it tilts
-    const scale = Math.min(this.w, this.h) * 0.32 * (this.w < 700 ? 0.96 : 1) * (1 + (1 - this.tilt) * ((this.w / this.h) * 1.25)), cam = 4.2;
-    const P = this.proj, D = this.depth, tmp = [0, 0, 0], J = this.jit;
+    // seen from above at tilt 0 the sheet fills the screen like the field it replaces (on phones: its full height), then pulls back
+    const base = Math.min(this.w, this.h) * 0.32 * (this.w < 700 ? 0.96 : 1);
+    const cover = Math.max((this.w / this.h) * 1.25, this.h / (1.45 * base) - 1);
+    const scale = base * (1 + (1 - this.tilt) * cover), cam = 4.2;
+    const P = this.proj, D = this.depth, C3 = this.cam3, tmp = [0, 0, 0], J = this.jit;
     const du = 1 / (NU - 1), dv = 1 / (NV - 1);
+    const jf = 1 - sm(seg(this.hp, 0.6, 0.95)); // jitter fades out as the surface becomes the torus (the new order is regular)
     for (let j = 0; j < NV; j++) for (let i = 0; i < NU; i++) {
       const k = j * NU + i;
-      // jitter fades out as the surface becomes the torus (the new order is regular)
-      const jf = 1 - sm(seg(this.hp, 0.6, 0.95));
       const u = Math.min(1, Math.max(0, i * du + J[k * 2] * du * jf)), v = Math.min(1, Math.max(0, j * dv + J[k * 2 + 1] * dv * jf));
       this.point(u, v, tmp);
       const [x, y, z] = tmp;
@@ -151,6 +155,20 @@ export class HomotopySurface {
       const y2 = y * cp - z1 * sp, z2 = y * sp + z1 * cp;
       const f = cam / (cam + z2);
       P[k * 2] = this.w / 2 + x1 * f * scale; P[k * 2 + 1] = this.h / 2 - y2 * f * scale; D[k] = z2;
+      C3[k * 3] = x1; C3[k * 3 + 1] = y2; C3[k * 3 + 2] = z2;
+    }
+    // how squarely each vertex faces the camera (1 = face on, 0 = edge on): edge-on parts are drawn fainter, so silhouettes don't clot
+    const F = this.face, glue0 = sm(seg(this.hp, 0.62, 0.95)), lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    for (let j = 0; j < NV; j++) for (let i = 0; i < NU; i++) {
+      const k = j * NU + i, a = j * NU + Math.max(0, i - 1), b = j * NU + Math.min(NU - 1, i + 1), cc = Math.max(0, j - 1) * NU + i, d = Math.min(NV - 1, j + 1) * NU + i;
+      const ux = C3[b * 3] - C3[a * 3], uy = C3[b * 3 + 1] - C3[a * 3 + 1], uz = C3[b * 3 + 2] - C3[a * 3 + 2];
+      const vx = C3[d * 3] - C3[cc * 3], vy = C3[d * 3 + 1] - C3[cc * 3 + 1], vz = C3[d * 3 + 2] - C3[cc * 3 + 2];
+      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, nl = Math.hypot(nx, ny, nz) || 1;
+      const ex = C3[k * 3], ey = C3[k * 3 + 1], ez = C3[k * 3 + 2] + cam, el = Math.hypot(ex, ey, ez) || 1;
+      F[k] = Math.abs((nx * ex + ny * ey + nz * ez) / (nl * el));
+      // until the sheet closes, its outer edges feather out (no hard band edges while it lifts)
+      const edge = Math.min(i / (NU - 1), 1 - i / (NU - 1), j / (NV - 1), 1 - j / (NV - 1));
+      F[k] = Math.min(F[k], lerp(sm(clamp(edge / 0.16)), 1, glue0));
     }
     const hp = this.hp;
     const seamJ = Math.floor((NV - 1) / 2);
@@ -158,22 +176,19 @@ export class HomotopySurface {
     const seamFlash = hp > 0.28 && hp < 0.44;
     const glue = seg(hp, 0.62, 0.95);
     const crossesSeam = (a: number, b: number) => { const ja = (a / NU) | 0, jb = (b / NU) | 0; return (ja <= seamJ) !== (jb <= seamJ); };
-    const buckets = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], gBuckets = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], flash = new Path2D(), faint = new Path2D();
-    // the re-formed surface is green: a front sweeps round the new shape as it closes (the transformation)
+    // buckets: 4 depth bands × 3 facing levels, for the sheet (pale jade: already adopted) and the re-formed surface (full jade)
+    const mk = () => Array.from({ length: 12 }, () => new Path2D());
+    const buckets = mk(), gBuckets = mk(), flash = new Path2D();
     const front = sm(seg(hp, 0.5, 0.97)) * 1.15;
     const reformed = (a: number) => (a % NU) / (NU - 1) < front;
-    const add = (a: number, b: number, green = false, into?: Path2D) => {
-      const bi = Math.min(3, Math.max(0, Math.floor((1.6 - (D[a] + D[b]) / 2) / 0.8)));
-      const path = green ? flash : into ?? (reformed(a) && reformed(b) ? gBuckets[bi] : buckets[bi]);
+    const add = (a: number, b: number, green = false) => {
+      const db = Math.min(3, Math.max(0, Math.floor((1.6 - (D[a] + D[b]) / 2) / 0.8)));
+      const fa = Math.min(F[a], F[b]), fl = fa < 0.18 ? 0 : fa < 0.45 ? 1 : 2;
+      const path = green ? flash : (reformed(a) && reformed(b) ? gBuckets : buckets)[db * 3 + fl];
       const x1 = P[a * 2], y1 = P[a * 2 + 1], x2 = P[b * 2], y2 = P[b * 2 + 1];
-      // links are drawn as soft arcs (like the field's network), bowing to one side or the other per vertex
-      const bw = into ? 0 : (a % 3 === 0 ? 0.2 : a % 3 === 1 ? -0.16 : 0.08);
+      const bw = a % 3 === 0 ? 0.2 : a % 3 === 1 ? -0.16 : 0.08; // soft arcs, like the field's network
       path.moveTo(x1, y1); path.quadraticCurveTo((x1 + x2) / 2 - (y2 - y1) * bw, (y1 + y2) / 2 + (x2 - x1) * bw, x2, y2);
     };
-    // the old lattice as a faint underlay — it fades as the new structure takes over
-    const lat = 1 - sm(seg(hp, 0.25, 0.6));
-    if (lat > 0.02) for (let j = 0; j < NV; j += 2) for (let i = 0; i < NU - 1; i++) add(j * NU + i, j * NU + i + 1, false, faint);
-    // network links: each vertex to its parent (+ some extra links for 3D legibility)
     for (let k = 0; k < NU * NV; k++) {
       const pk = this.parent[k]; if (pk < 0) continue;
       const cross = crossesSeam(k, pk);
@@ -181,38 +196,34 @@ export class HomotopySurface {
       add(k, pk, cross && (seamFlash || (hp >= 0.62 && hp < 0.78)));
       if (this.extra[k]) { const i = k % NU; if (i < NU - 1 && !(torn && crossesSeam(k, k + 1))) add(k, k + 1); }
     }
-    // re-gluing: stitches appear only where the edges have actually met
+    // re-gluing: stitches appear only where the edges have actually met (they weld both seams of the torus)
     if (glue > 0.02) {
-      const near = (a: number, b: number) => Math.hypot(P[a * 2] - P[b * 2], P[a * 2 + 1] - P[b * 2 + 1]) < 26;
+      const near = (a: number, b: number) => Math.hypot(P[a * 2] - P[b * 2], P[a * 2 + 1] - P[b * 2 + 1]) < 30;
       for (let j = 0; j < NV; j++) { const a = j * NU + NU - 1, b = j * NU; if (near(a, b)) add(a, b, glue < 0.85); }
       for (let i = 0; i < NU; i++) { const a = (NV - 1) * NU + i, b = i; if (near(a, b)) add(a, b, glue < 0.85); }
     }
-    // a soft contact shadow under the form (it lifts off the ground as it tilts into 3D)
-    {
-      const sy2 = this.h / 2 + scale * 0.95, rx = scale * 1.25, g = ctx.createRadialGradient(this.w / 2, sy2, 0, this.w / 2, sy2, rx);
-      g.addColorStop(0, 'rgba(42,42,46,0.10)'); g.addColorStop(1, 'rgba(42,42,46,0)');
-      ctx.save(); ctx.globalAlpha = this.tilt; ctx.translate(this.w / 2, sy2); ctx.scale(1, 0.16); ctx.translate(-this.w / 2, -sy2);
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(this.w / 2, sy2, rx, 0, TAU); ctx.fill(); ctx.restore();
-    }
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.lineWidth = 1; ctx.strokeStyle = c.rule; ctx.globalAlpha = lat; ctx.stroke(faint);
-    ctx.lineWidth = 0.8; ctx.strokeStyle = c.ink;
-    [0.34, 0.24, 0.14, 0.07].forEach((a, i) => { ctx.globalAlpha = a; ctx.stroke(buckets[i]); });
-    // the re-formed surface glows: a blurred jade pass under a crisp one
-    ctx.strokeStyle = c.glow; ctx.lineWidth = 3.2; [0.3, 0.2, 0.1, 0.05].forEach((a, i) => { ctx.globalAlpha = a; ctx.stroke(gBuckets[i]); });
-    ctx.lineWidth = 0.9; ctx.strokeStyle = c.signal; [0.75, 0.5, 0.3, 0.14].forEach((a, i) => { ctx.globalAlpha = a; ctx.stroke(gBuckets[i]); });
+    const DA = [1, 0.72, 0.45, 0.24], DW = [1.1, 0.85, 0.65, 0.5], FA = [0.13, 0.5, 1];
+    // the sheet carries the diffusion's adopted colour (pale jade), one layer only
+    ctx.strokeStyle = c.signal;
+    for (let q = 0; q < 12; q++) { ctx.globalAlpha = 0.5 * DA[(q / 3) | 0] * FA[q % 3]; ctx.lineWidth = DW[(q / 3) | 0]; ctx.stroke(buckets[q]); }
+    // the re-formed surface deepens to full jade, with a soft glow pass on the near side
+    ctx.strokeStyle = c.glow;
+    for (let q = 0; q < 6; q++) { ctx.globalAlpha = 0.22 * DA[(q / 3) | 0] * FA[q % 3]; ctx.lineWidth = DW[(q / 3) | 0] * 3.4; ctx.stroke(gBuckets[q]); }
+    ctx.strokeStyle = c.signal;
+    for (let q = 0; q < 12; q++) { ctx.globalAlpha = 0.8 * DA[(q / 3) | 0] * FA[q % 3]; ctx.lineWidth = DW[(q / 3) | 0]; ctx.stroke(gBuckets[q]); }
     ctx.globalAlpha = 0.35; ctx.strokeStyle = c.glow; ctx.lineWidth = 5; ctx.stroke(flash);
     ctx.globalAlpha = 1; ctx.strokeStyle = c.signal; ctx.lineWidth = 1.2; ctx.stroke(flash);
-    // vertices: round points, near ones stronger; the torn seam and the re-formed part in jade
-    const vp = [new Path2D(), new Path2D(), new Path2D(), new Path2D()]; // ink far, ink near, jade far, jade near
+    // vertices: round points; faint where the surface is edge-on or far, stronger near; deeper jade once re-formed
+    const vp = Array.from({ length: 6 }, () => new Path2D()); // [sheet, re-formed] × [faint, mid, strong]
     for (let k = 0; k < NU * NV; k++) {
       const j = (k / NU) | 0, onSeam = (j === seamJ || j === seamJ + 1) && seamFlash;
-      const green = onSeam || reformed(k), near = D[k] < 0, r = onSeam ? 2 : near ? 1.35 : 1.05;
-      const path = vp[(green ? 2 : 0) + (near ? 1 : 0)];
+      const green = onSeam || reformed(k), near = D[k] < 0, lv = F[k] < 0.25 ? 0 : near ? 2 : 1, r = onSeam ? 2 : lv === 2 ? 1.35 : 1.05;
+      const path = vp[(green ? 3 : 0) + lv];
       path.moveTo(P[k * 2] + r, P[k * 2 + 1]); path.arc(P[k * 2], P[k * 2 + 1], r, 0, TAU);
     }
-    ctx.fillStyle = c.ink; ctx.globalAlpha = 0.35; ctx.fill(vp[0]); ctx.globalAlpha = 0.9; ctx.fill(vp[1]);
-    ctx.fillStyle = c.signal; ctx.globalAlpha = 0.45; ctx.fill(vp[2]); ctx.globalAlpha = 1; ctx.fill(vp[3]);
+    ctx.fillStyle = c.signal;
+    [0.14, 0.4, 0.7, 0.2, 0.5, 1].forEach((a, i) => { ctx.globalAlpha = a; ctx.fill(vp[i]); });
     ctx.globalAlpha = 1;
   }
 }
